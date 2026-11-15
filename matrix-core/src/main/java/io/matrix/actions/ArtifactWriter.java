@@ -69,8 +69,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * when the file still matches; when the file is missing or its bytes changed, the retry
  * rewrites it and records the reconciliation. The index is append-only and a torn trailing
  * line (the expected state after a crash mid-append) is skipped on read, never repaired
- * automatically. Two concurrent processes writing the same root are not supported; the
- * guarantee is per identity within one process.</p>
+ * automatically.</p>
  *
  * <p><b>Who may write a root at one time.</b> A root has exactly one writer at a time. The
  * writer takes a <i>lease</i> on the root before it looks at the index and holds it until the
@@ -242,16 +241,14 @@ public final class ArtifactWriter {
         if (invalid != null) {
             return refuse(Disposition.REFUSED_INVALID_CONTENT, actionId, fileName, invalid);
         }
-        if (Files.isSymbolicLink(index())) {
-            return refuse(Disposition.REFUSED_SYMLINK_ESCAPE, actionId, fileName,
-                    "the index is a symbolic link; the writer never follows one");
-        }
-        if (hardLinked(index())) {
-            return refuse(Disposition.REFUSED_SYMLINK_ESCAPE, actionId, fileName,
-                    "the index is a hard link to another file; the writer never appends through one");
-        }
-
         Path target = root.resolve(fileName);
+        // the root must still be the directory the writer was made for. The check comes
+        // BEFORE the lease, so that a root that was deleted or replaced is reported as
+        // what it is, and not as a lease that could not be taken.
+        String replaced = rootReplaced();
+        if (replaced != null) {
+            return refuse(Disposition.REFUSED_ROOT_REPLACED, actionId, fileName, replaced);
+        }
         // the lease: one writer per root, in this process and on this host. It is taken
         // BEFORE the index is read, so the identity check and the index append are one
         // indivisible step with respect to every other writer.
@@ -262,9 +259,15 @@ public final class ArtifactWriter {
             return refuse(conflict.disposition, actionId, fileName, conflict.getMessage());
         }
         try (lease) {
-            String replaced = rootReplaced();
-            if (replaced != null) {
-                return refuse(Disposition.REFUSED_ROOT_REPLACED, actionId, fileName, replaced);
+            // the index's own identity is checked INSIDE the lease: the check and the
+            // append must be one step with respect to every other writer.
+            if (Files.isSymbolicLink(index())) {
+                return refuse(Disposition.REFUSED_SYMLINK_ESCAPE, actionId, fileName,
+                        "the index is a symbolic link; the writer never follows one");
+            }
+            if (hardLinked(index())) {
+                return refuse(Disposition.REFUSED_SYMLINK_ESCAPE, actionId, fileName,
+                        "the index is a hard link to another file; the writer never appends through one");
             }
             try {
                 Path parent = target.toAbsolutePath().getParent();
@@ -301,7 +304,8 @@ public final class ArtifactWriter {
                             "the index holds " + index.records().size() + " records and "
                                     + index.bytes() + " bytes, at the bound of "
                                     + MAX_INDEX_RECORDS + " records and " + MAX_INDEX_BYTES
-                                    + " bytes");
+                                    + " bytes; the trace is never truncated, so this root is "
+                                    + "full — use another root");
                 }
                 // the name belongs to the identity that committed it — a COMMITTED record OR the
                 // crash window's STAGED record whose final file already carries its digest
@@ -465,6 +469,25 @@ public final class ArtifactWriter {
      */
     public Map<String, Object> recover(String actionId) {
         Map<String, Object> state = new LinkedHashMap<>();
+        // the recovery removes the staged files of an identity, so it runs under the same
+        // lease as the write: without it, a recovery could delete the staged file of a
+        // write that is in flight for the same identity
+        RootLease lease;
+        try {
+            lease = acquireRootLease();
+        } catch (WriterConflict conflict) {
+            state.put("actionId", actionId);
+            state.put("disposition", "WRITER_CONFLICT");
+            state.put("note", conflict.getMessage());
+            return state;
+        }
+        try (lease) {
+            return recoverUnderLease(actionId, state);
+        }
+    }
+
+    /** The recovery, under the root's lease. */
+    private Map<String, Object> recoverUnderLease(String actionId, Map<String, Object> state) {
         if (Files.isSymbolicLink(index()) || hardLinked(index())) {
             state.put("actionId", actionId);
             state.put("disposition", "INDEX_REFUSED");
@@ -615,11 +638,8 @@ public final class ArtifactWriter {
     private void appendRecord(Record record) throws IOException {
         byte[] payload = JSON.writeValueAsString(record).getBytes(StandardCharsets.UTF_8);
         Path index = index();
-        boolean needsSeparator = needsSeparator(index);
-        ByteBuffer buffer = ByteBuffer.allocate(payload.length + 2);
-        if (needsSeparator) {
-            buffer.put((byte) '\n');
-        }
+        prepareIndexForAppend(index);
+        ByteBuffer buffer = ByteBuffer.allocate(payload.length + 1);
         buffer.put(payload);
         buffer.put((byte) '\n');
         buffer.flip();
@@ -632,16 +652,56 @@ public final class ArtifactWriter {
         }
     }
 
-    /** Whether the index needs a newline before the next record. */
-    private static boolean needsSeparator(Path index) throws IOException {
+    /**
+     * Prepares the index for an append.
+     *
+     * <p>The index is append-only evidence, and a <b>complete</b> record is never removed.
+     * The residue of a crash mid-append is not a record: it is a fragment the writer never
+     * finished. Two cases are told apart, because they are different things:</p>
+     * <ul>
+     *   <li>a tail that <b>parses</b> is a complete record whose newline was lost. It is
+     *       terminated and kept — it is evidence, and it stays;</li>
+     *   <li>a tail that does <b>not</b> parse is a fragment. It is removed, and nothing else
+     *       in the file is touched. Leaving it there would put a broken line in the middle
+     *       of the log, and every later read would see a structure it cannot trust — the
+     *       root would refuse every further write over a fragment that was never evidence.</li>
+     * </ul>
+     */
+    private void prepareIndexForAppend(Path index) throws IOException {
         if (!Files.isRegularFile(index, LinkOption.NOFOLLOW_LINKS) || Files.size(index) == 0) {
-            return false;
+            return;
         }
-        try (FileChannel channel = FileChannel.open(index, StandardOpenOption.READ)) {
-            channel.position(Files.size(index) - 1);
-            ByteBuffer last = ByteBuffer.allocate(1);
-            channel.read(last);
-            return last.get(0) != '\n';
+        byte[] raw = Files.readAllBytes(index);
+        if (raw[raw.length - 1] == '\n') {
+            return;
+        }
+        int lastNewline = -1;
+        for (int position = raw.length - 1; position >= 0; position--) {
+            if (raw[position] == '\n') {
+                lastNewline = position;
+                break;
+            }
+        }
+        int tailStart = lastNewline + 1;
+        String tail = new String(raw, tailStart, raw.length - tailStart, StandardCharsets.UTF_8);
+        if (tail.isBlank()) {
+            return;
+        }
+        Record complete = null;
+        try {
+            complete = JSON.readValue(tail, Record.class);
+        } catch (IOException fragment) {
+            // the tail is a fragment, not a record
+        }
+        if (complete != null && validRecord(complete)) {
+            // a complete record that lost its newline: it is terminated, not removed
+            Files.write(index, new byte[] {'\n'}, StandardOpenOption.WRITE,
+                    StandardOpenOption.APPEND, LinkOption.NOFOLLOW_LINKS);
+            return;
+        }
+        try (FileChannel channel = FileChannel.open(index, StandardOpenOption.WRITE)) {
+            channel.truncate(tailStart);
+            channel.force(true);
         }
     }
 

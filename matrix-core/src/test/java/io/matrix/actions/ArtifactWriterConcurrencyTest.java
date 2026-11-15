@@ -228,6 +228,47 @@ class ArtifactWriterConcurrencyTest {
     }
 
     @Test
+    @DisplayName("an incomplete tail is repaired, and the writes after it still work")
+    void incompleteTailIsRepaired() throws Exception {
+        writer.write("act-1", "report.md", MARKDOWN);
+        // a crash in the middle of an append leaves a fragment that was never a record
+        Files.writeString(writer.index(), "{\"actionId\":\"act-2\",\"fileName\":\"bro",
+                StandardOpenOption.WRITE, StandardOpenOption.APPEND);
+
+        ArtifactWriter.Result second = writer.write("act-2", "other.md",
+                "# Other\n".getBytes(StandardCharsets.UTF_8));
+        ArtifactWriter.Result third = writer.write("act-3", "third.md",
+                "# Third\n".getBytes(StandardCharsets.UTF_8));
+
+        assertThat(second.disposition()).isEqualTo(ArtifactWriter.Disposition.WRITTEN);
+        // the write that terminated the fragment must not leave the root unusable
+        assertThat(third.disposition()).isEqualTo(ArtifactWriter.Disposition.WRITTEN);
+        assertThat(third.reason()).isNull();
+        // the fragment is gone and every record that was a record is still there
+        assertThat(writer.readIndex()).extracting(ArtifactWriter.Record::actionId)
+                .containsExactly("act-1", "act-1", "act-2", "act-2", "act-3", "act-3");
+    }
+
+    @Test
+    @DisplayName("a complete record that lost its newline is kept, not removed")
+    void completeTailIsKept() throws Exception {
+        writer.write("act-1", "report.md", MARKDOWN);
+        // the record's bytes are there and only its newline was lost
+        String tail = "{\"actionId\":\"act-2\",\"fileName\":\"other.md\","
+                + "\"sha256\":\"" + sha256OfBytes("# Other\n".getBytes(StandardCharsets.UTF_8))
+                + "\",\"status\":\"COMMITTED\",\"bytes\":7,"
+                + "\"timestamp\":\"2026-11-15T00:00:00Z\"}";
+        Files.writeString(writer.index(), tail, StandardOpenOption.WRITE, StandardOpenOption.APPEND);
+
+        ArtifactWriter.Result result = writer.write("act-3", "third.md",
+                "# Third\n".getBytes(StandardCharsets.UTF_8));
+
+        assertThat(result.disposition()).isEqualTo(ArtifactWriter.Disposition.WRITTEN);
+        assertThat(writer.readIndex()).extracting(ArtifactWriter.Record::actionId)
+                .contains("act-2", "act-3");
+    }
+
+    @Test
     @DisplayName("a partial trailing record is tolerated, and the next write works")
     void partialTrailingRecordIsTolerated() throws Exception {
         writer.write("act-1", "report.md", MARKDOWN);

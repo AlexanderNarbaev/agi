@@ -136,6 +136,15 @@ public class ArtifactActionService {
                             + "reachable from other hosts, and a side effect on the file system "
                             + "needs a separate decision and a threat review");
         }
+        String host = io.matrix.security.StartupGuard.configuredHost();
+        if (!isLoopback(host)) {
+            // the mode is a DECLARATION; the bind address is the FACT. A process that
+            // declares LOCAL_ONLY and binds every interface is reachable from other
+            // hosts, and the declaration must not be what decides the side effect.
+            return Gate.closed("local_only_action",
+                    "this action is authorized in a local-only process only; the process binds "
+                            + host + ", which is not the loopback interface");
+        }
         String problem = rootProblem();
         if (problem != null) {
             return Gate.closed("output_root_unavailable", problem);
@@ -222,25 +231,66 @@ public class ArtifactActionService {
         }
         Path root = Paths.get(configuredRoot);
         if (!Files.exists(root, LinkOption.NOFOLLOW_LINKS)) {
-            return "the configured output root does not exist: " + configuredRoot;
+            return "the configured output root does not exist";
         }
         if (Files.isSymbolicLink(root)) {
-            return "the configured output root is a symbolic link: " + configuredRoot;
+            return "the configured output root is a symbolic link";
         }
         if (!Files.isDirectory(root, LinkOption.NOFOLLOW_LINKS)) {
-            return "the configured output root is not a directory: " + configuredRoot;
+            return "the configured output root is not a directory";
         }
         try {
             Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(root);
             if (permissions.contains(PosixFilePermission.GROUP_WRITE)
                     || permissions.contains(PosixFilePermission.OTHERS_WRITE)) {
-                return "the configured output root is writable by other users: " + configuredRoot;
+                return "the configured output root is writable by other users";
             }
         } catch (IOException | UnsupportedOperationException notPosix) {
             // a file system without POSIX permissions cannot say; the other checks still hold
         }
         return null;
     }
+
+    /**
+     * Whether a bind address is the loopback interface.
+     *
+     * @param host the address the process binds
+     * @return whether the process is reachable only from this host
+     */
+    private static boolean isLoopback(String host) {
+        if (host == null || host.isBlank()) {
+            return true;
+        }
+        String address = host.strip().toLowerCase(java.util.Locale.ROOT);
+        return NetworkExposure.LOOPBACK.equals(address) || "localhost".equals(address)
+                || "::1".equals(address) || "[::1]".equals(address);
+    }
+
+    /**
+     * Removes the server's filesystem paths from a message that leaves the process.
+     *
+     * <p>A refusal names the file system it refused to write to, and that path is the
+     * server's business: it tells a caller where the server's directories are. The route
+     * runs every detail it returns through this method, so no response body carries an
+     * absolute path.</p>
+     *
+     * @param message the message
+     * @return the message without the server's paths
+     */
+    public String redact(String message) {
+        if (message == null || message.isBlank()) {
+            return "";
+        }
+        String redacted = message;
+        if (!configuredRoot.isBlank()) {
+            redacted = redacted.replace(configuredRoot, "<output-root>");
+        }
+        return ABSOLUTE_PATH.matcher(redacted).replaceAll("<path>");
+    }
+
+    /** An absolute path, as a token of the message it appears in. */
+    private static final java.util.regex.Pattern ABSOLUTE_PATH =
+            java.util.regex.Pattern.compile("(?<![\\w:/])/(?:[\\w.+@%\\-]+/)*[\\w.+@%\\-]+");
 
     private static String digest(String value) {
         try {

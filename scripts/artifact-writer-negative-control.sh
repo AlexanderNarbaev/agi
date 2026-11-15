@@ -25,9 +25,17 @@ readonly GRADLE_TIMEOUT_SECONDS=1800
 readonly TEST_FILTER="io.matrix.actions.ArtifactWriterConcurrencyTest"
 
 ORIG=""
+ORIG_SUM=""
 restore() {
   if [ -n "$ORIG" ] && [ -f "$ORIG.bak" ]; then
     mv "$ORIG.bak" "$ORIG"
+  fi
+  if [ -n "$ORIG" ] && [ -n "$ORIG_SUM" ]; then
+    local now
+    now="$(sha256sum "$ORIG" | cut -d' ' -f1)"
+    if [ "$now" != "$ORIG_SUM" ]; then
+      echo "ERROR: the original file was not restored (sha256 $now, expected $ORIG_SUM)"
+    fi
   fi
 }
 trap restore EXIT INT TERM
@@ -57,6 +65,7 @@ mutant = (
 open(path, "w").write(source[:source.index(start)] + mutant + source[source.index(end):])
 PY
 
+ORIG_SUM="$(sha256sum "$TARGET" | cut -d' ' -f1)"
 cp "$TARGET" "$TARGET.bak"
 ORIG="$TARGET"
 python3 "$FIXER" "$TARGET"
@@ -73,8 +82,23 @@ flock /tmp/gradle-matrix.lock timeout "$GRADLE_TIMEOUT_SECONDS" \
   > "$LOG" 2>&1
 STATUS=$?
 
-if [ "$STATUS" -eq 0 ] && ! grep -qE "FAILED|tests completed.*failed" "$LOG"; then
+# The verdict must be tied to a TEST failure. A non-zero Gradle exit can also mean a
+# compile error, a timeout or a dead daemon, and calling that a kill would report a
+# confident negative about a guard that was never exercised.
+if [ "$STATUS" -eq 0 ]; then
   echo "SURVIVED: the concurrency test is green without the lease — a real gap"
+  tail -20 "$LOG"
+  rm -f "$LOG"
+  exit 1
+fi
+if grep -qE "error: |FAILURE: Build failed" "$LOG" && ! grep -qE "tests completed.*failed" "$LOG"; then
+  echo "BROKEN: the run failed without a test failure — the mutation did not produce a verdict"
+  tail -20 "$LOG"
+  rm -f "$LOG"
+  exit 1
+fi
+if ! grep -qE "tests completed.*failed|FAILED" "$LOG"; then
+  echo "BROKEN: the run failed without a test failure — the mutation did not produce a verdict"
   tail -20 "$LOG"
   rm -f "$LOG"
   exit 1

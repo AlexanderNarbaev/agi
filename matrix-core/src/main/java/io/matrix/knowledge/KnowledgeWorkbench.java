@@ -591,7 +591,13 @@ public class KnowledgeWorkbench implements AutoCloseable {
      * <p>The store's own {@code asked_question} table remains the durable
      * record of what was asked and whether the workspace could answer it.
      */
-    public DialogueContext context(String workspaceId) {
+    public synchronized DialogueContext context(String workspaceId) {
+        // CONCEPT-TO-ACTION: the method is synchronized for the same reason ask() is. The
+        // mapping function below runs INSIDE the map's own lock, and it calls store(),
+        // which takes the workbench's monitor. A second thread that reached the map
+        // without the monitor would hold the map's lock and wait for the monitor while
+        // the asking thread held the monitor and waited for the map's lock — the two
+        // orders are a deadlock. One lock order: the workbench's monitor, then the map.
         return contexts.computeIfAbsent(workspaceId, key -> {
             DialogueContext context = new DialogueContext(key);
             context.load(store().dialogueTurns(workspaceId, DialogueContext.MAXIMUM_TURNS));

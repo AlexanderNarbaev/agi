@@ -47,14 +47,14 @@ import org.junit.jupiter.api.io.TempDir;
  *       makes a freshly created directory group-writable. The tests therefore set the root's
  *       permissions explicitly; without that the gate would refuse every request and the
  *       refusal would be about the umask rather than about the route.</li>
- *   <li><b>The concurrency case uses two workbenches over two databases.</b> The knowledge
- *       workbench is not thread-safe — two concurrent asks on one instance raise a
- *       {@code ConcurrentModificationException} in the conversation map and a
- *       {@code Failed to record the asked question} in the store — so a single shared
- *       workbench would test the workbench, not the file action. The two workbenches answer
- *       the same question about the same workspace and write into the same root through the
- *       same service, which is exactly the situation the identity and the writer's lease
- *       exist for: one artifact, one writer, one replay.</li>
+ *   <li><b>The concurrency case uses ONE workbench and ONE route — the production
+ *       topology.</b> The application serves every request through a single
+ *       {@code @ApplicationScoped} workbench, so the test does the same: two threads ask
+ *       the same question of the same workspace through the same route and the same
+ *       service, and write into the same root. The workbench's asking path is serialized
+ *       (the store holds one database connection), and the file action's own lease is
+ *       what makes the WRITE safe — the identity and the lease exist for exactly this
+ *       situation: one artifact, one writer, one replay.</li>
  * </ul>
  *
  * <p>What these tests do not claim: a written report is a record of what the workspace said.
@@ -344,16 +344,15 @@ class ArtifactReportResourceTest {
     void theConcurrentRequests() throws Exception {
         Path root = root("concurrent");
         ArtifactActionService actions = new ArtifactActionService(true, root.toString());
-        ArtifactReportResource first = resource(workbench("concurrent-a"), actions);
-        ArtifactReportResource second = resource(workbench("concurrent-b"), actions);
+        ArtifactReportResource route = resource(workbench("concurrent"), actions);
         ExecutorService pool = Executors.newFixedThreadPool(2);
         CountDownLatch start = new CountDownLatch(1);
         List<Future<Response>> answers = new ArrayList<>();
         try {
-            for (ArtifactReportResource each : List.of(first, second)) {
+            for (int racer = 0; racer < 2; racer++) {
                 answers.add(pool.submit(() -> {
                     start.await();
-                    return each.report(WORKSPACE, request(QUESTION, true, "key-concurrent"));
+                    return route.report(WORKSPACE, request(QUESTION, true, "key-concurrent"));
                 }));
             }
             start.countDown();
@@ -398,6 +397,25 @@ class ArtifactReportResourceTest {
         assertThat(success(response).artifactLocator())
                 .as("the locator is a name, not a path")
                 .doesNotContain(root.toAbsolutePath().toString());
+    }
+
+    @Test
+    @DisplayName("a refusal carries no absolute path of the output root either")
+    void aRefusalCarriesNoPath() throws Exception {
+        // a root that does not exist: the refusal names the file system it refused to
+        // write to, and that path must not leave the process
+        Path missing = directory.resolve("a-root-that-is-not-there");
+        ArtifactActionService actions = new ArtifactActionService(true, missing.toString());
+        ArtifactReportResource resource = resource(workbench("refusal-nopath"), actions);
+
+        Response response = resource.report(WORKSPACE, request(QUESTION, true, "key-refusal"));
+
+        assertThat(response.getStatus()).isEqualTo(503);
+        String body = new ObjectMapper().writeValueAsString(response.getEntity());
+        assertThat(body)
+                .as("a refusal must not disclose where the server writes")
+                .doesNotContain(missing.toAbsolutePath().toString());
+        assertThat(body).doesNotContain(directory.toAbsolutePath().toString());
     }
 
     @Test

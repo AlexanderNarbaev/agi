@@ -49,6 +49,12 @@ public class ArtifactReportResource {
     @Inject
     ArtifactActionService actions;
 
+    /** The longest report name the route accepts. */
+    private static final int MAX_REPORT_NAME_LENGTH = 128;
+
+    /** The status the route answers when the root's own budget is exhausted. */
+    private static final int HTTP_INSUFFICIENT_STORAGE = 507;
+
     /** The body of a report request. */
     public record ReportRequest(String question, String reportName, Boolean consent,
                                 String idempotencyKey, String level) {
@@ -142,7 +148,7 @@ public class ArtifactReportResource {
         }
         if (!written.written()) {
             return refused(statusFor(written.disposition()), written.disposition().name(),
-                    written.reason());
+                    refusalExplanation(written.disposition()));
         }
 
         List<EvidenceReference> evidence = new ArrayList<>();
@@ -163,7 +169,16 @@ public class ArtifactReportResource {
             limitations.add("the question was not answered; the absence of an answer is the "
                     + "epistemic result, not a defect of the file action");
         }
-        List<String> refusals = written.written() ? List.of() : List.of(written.reason());
+        List<String> refusals = List.of();
+        if (written.disposition() == ArtifactWriter.Disposition.WRITTEN_TRACE_INCOMPLETE) {
+            // the artifact IS committed; only its trace line is missing. The caller has to
+            // know that the trace is incomplete, because the trace is what a later request
+            // replays against.
+            refusals = List.of("the report was written, but the trace line that records it "
+                    + "could not be appended; the artifact's digest is the record of it");
+            limitations.add("the trace of this write is incomplete: the artifact exists and "
+                    + "carries the digest below, but the index does not yet name it");
+        }
 
         ReportResponse response = new ReportResponse(
                 identity,
@@ -253,7 +268,7 @@ public class ArtifactReportResource {
      * traversal attempt is answered as a bad request instead of a write failure.</p>
      */
     private static boolean plainReportName(String name) {
-        if (name.isBlank() || name.length() > 128) {
+        if (name.isBlank() || name.length() > MAX_REPORT_NAME_LENGTH) {
             return false;
         }
         if (name.chars().anyMatch(c -> c < 0x20 || c == 0x7f)) {
@@ -272,7 +287,7 @@ public class ArtifactReportResource {
     private static int statusFor(ArtifactWriter.Disposition disposition) {
         return switch (disposition) {
             case REFUSED_IDENTITY, REFUSED_WRITER_CONFLICT -> 409;
-            case REFUSED_BUDGET -> 507;
+            case REFUSED_BUDGET -> HTTP_INSUFFICIENT_STORAGE;
             case REFUSED_OUTSIDE_ROOT, REFUSED_TRAVERSAL, REFUSED_SYMLINK_ESCAPE,
                     REFUSED_UNSUPPORTED_TYPE, REFUSED_TOO_LARGE, REFUSED_INVALID_CONTENT,
                     REFUSED_EMPTY_NAME -> 400;
@@ -294,10 +309,42 @@ public class ArtifactReportResource {
     }
 
     /** A refusal, in the shape the route's clients read. */
-    private static Response refused(int status, String code, String detail) {
+    private Response refused(int status, String code, String detail) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("error", code);
-        body.put("detail", detail == null ? "" : detail);
+        // the server's filesystem paths are the server's business: a refusal names the
+        // file system it refused to write to, and that path does not leave the process
+        body.put("detail", actions.redact(detail));
         return Response.status(status).entity(body).build();
+    }
+
+    /**
+     * The route's own explanation of a refusal of the bounded action.
+     *
+     * <p>The writer's reason names the file system it refused to write to; the route
+     * states what the refusal MEANS and keeps the path out of the response.</p>
+     */
+    private String refusalExplanation(ArtifactWriter.Disposition disposition) {
+        return switch (disposition) {
+            case REFUSED_IDENTITY -> "the report name is already bound to another action "
+                    + "identity; one idempotency key names one report";
+            case REFUSED_WRITER_CONFLICT -> "another writer holds this output root at this moment";
+            case REFUSED_BUDGET -> "the output root's own budget is exhausted";
+            case REFUSED_OUTSIDE_ROOT -> "the report name does not address a file inside the "
+                    + "authorized root";
+            case REFUSED_TRAVERSAL -> "the report name is not a plain file name";
+            case REFUSED_SYMLINK_ESCAPE -> "the report name or the trace is a link, and the writer "
+                    + "never writes through one";
+            case REFUSED_UNSUPPORTED_TYPE -> "the report name must end in .md";
+            case REFUSED_TOO_LARGE -> "the report is larger than the writer's bound";
+            case REFUSED_INVALID_CONTENT -> "the report's content does not pass the writer's "
+                    + "validation";
+            case REFUSED_EMPTY_NAME -> "the report name is required";
+            case REFUSED_INDEX_CORRUPT -> "the output root's trace is not a readable append-only "
+                    + "log, and the writer refuses to act on an unsound trace";
+            case REFUSED_ROOT_REPLACED -> "the authorized output root was replaced";
+            case REFUSED_WRITE_FAILED -> "the report could not be written";
+            default -> "the bounded action refused the write";
+        };
     }
 }
