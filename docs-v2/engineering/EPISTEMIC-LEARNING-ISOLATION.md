@@ -48,6 +48,9 @@ straight into the learning feed. The corpus is now derived through the same tran
 serving path uses (47 Cyrillic + 5 transliterated entries), and it is a pure function of the
 frozen battery — no clock, no randomness.
 
+**The corpus was extended once more, under the owner's authority** (section 4c): a bare
+letter-less arithmetic expression is a probe.
+
 ---
 
 ## 2. The independent review, and what it found
@@ -178,6 +181,91 @@ marks than recorded also fails.
 
 ---
 
+## 4c. The owner's exception — the one authorised change to the frozen zone
+
+**Under whose authority.** The owner's answer of **2026-11-15** to question
+**D1-QUARANTINE-RESIDUAL-010**: *"A + an owner-authorized exception for the frozen corpus"* — the 17
+residual records **stay as they are** (no further quarantine), and the frozen probe corpus is
+extended so that the **letter-less arithmetic probes** (`100-7?`, `7*6`, …) are caught as probes
+from now on. This is the **only** change to a frozen zone that this initiative is authorised to
+make; the owner's answer is the RFC-mandate the project AGENTS.md requires.
+
+**What was changed in the frozen zone.** Exactly one addition to `EvalBattery` — the corpus
+RULE, not the corpus's items:
+
+| Where | What |
+|---|---|
+| `EvalBattery.java` | `ARITHMETIC_PROBE_PATTERN` and `isArithmeticProbe(String)` — a constant pattern and a predicate. The battery's **items are untouched**, so the evaluation set and its published pass rate do not change. |
+| `PromotionGate.java` | `isFrozenProbe` consults the rule after the two corpora. |
+
+The `Random` handle that the earlier review asked to remove from `EvalBattery` was **left as it
+is**: the corpus rule does not need it, and the frozen file was not to be touched beyond the
+authorised change.
+
+**THE RULE, exactly.** After the text is trimmed, the WHOLE text must be digits, ONE of the four
+arithmetic operators (plus, minus, times, divided by), digits, and an OPTIONAL trailing question
+mark — nothing may surround it. The pattern's exact spelling is asserted in
+`ArithmeticProbeCorpusTest.theCorpusIsStillAPureFunctionOfItsSource`.
+
+| Text | Caught? | Why |
+|---|---|---|
+| `100-7?` | **yes** | the owner's example: digits, operator, digits, question mark |
+| `7*6` | **yes** | the owner's example, without the question mark |
+| `2+3`, `12*12`, `100/4`, `50/2`, `1000*12345` | **yes** | the battery's own arithmetic family |
+| `100 - 7?` | **yes** | spaces around the operator are allowed |
+| `The answer is 2+3=5` | no | the expression is not the whole text — a claim that merely CONTAINS digits and an operator is ordinary content |
+| `100-7 is 93` | no | two operators: not the query shape |
+| `audio:frame=8 hdc_dim=256` | no | not a bare expression |
+| `How many legs does a spider have?` | no | a legitimate question with numbers in it |
+| `What is the chemical symbol for iron?` | no | a legitimate question with numbers in it |
+| `What is 2+3?` | yes, but **by the corpus**, not by this rule | it is a battery item (`AR-5`/`RT-1`) |
+
+**Reject-only.** The rule can only ever turn a record INTO a probe — that is, exclude it from
+learning. It never turns a probe into content and never widens what may be learned from. It is a
+constant pattern: no clock, no randomness, and the corpus remains a pure function of its source
+(`ArithmeticProbeCorpusTest.theCorpusIsStillAPureFunctionOfItsSource`).
+
+**What it does and does not change.** It changes the FIREWALL, not the evaluation: the battery's
+items, their categories, their expected answers and the published pass rates are exactly as they
+were, and the transliterated corpus still catches the probes that really leaked
+(`столица франции`, `Moskva stolitsa Rossii?`, `stolitsa frantsii`, `stolitsa anglii`,
+`Skolko budet 5+3?`). It does NOT quarantine anything by itself: a record is excluded only when
+its id is in the ledger, as always.
+
+**How a reviewer can tell this is the authorised change and not an unrecorded edit.** The change
+is (a) one constant and one predicate in `EvalBattery`, (b) one condition in `PromotionGate`,
+(c) named in the javadoc of both with the owner's answer and the question id, (d) pinned by
+`ArithmeticProbeCorpusTest` (6 tests, including the boundary cases above and the corpus's
+purity), and (e) visible in the machine state: the three additional ledger marks carry the
+reason *"extended frozen corpus: letter-less arithmetic probe (owner D1-QUARANTINE-RESIDUAL-010)"*.
+The canary's `recordedMarks` was raised from 209 to 212 for the same reason, and the canary's
+`rule` field names the extended rule.
+
+**The re-measurement.** On the real log (a copy for the measurement; the log itself untouched):
+the extended rule marks **11** records of the log as arithmetic probes — the inputs `100-7?`,
+`7*6` (twice), `17+25`, `144/12`, `9*9`, `63-18` — of which **3** were in the residual and are
+newly quarantined.
+
+| Measure | Before the extension | After |
+|---|---|---|
+| The log's sha256 | `5732004d…` | **identical** (the log was not touched; only the ledger was appended) |
+| Quarantine marks in the ledger | 209 | **212** (append-only; the previous bytes are preserved) |
+| Admitted / excluded | 17 / 209 | **14 / 212** |
+| The learning window | 17 records, 15+/2− | **14 records, 12+/2−** |
+| The residual inputs | 17 | 14 — the two arithmetic inputs are gone |
+
+**The honesty note.** The window still holds BOTH classes (12 positive, 2 negative), so the
+fidelity of 0.75 measured before the extension is still a measurement of a mixed window and not a
+trivial number. Had the window become single-class, its fidelity would have been trivial and
+would NOT have been presented as a gain. The residual of 14 records is what the owner decided to
+leave: `gravity`, `What is gravity?`, `What is the capital of Chile?`, `What is the chemical
+symbol for iron?`, `What is the capital of Australia?`, `What is the capital of Poland?`, `Which
+continent is Japan located on?`, `What is the chemical symbol for gold?`, `Kakoj khimicheskij
+simvol u zheleza?`, `audio:frame=8 hdc_dim=256`. Nothing was deleted, and no record was
+quarantined beyond what the rule names on its own terms.
+
+---
+
 ## 5. The evidence
 
 ```
@@ -190,7 +278,7 @@ flock /tmp/gradle-matrix.lock bash -c 'rm -rf matrix-api-gateway/build/test-resu
 
 | Scope | Tests | Failures | Errors | Skipped |
 |---|---|---|---|---|
-| `io.matrix.brain.runtime.*` | 987 | 0 | 0 | 4 (one is the opt-in remediation) |
+| `io.matrix.brain.runtime.*` | 993 | 0 | 0 | 4 (one is the opt-in remediation) |
 | `io.matrix.api.*` | 286 | 0 | 0 | 0 |
 
 The classes that carry this work: `LearningIsolationTest` (12), `EpisodeQuarantineTest` (14),

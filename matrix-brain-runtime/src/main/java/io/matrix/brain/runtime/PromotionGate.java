@@ -208,12 +208,24 @@ public final class PromotionGate {
         return TRANSLITERATED_PROBE_INPUTS.size();
     }
 
-    /** True when the given text is (or contains) a frozen eval probe. */
+    /**
+     * True when the given text is (or contains) a frozen eval probe.
+     *
+     * <p>EPISTEMIC-INTEGRITY P0.4 (owner's answer of 2026-11-15 to
+     * D1-QUARANTINE-RESIDUAL-010): a bare LETTER-LESS ARITHMETIC PROBE is a probe
+     * too. The corpus is a LIST of the battery's inputs, so it caught the arithmetic
+     * family only by luck — the log holds "100-7?" and "7*6", which are the family's
+     * shape rather than the battery's items. The rule is
+     * {@link EvalBattery#ARITHMETIC_PROBE_PATTERN}: the WHOLE text must be digits,
+     * one arithmetic operator, digits and an optional trailing question mark. It is
+     * reject-only — it can exclude a record from learning, never admit one.</p>
+     */
     public static boolean isFrozenProbe(String text) {
         String n = normalize(text);
         if (n.isEmpty()) return false;
         if (matches(FROZEN_PROBE_INPUTS, n)) return true;
-        return matches(TRANSLITERATED_PROBE_INPUTS, n);
+        if (matches(TRANSLITERATED_PROBE_INPUTS, n)) return true;
+        return EvalBattery.isArithmeticProbe(n);
     }
 
     /**

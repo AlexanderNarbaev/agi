@@ -175,7 +175,15 @@ class ProductionLearningIsolationRemediation {
         System.out.println("[REMEDIATION] residual inputs: " + admitted.stream()
             .map(EpisodicLog.Entry::input).distinct().toList());
 
-        assertThat(quarantine.quarantinedIds()).hasSize(marked);
+        // IDEMPOTENT: the ledger is append-only and a second run adds nothing. The
+        // invariant is that every record the rule names is IN FORCE, not that this
+        // run was the one that marked it.
+        assertThat(quarantine.quarantinedIds())
+            .as("every record the rule names must be quarantined")
+            .containsAll(decision.stream().map(l -> l.substring(0, l.indexOf('\t'))).toList());
+        assertThat(quarantine.quarantinedIds().size())
+            .as("the ledger holds at least the marks of this decision")
+            .isGreaterThanOrEqualTo(marked);
         assertThat(admitted.size()).isLessThan(all.size());
         assertThat(window)
             .as("no quarantined record may be in the window")

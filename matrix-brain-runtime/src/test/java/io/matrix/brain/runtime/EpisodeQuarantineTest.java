@@ -321,4 +321,86 @@ class EpisodeQuarantineTest {
             .as("the record that was not named stays learnable")
             .hasSize(1);
     }
+
+    /**
+     * EPISTEMIC-INTEGRITY P0.4 (review fix, LOW finding 2) — the ledger's state
+     * before the first read is its OWN value.
+     *
+     * <p>The defect: {@code readable()} reports the state after the LAST read, and
+     * there is no last read before the first one — so a caller that asked "has the
+     * ledger been looked at?" was told "yes" about a read that never happened. The
+     * contract is now explicit: the pre-read state is
+     * {@link EpisodeQuarantine.State#NOT_READ_YET}, and a caller that wants to know
+     * whether the ledger has been looked at asks {@code state()}, not
+     * {@code readable()}.</p>
+     */
+    @Test
+    @DisplayName("before the first read the ledger's state is NOT_READ_YET")
+    void beforeTheFirstReadTheStateIsNotReadYet(@TempDir Path dir) throws Exception {
+        Path logPath = dir.resolve("episodic.ndjson");
+        writeLegacy(logPath, "ep-1", "organic", 0.9, true);
+        EpisodeQuarantine quarantine =
+            new EpisodeQuarantine(EpisodeQuarantine.defaultLedgerPath(logPath));
+
+        assertThat(quarantine.state())
+            .as("nobody has looked at the ledger yet, and that is its own state")
+            .isEqualTo(EpisodeQuarantine.State.NOT_READ_YET);
+        assertThat(quarantine.malformed())
+            .as("nothing has been read, so nothing has been found malformed")
+            .isFalse();
+
+        // After a read the state says what the read found.
+        quarantine.quarantinedIds();
+        assertThat(quarantine.state()).isEqualTo(EpisodeQuarantine.State.READABLE);
+        assertThat(quarantine.readable()).isTrue();
+    }
+
+    /**
+     * EPISTEMIC-INTEGRITY P0.4 (review fix, LOW finding 3) — an INEFFECTIVE mark is
+     * visible.
+     *
+     * <p>The defect: a ledger line whose id names no record was accepted silently.
+     * Such a mark excludes nothing, and it looks effective — the ledger claims an
+     * exclusion that does not exist. The count is now on the runtime path.</p>
+     */
+    @Test
+    @DisplayName("a mark that names no record is counted and reported")
+    void aMarkThatNamesNoRecordIsCountedAndReported(@TempDir Path dir) throws Exception {
+        Path logPath = dir.resolve("episodic.ndjson");
+        writeLegacy(logPath, "ep-1", "organic one", 0.9, true);
+        writeLegacy(logPath, "ep-2", "organic two", 0.9, true);
+        EpisodeQuarantine quarantine =
+            new EpisodeQuarantine(EpisodeQuarantine.defaultLedgerPath(logPath));
+        quarantine.quarantine("ep-1", "named record", 1000L);
+        // A mark for a record that is not there: syntactically valid, ineffective.
+        quarantine.quarantine("ep-does-not-exist", "a mark with no record", 1001L);
+
+        List<EpisodicLog.Entry> all = new EpisodicLog(logPath).readAll();
+        assertThat(LearningAdmission.unmatchedQuarantineIds(all, quarantine))
+            .as("the ineffective mark must be visible")
+            .isEqualTo(1);
+        assertThat(new EpisodicLog(logPath).learningCandidates())
+            .as("the effective mark still excludes its record")
+            .hasSize(1);
+
+        // And the count is on the runtime path.
+        io.matrix.bir.BirRegistry registry = new io.matrix.bir.BirRegistry();
+        try (RealSleepScheduler scheduler = new RealSleepScheduler(
+                new io.matrix.memory.HierarchicalMemory(),
+                new io.matrix.lifecycle.ConsolidationCycle(),
+                new io.matrix.federation.Anonymizer(2), 5,
+                new EpisodicLog(logPath), registry, new RuleInductionEngine(registry, null),
+                new EpisodeFeatureExtractor())) {
+            RealSleepScheduler.DreamReport dream = scheduler.triggerNow();
+
+            assertThat(dream.unmatchedQuarantineIds)
+                .as("the operator must be able to see that a mark excludes nothing")
+                .isEqualTo(1);
+            assertThat(dream.notes)
+                .as("the report says so in words, not only in a number")
+                .anyMatch(n -> n.contains("INEFFECTIVE_MARKS"));
+            assertThat(dream.snapshot())
+                .containsEntry("unmatchedQuarantineIds", 1);
+        }
+    }
 }

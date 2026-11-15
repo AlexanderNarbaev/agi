@@ -55,6 +55,23 @@ public final class EpisodeQuarantine {
     public static final String LEDGER_FILE_NAME = "episodic.quarantine.ndjson";
 
     /**
+     * The state of the ledger, as of its LAST read.
+     *
+     * <p>EPISTEMIC-INTEGRITY P0.4 (review fix, LOW finding 2). The contract is
+     * explicit: <b>read first</b>. {@link #NOT_READ_YET} is not a healthy ledger —
+     * it is the absence of an answer — so a caller cannot mistake "nobody has looked"
+     * for "the ledger is fine".</p>
+     */
+    public enum State {
+        /** The ledger has not been read yet; nothing is known about it. */
+        NOT_READ_YET,
+        /** The last read parsed every line: the ledger is whole. */
+        READABLE,
+        /** The last read skipped at least one line: the ledger is not whole. */
+        MALFORMED
+    }
+
+    /**
      * The suffix of the writer-lock file that serialises ledger appends.
      *
      * <p>EPISTEMIC-INTEGRITY P0.4 (review fix F4): the ledger is written with a
@@ -159,6 +176,15 @@ public final class EpisodeQuarantine {
     private final Path ledgerPath;
     private volatile int lastSkippedLines = 0;
     /**
+     * The state of the ledger's LAST read.
+     *
+     * <p>EPISTEMIC-INTEGRITY P0.4 (review fix, LOW finding 2): the state before the
+     * first read is its OWN value, not "readable". A caller that asks "is the ledger
+     * healthy?" before it has read the ledger must not be told "yes" — that answer
+     * belongs to a read that has not happened.</p>
+     */
+    private volatile State state = State.NOT_READ_YET;
+    /**
      * How many times the ledger has been read since construction.
      *
      * <p>EPISTEMIC-INTEGRITY P0.4 (review fix F7): the admission gate reads the
@@ -206,7 +232,22 @@ public final class EpisodeQuarantine {
     }
 
     /**
-     * True when the ledger was read COMPLETELY — every line parsed.
+     * The state of the ledger, as of its LAST read.
+     *
+     * <p>EPISTEMIC-INTEGRITY P0.4 (review fix, LOW finding 2). The contract is
+     * explicit: <b>read first</b>. Before the first read the state is
+     * {@link State#NOT_READ_YET}, which is NOT a healthy ledger — it is the absence
+     * of an answer — so a caller cannot mistake "nobody has looked" for "the ledger
+     * is fine".</p>
+     *
+     * @return the state of the last read
+     */
+    public State state() {
+        return state;
+    }
+
+    /**
+     * True when the last read of the ledger parsed every line.
      *
      * <p>EPISTEMIC-INTEGRITY P0.4 (review fix F4). A ledger line this build cannot
      * read is a quarantine mark that cannot be honoured: the record it names would
@@ -214,6 +255,14 @@ public final class EpisodeQuarantine {
      * admission gate therefore FAILS CLOSED on a malformed ledger — it admits
      * nothing and reports the count, instead of quietly learning from a record the
      * operator excluded.</p>
+     *
+     * <p><b>The contract (review fix, LOW finding 2): READ FIRST.</b> This method
+     * answers "did the last read find a malformed line?", and before the first read
+     * there is no such line — so it answers true. That is a statement about the
+     * ledger's PARSING, not about its health. A caller that wants to know whether
+     * the ledger has actually been looked at asks {@link #state()}: it answers
+     * {@link State#NOT_READ_YET} until the ledger has been read, and that is the
+     * value a caller must not mistake for a healthy ledger.</p>
      *
      * @return true when the last read found no malformed line
      */
@@ -240,6 +289,7 @@ public final class EpisodeQuarantine {
         List<Event> out = new ArrayList<>();
         if (ledgerPath == null || !Files.exists(ledgerPath)) {
             lastSkippedLines = 0;
+            state = State.READABLE;
             return out;
         }
         int skipped = 0;
@@ -254,6 +304,7 @@ public final class EpisodeQuarantine {
             throw new RuntimeException("EpisodeQuarantine read failed: " + ledgerPath, ex);
         }
         lastSkippedLines = skipped;
+        state = skipped == 0 ? State.READABLE : State.MALFORMED;
         return out;
     }
 

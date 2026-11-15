@@ -184,6 +184,11 @@ public final class RealSleepScheduler implements AutoCloseable {
             // on it — so the counter must be visible to the operator, not dead code.
             dream.quarantineLedgerReadable = stats.ledgerReadable;
             dream.quarantineMalformedLines = stats.ledgerMalformedLines;
+            // EPISTEMIC-INTEGRITY P0.4 (review fix, LOW finding 3): a quarantine mark
+            // that names NO record excludes nothing, and it is a silent fail-open —
+            // the ledger claims an exclusion that does not exist. The count is on the
+            // runtime path so it cannot hide.
+            dream.unmatchedQuarantineIds = stats.unmatchedQuarantineIds;
             dream.windowPositives = stats.windowPositives;
             dream.windowNegatives = stats.windowNegatives;
             dream.notes.add("induction=RuleInductionEngine.induce(engine=TsetlinTrainer+MpdtGaProducer)");
@@ -192,10 +197,15 @@ public final class RealSleepScheduler implements AutoCloseable {
                 + " excluded=" + stats.excluded
                 + " (non-organic or quarantined records never reach the induction input)");
             if (!stats.ledgerReadable) {
-                dream.notes.add("quarantine_ledger=UNREADABLE lines=" 
+                dream.notes.add("quarantine_ledger=UNREADABLE lines="
                     + stats.ledgerMalformedLines
                     + " (the gate fails closed: nothing is admitted while the ledger "
                     + "cannot be read in full)");
+            }
+            if (stats.unmatchedQuarantineIds > 0) {
+                dream.notes.add("quarantine_ledger=INEFFECTIVE_MARKS unmatched="
+                    + stats.unmatchedQuarantineIds
+                    + " (marks that name no record of the log exclude nothing)");
             }
         }
         lastDream.set(dream);
@@ -249,6 +259,13 @@ public final class RealSleepScheduler implements AutoCloseable {
         /** How many ledger lines could not be read. Unit: lines. */
         public int quarantineMalformedLines;
         /**
+         * EPISTEMIC-INTEGRITY P0.4 (review fix, LOW finding 3) — how many quarantine
+         * marks name NO record of the log. Such a mark excludes nothing: it is a
+         * silent fail-open, and the count is reported here so it cannot hide.
+         * Unit: marks.
+         */
+        public int unmatchedQuarantineIds;
+        /**
          * EPISTEMIC-INTEGRITY P0.4 (review fix F6) — the class balance of the window
          * the induction was given, under the production label rule
          * ({@code confidence >= 0.7 AND accepted}). A window with only one class makes
@@ -275,6 +292,7 @@ public final class RealSleepScheduler implements AutoCloseable {
             m.put("inducedEpisodeIds", inducedEpisodeIds);
             m.put("quarantineLedgerReadable", quarantineLedgerReadable);
             m.put("quarantineMalformedLines", quarantineMalformedLines);
+            m.put("unmatchedQuarantineIds", unmatchedQuarantineIds);
             m.put("windowPositives", windowPositives);
             m.put("windowNegatives", windowNegatives);
             m.put("notes", notes);
@@ -308,7 +326,8 @@ public final class RealSleepScheduler implements AutoCloseable {
         if (entries.isEmpty()) {
             return new InductionStats(0, 0, 0.0, java.util.List.of(), 0, excluded,
                 java.util.List.of(), assessment.ledgerReadable(),
-                assessment.ledgerMalformedLines(), 0, 0);
+                assessment.ledgerMalformedLines(),
+                assessment.unmatchedQuarantineIds(), 0, 0);
         }
         // Take last 20 (cap at K_MAX for Article II)
         java.util.List<EpisodicLog.Entry> recent = assessment.window(KMaxEnforcer.K_MAX);
@@ -353,7 +372,8 @@ public final class RealSleepScheduler implements AutoCloseable {
         }
         return new InductionStats(learned, rejected, delta, fidelities, entries.size(),
             excluded, List.copyOf(ids), assessment.ledgerReadable(),
-            assessment.ledgerMalformedLines(), positives, negatives);
+            assessment.ledgerMalformedLines(), assessment.unmatchedQuarantineIds(),
+            positives, negatives);
     }
 
     /**
@@ -373,5 +393,6 @@ public final class RealSleepScheduler implements AutoCloseable {
                                   int admitted, int excluded,
                                   java.util.List<String> inducedEpisodeIds,
                                   boolean ledgerReadable, int ledgerMalformedLines,
+                                  int unmatchedQuarantineIds,
                                   int windowPositives, int windowNegatives) {}
 }

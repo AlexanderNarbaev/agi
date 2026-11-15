@@ -204,3 +204,27 @@
 
 .github/ | 2350 | repo-owner | 2026-12-31
 AGENTS.md | 63 | repo-owner | 2026-12-31
+#
+# 2026-11-15, the EvalBattery.java exception was created with 79 diff lines.
+#
+# The change is SANCTIONED by the owner: the EPISTEMIC-INTEGRITY directive of
+# 2026-11-15 reserves the frozen zones, and the owner's answer to question
+# D1-QUARANTINE-RESIDUAL-010 (2026-11-15, option B) authorizes exactly one
+# bounded change to this file — the frozen PROBE CORPUS gains the pattern of a
+# letter-less arithmetic probe, so that the probes of an earlier wave can no
+# longer walk past the corpus. The decision is recorded as OD-059 in
+# docs-v2/governance/DECISION-REGISTER.md.
+#
+# What changed: ONE additive block (+66 lines, no existing line touched) — the
+# constant, the predicate and the javadoc that names the authority, the
+# question id, the rule and its boundary cases. The battery's ITEMS are
+# untouched, so the evaluation set and its published pass rate do not move.
+# The unused Random handle stays: the rule needs no clock and no randomness,
+# and nothing else in this file was authorized to change.
+#
+# How a reviewer can tell this is the authorized change: the javadoc cites the
+# owner's question id; the rule is pinned by ArithmeticProbeCorpusTest; the
+# three new quarantine marks in the machine ledger carry the reason string
+# with the question id; and the canary names the extended rule.
+#
+matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/EvalBattery.java | 79 | repo-owner | 2026-12-31

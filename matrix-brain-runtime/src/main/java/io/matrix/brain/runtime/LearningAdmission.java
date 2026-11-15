@@ -53,12 +53,16 @@ public final class LearningAdmission {
      * @param excluded     how many records the gate excluded
      * @param ledgerReadable whether the quarantine ledger was read completely
      * @param ledgerMalformedLines how many ledger lines could not be read
+     * @param unmatchedQuarantineIds how many quarantine marks name NO record of the
+     *        log — marks that are INEFFECTIVE, because the record they name is not
+     *        there
      */
     public record Assessment(List<EpisodicLog.Entry> candidates,
                               int total,
                               int excluded,
                               boolean ledgerReadable,
-                              int ledgerMalformedLines) {
+                              int ledgerMalformedLines,
+                              int unmatchedQuarantineIds) {
 
         /**
          * The learning window of this assessment: the last {@code kMax} candidates.
@@ -100,13 +104,31 @@ public final class LearningAdmission {
     /** The admitted subset of a list of records, in the original order. */
     public static List<EpisodicLog.Entry> admitted(List<EpisodicLog.Entry> all,
                                                     EpisodeQuarantine quarantine) {
+        return admit(all, quarantine).candidates();
+    }
+
+    /**
+     * One admission pass, with everything the pass learned about the ledger.
+     *
+     * <p>EPISTEMIC-INTEGRITY P0.4 (review fix, LOW finding 3): the pass also counts
+     * the quarantine marks that name NO record of the log. Such a mark is
+     * INEFFECTIVE — it excludes nothing — and it is a silent fail-open: the ledger
+     * says the record is excluded, the record is not there, and nothing reports it.
+     * The count is reported on the runtime path.</p>
+     */
+    private record Pass(List<EpisodicLog.Entry> candidates,
+                        Set<String> quarantinedIds,
+                        boolean ledgerReadable) {}
+
+    /** One admission pass: the candidates, the marks, and the ledger's health. */
+    private static Pass admit(List<EpisodicLog.Entry> all, EpisodeQuarantine quarantine) {
         List<EpisodicLog.Entry> out = new ArrayList<>();
-        if (all == null) return out;
+        if (all == null) return new Pass(out, Set.of(), true);
         if (quarantine == null) {
             for (EpisodicLog.Entry e : all) {
                 if (eligible(e)) out.add(e);
             }
-            return out;
+            return new Pass(out, Set.of(), true);
         }
         // ONE read of the ledger for the whole pass (review fix F7): the previous
         // implementation asked the ledger about every record separately, and each
@@ -115,12 +137,36 @@ public final class LearningAdmission {
         if (!quarantine.readable()) {
             // Fail closed: an unreadable ledger is an unreadable exclusion, and the
             // count is reported on the runtime path.
-            return out;
+            return new Pass(out, quarantined, false);
         }
         for (EpisodicLog.Entry e : all) {
             if (eligible(e) && !quarantined.contains(e.id())) out.add(e);
         }
-        return out;
+        return new Pass(out, quarantined, true);
+    }
+
+    /**
+     * The quarantine marks that name NO record of the log.
+     *
+     * <p>EPISTEMIC-INTEGRITY P0.4 (review fix, LOW finding 3). A mark whose id is not
+     * in the log excludes nothing; it is a mark that looks effective and is not.</p>
+     *
+     * @param all        the records of the log
+     * @param quarantine the ledger; null means "no marks at all"
+     * @return how many of the marks name no record
+     */
+    public static int unmatchedQuarantineIds(List<EpisodicLog.Entry> all,
+                                             EpisodeQuarantine quarantine) {
+        if (all == null || quarantine == null) return 0;
+        Set<String> marks = quarantine.quarantinedIds();
+        if (marks.isEmpty()) return 0;
+        Set<String> records = new java.util.HashSet<>();
+        for (EpisodicLog.Entry e : all) records.add(e.id());
+        int unmatched = 0;
+        for (String id : marks) {
+            if (!records.contains(id)) unmatched++;
+        }
+        return unmatched;
     }
 
     /**
@@ -151,11 +197,12 @@ public final class LearningAdmission {
      */
     public static Assessment assess(EpisodicLog log, EpisodeQuarantine quarantine) {
         List<EpisodicLog.Entry> all = log == null ? List.of() : log.readAll();
-        List<EpisodicLog.Entry> candidates = admitted(all, quarantine);
+        Pass pass = admit(all, quarantine);
         boolean readable = quarantine == null || quarantine.readable();
         int malformed = quarantine == null ? 0 : quarantine.lastSkippedLines();
-        return new Assessment(candidates, all.size(), all.size() - candidates.size(),
-            readable, malformed);
+        int unmatched = unmatchedQuarantineIds(all, quarantine);
+        return new Assessment(pass.candidates(), all.size(),
+            all.size() - pass.candidates().size(), readable, malformed, unmatched);
     }
 
     /**

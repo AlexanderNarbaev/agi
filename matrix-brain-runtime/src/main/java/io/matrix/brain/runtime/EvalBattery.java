@@ -13,6 +13,74 @@ import java.util.Random;
  */
 public final class EvalBattery {
 
+    /**
+     * EPISTEMIC-INTEGRITY P0.4 — the pattern of a LETTER-LESS ARITHMETIC PROBE.
+     *
+     * <p><b>Why this pattern exists.</b> The battery's arithmetic family is a family
+     * of bare expressions ("2+3", "12*12", "100-7"), and the log holds them in the
+     * form the serving path writes — with a trailing question mark and with operands
+     * the battery does not contain ("100-7?", "7*6"). The guard corpus is a LIST of
+     * the battery's inputs, so it caught those two only by luck, and the arithmetic
+     * probes of an earlier wave walked past it. The family is therefore recognised by
+     * its SHAPE: a whole query that is nothing but digits, one arithmetic operator
+     * and digits.</p>
+     *
+     * <p><b>THE RULE, exactly.</b> After the text is trimmed, the WHOLE text must be
+     * digits, ONE of the four arithmetic operators (plus, minus, times, divided by),
+     * digits, and an OPTIONAL trailing question mark — nothing may surround it. The
+     * pattern is {@link #ARITHMETIC_PROBE_PATTERN}; its spelling is written there
+     * rather than here, because the operator class ends in a slash and a literal
+     * star-slash would end this comment.</p>
+     *
+     * <p><b>Its boundary cases, which are the point.</b></p>
+     * <ul>
+     *   <li>{@code "100-7?"} and {@code "7*6"} — caught, with and without the
+     *       trailing question mark. These are the two records the owner decided
+     *       about.</li>
+     *   <li>{@code "The answer is 2+3=5"} — NOT caught: the expression is not the
+     *       whole text, and the rule is anchored. A claim that merely CONTAINS digits
+     *       and an operator is ordinary content.</li>
+     *   <li>{@code "What is the chemical symbol for iron?"} and {@code "How many legs
+     *       does a spider have?"} — NOT caught: a legitimate question with numbers in
+     *       it is not a bare expression.</li>
+     *   <li>{@code "100-7 is 93"} — NOT caught (an operator and a second operator).</li>
+     *   <li>{@code "audio:frame=8 hdc_dim=256"} — NOT caught (not a bare
+     *       expression).</li>
+     * </ul>
+     *
+     * <p><b>Reject-only.</b> The pattern can only ever turn a record INTO a probe,
+     * that is, exclude it from learning. It never turns a probe into content, and it
+     * never widens what may be learned from.</p>
+     *
+     * <p><b>Under whose authority.</b> This is the ONLY change to the frozen zone
+     * that the EPISTEMIC-INTEGRITY initiative is authorised to make: the owner's
+     * answer of 2026-11-15 to question D1-QUARANTINE-RESIDUAL-010 ("A + an
+     * owner-authorized exception for the frozen corpus") — the 17 residual records
+     * stay as they are, and the letter-less arithmetic probes are caught as probes
+     * from now on. The battery's ITEMS are untouched: this pattern generalises the
+     * arithmetic family the battery already defines, and it does not add an
+     * evaluation item (which would change the evaluation set and its published pass
+     * rate).</p>
+     *
+     * <p>Article III: a constant pattern, no clock, no randomness.</p>
+     */
+    public static final java.util.regex.Pattern ARITHMETIC_PROBE_PATTERN =
+        java.util.regex.Pattern.compile("^\\d+[ \\t]*[+\\-*/][ \\t]*\\d+[ \\t]*\\??$");
+
+    /**
+     * True when the text is a bare letter-less arithmetic probe.
+     *
+     * <p>The rule is {@link #ARITHMETIC_PROBE_PATTERN}; see its javadoc for the
+     * boundary cases.</p>
+     *
+     * @param text the text to test; null is not a probe
+     * @return true when the whole text is an arithmetic expression
+     */
+    public static boolean isArithmeticProbe(String text) {
+        if (text == null) return false;
+        return ARITHMETIC_PROBE_PATTERN.matcher(text.trim()).matches();
+    }
+
     /** A single eval probe with expected behavior tags. */
     public record Probe(
         String id,

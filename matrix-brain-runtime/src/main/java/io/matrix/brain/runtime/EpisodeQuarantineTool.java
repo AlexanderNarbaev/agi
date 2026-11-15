@@ -188,6 +188,11 @@ public final class EpisodeQuarantineTool {
             + " excluded=" + assessment.excluded());
         System.out.println("ledgerReadable=" + assessment.ledgerReadable()
             + " ledgerMalformedLines=" + assessment.ledgerMalformedLines());
+        // EPISTEMIC-INTEGRITY P0.4 (review fix, LOW finding 3): a mark that names no
+        // record excludes nothing — it looks effective and is not.
+        System.out.println("unmatchedQuarantineIds=" + assessment.unmatchedQuarantineIds()
+            + (assessment.unmatchedQuarantineIds() > 0
+                ? " (INEFFECTIVE MARKS: they name no record of the log)" : ""));
         System.out.println("window(raw)      : " + describe(rawWindow));
         System.out.println("window(admitted) : " + describe(admittedWindow));
     }

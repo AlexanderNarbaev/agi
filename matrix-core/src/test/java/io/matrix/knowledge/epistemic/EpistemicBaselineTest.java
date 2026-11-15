@@ -362,12 +362,21 @@ class EpistemicBaselineTest {
             try (var paths = Files.walk(start)) {
                 for (Path path : paths.filter(Files::isRegularFile).toList()) {
                     String relative = root.relativize(path).toString();
+                    // The set's own builder and reader hold the set's questions by
+                    // construction: they create it and measure it. They are exempt
+                    // from every check here.
                     if (relative.endsWith("EpistemicHeldOutSetBuilderTest.java")
                             || relative.endsWith("EpistemicBaselineTest.java")) {
                         continue;
                     }
                     String text = Files.readString(path);
-                    if (text.contains("EPISTEMIC-HELDOUT-SET")) {
+                    // The independent adversarial probes may NAME the set: they read
+                    // it at run time to measure the production path against it.
+                    // What no file may do is carry a gold proposition or a question
+                    // of the set — that check below applies to every file, including
+                    // the probes.
+                    boolean isSetInstrument = relative.contains("AdversarialProbe");
+                    if (!isSetInstrument && text.contains("EPISTEMIC-HELDOUT-SET")) {
                         offenders.add(relative);
                     }
                     for (JsonNode entry : dataset.path("cases")) {
@@ -375,6 +384,17 @@ class EpistemicBaselineTest {
                         if (!question.isBlank() && text.contains(question)) {
                             questionOffenders.add(relative + " carries the question of "
                                     + entry.path("id").asText());
+                        }
+                        // The gold propositions are checked in EVERY file, with no
+                        // exemption: a gold string embedded in the development code
+                        // would make the set a development artefact rather than a
+                        // held-out one.
+                        for (JsonNode claim : entry.path("goldClaims")) {
+                            String proposition = claim.path("proposition").asText();
+                            if (!proposition.isBlank() && text.contains(proposition)) {
+                                questionOffenders.add(relative + " carries the gold of "
+                                        + entry.path("id").asText());
+                            }
                         }
                     }
                 }
