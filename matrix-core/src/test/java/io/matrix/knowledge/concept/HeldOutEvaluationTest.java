@@ -199,7 +199,7 @@ class HeldOutEvaluationTest {
     }
 
     /** A gold claim a candidate lost, and the coverage floor under each row. */
-    record CoverageShift(String caseId, String candidate, String proposition,
+    record CoverageShift(String caseId, String candidate, String side, String proposition,
             double baselineFloor, double candidateFloor, int baselineCited,
             int candidateCited) {
     }
@@ -799,7 +799,7 @@ class HeldOutEvaluationTest {
      */
     private static List<CoverageShift> coverageShifts(HeldOutCase heldOutCase, List<Row> collected,
             Row baselineRow, KnowledgeSnapshot baseline, KnowledgeSnapshot h1,
-            KnowledgeSnapshot h2, KnowledgeSnapshot h12, AbstractionLevel level) {
+            KnowledgeSnapshot h2, KnowledgeSnapshot h12, String expanded, AbstractionLevel level) {
         List<CoverageShift> shifts = new ArrayList<>();
         if (baselineRow.goldPropositions().isEmpty()) {
             return shifts;
@@ -812,6 +812,11 @@ class HeldOutEvaluationTest {
         questions.put(EnrichmentCandidates.H1, heldOutCase.question());
         questions.put(EnrichmentCandidates.H2, heldOutCase.question());
         questions.put(EnrichmentCandidates.H1_AND_H2, heldOutCase.question());
+        // the question-side candidate: the same measurement, over the UNMODIFIED snapshot and
+        // with the expanded question. The development run measured the corpus-side candidates
+        // only; the measurement itself is the frozen one.
+        snapshots.put(EnrichmentCandidates.H3, baseline);
+        questions.put(EnrichmentCandidates.H3, expanded);
         for (Map.Entry<String, KnowledgeSnapshot> entry : snapshots.entrySet()) {
             Row candidateRow = null;
             for (Row row : collected) {
@@ -830,7 +835,9 @@ class HeldOutEvaluationTest {
                 if (cited(candidateRow.citedPropositions(), proposition)) {
                     continue;
                 }
-                shifts.add(new CoverageShift(heldOutCase.id(), entry.getKey(), proposition,
+                shifts.add(new CoverageShift(heldOutCase.id(), entry.getKey(),
+                        EnrichmentCandidates.H3.equals(entry.getKey()) ? "question" : "corpus",
+                        proposition,
                         RetrievalExperiment.coverageFloor(baseline, proposition,
                                 heldOutCase.question(), level),
                         RetrievalExperiment.coverageFloor(entry.getValue(), proposition,
@@ -1669,6 +1676,8 @@ class HeldOutEvaluationTest {
                 .append("the candidates: a retriever-level candidate cannot reach either ")
                 .append("route (freeze §4.4), so the verdicts above are identical in every ")
                 .append("row.\n\n");
+
+        text.append("## 5. The contradictory and the ambiguous cases\n\n");
         text.append("These are the cases the dataset built to see what the system does when the ")
                 .append("corpus holds more than one reading, or two claims that cannot both ")
                 .append("hold. The expected disposition is to REPORT the conflict, not to pick ")

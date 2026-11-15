@@ -19,7 +19,7 @@
 | `P1'` | `plate-tectonics-eval-neg` | 1 | 5 | 672 | 766 | 699 |
 | `P1''` | `plate-tectonics-eval-neg2` | 1 | 5 | 672 | 718 | 654 |
 
-Every scope of the dataset was prepared with the production methods behind the HTTP calls: `AcquisitionCycle.loadSeed` (the seed route), `AcquisitionCycle.run` (the learn route) and `AcquisitionCycle.acquireAndRevise` (the revise route). The preparation is repeated before every case, exactly as the official runner does it. Preparation cost: 88717 ms.
+Every scope of the dataset was prepared with the production methods behind the HTTP calls: `AcquisitionCycle.loadSeed` (the seed route), `AcquisitionCycle.run` (the learn route) and `AcquisitionCycle.acquireAndRevise` (the revise route). The preparation is repeated before every case, exactly as the official runner does it. Preparation cost: 89665 ms.
 
 ## 2. What the source-grounded extraction found
 
@@ -34,7 +34,7 @@ The extraction of the workspace of the first answer case (S1, 348 claims, 326 co
 | relation candidates | 7 |
 | — of which SUPPORTED | 7 |
 | relation candidates rejected | 116 |
-| extraction time | 130 ms |
+| extraction time | 129 ms |
 | retained text of the extraction | 53411 bytes |
 
 The rejections, by reason:

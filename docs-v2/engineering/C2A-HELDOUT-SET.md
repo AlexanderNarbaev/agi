@@ -147,8 +147,14 @@ flock /tmp/gradle-matrix.lock bash -c 'rm -rf matrix-core/build/test-results && 
 * exit status **0** — `BUILD SUCCESSFUL`; the test is green.
 * The artefact is written to `docs-v2/engineering/C2A-HELDOUT-SET.json` and read back and compared
   byte-for-byte with the serialised dataset before the test ends.
+* **The artefact is byte-reproducible.** Three consecutive builds produced the same digest:
+  `sha256 = bbb3d2ad630ec610df3dbaae3ec10978d6cbbe740e13604dfd827b56b6872d77`.
+  (The first drafts of the builder wrote two of the manifest maps with `Map.of(...)`, whose
+  iteration order is not stable between JVM runs, so the digest changed on every build. Those
+  maps are `LinkedHashMap`s now. A consumer that cites the dataset's digest must take it from a
+  fresh build, not from an earlier one.)
 * The JUnit XML: `matrix-core/build/test-results/test/TEST-io.matrix.knowledge.HeldOutSetBuilderTest.xml`
-  — `tests="1" skipped="0" failures="0" errors="0"`, one testcase, 5.8 s.
+  — `tests="1" skipped="0" failures="0" errors="0"`, one testcase, about 6 s.
 * The run prints the counts to the test's standard output, which the XML preserves:
   `[B6] … (38 cases)`, `[B6] kinds {POSITIVE=19, NEGATIVE=6, UNSUPPORTED=6, AMBIGUOUS=4, CONTRADICTORY=3}`.
 
