@@ -22,6 +22,7 @@ import java.util.Random;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * C2A — the LEARNING EVIDENCE measurement over REAL observations (Workstream C).
@@ -615,6 +616,13 @@ class C2ALearningEvidenceTest {
         Path artifact = root.resolve("docs-v2/engineering/C2A-LEARNING-EVIDENCE.json");
         Path historical = root.resolve("docs-v2/engineering/E1-LEARNING-EVIDENCE.json");
 
+        // The measurement is OF the machine's runtime log. Where the log does not exist —
+        // a fresh checkout, a CI runner — there is nothing to measure, and the test says
+        // so and skips itself; it does not measure the fixture and call it the runtime.
+        assumeTrue(Files.isRegularFile(root.resolve("data/mind/episodic.ndjson")),
+                "the machine's episodic log is not on this machine: the measurement cannot be "
+                        + "made here (the file is the runtime's own data and is not part of the "
+                        + "repository)");
         List<Episode> real = realEpisodes(root);
         assertThat(real).as("the machine's episodic log").isNotEmpty();
 

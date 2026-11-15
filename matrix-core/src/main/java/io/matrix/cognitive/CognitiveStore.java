@@ -1972,6 +1972,24 @@ public final class CognitiveStore
             ps.executeUpdate();
         } catch (SQLException e) {
             if (isConstraintViolation(e)) {
+                // The check above and this insert are two steps, and another writer on the
+                // same database may have taken the position in between: the position is
+                // unique, and the row that is already there wins. The record is immutable,
+                // so the append is resolved by reading what is recorded: the SAME content at
+                // that position is the SAME event (this append is a replay of it), and a
+                // DIFFERENT content is a conflict.
+                List<String> now = eventContentAt(episodeId, sequence);
+                if (now != null) {
+                    if (now.equals(eventContentOf(episodeId, sequence, type, actor, detail,
+                            occurredAt))) {
+                        return;
+                    }
+                    throw new CognitiveConflictException(
+                            CognitiveConflictException.Kind.IMMUTABLE_RECORD,
+                            "event " + eventId + " conflicts with the event already recorded at "
+                                    + "that position of episode " + episodeId + "; an event stream "
+                                    + "is never rewritten");
+                }
                 throw new CognitiveConflictException(
                         CognitiveConflictException.Kind.IMMUTABLE_RECORD,
                         "event " + eventId + " conflicts with an event that is already recorded");

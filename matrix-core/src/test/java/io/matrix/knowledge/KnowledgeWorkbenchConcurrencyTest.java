@@ -1,5 +1,6 @@
 package io.matrix.knowledge;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,6 +42,15 @@ class KnowledgeWorkbenchConcurrencyTest {
     void setUp() throws Exception {
         workbench = KnowledgeWorkbench.at(temporary.resolve("workbench.sqlite").toString());
         workbench.loadBundledPackage(KnowledgeWorkbench.DEFAULT_WORKSPACE);
+    }
+
+    @AfterEach
+    void tearDown() {
+        // the workbench holds its database open and may run background work; a test that
+        // leaves it open hands its locks and its threads to the next test in the suite
+        if (workbench != null) {
+            workbench.close();
+        }
     }
 
     @Test
