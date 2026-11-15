@@ -45,10 +45,22 @@ CC-BY-SA-4.0, with its own attribution, canonical URL and snapshot revision in
 The claim counts are the **production importer's own numbers** (`ImportResult.claimsAdded()`), and
 they reproduce the pool manifest's figures exactly: 90 / 92 / 152 / 82 / 45 / 14 / 65 = **540**.
 
-These documents are **not** in the development corpus (`matrix-core/src/main/resources/corpus/
-plate-tectonics/`, the USGS *This Dynamic Earth* and the Wikipedia *Plate tectonics* article). They
-are the same material the W50 evaluation acquired for scope P1 and later, so a candidate fitted to
-the 29 development cases has not seen the sentences this set asks about.
+These documents are **not** in the seed corpus of the development corpus
+(`matrix-core/src/main/resources/corpus/plate-tectonics/`, the USGS *This Dynamic Earth* and the
+Wikipedia *Plate tectonics* article). **They are, however, largely the same material the
+development evaluation acquired**: scope P1 imports continental-drift, mid-ocean-ridge and
+subduction, and R1/R2 add slab-pull and paleomagnetism (the scopes are declared in
+`matrix-core/src/main/resources/epistemic-eval/cases.json` and measured in
+`docs-v2/engineering/E2-FLOOR-0p25.json`).
+
+**So the independence this set has is QUESTION independence, not corpus independence.** Measured:
+**26 of the 38 cases (50 of the 61 gold references) draw their gold from a document the
+development evaluation also imports**; only mantle-convection (5 cases) and seafloor-spreading
+(4 cases) are free of it. A candidate fitted to the 29 development cases has not seen these
+QUESTIONS, and has not seen these GOLD SENTENCES as the answer to these questions — but it has
+seen the documents. The set can therefore REJECT a candidate (it did) and cannot establish a
+positive effect: the corpus it shares with the development set is the corpus the candidates were
+developed against.
 
 ### 1.2 The development set — the set this one must not resemble
 

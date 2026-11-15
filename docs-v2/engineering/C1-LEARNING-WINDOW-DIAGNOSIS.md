@@ -6,6 +6,14 @@ recommended or implied anywhere in this document.**
 **Branch / HEAD:** `develop` @ `429eba27` (read-only; no build was run, no file was modified
 except this one).
 **Date:** 2026-11-15.
+**Measured against:** the runtime log `data/mind/episodic.ndjson` as it stood at that moment —
+**108 records**, sha256 `c2035b35478fc11b165ff24576fc277a9797c92208b8e8a5a83aecf13b336df1`.
+**The log has since grown**: the later collection of real observations (see
+`docs-v2/engineering/C2A-LEARNING-EVIDENCE.md`) appended 59 records, so the file holds 167 and
+the tail-20 window is **10 positive / 10 negative** instead of 20 / 0. Every number below is a
+statement about the FIRST 108 records, and they still reproduce: `scripts/c1-measure-learning-window.py`
+— the measurement script, now in the repository — re-measures them, and the first 108 lines still
+hash to the sha256 above.
 
 **What this document is:** the implementation map of the learning path, the production label
 rule quoted from source, an evidence-graded verdict on six candidate causes, the measured
