@@ -15,6 +15,8 @@ import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.nio.channels.FileLock;
+import java.nio.channels.OverlappingFileLockException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
@@ -25,6 +27,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * B3 — the bounded artifact writer: the one new side effect of Evidence-to-Action.
@@ -66,6 +71,28 @@ import java.util.Set;
  * line (the expected state after a crash mid-append) is skipped on read, never repaired
  * automatically. Two concurrent processes writing the same root are not supported; the
  * guarantee is per identity within one process.</p>
+ *
+ * <p><b>Who may write a root at one time.</b> A root has exactly one writer at a time. The
+ * writer takes a <i>lease</i> on the root before it looks at the index and holds it until the
+ * write is finished: a JVM-wide lock keyed by the root's canonical path serializes the threads
+ * of this process, and an operating-system lock on {@value #LOCK_FILE} inside the root excludes
+ * every other process on the host. A second process is <b>refused</b>
+ * ({@link Disposition#REFUSED_WRITER_CONFLICT}) rather than queued, because a process that
+ * cannot prove it owns the root must not write into it. The lease is what makes the identity
+ * check and the index append one indivisible step: no other writer can observe the index
+ * between the check and the append. This is process-level exclusion on one host — it is not a
+ * distributed lock, and it makes no claim about two hosts.</p>
+ *
+ * <p><b>What a record proves.</b> A record binds an artifact name to an identity only when the
+ * artifact <i>on disk</i> carries the digest the record states. A record whose artifact is
+ * missing or altered is stale, and a record that was forged into the index is unverifiable;
+ * neither may deny a write. The old behaviour — treating every {@code COMMITTED} line as a
+ * binding — let an attacker who could write the index reserve every name in the root without
+ * writing a single artifact.</p>
+ *
+ * <p><b>What is durable.</b> The bytes are forced to disk before the move, the index is forced
+ * after every append, and the root directory is forced after the move, so the rename and the
+ * trace that describes it survive a power loss in the state the index records.</p>
  */
 public final class ArtifactWriter {
 
@@ -75,8 +102,30 @@ public final class ArtifactWriter {
     /** The most committed artifacts one root may hold. */
     public static final int MAX_ARTIFACTS = 1000;
 
+    /**
+     * The most index records one root may hold.
+     *
+     * <p>The trace is append-only evidence, so it is never truncated: at the limit the writer
+     * refuses new writes instead. The limit is four records per artifact — one {@code STAGED}
+     * and one {@code COMMITTED} record per write, with room for the reconciliation writes a
+     * retry may append.</p>
+     */
+    public static final int MAX_INDEX_RECORDS = 4 * MAX_ARTIFACTS;
+
+    /** The largest index file one root may hold, in bytes. */
+    public static final long MAX_INDEX_BYTES = 4L * 1024 * 1024;
+
     /** The append-only index of every staged and committed write, in the root. */
     public static final String INDEX_FILE = ".artifact-index.ndjson";
+
+    /**
+     * The file that carries the root's writer lease.
+     *
+     * <p>It is a dot file, so the name rules refuse it as an artifact name, and the operating
+     * system lock on it is released by the kernel when the process dies — a crashed writer
+     * cannot hold a root hostage.</p>
+     */
+    public static final String LOCK_FILE = ".artifact-lock";
 
     /** The dispositions of one write attempt. */
     public enum Disposition {
@@ -84,6 +133,7 @@ public final class ArtifactWriter {
         REFUSED_OUTSIDE_ROOT, REFUSED_TRAVERSAL, REFUSED_SYMLINK_ESCAPE,
         REFUSED_UNSUPPORTED_TYPE, REFUSED_TOO_LARGE, REFUSED_INVALID_CONTENT,
         REFUSED_EMPTY_NAME, REFUSED_IDENTITY, REFUSED_WRITE_FAILED, REFUSED_BUDGET,
+        REFUSED_WRITER_CONFLICT, REFUSED_ROOT_REPLACED, REFUSED_INDEX_CORRUPT,
         WRITTEN_TRACE_INCOMPLETE
     }
 
@@ -98,7 +148,27 @@ public final class ArtifactWriter {
     }
 
     private static final ObjectMapper JSON = new ObjectMapper();
+
+    /**
+     * The in-process lease of every root, keyed by the root's canonical path.
+     *
+     * <p>The key is the real path, so two writers that name the same directory by different
+     * routes share one lease, and two different directories never share one. The map grows
+     * with the number of roots a process opens, which is bounded by the process's own
+     * configuration; an entry is never removed while its lock may still be held.</p>
+     */
+    private static final ConcurrentHashMap<String, Lock> ROOT_LEASES = new ConcurrentHashMap<>();
+
     private final Path root;
+
+    /**
+     * The identity of the root directory as the file system saw it when the writer was made.
+     *
+     * <p>A root that is replaced — deleted and recreated, or swapped for a symbolic link —
+     * is a different directory wearing the same name. Comparing the identity before every
+     * write turns that into a refusal instead of a write into somewhere else.</p>
+     */
+    private final Object rootIdentity;
 
     /**
      * A writer over one authorized root.
@@ -116,6 +186,7 @@ public final class ArtifactWriter {
         }
         try {
             this.root = root.toRealPath();
+            this.rootIdentity = identityOf(this.root);
         } catch (IOException failure) {
             throw new UncheckedIOException("the authorized root cannot be resolved", failure);
         }
@@ -181,72 +252,102 @@ public final class ArtifactWriter {
         }
 
         Path target = root.resolve(fileName);
+        // the lease: one writer per root, in this process and on this host. It is taken
+        // BEFORE the index is read, so the identity check and the index append are one
+        // indivisible step with respect to every other writer.
+        RootLease lease;
         try {
-            Path parent = target.toAbsolutePath().getParent();
-            if (parent == null || !Files.isDirectory(parent)
-                    || !parent.toRealPath().equals(root)) {
-                return refuse(Disposition.REFUSED_OUTSIDE_ROOT, actionId, fileName,
-                        "the target is not inside the authorized root");
-            }
-            if (Files.exists(target, LinkOption.NOFOLLOW_LINKS) && Files.isSymbolicLink(target)) {
-                Path resolved = target.toRealPath();
-                if (!resolved.startsWith(root)) {
-                    return refuse(Disposition.REFUSED_SYMLINK_ESCAPE, actionId, fileName,
-                            "a symbolic link at the target resolves outside the root: " + resolved);
-                }
-            }
-        } catch (IOException failure) {
-            return refuse(Disposition.REFUSED_OUTSIDE_ROOT, actionId, fileName,
-                    "the target's location cannot be resolved: " + failure.getMessage());
+            lease = acquireRootLease();
+        } catch (WriterConflict conflict) {
+            return refuse(conflict.disposition, actionId, fileName, conflict.getMessage());
         }
+        try (lease) {
+            String replaced = rootReplaced();
+            if (replaced != null) {
+                return refuse(Disposition.REFUSED_ROOT_REPLACED, actionId, fileName, replaced);
+            }
+            try {
+                Path parent = target.toAbsolutePath().getParent();
+                if (parent == null || !Files.isDirectory(parent)
+                        || !parent.toRealPath().equals(root)) {
+                    return refuse(Disposition.REFUSED_OUTSIDE_ROOT, actionId, fileName,
+                            "the target is not inside the authorized root");
+                }
+                if (Files.exists(target, LinkOption.NOFOLLOW_LINKS) && Files.isSymbolicLink(target)) {
+                    Path resolved = target.toRealPath();
+                    if (!resolved.startsWith(root)) {
+                        return refuse(Disposition.REFUSED_SYMLINK_ESCAPE, actionId, fileName,
+                                "a symbolic link at the target resolves outside the root: " + resolved);
+                    }
+                }
+            } catch (IOException failure) {
+                return refuse(Disposition.REFUSED_OUTSIDE_ROOT, actionId, fileName,
+                        "the target's location cannot be resolved: " + failure.getMessage());
+            }
 
-        String digest = digest(content);
-        try {
-            // the name belongs to the identity that committed it — a COMMITTED record OR the
-            // crash window's STAGED record whose final file already carries its digest
-            Optional<Record> boundToAnother = boundToAnotherIdentity(fileName, actionId);
-            if (boundToAnother.isPresent()) {
-                return refuse(Disposition.REFUSED_IDENTITY, actionId, fileName,
-                        "the artifact name is already committed by the action identity "
-                                + boundToAnother.get().actionId() + "; one artifact has one identity");
-            }
-            Optional<Record> commit = effectiveCommit(actionId);
-            if (commit.isPresent()) {
-                if (!commit.get().fileName().equals(fileName)) {
-                    // an identity names ONE artifact: a record naming another file must not
-                    // redirect this request, and a forged one must not suppress it silently
+            String digest = digest(content);
+            try {
+                IndexView index = readIndexView();
+                if (index.corrupt()) {
+                    // the trace is evidence, not state to rewrite: a broken log is reported,
+                    // never repaired, and the writer refuses to act on an unsound view of it
+                    return refuse(Disposition.REFUSED_INDEX_CORRUPT, actionId, fileName,
+                            "the index is not a readable append-only log; the writer refuses to "
+                                    + "act on an unsound trace");
+                }
+                if (index.records().size() >= MAX_INDEX_RECORDS
+                        || index.bytes() >= MAX_INDEX_BYTES) {
+                    return refuse(Disposition.REFUSED_BUDGET, actionId, fileName,
+                            "the index holds " + index.records().size() + " records and "
+                                    + index.bytes() + " bytes, at the bound of "
+                                    + MAX_INDEX_RECORDS + " records and " + MAX_INDEX_BYTES
+                                    + " bytes");
+                }
+                // the name belongs to the identity that committed it — a COMMITTED record OR the
+                // crash window's STAGED record whose final file already carries its digest
+                Optional<Record> boundToAnother = boundToAnotherIdentity(index.records(), fileName,
+                        actionId);
+                if (boundToAnother.isPresent()) {
                     return refuse(Disposition.REFUSED_IDENTITY, actionId, fileName,
-                            "the action identity is committed to the artifact " + commit.get()
-                                    .fileName() + ", not " + fileName);
+                            "the artifact name is already committed by the action identity "
+                                    + boundToAnother.get().actionId() + "; one artifact has one identity");
                 }
-                if (!commit.get().sha256().equals(digest)) {
-                    return refuse(Disposition.REFUSED_IDENTITY, actionId, fileName,
-                            "the action identity was already committed with different content; an "
-                                    + "identity names one artifact, and a second content under it is "
-                                    + "a new action");
+                Optional<Record> commit = effectiveCommit(index.records(), actionId);
+                if (commit.isPresent()) {
+                    if (!commit.get().fileName().equals(fileName)) {
+                        // an identity names ONE artifact: a record naming another file must not
+                        // redirect this request, and a forged one must not suppress it silently
+                        return refuse(Disposition.REFUSED_IDENTITY, actionId, fileName,
+                                "the action identity is committed to the artifact " + commit.get()
+                                        .fileName() + ", not " + fileName);
+                    }
+                    if (!commit.get().sha256().equals(digest)) {
+                        return refuse(Disposition.REFUSED_IDENTITY, actionId, fileName,
+                                "the action identity was already committed with different content; an "
+                                        + "identity names one artifact, and a second content under it is "
+                                        + "a new action");
+                    }
+                    Path finalPath = root.resolve(commit.get().fileName());
+                    if (Files.isRegularFile(finalPath)
+                            && digest(finalPath).equals(commit.get().sha256())) {
+                        return new Result(Disposition.REPLAYED, actionId, fileName, finalPath, digest,
+                                "the same action identity and content were already committed, and the "
+                                        + "artifact still matches its recorded digest", index().toString());
+                    }
+                    // the commit record exists and the artifact is missing or changed: reconcile
+                    return stagedWrite(actionId, fileName, content, digest, Disposition.RECONCILED_WRITTEN);
                 }
-                Path finalPath = root.resolve(commit.get().fileName());
-                if (Files.isRegularFile(finalPath)
-                        && digest(finalPath).equals(commit.get().sha256())) {
-                    return new Result(Disposition.REPLAYED, actionId, fileName, finalPath, digest,
-                            "the same action identity and content were already committed, and the "
-                                    + "artifact still matches its recorded digest", index().toString());
+                long committedFiles = committedArtifactCount(index.records());
+                if (committedFiles >= MAX_ARTIFACTS) {
+                    return refuse(Disposition.REFUSED_BUDGET, actionId, fileName,
+                            "the root holds " + committedFiles + " committed artifacts, at "
+                                    + "the budget of " + MAX_ARTIFACTS);
                 }
-                // the commit record exists and the artifact is missing or changed: reconcile
-                return stagedWrite(actionId, fileName, content, digest, Disposition.RECONCILED_WRITTEN);
+                return stagedWrite(actionId, fileName, content, digest, Disposition.WRITTEN);
+            } catch (IOException failure) {
+                return new Result(Disposition.REFUSED_WRITE_FAILED, actionId, fileName, target,
+                        digest, "the write failed: " + failure.getMessage(), index().toString());
             }
-            long committedFiles = readIndex().stream()
-                    .filter(r -> r.status().equals("COMMITTED"))
-                    .map(Record::fileName).distinct().count();
-            if (committedFiles >= MAX_ARTIFACTS) {
-                return refuse(Disposition.REFUSED_BUDGET, actionId, fileName,
-                        "the root holds " + committedFiles + " committed artifacts, at "
-                                + "the budget of " + MAX_ARTIFACTS);
-            }
-            return stagedWrite(actionId, fileName, content, digest, Disposition.WRITTEN);
-        } catch (IOException failure) {
-            return new Result(Disposition.REFUSED_WRITE_FAILED, actionId, fileName, target,
-                    digest, "the write failed: " + failure.getMessage(), index().toString());
         }
     }
 
@@ -289,6 +390,8 @@ public final class ArtifactWriter {
         Path target = root.resolve(fileName);
         try {
             Files.move(staged, target, StandardCopyOption.ATOMIC_MOVE);
+            // the rename itself must be on the medium before the trace that describes it
+            forceRootDirectory();
         } catch (IOException failure) {
             // the move failed: the staged file must not be left behind
             Files.deleteIfExists(staged);
@@ -314,7 +417,17 @@ public final class ArtifactWriter {
      * digest is treated as committed.
      */
     public Optional<Record> effectiveCommit(String actionId) throws IOException {
-        List<Record> records = readIndex();
+        return effectiveCommit(readIndex(), actionId);
+    }
+
+    /**
+     * The commit of an identity inside an already-read index.
+     *
+     * @param records the index records
+     * @param actionId the identity
+     * @return the record that commits the identity, if any
+     */
+    private Optional<Record> effectiveCommit(List<Record> records, String actionId) {
         Optional<Record> committed = records.stream()
                 .filter(r -> r.actionId().equals(actionId) && r.status().equals("COMMITTED"))
                 .reduce((first, second) -> second);
@@ -326,11 +439,22 @@ public final class ArtifactWriter {
                 .reduce((first, second) -> second);
         if (staged.isPresent()) {
             Path finalPath = root.resolve(staged.get().fileName());
-            if (Files.isRegularFile(finalPath) && digest(finalPath).equals(staged.get().sha256())) {
+            if (carriesDigest(finalPath, staged.get().sha256())) {
                 return staged;
             }
         }
         return Optional.empty();
+    }
+
+    /** Whether the path is a regular file that carries the expected digest. */
+    private boolean carriesDigest(Path path, String expected) {
+        try {
+            return Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)
+                    && digest(path).equals(expected);
+        } catch (IOException unreadable) {
+            // an artifact that cannot be read cannot be verified, so it is not a commit
+            return false;
+        }
     }
 
     /**
@@ -349,7 +473,15 @@ public final class ArtifactWriter {
             return state;
         }
         try {
-            List<Record> records = readIndex();
+            IndexView view = readIndexView();
+            if (view.corrupt()) {
+                state.put("actionId", actionId);
+                state.put("disposition", "CORRUPT_INDEX");
+                state.put("note", "the index is not a readable append-only log, so the crash state "
+                        + "cannot be derived from it; the writer refuses to act on it");
+                return state;
+            }
+            List<Record> records = view.records();
             boolean staged = records.stream().anyMatch(r -> r.actionId().equals(actionId)
                     && r.status().equals("STAGED"));
             Optional<Record> committed = records.stream()
@@ -409,11 +541,47 @@ public final class ArtifactWriter {
      * rewrite.
      */
     public List<Record> readIndex() throws IOException {
+        return readIndexView().records();
+    }
+
+    /**
+     * The index as the writer reads it, with the facts the write path needs.
+     *
+     * @param records the readable records
+     * @param bytes the size of the index file
+     * @param corrupt whether the log's structure is broken
+     */
+    private record IndexView(List<Record> records, long bytes, boolean corrupt) {
+    }
+
+    /**
+     * Reads the index once, and reports whether its structure is sound.
+     *
+     * <p>A line that does not parse is <b>tolerated</b> when it is the last line of a file
+     * that does not end in a newline — that is exactly the residue a crash mid-append
+     * leaves. Any other unreadable line means the log's structure is broken: a record
+     * cannot be placed in the order it was written, so the identity and budget checks
+     * computed from it would be unsound. The writer then fails closed rather than acting on
+     * a trace it cannot read. The index is never rewritten to repair it.</p>
+     */
+    private IndexView readIndexView() throws IOException {
         List<Record> records = new ArrayList<>();
-        if (!Files.isRegularFile(index(), LinkOption.NOFOLLOW_LINKS)) {
-            return records;
+        Path index = index();
+        if (!Files.exists(index, LinkOption.NOFOLLOW_LINKS)) {
+            return new IndexView(records, 0L, false);
         }
-        for (String line : Files.readAllLines(index(), StandardCharsets.UTF_8)) {
+        if (!Files.isRegularFile(index, LinkOption.NOFOLLOW_LINKS)) {
+            // something that is not a log stands in the index's place
+            return new IndexView(records, 0L, true);
+        }
+        byte[] raw = Files.readAllBytes(index);
+        String text = new String(raw, StandardCharsets.UTF_8);
+        boolean endsWithNewline = text.endsWith("\n");
+        String[] lines = text.split("\n", -1);
+        int count = endsWithNewline ? lines.length - 1 : lines.length;
+        boolean corrupt = false;
+        for (int position = 0; position < count; position++) {
+            String line = lines[position];
             if (line.isBlank()) {
                 continue;
             }
@@ -421,36 +589,68 @@ public final class ArtifactWriter {
             try {
                 record = JSON.readValue(line, Record.class);
             } catch (IOException torn) {
-                // a partial append: skip it; the write that appends next is unaffected
+                if (position == count - 1 && !endsWithNewline) {
+                    // the residue of a crash mid-append: skipped, never repaired
+                    continue;
+                }
+                corrupt = true;
                 continue;
             }
             if (validRecord(record)) {
                 records.add(record);
             }
         }
-        return records;
+        return new IndexView(records, raw.length, corrupt);
     }
 
+    /**
+     * Appends one record and forces it to disk.
+     *
+     * <p>The separator and the record go out in one write, so a crash in the middle leaves a
+     * partial line <i>without</i> a trailing newline — which is precisely the shape the
+     * reader recognises as a torn append. The channel is forced afterwards, so the trace
+     * that describes the artifact is on the medium before the caller is told the write
+     * succeeded.</p>
+     */
     private void appendRecord(Record record) throws IOException {
-        String line = JSON.writeValueAsString(record) + "\n";
-        ensureTrailingNewline();
-        Files.write(index(), line.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE,
-                StandardOpenOption.APPEND, StandardOpenOption.WRITE, LinkOption.NOFOLLOW_LINKS);
+        byte[] payload = JSON.writeValueAsString(record).getBytes(StandardCharsets.UTF_8);
+        Path index = index();
+        boolean needsSeparator = needsSeparator(index);
+        ByteBuffer buffer = ByteBuffer.allocate(payload.length + 2);
+        if (needsSeparator) {
+            buffer.put((byte) '\n');
+        }
+        buffer.put(payload);
+        buffer.put((byte) '\n');
+        buffer.flip();
+        try (FileChannel channel = FileChannel.open(index, StandardOpenOption.CREATE,
+                StandardOpenOption.WRITE, StandardOpenOption.APPEND, LinkOption.NOFOLLOW_LINKS)) {
+            while (buffer.hasRemaining()) {
+                channel.write(buffer);
+            }
+            channel.force(true);
+        }
     }
 
-    /** A torn trailing line (no newline) must not swallow the next record. */
-    private void ensureTrailingNewline() throws IOException {
-        if (!Files.isRegularFile(index(), LinkOption.NOFOLLOW_LINKS) || Files.size(index()) == 0) {
-            return;
+    /** Whether the index needs a newline before the next record. */
+    private static boolean needsSeparator(Path index) throws IOException {
+        if (!Files.isRegularFile(index, LinkOption.NOFOLLOW_LINKS) || Files.size(index) == 0) {
+            return false;
         }
-        try (var channel = Files.newByteChannel(index(), StandardOpenOption.READ)) {
-            channel.position(Files.size(index()) - 1);
+        try (FileChannel channel = FileChannel.open(index, StandardOpenOption.READ)) {
+            channel.position(Files.size(index) - 1);
             ByteBuffer last = ByteBuffer.allocate(1);
             channel.read(last);
-            if (last.get(0) != '\n') {
-                Files.write(index(), new byte[] {'\n'}, StandardOpenOption.APPEND,
-                        StandardOpenOption.WRITE, LinkOption.NOFOLLOW_LINKS);
-            }
+            return last.get(0) != '\n';
+        }
+    }
+
+    /** Forces the root directory, so the rename into it survives a power loss. */
+    private void forceRootDirectory() {
+        try (FileChannel channel = FileChannel.open(root, StandardOpenOption.READ)) {
+            channel.force(true);
+        } catch (IOException | UnsupportedOperationException notSupported) {
+            // a platform that cannot fsync a directory still gets the artifact's own fsync
         }
     }
 
@@ -461,6 +661,152 @@ public final class ArtifactWriter {
         } catch (IOException | UnsupportedOperationException | IllegalArgumentException notUnix) {
             return false;
         }
+    }
+
+    // ── the writer lease ───────────────────────────────────────────────────
+
+    /**
+     * The exclusive right to write one root.
+     *
+     * <p>Held for the whole write: the identity check, the staging, the move and the index
+     * append are one step with respect to every other writer.</p>
+     */
+    private interface RootLease extends AutoCloseable {
+        @Override
+        void close();
+    }
+
+    /** The root is held by another writer, or its lease cannot be taken. */
+    private static final class WriterConflict extends Exception {
+        private final Disposition disposition;
+
+        WriterConflict(Disposition disposition, String message) {
+            super(message);
+            this.disposition = disposition;
+        }
+    }
+
+    /**
+     * Takes the writer lease of this root.
+     *
+     * <p>Two mechanisms, because they exclude different writers. The JVM-wide lock
+     * serializes the threads of this process; the operating-system lock on the lease file
+     * excludes every other process on the host. A process that cannot take the lease is
+     * <b>refused</b>, not queued: a writer that cannot prove it owns the root must not
+     * write into it. The operating-system lock is released by the kernel when the process
+     * dies, so a crashed writer cannot hold a root hostage.</p>
+     *
+     * @return the lease; closing it releases the root
+     * @throws WriterConflict when another writer holds the root
+     */
+    private RootLease acquireRootLease() throws WriterConflict {
+        Lock local = ROOT_LEASES.computeIfAbsent(root.toString(), key -> new ReentrantLock());
+        local.lock();
+        FileChannel channel = null;
+        try {
+            Path lease = root.resolve(LOCK_FILE);
+            if (Files.isSymbolicLink(lease)) {
+                throw new WriterConflict(Disposition.REFUSED_WRITER_CONFLICT,
+                        "the writer lease file is a symbolic link; the writer never follows one");
+            }
+            channel = FileChannel.open(lease, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
+                    LinkOption.NOFOLLOW_LINKS);
+            FileLock held;
+            try {
+                held = channel.tryLock();
+            } catch (OverlappingFileLockException overlapping) {
+                throw new WriterConflict(Disposition.REFUSED_WRITER_CONFLICT,
+                        "another writer in this process holds this root");
+            }
+            if (held == null) {
+                throw new WriterConflict(Disposition.REFUSED_WRITER_CONFLICT,
+                        "another process holds the writer lease of this root");
+            }
+            final FileLock fileLock = held;
+            final FileChannel openChannel = channel;
+            channel = null;
+            return new RootLease() {
+                @Override
+                public void close() {
+                    try {
+                        fileLock.release();
+                    } catch (IOException ignored) {
+                        // closing the channel releases the lock anyway
+                    }
+                    try {
+                        openChannel.close();
+                    } catch (IOException ignored) {
+                        // the kernel drops the lock with the process
+                    }
+                    local.unlock();
+                }
+            };
+        } catch (WriterConflict conflict) {
+            closeQuietly(channel);
+            local.unlock();
+            throw conflict;
+        } catch (IOException failure) {
+            closeQuietly(channel);
+            local.unlock();
+            // an unwritable root is an I/O failure, not a conflict with another writer
+            throw new WriterConflict(Disposition.REFUSED_WRITE_FAILED,
+                    "the writer lease could not be taken: " + failure.getMessage());
+        }
+    }
+
+    private static void closeQuietly(FileChannel channel) {
+        if (channel == null) {
+            return;
+        }
+        try {
+            channel.close();
+        } catch (IOException ignored) {
+            // the lease was never taken; there is nothing to release
+        }
+    }
+
+    /**
+     * Why the root is no longer the directory this writer was made for, or null.
+     *
+     * <p>A root that is deleted, replaced or swapped for a symbolic link is a different
+     * directory wearing the same name. The writer refuses rather than write into a place
+     * the caller did not authorize.</p>
+     */
+    private String rootReplaced() {
+        if (!Files.exists(root, LinkOption.NOFOLLOW_LINKS)) {
+            return "the authorized root no longer exists: " + root;
+        }
+        if (Files.isSymbolicLink(root)) {
+            return "the authorized root was replaced by a symbolic link: " + root;
+        }
+        if (!Files.isDirectory(root, LinkOption.NOFOLLOW_LINKS)) {
+            return "the authorized root is no longer a directory: " + root;
+        }
+        try {
+            Object identity = identityOf(root);
+            if (rootIdentity != null && identity != null && !rootIdentity.equals(identity)) {
+                return "the authorized root was replaced by another directory: " + root;
+            }
+        } catch (IOException unreadable) {
+            return "the authorized root cannot be identified: " + unreadable.getMessage();
+        }
+        return null;
+    }
+
+    /**
+     * The file system's identity of a path, or null when it has none.
+     *
+     * <p>The identity is the file key together with the creation time. Both are needed: on an
+     * overlay file system the inode number of a deleted directory is handed straight to its
+     * replacement, so the file key alone would call a replaced root the original one. The
+     * creation time of a directory does not move when files are added to it or removed from
+     * it, so the pair is stable for the directory the caller authorized and different for a
+     * different directory that took its place.</p>
+     */
+    private static Object identityOf(Path path) throws IOException {
+        java.nio.file.attribute.BasicFileAttributes attributes =
+                Files.readAttributes(path, java.nio.file.attribute.BasicFileAttributes.class);
+        return attributes.fileKey() + "@" + attributes.creationTime();
     }
 
     /** The identity's own temp name: the sanitized key plus a hash of the raw key. */
@@ -477,22 +823,55 @@ public final class ArtifactWriter {
         }
     }
 
-    /** The other identity that already holds this artifact name, if any. */
-    private Optional<Record> boundToAnotherIdentity(String fileName, String actionId) throws IOException {
-        for (Record record : readIndex()) {
+    /**
+     * The other identity that holds this artifact name, if any.
+     *
+     * <p>A record holds a name only when the artifact <b>on disk</b> carries the digest the
+     * record states. A record whose artifact is missing was written for an artifact that is
+     * gone; a record whose artifact no longer matches was written for different bytes. In
+     * either case the record cannot be checked against the file system, so it does not bind
+     * the name and does not deny this write. This is the difference between an honest trace
+     * and a forged one: the writer verifies the claim it acts on.</p>
+     *
+     * @param records the index records
+     * @param fileName the requested artifact name
+     * @param actionId the requesting identity
+     * @return the record of the identity that holds the name, if any
+     */
+    private Optional<Record> boundToAnotherIdentity(List<Record> records, String fileName,
+                                                     String actionId) {
+        for (Record record : records) {
             if (!record.fileName().equals(fileName) || record.actionId().equals(actionId)) {
                 continue;
             }
-            if (record.status().equals("COMMITTED")) {
-                return Optional.of(record);
+            if (!record.status().equals("COMMITTED") && !record.status().equals("STAGED")) {
+                continue;
             }
-            // the crash window: a STAGED record whose final file already carries its digest
             Path finalPath = root.resolve(record.fileName());
-            if (Files.isRegularFile(finalPath) && digest(finalPath).equals(record.sha256())) {
+            if (carriesDigest(finalPath, record.sha256())) {
                 return Optional.of(record);
             }
         }
         return Optional.empty();
+    }
+
+    /**
+     * The artifacts the root really holds.
+     *
+     * <p>Only a {@code COMMITTED} record whose artifact is present on disk counts. A forged
+     * record names an artifact that does not exist, and counting it would let anyone who can
+     * write the index exhaust the budget of a root that holds nothing.</p>
+     *
+     * @param records the index records
+     * @return the number of distinct artifacts present on disk
+     */
+    private long committedArtifactCount(List<Record> records) {
+        return records.stream()
+                .filter(r -> r.status().equals("COMMITTED"))
+                .map(Record::fileName)
+                .distinct()
+                .filter(name -> Files.isRegularFile(root.resolve(name), LinkOption.NOFOLLOW_LINKS))
+                .count();
     }
 
     /** A record is evidence only if it names a plain artifact and a real digest. */
