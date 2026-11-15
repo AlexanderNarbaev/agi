@@ -2804,7 +2804,7 @@ public final class KnowledgeStore implements AutoCloseable {
      * grows, the earliest asking is kept, and the most recent wording is
      * kept because it is the one the user last used.
      */
-    public AskedQuestion recordAskedQuestion(String workspaceId, String question,
+    public synchronized AskedQuestion recordAskedQuestion(String workspaceId, String question,
                                              List<String> uncoveredTerms, boolean answered,
                                              long askedAt) {
         String key = QuestionConsolidator.canonicalKey(question);
@@ -4834,7 +4834,7 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     /** Export the whole workspace as one snapshot. */
-    public KnowledgeSnapshot exportWorkspace(String workspaceId) {
+    public synchronized KnowledgeSnapshot exportWorkspace(String workspaceId) {
         String name = queryOne("SELECT name FROM workspace WHERE id = ?", workspaceId,
                 rs -> rs.getString("name"));
         return new KnowledgeSnapshot(workspaceId, name,
@@ -4845,7 +4845,7 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     /** The workspace identifiers this store holds. */
-    public List<String> workspaces() {
+    public synchronized List<String> workspaces() {
         List<String> ids = new ArrayList<>();
         try (Statement st = connection.createStatement();
              ResultSet rs = st.executeQuery("SELECT id FROM workspace ORDER BY id")) {
