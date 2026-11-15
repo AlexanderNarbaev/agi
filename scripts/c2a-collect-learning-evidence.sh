@@ -152,7 +152,10 @@ echo "-- BEFORE: $BEFORE_COUNT records, $BEFORE_DIST, sha256=$BEFORE_SHA"
 # ---- 1. the collection -------------------------------------------------------
 echo "-- step 1: the real runtime writes real episodes"
 rm -rf matrix-brain-runtime/build/test-results
-if ! gradle_locked :matrix-brain-runtime:test --tests "$COLLECT_FILTER"; then
+# the flag makes the measured collection run: it is the only step that writes into the
+# machine's real episodic log, so it must never happen as a side effect of an ordinary build
+if ! gradle_locked :matrix-brain-runtime:test --tests "$COLLECT_FILTER" \
+        -Dmatrix.c2a.collect=true; then
   echo "FAIL: the collection run failed"
   exit 1
 fi

@@ -25,6 +25,7 @@ import java.util.Random;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * C2A — the REAL episode collection harness (Workstream C of CONCEPT-TO-ACTION).
@@ -234,6 +235,17 @@ class C2ARealEpisodeCollectionTest {
     @Test
     @DisplayName("C2A — real episodes from the current build, with explicit provenance")
     void collectRealEpisodes() throws Exception {
+        // The measured collection WRITES into the machine's real episodic log. A test that
+        // changes the machine's runtime state as a side effect of an ordinary build is
+        // wrong, and it is also destructive to another measurement: the downstream
+        // accuracy test reads the SAME log, and on a machine where the log does not
+        // exist it skips itself (it assumes the log away) — so a collection that runs
+        // first would silently replace "no data" with "59 new episodes" and change that
+        // test's verdict. The measured run is therefore OPT-IN, and the runbook that
+        // owns it passes the flag.
+        assumeTrue(Boolean.getBoolean("matrix.c2a.collect"),
+                "the measured collection is opt-in: it writes into the machine's real episodic "
+                        + "log, and scripts/c2a-collect-learning-evidence.sh is what runs it");
         Path root = repoRoot();
         Path mindDir = propertyPath("matrix.c2a.mind-dir", root.resolve("data/mind"));
         Path hdcPath = propertyPath("matrix.c2a.hdc", mindDir.resolve("hdc_kb.ndjson"));

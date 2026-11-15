@@ -9,8 +9,10 @@ except this one).
 **Measured against:** the runtime log `data/mind/episodic.ndjson` as it stood at that moment —
 **108 records**, sha256 `c2035b35478fc11b165ff24576fc277a9797c92208b8e8a5a83aecf13b336df1`.
 **The log has since grown**: the later collection of real observations (see
-`docs-v2/engineering/C2A-LEARNING-EVIDENCE.md`) appended 59 records, so the file holds 167 and
-the tail-20 window is **10 positive / 10 negative** instead of 20 / 0. Every number below is a
+`docs-v2/engineering/C2A-LEARNING-EVIDENCE.md`) appended 59 records, so the file holds **at least
+167** — and it keeps growing, because the runtime appends to it on every served interaction (226
+after the wave's own collection was re-run while the opt-in flag was verified) — and the tail-20
+window is **10 positive / 10 negative** instead of 20 / 0. Every number below is a
 statement about the FIRST 108 records, and they still reproduce: `scripts/c1-measure-learning-window.py`
 — the measurement script, now in the repository — re-measures them, and the first 108 lines still
 hash to the sha256 above.
