@@ -142,10 +142,24 @@ inputs), applied by **record id**, never by position.
 
 | | before | after |
 |---|---|---|
-| admitted | 226 | **17** |
-| excluded | 0 | **209** |
-| the window | 20 (10 positive / 10 negative) | **17 (15 / 2)** |
-| the induction fidelity | 0.50 | **0.75** |
+| admitted | 226 | **14** |
+| excluded | 0 | **212** |
+| the window | 20 (10 positive / 10 negative) | **14 (12 / 2)** |
+| the induction fidelity | 0.50 | **0.75** on a mixed window |
+
+**The owner's answer on the residual, and the one frozen-zone change it authorizes.** The owner
+chose (question D1-QUARANTINE-RESIDUAL-010, option B): the residual records stay as they are, and
+the frozen probe corpus gains the pattern of a **letter-less arithmetic probe** — a whole query that
+is nothing but digits, one of `+ - * /`, digits and an optional trailing `?`. The rule is
+**reject-only**: it can only exclude a record from learning, never admit one, and its precision comes
+from the whole-text anchor, so a claim that merely contains digits and an operator ("The answer is
+2+3=5") and a legitimate question with numbers in it ("How many legs does a spider have?") are both
+untouched. It marked **3** more records of the real log (`100-7?`, `7*6` twice); the ledger was
+**appended** by the tool (209 → 212 marks, the previous bytes preserved) and the log's digest is
+unchanged. This is the **only** change to a frozen zone that the initiative is authorized to make; it
+is recorded as **OD-059**, and the exception it needs in the quality gate's frozen-zone baseline is
+recorded with the owner's authority, its scope and the 79 diff lines it costs. The battery's **items**
+are untouched, so the evaluation set and its published pass rate do not move.
 
 **The honesty note.** 0.75 on a 15/2 window is a real measurement; the earlier 1.00 that the
 positional rule produced was a **single-class window** — trivial, not a gain. The residual is 17
@@ -166,7 +180,11 @@ historical fact) and a test that fails when the ledger is missing, **monotonical
 growing log never breaks the build and no digest is pinned. The failure was demonstrated on a copy:
 with the ledger removed, the canary names the exact consequence. A fresh clone skips with a reason.
 
-**Known limits, recorded not hidden.** The content rule can quarantine a genuine organic record that
+**The ledger's own disappearance now breaks the build.** The canary: a tracked JSON records the log's
+record count and the mark count, and a test fails when the log holds at least that many records but
+the ledger is missing — **monotonically** ("at least"), so a growing log never breaks the build and no
+digest is pinned. The failure was demonstrated on a copy. The known limits below are recorded rather
+than hidden. The content rule can quarantine a genuine organic record that
 repeats a designed input; the quarantine is enforced at the gate, not at the trainer; the gate trusts
 a self-declared role. The HDC retrieval substrate was not traced for earlier contamination; the
 gateway's other writers were not traced.
