@@ -1,0 +1,550 @@
+{
+  "dataset" : "epistemic-heldout-premise-semantics",
+  "version" : "1.0",
+  "date" : "2026-11-15",
+  "purpose" : "a new independently held-out evaluation set for the epistemic semantics: premise handling and evidence-conflict surfacing, with positive controls and adversarial negative controls, frozen before any implementation is selected",
+  "freeze" : {
+    "algorithm" : "sha-256",
+    "scope" : "the UTF-8 bytes of the compact JSON document that is the 'cases' array of this dataset, followed by a single line feed",
+    "sha256" : "2f4347da61b67df5f039f4dc72c985a8187f5c211e91faf7cd4a7ae2e791acbe",
+    "frozenAt" : "2026-11-15",
+    "frozenBefore" : "the measurement of any candidate implementation of the premise semantics, and before any algorithm was selected for the repair",
+    "regressionSets" : [ "epistemic-eval/cases.json", "docs-v2/engineering/C2A-HELDOUT-SET.json" ]
+  },
+  "manifest" : {
+    "corpus" : "corpus/plate-tectonics",
+    "corpusManifest" : "matrix-core/src/main/resources/corpus/plate-tectonics/corpus-manifest.json",
+    "corpusManifestSha256" : "4c4b37b8165a09fc5864dd007220ee7e33f48b2d840cedefbc46fc9f7d788d02",
+    "workspace" : "epistemic-heldout-plate-tectonics",
+    "acquisitionPath" : "io.matrix.knowledge.acquisition.AcquisitionCycle.SEED_CORPUS -> io.matrix.knowledge.acquisition.ClasspathCorpus.extract -> io.matrix.knowledge.KnowledgeWorkbench.importDocument",
+    "builder" : "io.matrix.knowledge.epistemic.EpistemicHeldOutSetBuilderTest",
+    "method" : "the corpus documents are imported through the production acquisition path; every gold claim is the production claim whose proposition equals a sentence of a corpus document, and the builder proves the sentence is verbatim in that document before the case is written out",
+    "verifications" : [ "the gold proposition occurs verbatim in its corpus document", "the gold claim exists in the production workspace and was introduced by that document's source", "the gold proposition of this set is not a gold proposition of the 29-case development set nor of the C2A 38-case held-out set", "a question of this set shares no normalised token sequence of length >= 4 with any development question, any development assertion or any C2A held-out question", "an UNSUPPORTED case names content terms that occur in no corpus document", "the nine classes are present, and every corpus document carries a case", "no case repeats a question or an id" ],
+    "classes" : {
+      "SUPPORTED_PREMISE" : "the corpus supports the presupposition; the expected disposition is ANSWERED and a refusal is a false refusal",
+      "REFUTED_PREMISE" : "the corpus contradicts the presupposition; the expected disposition is REFUTED and the contradicting claim and source must be cited",
+      "UNSUPPORTED_PREMISE" : "no evidence either way; the expected disposition is UNSUPPORTED and calling the premise false is a false contradiction",
+      "IRRELEVANT_REFUTATION" : "the corpus holds a claim that looks like a refutation but is about another subject; the expected disposition is NOT_REFUTED and the look-alike claim must not be used as the contradiction",
+      "CONFLICTING_EVIDENCE" : "two corpus claims that cannot both hold; the expected disposition is CONFLICT_SURFACED and both sides are cited with their provenance",
+      "AMBIGUOUS_READINGS" : "several defensible readings; the expected disposition is AMBIGUITY_SURFACED and no reading may be silently chosen",
+      "LEXICAL_NEGATION" : "the surface wording negates or inverts the relation; the expected disposition follows the evidence, not the wording",
+      "PARAPHRASE" : "the same presupposition phrased differently; the expected disposition is the one of the presupposition, and string matching cannot find it",
+      "NO_PREMISE" : "a plain factual question; the expected disposition is ANSWERED and an abstention is an over-refusal"
+    },
+    "documents" : [ {
+      "file" : "usgs-this-dynamic-earth.md",
+      "sourceId" : "src-80490bee",
+      "contentHash" : "a82d4ca7143a018710193839fcbeb982998c3ac73db5edd621bf29ecb2467cdc",
+      "claimsAdded" : 77,
+      "conceptsCreated" : 77,
+      "representationsCreated" : 77,
+      "licence" : "US-PUBLIC-DOMAIN",
+      "licenceUrl" : "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+      "sourceUrl" : "https://pubs.usgs.gov/gip/dynamic/understanding.html",
+      "attribution" : "U.S. Geological Survey, 'This Dynamic Earth' (public domain)",
+      "revision" : "snapshot 2026-11-07",
+      "accessedAt" : "2026-11-07",
+      "sha256" : "a82d4ca7143a018710193839fcbeb982998c3ac73db5edd621bf29ecb2467cdc"
+    }, {
+      "file" : "wikipedia-plate-tectonics.md",
+      "sourceId" : "src-c62264ff",
+      "contentHash" : "db794272ec30fb62ce4d9076e43db0fadc2b1037fc9d437a51a690da8fc1c853",
+      "claimsAdded" : 271,
+      "conceptsCreated" : 249,
+      "representationsCreated" : 258,
+      "licence" : "CC-BY-SA-4.0",
+      "licenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "sourceUrl" : "https://en.wikipedia.org/w/index.php?title=Plate%20tectonics&oldid=1381934246",
+      "attribution" : "'Plate tectonics', Wikipedia (CC BY-SA 4.0), revision 1381934246, 2026-10-25T18:21:16Z",
+      "revision" : "oldid=1381934246",
+      "accessedAt" : "2026-11-07",
+      "sha256" : "db794272ec30fb62ce4d9076e43db0fadc2b1037fc9d437a51a690da8fc1c853"
+    } ],
+    "counts" : {
+      "cases" : 16,
+      "distinctGoldPropositions" : 16,
+      "casesPerClass" : {
+        "SUPPORTED_PREMISE" : 2,
+        "REFUTED_PREMISE" : 2,
+        "UNSUPPORTED_PREMISE" : 2,
+        "IRRELEVANT_REFUTATION" : 1,
+        "CONFLICTING_EVIDENCE" : 1,
+        "AMBIGUOUS_READINGS" : 2,
+        "LEXICAL_NEGATION" : 2,
+        "PARAPHRASE" : 2,
+        "NO_PREMISE" : 2
+      },
+      "casesPerDocument" : {
+        "usgs-this-dynamic-earth.md" : 9,
+        "wikipedia-plate-tectonics.md" : 4
+      },
+      "goldClaimsPerDocument" : {
+        "usgs-this-dynamic-earth.md" : 15,
+        "wikipedia-plate-tectonics.md" : 9
+      }
+    },
+    "regressionSets" : {
+      "developmentSet" : "matrix-core/src/main/resources/epistemic-eval/cases.json",
+      "developmentSetSha256" : "214e0b9a7e59a227e2cf3c688623b05d8e039a53de9c5cffb8b2d82b4b575a1f",
+      "c2aHeldOutSet" : "docs-v2/engineering/C2A-HELDOUT-SET.json",
+      "c2aHeldOutSetSha256" : "bbb3d2ad630ec610df3dbaae3ec10978d6cbbe740e13604dfd827b56b6872d77",
+      "status" : "both sets are REGRESSION sets from this one on: they keep their value and they are no longer fresh proof"
+    }
+  },
+  "cases" : [ {
+    "id" : "E-S01",
+    "class" : "SUPPORTED_PREMISE",
+    "level" : "INTRODUCTORY",
+    "question" : "Given that new crust is generated where the plates pull away from each other, what happens where Mid-Atlantic Ridge runs?",
+    "expectedDisposition" : "ANSWERED",
+    "premise" : "new crust is generated where the plates pull away from each other",
+    "goldClaims" : [ {
+      "claimId" : "clm-33443e4a",
+      "proposition" : "There are four types of plate boundaries: Divergent boundaries -- where new crust is generated as the plates pull away from each other.",
+      "sourceSpan" : "There are four types of plate boundaries: Divergent boundaries -- where new crust is generated as the plates pull away from each other.",
+      "claimContext" : "usgs-this-dynamic-earth.md: \"This Dynamic Earth\" (line 1) [characters 22-17144]",
+      "sourceId" : "src-80490bee",
+      "sourceTitle" : "usgs-this-dynamic-earth.md",
+      "sourceLicence" : "US-PUBLIC-DOMAIN",
+      "sourceLicenceUrl" : "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+      "sourceUrl" : "https://pubs.usgs.gov/gip/dynamic/understanding.html",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-4dd45449",
+      "proposition" : "Perhaps the best known of the divergent boundaries is the Mid-Atlantic Ridge.",
+      "sourceSpan" : "Perhaps the best known of the divergent boundaries is the Mid-Atlantic Ridge.",
+      "claimContext" : "usgs-this-dynamic-earth.md: \"This Dynamic Earth\" (line 1) [characters 22-17144]",
+      "sourceId" : "src-80490bee",
+      "sourceTitle" : "usgs-this-dynamic-earth.md",
+      "sourceLicence" : "US-PUBLIC-DOMAIN",
+      "sourceLicenceUrl" : "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+      "sourceUrl" : "https://pubs.usgs.gov/gip/dynamic/understanding.html",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "usgs-this-dynamic-earth.md" ],
+    "traits" : [ "premise-marker" ],
+    "note" : "the corpus states the presupposition in its own words; the system must answer it, and a refusal here is a false refusal"
+  }, {
+    "id" : "E-S02",
+    "class" : "SUPPORTED_PREMISE",
+    "level" : "INTRODUCTORY",
+    "question" : "Given that a subduction zone is where a sinking plate goes, what becomes of the crust there?",
+    "expectedDisposition" : "ANSWERED",
+    "premise" : "a subduction zone is where a sinking plate goes",
+    "goldClaims" : [ {
+      "claimId" : "clm-5218fdea",
+      "proposition" : "The location where sinking of a plate occurs is called a subduction zone.",
+      "sourceSpan" : "The location where sinking of a plate occurs is called a subduction zone.",
+      "claimContext" : "usgs-this-dynamic-earth.md: \"This Dynamic Earth\" (line 1) [characters 22-17144]",
+      "sourceId" : "src-80490bee",
+      "sourceTitle" : "usgs-this-dynamic-earth.md",
+      "sourceLicence" : "US-PUBLIC-DOMAIN",
+      "sourceLicenceUrl" : "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+      "sourceUrl" : "https://pubs.usgs.gov/gip/dynamic/understanding.html",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-551c678f",
+      "proposition" : "Convergent boundaries -- where crust is destroyed as one plate dives under another.",
+      "sourceSpan" : "Convergent boundaries -- where crust is destroyed as one plate dives under another.",
+      "claimContext" : "usgs-this-dynamic-earth.md: \"This Dynamic Earth\" (line 1) [characters 22-17144]",
+      "sourceId" : "src-80490bee",
+      "sourceTitle" : "usgs-this-dynamic-earth.md",
+      "sourceLicence" : "US-PUBLIC-DOMAIN",
+      "sourceLicenceUrl" : "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+      "sourceUrl" : "https://pubs.usgs.gov/gip/dynamic/understanding.html",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "usgs-this-dynamic-earth.md" ],
+    "traits" : [ "premise-marker" ],
+    "note" : "the corpus states the presupposition; the system must answer it"
+  }, {
+    "id" : "E-R01",
+    "class" : "REFUTED_PREMISE",
+    "level" : "INTRODUCTORY",
+    "question" : "Given that there was an apparent mechanism for continental drift when Wegener proposed it, how was his theory received?",
+    "expectedDisposition" : "REFUTED",
+    "premise" : "there was an apparent mechanism for continental drift when Wegener proposed it",
+    "goldClaims" : [ {
+      "claimId" : "clm-136a59db",
+      "proposition" : "However, his ideas were not taken seriously by many geologists, who pointed out that there was no apparent mechanism for continental drift.",
+      "sourceSpan" : "However, his ideas were not taken seriously by many geologists, who pointed out that there was no apparent mechanism for continental drift.",
+      "claimContext" : "wikipedia-plate-tectonics.md: \"Plate tectonics\" (line 1) [characters 19-58931]",
+      "sourceId" : "src-c62264ff",
+      "sourceTitle" : "wikipedia-plate-tectonics.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "sourceUrl" : "https://en.wikipedia.org/w/index.php?title=Plate%20tectonics&oldid=1381934246",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-9a6d3a7e",
+      "proposition" : "Wegener's work was initially not widely accepted, in part due to a lack of detailed evidence but mostly because of the lack of a reasonable physically supported mechanism.",
+      "sourceSpan" : "Wegener's work was initially not widely accepted, in part due to a lack of detailed evidence but mostly because of the lack of a reasonable physically supported mechanism.",
+      "claimContext" : "wikipedia-plate-tectonics.md: \"Plate tectonics\" (line 1) [characters 19-58931]",
+      "sourceId" : "src-c62264ff",
+      "sourceTitle" : "wikipedia-plate-tectonics.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "sourceUrl" : "https://en.wikipedia.org/w/index.php?title=Plate%20tectonics&oldid=1381934246",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-plate-tectonics.md" ],
+    "traits" : [ "premise-marker" ],
+    "note" : "the corpus denies the presupposition outright; the system must refuse it and name the contradicting claim and its source"
+  }, {
+    "id" : "E-R02",
+    "class" : "REFUTED_PREMISE",
+    "level" : "INTRODUCTORY",
+    "question" : "Given that a horizontal pushing force is what moves the plates apart at spreading ridges, what drives that motion?",
+    "expectedDisposition" : "REFUTED",
+    "premise" : "a horizontal pushing force is what moves the plates apart at spreading ridges",
+    "goldClaims" : [ {
+      "claimId" : "clm-478f87a",
+      "proposition" : "This is a misnomer as there is no force \"pushing\" horizontally, indeed tensional features are dominant along ridges.",
+      "sourceSpan" : "This is a misnomer as there is no force \"pushing\" horizontally, indeed tensional features are dominant along ridges.",
+      "claimContext" : "wikipedia-plate-tectonics.md: \"Plate tectonics\" (line 1) [characters 19-58931]",
+      "sourceId" : "src-c62264ff",
+      "sourceTitle" : "wikipedia-plate-tectonics.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "sourceUrl" : "https://en.wikipedia.org/w/index.php?title=Plate%20tectonics&oldid=1381934246",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-plate-tectonics.md" ],
+    "traits" : [ "premise-marker" ],
+    "note" : "the corpus denies the presupposition in its own words; the system must refuse it and cite the contradicting claim"
+  }, {
+    "id" : "E-U01",
+    "class" : "UNSUPPORTED_PREMISE",
+    "level" : "INTRODUCTORY",
+    "question" : "Given that foraminifera in palaeomagnetic core samples date the Triassic, how is the age of the layer established?",
+    "expectedDisposition" : "UNSUPPORTED",
+    "premise" : "foraminifera in palaeomagnetic core samples date the Triassic",
+    "goldClaims" : [ ],
+    "sourceFiles" : [ ],
+    "contentTerms" : [ "foraminifera", "palaeomagnetic", "triassic" ],
+    "traits" : [ "premise-marker" ],
+    "note" : "no corpus document mentions any of the content terms; the system must not call the premise false, and must not call it true either"
+  }, {
+    "id" : "E-U02",
+    "class" : "UNSUPPORTED_PREMISE",
+    "level" : "INTRODUCTORY",
+    "question" : "Given that an accretionary prism of eclogite marks a Moho discontinuity, what does the structure indicate?",
+    "expectedDisposition" : "UNSUPPORTED",
+    "premise" : "an accretionary prism of eclogite marks a Moho discontinuity",
+    "goldClaims" : [ ],
+    "sourceFiles" : [ ],
+    "contentTerms" : [ "accretionary", "eclogite", "moho" ],
+    "traits" : [ "premise-marker" ],
+    "note" : "no corpus document mentions any of the content terms; absence of evidence is not a contradiction and the system must say so rather than refuse"
+  }, {
+    "id" : "E-I01",
+    "class" : "IRRELEVANT_REFUTATION",
+    "level" : "INTRODUCTORY",
+    "question" : "Given that the horizontal grinding of the Pacific Plate past the North American Plate is caused by a pushing force, what causes that motion?",
+    "expectedDisposition" : "NOT_REFUTED",
+    "premise" : "the horizontal grinding of the Pacific Plate past the North American Plate is caused by a pushing force",
+    "goldClaims" : [ {
+      "claimId" : "clm-29a6d600",
+      "proposition" : "Along it, the Pacific Plate has been grinding horizontally past the North American Plate for 10 million years, at an average rate of about 5 cm/yr.",
+      "sourceSpan" : "Along it, the Pacific Plate has been grinding horizontally past the North American Plate for 10 million years, at an average rate of about 5 cm/yr.",
+      "claimContext" : "usgs-this-dynamic-earth.md: \"This Dynamic Earth\" (line 1) [characters 22-17144]",
+      "sourceId" : "src-80490bee",
+      "sourceTitle" : "usgs-this-dynamic-earth.md",
+      "sourceLicence" : "US-PUBLIC-DOMAIN",
+      "sourceLicenceUrl" : "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+      "sourceUrl" : "https://pubs.usgs.gov/gip/dynamic/understanding.html",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "usgs-this-dynamic-earth.md" ],
+    "trapClaims" : [ {
+      "proposition" : "This is a misnomer as there is no force \"pushing\" horizontally, indeed tensional features are dominant along ridges.",
+      "sourceSpan" : "This is a misnomer as there is no force \"pushing\" horizontally, indeed tensional features are dominant along ridges.",
+      "claimId" : "clm-478f87a",
+      "claimContext" : "wikipedia-plate-tectonics.md: \"Plate tectonics\" (line 1) [characters 19-58931]",
+      "sourceId" : "src-c62264ff"
+    } ],
+    "traits" : [ "premise-marker" ],
+    "note" : "the corpus holds a denial of a pushing force, but the denial is about spreading ridges and not about the San Andreas; a system that reads the denial as a refutation of this premise has produced a false contradiction"
+  }, {
+    "id" : "E-C01",
+    "class" : "CONFLICTING_EVIDENCE",
+    "level" : "INTRODUCTORY",
+    "question" : "Given that slab pull along subduction zones is the major driving force of plate motion, what does the corpus say about the Pacific plate?",
+    "expectedDisposition" : "CONFLICT_SURFACED",
+    "premise" : "slab pull along subduction zones is the major driving force of plate motion",
+    "goldClaims" : [ {
+      "claimId" : "clm-d5ae092b",
+      "proposition" : "It is thus thought that forces associated with the downgoing plate (slab pull and slab suction) are the driving forces which determine the motion of plates, except for those plates which are not being subducted.",
+      "sourceSpan" : "It is thus thought that forces associated with the downgoing plate (slab pull and slab suction) are the driving forces which determine the motion of plates, except for those plates which are not being subducted.",
+      "claimContext" : "wikipedia-plate-tectonics.md: \"Plate tectonics\" (line 1) [characters 19-58931]",
+      "sourceId" : "src-c62264ff",
+      "sourceTitle" : "wikipedia-plate-tectonics.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "sourceUrl" : "https://en.wikipedia.org/w/index.php?title=Plate%20tectonics&oldid=1381934246",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-6de87b0",
+      "proposition" : "This view however has been contradicted by a recent study which found that the actual motions of the Pacific plate and other plates associated with the East Pacific Rise do not correlate mainly with either slab pull or slab push, but rather with a mantle convection upwelling whose horizontal spreading along the bases of the various plates drives them along via viscosity-related traction forces.",
+      "sourceSpan" : "This view however has been contradicted by a recent study which found that the actual motions of the Pacific plate and other plates associated with the East Pacific Rise do not correlate mainly with either slab pull or slab push, but rather with a mantle convection upwelling whose horizontal spreading along the bases of the various plates drives them along via viscosity-related traction forces.",
+      "claimContext" : "wikipedia-plate-tectonics.md: \"Plate tectonics\" (line 1) [characters 19-58931]",
+      "sourceId" : "src-c62264ff",
+      "sourceTitle" : "wikipedia-plate-tectonics.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "sourceUrl" : "https://en.wikipedia.org/w/index.php?title=Plate%20tectonics&oldid=1381934246",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-plate-tectonics.md" ],
+    "traits" : [ "premise-marker" ],
+    "note" : "the corpus holds two accounts of the driving mechanism that cannot both hold; the system must surface both with their provenance instead of choosing one"
+  }, {
+    "id" : "E-A01",
+    "class" : "AMBIGUOUS_READINGS",
+    "level" : "INTRODUCTORY",
+    "question" : "Given that plate boundaries are narrow lines between two plates, how are they described?",
+    "expectedDisposition" : "AMBIGUITY_SURFACED",
+    "premise" : "plate boundaries are narrow lines between two plates",
+    "goldClaims" : [ ],
+    "sourceFiles" : [ "usgs-this-dynamic-earth.md" ],
+    "readings" : [ {
+      "reading" : "the boundary is a narrow zone between two plates",
+      "file" : "usgs-this-dynamic-earth.md",
+      "spans" : [ {
+        "proposition" : "Most movement occurs along narrow zones between plates where the results of plate-tectonic forces are most evident.",
+        "sourceSpan" : "Most movement occurs along narrow zones between plates where the results of plate-tectonic forces are most evident.",
+        "claimId" : "clm-1a356023",
+        "claimContext" : "usgs-this-dynamic-earth.md: \"This Dynamic Earth\" (line 1) [characters 22-17144]",
+        "sourceId" : "src-80490bee"
+      } ]
+    }, {
+      "reading" : "the boundary is a broad belt in which the boundary is not well defined",
+      "file" : "usgs-this-dynamic-earth.md",
+      "spans" : [ {
+        "proposition" : "Plate boundary zones -- broad belts in which boundaries are not well defined and the effects of plate interaction are unclear.",
+        "sourceSpan" : "Plate boundary zones -- broad belts in which boundaries are not well defined and the effects of plate interaction are unclear.",
+        "claimId" : "clm-4f207811",
+        "claimContext" : "usgs-this-dynamic-earth.md: \"This Dynamic Earth\" (line 1) [characters 22-17144]",
+        "sourceId" : "src-80490bee"
+      }, {
+        "proposition" : "In some regions, the boundaries are not well defined because the plate-movement deformation occurring there extends over a broad belt (called a plate-boundary zone ).",
+        "sourceSpan" : "In some regions, the boundaries are not well defined because the plate-movement deformation occurring there extends over a broad belt (called a plate-boundary zone ).",
+        "claimId" : "clm-de861fd2",
+        "claimContext" : "usgs-this-dynamic-earth.md: \"This Dynamic Earth\" (line 1) [characters 22-17144]",
+        "sourceId" : "src-80490bee"
+      } ]
+    } ],
+    "traits" : [ "premise-marker" ],
+    "note" : "the corpus describes the plate boundary both as a narrow zone and as a broad belt; the two readings are defensible and the system must distinguish them rather than pick one"
+  }, {
+    "id" : "E-A02",
+    "class" : "AMBIGUOUS_READINGS",
+    "level" : "INTRODUCTORY",
+    "question" : "Which forces does the corpus list as possible drivers of plate motion?",
+    "expectedDisposition" : "AMBIGUITY_SURFACED",
+    "goldClaims" : [ ],
+    "sourceFiles" : [ "wikipedia-plate-tectonics.md" ],
+    "readings" : [ {
+      "reading" : "slab pull and slab suction",
+      "file" : "wikipedia-plate-tectonics.md",
+      "spans" : [ {
+        "proposition" : "It is thus thought that forces associated with the downgoing plate (slab pull and slab suction) are the driving forces which determine the motion of plates, except for those plates which are not being subducted.",
+        "sourceSpan" : "It is thus thought that forces associated with the downgoing plate (slab pull and slab suction) are the driving forces which determine the motion of plates, except for those plates which are not being subducted.",
+        "claimId" : "clm-d5ae092b",
+        "claimContext" : "wikipedia-plate-tectonics.md: \"Plate tectonics\" (line 1) [characters 19-58931]",
+        "sourceId" : "src-c62264ff"
+      } ]
+    }, {
+      "reading" : "tidal force",
+      "file" : "wikipedia-plate-tectonics.md",
+      "spans" : [ {
+        "proposition" : "Possible tidal effect on plate tectonics Of the many forces discussed above, tidal force is still highly debated and defended as a possible principal driving force of plate tectonics.",
+        "sourceSpan" : "Possible tidal effect on plate tectonics Of the many forces discussed above, tidal force is still highly debated and defended as a possible principal driving force of plate tectonics.",
+        "claimId" : "clm-b9cf3eea",
+        "claimContext" : "wikipedia-plate-tectonics.md: \"Plate tectonics\" (line 1) [characters 19-58931]",
+        "sourceId" : "src-c62264ff"
+      } ]
+    }, {
+      "reading" : "surge tectonics, in which the mantle flows in channels",
+      "file" : "wikipedia-plate-tectonics.md",
+      "spans" : [ {
+        "proposition" : "Surge tectonics Another theory is that the mantle flows neither in cells nor large plumes but rather as a series of channels just below Earth's crust, which then provide basal friction to the lithosphere.",
+        "sourceSpan" : "Surge tectonics Another theory is that the mantle flows neither in cells nor large plumes but rather as a series of channels just below Earth's crust, which then provide basal friction to the lithosphere.",
+        "claimId" : "clm-6c105b94",
+        "claimContext" : "wikipedia-plate-tectonics.md: \"Plate tectonics\" (line 1) [characters 19-58931]",
+        "sourceId" : "src-c62264ff"
+      } ]
+    }, {
+      "reading" : "mantle convection upwelling with basal traction",
+      "file" : "wikipedia-plate-tectonics.md",
+      "spans" : [ {
+        "proposition" : "This view however has been contradicted by a recent study which found that the actual motions of the Pacific plate and other plates associated with the East Pacific Rise do not correlate mainly with either slab pull or slab push, but rather with a mantle convection upwelling whose horizontal spreading along the bases of the various plates drives them along via viscosity-related traction forces.",
+        "sourceSpan" : "This view however has been contradicted by a recent study which found that the actual motions of the Pacific plate and other plates associated with the East Pacific Rise do not correlate mainly with either slab pull or slab push, but rather with a mantle convection upwelling whose horizontal spreading along the bases of the various plates drives them along via viscosity-related traction forces.",
+        "claimId" : "clm-6de87b0",
+        "claimContext" : "wikipedia-plate-tectonics.md: \"Plate tectonics\" (line 1) [characters 19-58931]",
+        "sourceId" : "src-c62264ff"
+      } ]
+    } ],
+    "traits" : [ "no-premise" ],
+    "note" : "the corpus names four defensible drivers and does not settle between them; the system must report the readings rather than invent a resolution"
+  }, {
+    "id" : "E-L01",
+    "class" : "LEXICAL_NEGATION",
+    "level" : "INTRODUCTORY",
+    "question" : "Given that no new crust is created where the plates pull away from each other, what happens there?",
+    "expectedDisposition" : "REFUTED",
+    "premise" : "no new crust is created where the plates pull away from each other",
+    "goldClaims" : [ {
+      "claimId" : "clm-33443e4a",
+      "proposition" : "There are four types of plate boundaries: Divergent boundaries -- where new crust is generated as the plates pull away from each other.",
+      "sourceSpan" : "There are four types of plate boundaries: Divergent boundaries -- where new crust is generated as the plates pull away from each other.",
+      "claimContext" : "usgs-this-dynamic-earth.md: \"This Dynamic Earth\" (line 1) [characters 22-17144]",
+      "sourceId" : "src-80490bee",
+      "sourceTitle" : "usgs-this-dynamic-earth.md",
+      "sourceLicence" : "US-PUBLIC-DOMAIN",
+      "sourceLicenceUrl" : "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+      "sourceUrl" : "https://pubs.usgs.gov/gip/dynamic/understanding.html",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "usgs-this-dynamic-earth.md" ],
+    "traits" : [ "premise-marker", "negation" ],
+    "note" : "the question negates the relation the corpus asserts; the verdict must follow the evidence, so the negated premise is the refuted one"
+  }, {
+    "id" : "E-L02",
+    "class" : "LEXICAL_NEGATION",
+    "level" : "INTRODUCTORY",
+    "question" : "Поскольку тектонические плиты никогда не расходились, как образовались срединно-океанические хребты?",
+    "expectedDisposition" : "UNSUPPORTED",
+    "premise" : "тектонические плиты никогда не расходились",
+    "goldClaims" : [ ],
+    "sourceFiles" : [ ],
+    "contentTerms" : [ "тектонические", "расходились", "хребты" ],
+    "traits" : [ "premise-marker", "negation" ],
+    "note" : "the negated premise is in a language the corpus does not hold; the requirement is the conservative one: a negation must never become a contradiction the evidence does not contain, so the system must neither confirm nor deny it"
+  }, {
+    "id" : "E-P01",
+    "class" : "PARAPHRASE",
+    "level" : "INTRODUCTORY",
+    "question" : "Given that Mid-Atlantic Ridge is a divergent boundary, what takes place along it?",
+    "expectedDisposition" : "ANSWERED",
+    "premise" : "Mid-Atlantic Ridge is a divergent boundary",
+    "goldClaims" : [ {
+      "claimId" : "clm-4dd45449",
+      "proposition" : "Perhaps the best known of the divergent boundaries is the Mid-Atlantic Ridge.",
+      "sourceSpan" : "Perhaps the best known of the divergent boundaries is the Mid-Atlantic Ridge.",
+      "claimContext" : "usgs-this-dynamic-earth.md: \"This Dynamic Earth\" (line 1) [characters 22-17144]",
+      "sourceId" : "src-80490bee",
+      "sourceTitle" : "usgs-this-dynamic-earth.md",
+      "sourceLicence" : "US-PUBLIC-DOMAIN",
+      "sourceLicenceUrl" : "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+      "sourceUrl" : "https://pubs.usgs.gov/gip/dynamic/understanding.html",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-33443e4a",
+      "proposition" : "There are four types of plate boundaries: Divergent boundaries -- where new crust is generated as the plates pull away from each other.",
+      "sourceSpan" : "There are four types of plate boundaries: Divergent boundaries -- where new crust is generated as the plates pull away from each other.",
+      "claimContext" : "usgs-this-dynamic-earth.md: \"This Dynamic Earth\" (line 1) [characters 22-17144]",
+      "sourceId" : "src-80490bee",
+      "sourceTitle" : "usgs-this-dynamic-earth.md",
+      "sourceLicence" : "US-PUBLIC-DOMAIN",
+      "sourceLicenceUrl" : "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+      "sourceUrl" : "https://pubs.usgs.gov/gip/dynamic/understanding.html",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "usgs-this-dynamic-earth.md" ],
+    "traits" : [ "premise-marker", "paraphrase-pair" ],
+    "note" : "the first of the paraphrased pair; the presupposition is stated as a classification"
+  }, {
+    "id" : "E-P02",
+    "class" : "PARAPHRASE",
+    "level" : "INTRODUCTORY",
+    "question" : "Assuming that the plates pull apart where Mid-Atlantic Ridge runs, what happens there?",
+    "expectedDisposition" : "ANSWERED",
+    "premise" : "the plates pull apart where Mid-Atlantic Ridge runs",
+    "goldClaims" : [ {
+      "claimId" : "clm-4dd45449",
+      "proposition" : "Perhaps the best known of the divergent boundaries is the Mid-Atlantic Ridge.",
+      "sourceSpan" : "Perhaps the best known of the divergent boundaries is the Mid-Atlantic Ridge.",
+      "claimContext" : "usgs-this-dynamic-earth.md: \"This Dynamic Earth\" (line 1) [characters 22-17144]",
+      "sourceId" : "src-80490bee",
+      "sourceTitle" : "usgs-this-dynamic-earth.md",
+      "sourceLicence" : "US-PUBLIC-DOMAIN",
+      "sourceLicenceUrl" : "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+      "sourceUrl" : "https://pubs.usgs.gov/gip/dynamic/understanding.html",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-33443e4a",
+      "proposition" : "There are four types of plate boundaries: Divergent boundaries -- where new crust is generated as the plates pull away from each other.",
+      "sourceSpan" : "There are four types of plate boundaries: Divergent boundaries -- where new crust is generated as the plates pull away from each other.",
+      "claimContext" : "usgs-this-dynamic-earth.md: \"This Dynamic Earth\" (line 1) [characters 22-17144]",
+      "sourceId" : "src-80490bee",
+      "sourceTitle" : "usgs-this-dynamic-earth.md",
+      "sourceLicence" : "US-PUBLIC-DOMAIN",
+      "sourceLicenceUrl" : "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+      "sourceUrl" : "https://pubs.usgs.gov/gip/dynamic/understanding.html",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "usgs-this-dynamic-earth.md" ],
+    "traits" : [ "premise-marker", "paraphrase-pair" ],
+    "note" : "the second of the paraphrased pair; the same presupposition is phrased as a process, so a matcher that looks for the first wording finds nothing"
+  }, {
+    "id" : "E-N01",
+    "class" : "NO_PREMISE",
+    "level" : "INTRODUCTORY",
+    "question" : "What is the place where a sinking plate goes under another one called?",
+    "expectedDisposition" : "ANSWERED",
+    "goldClaims" : [ {
+      "claimId" : "clm-5218fdea",
+      "proposition" : "The location where sinking of a plate occurs is called a subduction zone.",
+      "sourceSpan" : "The location where sinking of a plate occurs is called a subduction zone.",
+      "claimContext" : "usgs-this-dynamic-earth.md: \"This Dynamic Earth\" (line 1) [characters 22-17144]",
+      "sourceId" : "src-80490bee",
+      "sourceTitle" : "usgs-this-dynamic-earth.md",
+      "sourceLicence" : "US-PUBLIC-DOMAIN",
+      "sourceLicenceUrl" : "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+      "sourceUrl" : "https://pubs.usgs.gov/gip/dynamic/understanding.html",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "usgs-this-dynamic-earth.md" ],
+    "traits" : [ "no-premise" ],
+    "note" : "a plain factual question with no presupposition; the system must answer it normally, and an abstention here is an over-refusal"
+  }, {
+    "id" : "E-N02",
+    "class" : "NO_PREMISE",
+    "level" : "INTRODUCTORY",
+    "question" : "Which ridge spreads fastest and which spreads slowest?",
+    "expectedDisposition" : "ANSWERED",
+    "goldClaims" : [ {
+      "claimId" : "clm-6563ea88",
+      "proposition" : "The Arctic Ridge has the slowest rate (less than 2.5 cm/yr), and the East Pacific Rise near Easter Island, in the South Pacific about 3,400 km west of Chile, has the fastest rate (more than 15 cm/yr).",
+      "sourceSpan" : "The Arctic Ridge has the slowest rate (less than 2.5 cm/yr), and the East Pacific Rise near Easter Island, in the South Pacific about 3,400 km west of Chile, has the fastest rate (more than 15 cm/yr).",
+      "claimContext" : "usgs-this-dynamic-earth.md: \"This Dynamic Earth\" (line 1) [characters 22-17144]",
+      "sourceId" : "src-80490bee",
+      "sourceTitle" : "usgs-this-dynamic-earth.md",
+      "sourceLicence" : "US-PUBLIC-DOMAIN",
+      "sourceLicenceUrl" : "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+      "sourceUrl" : "https://pubs.usgs.gov/gip/dynamic/understanding.html",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "usgs-this-dynamic-earth.md" ],
+    "traits" : [ "no-premise" ],
+    "note" : "a plain factual question with no presupposition; the control against over-refusal"
+  } ]
+}
