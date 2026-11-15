@@ -1,7 +1,7 @@
 {
   "record": "C2A-HTTP-DEMONSTRATION",
   "date": "2026-11-15",
-  "commit": "6b485ef089c41edd8cc827943917aad0864dd4c3",
+  "commit": "47c1c4ce0801d97b9317b88621db29eddccf3700",
   "route": "POST /v1/workbench/workspaces/{id}/reports",
   "baseUrl": "http://127.0.0.1:9099",
   "workspace": "c2a-demo",
