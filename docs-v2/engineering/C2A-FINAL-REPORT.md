@@ -398,9 +398,8 @@ flock /tmp/gradle-matrix.lock bash -c 'rm -rf matrix-core/build/test-results && 
 # the learning window's measurement, without a build
 python3 scripts/c1-measure-learning-window.py
 
-# the official evaluation (it needs the SQLite driver's native library, see §G.5)
-JAVA_TOOL_OPTIONS="-Dorg.sqlite.lib.path=<the directory that holds libsqlitejdbc.so>" \
-  python3 scripts/w51-epistemic-eval.py
+# the official evaluation (the driver's native library is no longer a manual step, see §G.5)
+python3 scripts/w51-epistemic-eval.py
 
 # the gates
 ./scripts/quality-gate.sh
@@ -472,11 +471,15 @@ a case's candidates run on one prepared snapshot), and the honesty of the negati
 
 ### G.5 What was NOT verified, and the inherited defects
 
-1. **The packaged application cannot open the SQLite store on this host** — the driver's own
-   resource extraction fails inside the application's class loader ("No native library found for
-   os.name=Linux, os.arch=x86_64"). The evaluation runner and the demonstration both need
-   `-Dorg.sqlite.lib.path=<the directory that holds libsqlitejdbc.so>`. It is **not** a property
-   of the new route, and it blocks every packaged-app run that touches the store.
+1. **The packaged application could not open the SQLite store on this host** — and the
+   diagnosis in this report was **wrong**: it blamed the driver's resource extraction inside the
+   application's class loader, but the lookup **succeeds**; the failure is the driver's **write
+   into its extraction target**, which was the application's scratch directory under a tmpfs
+   whose per-user quota the project had already measured exhausting. The need for
+   `-Dorg.sqlite.lib.path` is **not reproducible** in the JVM packaging on this host. **Corrected
+   and closed on 2026-11-15** (`docs-v2/engineering/EPISTEMIC-SQLITE-PACKAGING.md`): the packaging
+   verifies that the driver carries the native library, the demonstration's workaround is
+   deleted, and a mutation proof shows the guard failing when the library is removed.
 2. **The Docker Hub publication has no credentials.** The repository holds **zero** secrets
    (`gh api repos/AlexanderNarbaev/agi/actions/secrets` → `total_count: 0`), so the publication
    step cannot authenticate and the aggregate `ci` job stays red on that step alone. The values

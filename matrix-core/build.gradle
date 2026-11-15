@@ -398,6 +398,14 @@ graalvmNative {
 
                 '--initialize-at-build-time=org.sqlite.util.ProcessRunner',
 
+                // The SQLite driver extracts its native library out of its own jar and
+                // loads it with System.load when the first connection is opened. A native
+                // image cannot extract a file and dlopen it at run time, so the extraction
+                // has to happen while the image is built. Without this entry the image
+                // reaches the driver's last resort and reports "No native library found
+                // for os.name=..., os.arch=...", and the store cannot be opened at all.
+                '--initialize-at-build-time=org.sqlite.SQLiteJDBCLoader',
+
                 '--initialize-at-build-time=scala.math.Ordering$Short$',
 
                 '--initialize-at-build-time=scala.math.Ordering$DeprecatedFloatOrdering$',
@@ -622,6 +630,74 @@ tasks.register('coverageTest', Test) {
 
 // Enable zip64 for JMH jar
 tasks.named("jmhJar") { zip64 = true }
+
+// ─── EPISTEMIC P0.5 — the packaged application must carry the SQLite native library ───
+//
+// The SQLite driver extracts its native library out of its own jar when the first
+// connection is opened, and it loads that file with System.load. If the packaging
+// stops carrying that resource — a stripped jar, a dependency the application does
+// not ship, an artifact renamed out of the driver's own layout — the driver reaches
+// its last resort and reports "No native library found for os.name=..., os.arch=...",
+// and the packaged application cannot open its store at all.
+//
+// The check reads the PACKAGED output (not the dependency cache) and fails the build
+// when the library for THIS platform is missing from it. It is a build-time guard:
+// the defect it catches is invisible until a store is opened, and the store is
+// opened by a route, not by the build.
+//
+//   ./gradlew :matrix-core:verifyPackagedSqliteNativeLibrary
+tasks.register('verifyPackagedSqliteNativeLibrary') {
+    group = 'verification'
+    description = 'Checks that the packaged application carries the SQLite native library for this platform'
+    dependsOn 'quarkusBuild'
+    def packagedLibraries = layout.buildDirectory.dir('quarkus-app/lib/main')
+    def report = layout.buildDirectory.file('reports/packaged-sqlite-native-library.txt')
+    inputs.dir(packagedLibraries)
+    outputs.file(report)
+    doLast {
+        def directory = packagedLibraries.get().asFile
+        def drivers = directory.isDirectory()
+                ? (directory.listFiles() ?: new File[0]).findAll {
+                    it.name.startsWith('org.xerial.sqlite-jdbc-') && it.name.endsWith('.jar')
+                }
+                : []
+        if (drivers.isEmpty()) {
+            throw new GradleException(
+                    'the packaged application does not carry the SQLite driver: ' + directory)
+        }
+        def osName = System.getProperty('os.name').toLowerCase()
+        def osArch = System.getProperty('os.arch').toLowerCase()
+        def platform = osName.contains('linux') ? 'Linux'
+                : osName.contains('mac') ? 'Mac'
+                : osName.contains('windows') ? 'Windows'
+                : osName
+        def arch = (osArch in ['amd64', 'x86_64']) ? 'x86_64'
+                : (osArch in ['aarch64', 'arm64']) ? 'aarch64'
+                : (osArch == 'x86') ? 'x86'
+                : osArch
+        def prefix = "org/sqlite/native/${platform}/${arch}/"
+        def found = []
+        drivers.each { driver ->
+            new java.util.zip.ZipFile(driver).withCloseable { zip ->
+                zip.entries().each { entry ->
+                    if (entry.name.startsWith(prefix)) {
+                        found << entry.name
+                    }
+                }
+            }
+        }
+        if (found.isEmpty()) {
+            throw new GradleException(
+                    'the packaged SQLite driver carries no native library for ' + platform + '/' + arch +
+                    ' (expected a resource under ' + prefix + '): ' + drivers*.name)
+        }
+        def lines = ["platform=${platform}/${arch}", "driver=${drivers*.name}"] + found.sort()
+        def target = report.get().asFile
+        target.parentFile.mkdirs()
+        target.text = lines.join('\n') + '\n'
+        logger.lifecycle('the packaged application carries the SQLite native library: ' + found.sort().join(', '))
+    }
+}
 
 // W51 — the end-to-end demonstration of the cognitive system.
 //
