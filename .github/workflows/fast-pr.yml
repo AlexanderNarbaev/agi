@@ -35,12 +35,18 @@ on:
   pull_request:
     branches: [develop]
     types: [opened, edited, reopened, synchronize]
+  # The integration branch must not be left unverified. The lane is cheap
+  # (4-8 minutes) and it runs on a push to `develop` as well, so the state of
+  # the integration branch is always checked even when the change arrived by a
+  # direct push instead of a pull request.
+  push:
+    branches: [develop]
 
 permissions:
   contents: read
 
 concurrency:
-  group: fast-pr-${{ github.event.pull_request.number }}
+  group: fast-pr-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
 
 env:
@@ -72,8 +78,19 @@ jobs:
         name: "Compute the touched modules and packages"
         run: |
           set -euo pipefail
-          base="${{ github.event.pull_request.base.sha }}"
-          head="${{ github.event.pull_request.head.sha }}"
+          # The comparison base: the pull request's base for a pull request, the
+          # push's own before/after for a push. The first push to a repository
+          # carries an all-zero `before`, so the parent of the head is used.
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+            head="${{ github.event.pull_request.head.sha }}"
+          else
+            base="${{ github.event.before }}"
+            head="${{ github.event.after }}"
+            if [ "$base" = "0000000000000000000000000000000000000000" ]; then
+              base="$(git rev-parse "${head}^")"
+            fi
+          fi
           git diff --name-only "$base" "$head" > /tmp/changed.txt
 
           # The Gradle module of a changed path: <module>/src/<source-set>/<package>/<file>
@@ -137,6 +154,10 @@ jobs:
   # ---------------------------------------------------------------------------
   branch-name:
     name: "Branch name"
+    # The convention applies to work branches. A push to the integration branch
+    # carries no branch name to judge, so the check does not run there; a
+    # skipped required check is not a failure.
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
