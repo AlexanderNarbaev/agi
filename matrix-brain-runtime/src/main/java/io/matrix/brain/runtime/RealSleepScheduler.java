@@ -172,8 +172,31 @@ public final class RealSleepScheduler implements AutoCloseable {
             dream.rulesRejected = stats.rejected;
             dream.consolidationDelta = stats.delta;
             dream.fidelityScores = stats.fidelities;
+            // EPISTEMIC-INTEGRITY P0.4 — Article VIII: the operator must be able to
+            // see that the admission gate ran, how many records it excluded, and
+            // exactly which episode ids were offered to the induction.
+            dream.episodesAdmitted = stats.admitted;
+            dream.episodesExcluded = stats.excluded;
+            dream.inducedEpisodeIds = stats.inducedEpisodeIds;
+            // EPISTEMIC-INTEGRITY P0.4 (review fix F4): the health of the quarantine
+            // ledger is on the runtime path. A ledger line that could not be read is a
+            // quarantine mark that could not be honoured, and the gate FAILS CLOSED
+            // on it — so the counter must be visible to the operator, not dead code.
+            dream.quarantineLedgerReadable = stats.ledgerReadable;
+            dream.quarantineMalformedLines = stats.ledgerMalformedLines;
+            dream.windowPositives = stats.windowPositives;
+            dream.windowNegatives = stats.windowNegatives;
             dream.notes.add("induction=RuleInductionEngine.induce(engine=TsetlinTrainer+MpdtGaProducer)");
             dream.notes.add("rules_learned=" + stats.learned);
+            dream.notes.add("admission=LearningAdmission admitted=" + stats.admitted
+                + " excluded=" + stats.excluded
+                + " (non-organic or quarantined records never reach the induction input)");
+            if (!stats.ledgerReadable) {
+                dream.notes.add("quarantine_ledger=UNREADABLE lines=" 
+                    + stats.ledgerMalformedLines
+                    + " (the gate fails closed: nothing is admitted while the ledger "
+                    + "cannot be read in full)");
+            }
         }
         lastDream.set(dream);
         lastActivityMillis.set(System.currentTimeMillis());
@@ -203,6 +226,36 @@ public final class RealSleepScheduler implements AutoCloseable {
         public int rulesRejected;
         public double consolidationDelta;
         public List<Double> fidelityScores = List.of();
+        /**
+         * EPISTEMIC-INTEGRITY P0.4 — how many records the admission gate considered
+         * learnable, and how many it excluded (evaluation, experiment, synthetic or
+         * quarantined records).
+         */
+        public int episodesAdmitted;
+        public int episodesExcluded;
+        /**
+         * The episode ids that were actually offered to the induction. This is the
+         * LEAKAGE EVIDENCE: a record from the evaluation path that reached this list
+         * would be visible here, not merely absent from a summary.
+         */
+        public List<String> inducedEpisodeIds = List.of();
+        /**
+         * EPISTEMIC-INTEGRITY P0.4 (review fix F4) — the health of the quarantine
+         * ledger that governed this pass. False means at least one ledger line could
+         * not be read, and the gate FAILED CLOSED: nothing was admitted, because an
+         * unreadable exclusion is not an exclusion.
+         */
+        public boolean quarantineLedgerReadable = true;
+        /** How many ledger lines could not be read. Unit: lines. */
+        public int quarantineMalformedLines;
+        /**
+         * EPISTEMIC-INTEGRITY P0.4 (review fix F6) — the class balance of the window
+         * the induction was given, under the production label rule
+         * ({@code confidence >= 0.7 AND accepted}). A window with only one class makes
+         * the induction fidelity trivial, so the balance is reported next to it.
+         */
+        public int windowPositives;
+        public int windowNegatives;
         public List<String> notes = List.of();
 
         public Map<String, Object> snapshot() {
@@ -217,6 +270,13 @@ public final class RealSleepScheduler implements AutoCloseable {
             m.put("rulesRejected", rulesRejected);
             m.put("consolidationDelta", consolidationDelta);
             m.put("fidelityScores", fidelityScores);
+            m.put("episodesAdmitted", episodesAdmitted);
+            m.put("episodesExcluded", episodesExcluded);
+            m.put("inducedEpisodeIds", inducedEpisodeIds);
+            m.put("quarantineLedgerReadable", quarantineLedgerReadable);
+            m.put("quarantineMalformedLines", quarantineMalformedLines);
+            m.put("windowPositives", windowPositives);
+            m.put("windowNegatives", windowNegatives);
             m.put("notes", notes);
             m.put("engine", "SleepCycle.runOnce");
             return m;
@@ -228,32 +288,59 @@ public final class RealSleepScheduler implements AutoCloseable {
      * register the resulting Bir in the registry. CONSISTENCY_CHECKER is
      * honored implicitly: a Bir that fails to register (e.g., duplicate id)
      * is counted as rejected, not silently overwritten.
+     *
+     * <p>EPISTEMIC-INTEGRITY P0.4: the entries come from the ADMISSION gate
+     * ({@link EpisodicLog#learningCandidates()}), not from the raw log. A record
+     * whose provenance is evaluation/experiment/synthetic, or whose id is named in
+     * the quarantine ledger, cannot reach {@link RuleInductionEngine#induce}. The
+     * window is still the last {@link KMaxEnforcer#K_MAX} records and the label rule
+     * is unchanged ({@code confidence >= 0.7 AND accepted}).</p>
      */
     private InductionStats runInduction() {
-        java.util.List<EpisodicLog.Entry> entries = episodicLog.readAll();
+        // EPISTEMIC-INTEGRITY P0.4 (review fix F8): ONE read-and-admit of the system.
+        // The scheduler, the log's own API and the operator tool all go through
+        // LearningAdmission.assess, so the window they use and the numbers they
+        // report cannot drift apart.
+        LearningAdmission.Assessment assessment =
+            LearningAdmission.assess(episodicLog, quarantine());
+        java.util.List<EpisodicLog.Entry> entries = assessment.candidates();
+        int excluded = assessment.excluded();
         if (entries.isEmpty()) {
-            return new InductionStats(0, 0, 0.0, java.util.List.of());
+            return new InductionStats(0, 0, 0.0, java.util.List.of(), 0, excluded,
+                java.util.List.of(), assessment.ledgerReadable(),
+                assessment.ledgerMalformedLines(), 0, 0);
         }
         // Take last 20 (cap at K_MAX for Article II)
-        int n = Math.min(entries.size(), 20);
-        java.util.List<EpisodicLog.Entry> recent = entries.subList(
-            Math.max(0, entries.size() - n), entries.size());
+        java.util.List<EpisodicLog.Entry> recent = assessment.window(KMaxEnforcer.K_MAX);
 
         long[][] features = new long[recent.size()][];
         java.util.List<String> ids = new java.util.ArrayList<>();
+        java.util.List<EpisodeRole> roles = new java.util.ArrayList<>();
         boolean[] labels = new boolean[recent.size()];
+        int positives = 0;
         for (int i = 0; i < recent.size(); i++) {
             EpisodicLog.Entry e = recent.get(i);
             features[i] = featureExtractor.encode(e);
             ids.add(e.id());
+            roles.add(e.role());
             labels[i] = e.confidence() >= 0.7 && e.accepted();
+            if (labels[i]) positives++;
         }
+        // EPISTEMIC-INTEGRITY P0.4 (review fix F6): the CLASS BALANCE of the window
+        // travels with the report. A single-class window makes the induction
+        // fidelity trivial (1.00 with no negative class at all), so an operator must
+        // be able to see the balance and judge the fidelity against it.
+        int negatives = recent.size() - positives;
 
         int before = birRegistry.size();
         java.util.List<Double> fidelities = new java.util.ArrayList<>();
         int learned = 0, rejected = 0;
         try {
-            var res = ruleEngine.induce(ids, features, labels);
+            // The roles are passed to the engine as well: the admission gate decides
+            // who may be here, and the engine refuses non-organic input a second
+            // time. Defence in depth, because the gate is the only thing standing
+            // between an evaluation record and the mind's memory.
+            var res = ruleEngine.induce(ids, features, labels, roles);
             fidelities.add(res.chosenFidelity());
             if (birRegistry.size() > before) learned++; else rejected++;
         } catch (Throwable t) {
@@ -264,10 +351,27 @@ public final class RealSleepScheduler implements AutoCloseable {
             recentFidelities.add(fidelities.isEmpty() ? 0.0 : fidelities.get(0));
             if (recentFidelities.size() > 100) recentFidelities.remove(0);
         }
-        return new InductionStats(learned, rejected, delta, fidelities);
+        return new InductionStats(learned, rejected, delta, fidelities, entries.size(),
+            excluded, List.copyOf(ids), assessment.ledgerReadable(),
+            assessment.ledgerMalformedLines(), positives, negatives);
+    }
+
+    /**
+     * The quarantine that governs this scheduler's log.
+     *
+     * <p>Bound to the log's own sibling ledger, so it works with no configuration: an
+     * absent ledger means nothing is quarantined and the behaviour is exactly the one
+     * before P0.4.</p>
+     */
+    private EpisodeQuarantine quarantine() {
+        return episodicLog == null ? null : episodicLog.quarantine();
     }
 
     /** Result of one induction pass. */
     private record InductionStats(int learned, int rejected, double delta,
-                                  java.util.List<Double> fidelities) {}
+                                  java.util.List<Double> fidelities,
+                                  int admitted, int excluded,
+                                  java.util.List<String> inducedEpisodeIds,
+                                  boolean ledgerReadable, int ledgerMalformedLines,
+                                  int windowPositives, int windowNegatives) {}
 }

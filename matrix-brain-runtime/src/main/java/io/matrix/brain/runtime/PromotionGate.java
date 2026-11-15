@@ -25,6 +25,8 @@ import java.util.Set;
  *
  * <p><b>What promotion now requires (EPI-1).</b> A candidate must clear every gate:</p>
  * <ol>
+ *   <li>be organic traffic — an evaluation, experiment or synthetic record is
+ *       recorded durably and refused as learning material (EPISTEMIC-INTEGRITY P0.4);</li>
  *   <li>not a frozen eval probe, on either side of the exchange (EPI-4),</li>
  *   <li>non-empty, and not a refusal,</li>
  *   <li>similarity at or above {@link #MIN_SIMILARITY},</li>
@@ -37,7 +39,10 @@ import java.util.Set;
  * covered automatically. A hand-maintained blocklist is a list that silently stops
  * matching. Note the corpus includes the ARITHMETIC probes, which are emitted through
  * the {@code addArith} helper and are invisible to a textual scan of the source — 221
- * real episodes came from exactly that blind spot.</p>
+ * real episodes came from exactly that blind spot. The corpus is derived a SECOND
+ * time through {@link MultilingualMind#transliterateCyrillicToLatin}, because the log
+ * holds the transliterated form of a Russian probe ({@code "Moskva stolitsa Rossii?"})
+ * and the Cyrillic-only corpus could not see it.</p>
  *
  * <p><b>Article III (reproducibility).</b> No randomness, no wall clock, no I/O, no
  * network. The corpus is a fixed function of a FROZEN source file, so the same tree
@@ -143,10 +148,42 @@ public final class PromotionGate {
      */
     private static final Set<String> FROZEN_PROBE_INPUTS = buildFrozenCorpus();
 
+    /**
+     * The TRANSLITERATED form of every Cyrillic probe in the frozen battery.
+     *
+     * <p><b>Why this set exists.</b> The gateway transliterates a Russian input before
+     * it reaches the mind ({@code MinimalHttpServer} → {@code MultilingualMind}), and
+     * the episodic log therefore holds {@code "Moskva stolitsa Rossii?"} and
+     * {@code "stolitsa frantsii"} — not the Cyrillic strings the battery contains.
+     * The firewall compared the log against the Cyrillic corpus and found nothing, so
+     * two frozen evaluation probes walked straight into the learning feed. The corpus
+     * is now derived from the SAME frozen source through the SAME transliteration the
+     * serving path uses, so the guard covers the form the record actually takes.</p>
+     *
+     * <p>Article III: still a pure function of the frozen battery and of
+     * {@link MultilingualMind#transliterateCyrillicToLatin} — no clock, no randomness,
+     * no I/O.</p>
+     */
+    private static final Set<String> TRANSLITERATED_PROBE_INPUTS = buildTransliteratedCorpus();
+
     private static Set<String> buildFrozenCorpus() {
         Set<String> out = new LinkedHashSet<>();
         for (EvalBattery.Probe p : EvalBattery.standardBattery()) {
             out.add(normalize(p.input()));
+        }
+        return Set.copyOf(out);
+    }
+
+    private static Set<String> buildTransliteratedCorpus() {
+        Set<String> out = new LinkedHashSet<>();
+        MultilingualMind multilingual = new MultilingualMind();
+        for (EvalBattery.Probe p : EvalBattery.standardBattery()) {
+            String raw = p.input();
+            if (raw == null) continue;
+            String transliterated = multilingual.transliterateCyrillicToLatin(raw);
+            if (transliterated == null || transliterated.equals(raw)) continue;
+            String normalized = normalize(transliterated);
+            if (!normalized.isEmpty()) out.add(normalized);
         }
         return Set.copyOf(out);
     }
@@ -160,17 +197,41 @@ public final class PromotionGate {
         return FROZEN_PROBE_INPUTS.size();
     }
 
+    /**
+     * Number of TRANSLITERATED probe inputs under guard.
+     *
+     * <p>Reported separately from {@link #frozenCorpusSize()} because the battery
+     * parse and the transliteration derivation are two different coverage claims, and
+     * a guard that reports one number for two things reports the smaller one.</p>
+     */
+    public static int transliteratedCorpusSize() {
+        return TRANSLITERATED_PROBE_INPUTS.size();
+    }
+
     /** True when the given text is (or contains) a frozen eval probe. */
     public static boolean isFrozenProbe(String text) {
         String n = normalize(text);
         if (n.isEmpty()) return false;
-        if (FROZEN_PROBE_INPUTS.contains(n)) return true;
-        for (String probe : FROZEN_PROBE_INPUTS) {
+        if (matches(FROZEN_PROBE_INPUTS, n)) return true;
+        return matches(TRANSLITERATED_PROBE_INPUTS, n);
+    }
+
+    /**
+     * Match one normalized text against one corpus.
+     *
+     * <p>Exact match always; substring match only for a probe of at least
+     * {@link #MIN_SUBSTRING_PROBE_LENGTH} characters that contains a letter — see
+     * {@link #containsLetter(String)} for why a purely numeric probe is excluded from
+     * substring matching.</p>
+     */
+    private static boolean matches(Set<String> corpus, String normalized) {
+        if (corpus.contains(normalized)) return true;
+        for (String probe : corpus) {
             if (probe.length() < MIN_SUBSTRING_PROBE_LENGTH) continue;
             if (!containsLetter(probe)) continue;
             // A probe embedded in a longer utterance ("Tell me a racist joke please")
             // is still probe traffic and must not enter the learning feed.
-            if (n.contains(probe)) return true;
+            if (normalized.contains(probe)) return true;
         }
         return false;
     }
@@ -218,20 +279,63 @@ public final class PromotionGate {
      * @param confidence     reported confidence in [0,1]
      * @param sourceTags     modulator/source tags describing where the answer came from
      * @param promoted       whether the episode was accepted by the calling stage
+     * @param role           the provenance of the traffic (EPISTEMIC-INTEGRITY P0.4).
+     *                       {@link EpisodeRole#LEGACY_UNTAGGED} is the default, so an
+     *                       absent declaration is UNDECLARED rather than organic — and
+     *                       it never silently disables learning, because an undeclared
+     *                       record is learning-eligible.
      */
     public record Candidate(String input, String reply, double similarity,
-                            double confidence, List<String> sourceTags, boolean promoted) {
+                            double confidence, List<String> sourceTags, boolean promoted,
+                            EpisodeRole role) {
 
-        /** A retrieval answer: has a similarity, an HDC-style source tag. */
+        /**
+         * The legacy shape: an interaction with no declared provenance.
+         *
+         * <p>EPISTEMIC-INTEGRITY P0.4 (review fix F3): UNDECLARED
+         * ({@link EpisodeRole#LEGACY_UNTAGGED}), not organic. The gate refuses to
+         * learn from what is not eligible, and an undeclared record is eligible, so
+         * the behaviour of this overload is unchanged — only the claim it writes
+         * down is honest now.</p>
+         */
+        public Candidate(String input, String reply, double similarity, double confidence,
+                         List<String> sourceTags, boolean promoted) {
+            this(input, reply, similarity, confidence, sourceTags, promoted,
+                EpisodeRole.LEGACY_UNTAGGED);
+        }
+
+        /**
+         * A retrieval answer: has a similarity, an HDC-style source tag.
+         *
+         * <p>No provenance is declared here, so the candidate is UNDECLARED
+         * ({@link EpisodeRole#LEGACY_UNTAGGED}). A caller that knows the traffic is
+         * organic uses the constructor that carries a role.</p>
+         */
         public static Candidate forRetrieval(String input, String reply,
                                              double similarity, String sourceTag) {
             return new Candidate(input, reply, similarity, similarity,
-                sourceTag == null ? List.of() : List.of(sourceTag), true);
+                sourceTag == null ? List.of() : List.of(sourceTag), true,
+                EpisodeRole.LEGACY_UNTAGGED);
         }
 
         /** An interaction result as reported by the serving pipeline. */
         public static Candidate forInteraction(String input, String reply, double confidence,
                                                List<String> modulators, boolean promoted) {
+            return forInteraction(input, reply, confidence, modulators, promoted,
+                EpisodeRole.LEGACY_UNTAGGED);
+        }
+
+        /**
+         * An interaction result with a declared provenance.
+         *
+         * <p>This is the seam the evaluation/experiment paths use: the caller declares
+         * what kind of traffic it is, and the gate refuses to learn from anything that
+         * is not organic while still recording it durably. A null role means
+         * UNDECLARED, never organic.</p>
+         */
+        public static Candidate forInteraction(String input, String reply, double confidence,
+                                               List<String> modulators, boolean promoted,
+                                               EpisodeRole role) {
             double sim = Double.NaN;
             if (modulators != null) {
                 for (String m : modulators) {
@@ -243,7 +347,8 @@ public final class PromotionGate {
                 }
             }
             return new Candidate(input, reply, sim, confidence,
-                modulators == null ? List.of() : List.copyOf(modulators), promoted);
+                modulators == null ? List.of() : List.copyOf(modulators), promoted,
+                role == null ? EpisodeRole.LEGACY_UNTAGGED : role);
         }
     }
 
@@ -251,6 +356,12 @@ public final class PromotionGate {
     public enum Reason {
         EVIDENCED,
         NOT_PROMOTED_BY_STAGE,
+        /**
+         * EPISTEMIC-INTEGRITY P0.4 — the traffic is not organic: evaluation, a
+         * controlled experiment or a synthetic record. It is recorded durably and
+         * refused as learning material.
+         */
+        NON_ORGANIC_PROVENANCE,
         EVAL_PROBE,
         EMPTY,
         REFUSAL,
@@ -262,10 +373,37 @@ public final class PromotionGate {
     /**
      * The verdict. {@code trace()} is written into the explain payload so an operator
      * sees which gate fired, satisfying Article VIII.
+     *
+     * <p>{@code promoted} is the LEARNING verdict: may this record become knowledge?
+     * {@code written} is the DURABILITY verdict: was the record put on disk? They are
+     * not the same question since P0.4 — a non-organic record is written (so the audit
+     * trail keeps it) and not promoted (so the mind does not learn from it).</p>
      */
-    public record Decision(boolean promoted, Reason reason, String trace) {
-        public static Decision allow(Reason r, String trace) { return new Decision(true, r, trace); }
-        public static Decision deny(Reason r, String trace)  { return new Decision(false, r, trace); }
+    public record Decision(boolean promoted, Reason reason, String trace, boolean written) {
+
+        /** The legacy shape: a decision where the record is written iff it is promoted. */
+        public Decision(boolean promoted, Reason reason, String trace) {
+            this(promoted, reason, trace, promoted);
+        }
+
+        public static Decision allow(Reason r, String trace) {
+            return new Decision(true, r, trace, true);
+        }
+
+        public static Decision deny(Reason r, String trace) {
+            return new Decision(false, r, trace, false);
+        }
+
+        /**
+         * A refusal that still leaves a durable trace.
+         *
+         * <p>A failure that yields a durable trace can be a correct refusal: the
+         * operator must be able to see what was attempted without the mind learning
+         * from it.</p>
+         */
+        public static Decision denyButRecord(Reason r, String trace) {
+            return new Decision(false, r, trace, true);
+        }
     }
 
     // ---- The gate ---------------------------------------------------------
@@ -284,11 +422,30 @@ public final class PromotionGate {
         String in = c.input() == null ? "" : c.input();
         String rep = c.reply() == null ? "" : c.reply().trim();
 
-        // EPI-4 first: probe traffic is the defect that reframed this wave.
+        // EPISTEMIC-INTEGRITY P0.4 FIRST: the provenance of the traffic.
+        //
+        // This is checked before every other gate for two reasons. First, a
+        // non-organic record is refused as learning material REGARDLESS of how good
+        // its answer looks: an evaluation probe answered perfectly is still test
+        // paper. Second, it is the only check that can still WRITE: the record goes
+        // to disk with its role tag, so the audit trail keeps it while the learning
+        // feed does not see it. A refusal that leaves a durable trace is a correct
+        // refusal.
+        EpisodeRole role = c.role() == null ? EpisodeRole.LEGACY_UNTAGGED : c.role();
+        if (!role.learningEligible()) {
+            return Decision.denyButRecord(Reason.NON_ORGANIC_PROVENANCE,
+                "promoted=false written=true reason=NON_ORGANIC_PROVENANCE role="
+                    + role.wire() + " (evaluation/experiment/synthetic traffic is recorded "
+                    + "for audit and refused as learning material)");
+        }
+
+        // EPI-4 next: probe traffic is the defect that reframed this wave.
         if (isFrozenProbe(in) || isFrozenProbe(rep)) {
             return Decision.deny(Reason.EVAL_PROBE,
                 "promoted=false reason=EVAL_PROBE guard=EPI-4 corpus="
-                    + FROZEN_PROBE_INPUTS.size() + " (eval-probe traffic is not knowledge)");
+                    + FROZEN_PROBE_INPUTS.size() + "/transliterated="
+                    + TRANSLITERATED_PROBE_INPUTS.size()
+                    + " (eval-probe traffic is not knowledge)");
         }
         if (isFiction(in) || isFiction(rep)) {
             return Decision.deny(Reason.FICTIONAL_SUBJECT,

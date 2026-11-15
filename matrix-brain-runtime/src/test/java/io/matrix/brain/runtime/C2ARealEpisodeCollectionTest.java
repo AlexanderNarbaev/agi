@@ -88,7 +88,7 @@ class C2ARealEpisodeCollectionTest {
      * @param family      what the input was designed to probe
      * @param expectation what the diagnosis says should happen — a PREDICTION, not a label
      */
-    private record Work(int index, String input, String family, String expectation) {}
+    record Work(int index, String input, String family, String expectation) {}
 
     /**
      * The designed workload.
@@ -113,7 +113,7 @@ class C2ARealEpisodeCollectionTest {
      * not labels: the label of every observation is derived by the production rule
      * ({@code confidence >= 0.7 AND accepted}) from what the runtime actually produced.</p>
      */
-    private static List<Work> workload() {
+    static List<Work> workload() {
         List<Work> w = new ArrayList<>();
         int i = 0;
         // ---- the body: family coverage --------------------------------------
@@ -243,9 +243,24 @@ class C2ARealEpisodeCollectionTest {
         // first would silently replace "no data" with "59 new episodes" and change that
         // test's verdict. The measured run is therefore OPT-IN, and the runbook that
         // owns it passes the flag.
-        assumeTrue(Boolean.getBoolean("matrix.c2a.collect"),
+        // EPISTEMIC-INTEGRITY P0.4: the measured collection stays opt-in, and the
+        // opt-in now has a name that says what it does. The legacy flag
+        // (-Dmatrix.c2a.collect=true) is still honoured so the retained runbook keeps
+        // working, but the CLEAR name is -Dmatrix.c2a.collect.real-log=true.
+        //
+        // The opt-in is also no longer the only thing standing between this harness
+        // and the learning feed: every record it writes is tagged EXPERIMENT, so the
+        // admission gate refuses it as learning material even when it lands in the
+        // real log. The contamination is now impossible by construction, not merely
+        // avoided by not running the harness.
+        assumeTrue(Boolean.getBoolean("matrix.c2a.collect.real-log")
+                        || "true".equalsIgnoreCase(
+                               System.getenv("MATRIX_C2A_COLLECT_REAL_LOG"))
+                        || Boolean.getBoolean("matrix.c2a.collect"),
                 "the measured collection is opt-in: it writes into the machine's real episodic "
-                        + "log, and scripts/c2a-collect-learning-evidence.sh is what runs it");
+                        + "log. Use -Dmatrix.c2a.collect.real-log=true (the clear name); "
+                        + "-Dmatrix.c2a.collect=true is the legacy spelling. Every record it "
+                        + "writes is tagged EXPERIMENT and can never enter the learning window.");
         Path root = repoRoot();
         Path mindDir = propertyPath("matrix.c2a.mind-dir", root.resolve("data/mind"));
         Path hdcPath = propertyPath("matrix.c2a.hdc", mindDir.resolve("hdc_kb.ndjson"));
@@ -311,6 +326,7 @@ class C2ARealEpisodeCollectionTest {
         EpisodicLog log = new EpisodicLog(episodicPath);
 
         List<Map<String, Object>> observations = new ArrayList<>();
+        int written = 0;
         int promoted = 0;
         int rejected = 0;
         int logCursor = beforeCount;
@@ -326,9 +342,14 @@ class C2ARealEpisodeCollectionTest {
 
             MindResult result = cycle.think(retrievalForm, original);
 
-            // ProductionBrainClient.java:388-389 — the write path, verbatim.
+            // ProductionBrainClient.java:388-389 — the write path, verbatim, PLUS the
+            // provenance declaration (EPISTEMIC-INTEGRITY P0.4). The collection is an
+            // EXPERIMENT: real code, real observations, designed workload — not organic
+            // traffic. The record is therefore written durably (the audit trail keeps
+            // it) and refused as learning material.
             PromotionGate.Decision decision = log.append(retrievalForm, result.reply(),
-                result.confidence(), result.accepted(), result.modulatorsFired());
+                result.confidence(), result.accepted(), result.modulatorsFired(),
+                EpisodeRole.EXPERIMENT);
 
             Map<String, Object> observation = new LinkedHashMap<>();
             observation.put("index", work.index());
@@ -343,6 +364,8 @@ class C2ARealEpisodeCollectionTest {
             observation.put("accepted", result.accepted());
             observation.put("modulators", result.modulatorsFired());
             observation.put("promoted", decision.promoted());
+            observation.put("written", decision.written());
+            observation.put("role", EpisodeRole.EXPERIMENT.wire());
             observation.put("gateReason", decision.reason().name());
             observation.put("gateTrace", decision.trace());
             observation.put("durationMs", result.durationMs());
@@ -351,10 +374,11 @@ class C2ARealEpisodeCollectionTest {
             observation.put("trace", result.trace().stream()
                 .map(step -> step.stage() + ":" + step.confidence()).toList());
 
-            if (decision.promoted()) {
+            if (decision.written()) {
                 observation.put("logPosition", logCursor);
                 logCursor++;
-                promoted++;
+                written++;
+                if (decision.promoted()) promoted++;
             } else {
                 observation.put("logPosition", -1);
                 rejected++;
@@ -374,9 +398,13 @@ class C2ARealEpisodeCollectionTest {
 
         assertThat(afterCount).as("the episodic log must have grown").isGreaterThan(beforeCount);
         assertThat(afterCount - beforeCount)
-            .as("the log grew by exactly the number of promoted episodes")
-            .isEqualTo(promoted);
-        assertThat(promoted).as("at least 30 distinct real observations").isGreaterThanOrEqualTo(30);
+            .as("the log grew by exactly the number of episodes the gate WROTE")
+            .isEqualTo(written);
+        assertThat(written).as("at least 30 distinct real observations").isGreaterThanOrEqualTo(30);
+        assertThat(promoted)
+            .as("a collection run must NOT be admitted to the learning feed: every record it "
+                + "writes is an EXPERIMENT, so the promotion decision is a refusal")
+            .isZero();
 
         // The NEW observations are the tail of the log; bind them to their features.
         List<EpisodicLog.Entry> newEntries = afterEntries.subList(beforeCount, afterCount);
@@ -385,7 +413,7 @@ class C2ARealEpisodeCollectionTest {
         Set<String> seenInputs = new LinkedHashSet<>();
         int cursor = beforeCount;
         for (Map<String, Object> observation : observations) {
-            if (!Boolean.TRUE.equals(observation.get("promoted"))) {
+            if (!Boolean.TRUE.equals(observation.get("written"))) {
                 continue;
             }
             EpisodicLog.Entry entry = newEntries.get(cursor - beforeCount);
@@ -439,8 +467,10 @@ class C2ARealEpisodeCollectionTest {
 
         Map<String, Object> newBlock = new LinkedHashMap<>();
         newBlock.put("executed", workload().size());
-        newBlock.put("promoted", promoted);
+        newBlock.put("written", written);
+        newBlock.put("promotedToLearning", promoted);
         newBlock.put("rejectedByGate", rejected);
+        newBlock.put("role", EpisodeRole.EXPERIMENT.wire());
         newBlock.put("distinctInputs", seenInputs.size());
         newBlock.put("positiveLabels", newEntries.stream()
             .filter(e -> e.confidence() >= 0.7 && e.accepted()).count());
@@ -452,6 +482,8 @@ class C2ARealEpisodeCollectionTest {
             .map(extractor::encode).map(packer::packForTest).distinct().count());
         report.put("newObservations", newBlock);
         report.put("productionWindow", window);
+        report.put("admittedWindow", admittedWindow(afterEntries, extractor, packer,
+            new EpisodeQuarantine(EpisodeQuarantine.defaultLedgerPath(episodicPath))));
         report.put("inductionBefore", inductionBefore);
         report.put("induction", induction);
         report.put("observations", observations);
@@ -473,10 +505,12 @@ class C2ARealEpisodeCollectionTest {
         System.out.println("[C2A] mode=" + (writeArtefact ? "MEASURED" : "SANDBOX_PROBE"));
         System.out.println("[C2A] episodic log: " + episodicPath.toAbsolutePath());
         System.out.println("[C2A] records before=" + beforeCount + " after=" + afterCount
-            + " promoted=" + promoted + " rejected=" + rejected);
+            + " written=" + written + " promotedToLearning=" + promoted + " rejected=" + rejected);
         System.out.println("[C2A] distribution before=" + beforePos + "+/" + beforeNeg + "-"
             + " after=" + afterPos + "+/" + afterNeg + "-");
-        System.out.println("[C2A] window: " + window.get("summary"));
+        System.out.println("[C2A] window(raw):      " + window.get("summary"));
+        System.out.println("[C2A] window(admitted): "
+            + ((Map<?, ?>) report.get("admittedWindow")).get("summary"));
         System.out.println("[C2A] induction BEFORE: " + inductionBefore.get("summary"));
         System.out.println("[C2A] induction AFTER:  " + induction.get("summary"));
         for (Map<String, Object> observation : observations) {
@@ -531,6 +565,28 @@ class C2ARealEpisodeCollectionTest {
         window.put("summary", "size=" + recent.size() + " pos=" + positives
             + " neg=" + (recent.size() - positives) + " distinctInputs=" + inputs.size()
             + " distinctFeatures=" + features.size());
+        return window;
+    }
+
+
+    /**
+     * The window the PRODUCTION induction actually uses: the admitted records only.
+     *
+     * <p>EPISTEMIC-INTEGRITY P0.4. The raw window above is what the log's tail looks
+     * like; this is what the mind learns from, after the admission gate has removed
+     * the evaluation and experiment records. A collection run therefore moves the raw
+     * window and NOT the admitted window — which is the whole point of the
+     * mechanism.</p>
+     */
+    private static Map<String, Object> admittedWindow(List<EpisodicLog.Entry> entries,
+                                                      EpisodeFeatureExtractor extractor,
+                                                      TsetlinTrainer packer,
+                                                      EpisodeQuarantine quarantine) {
+        List<EpisodicLog.Entry> admitted = LearningAdmission.admitted(entries, quarantine);
+        Map<String, Object> window = productionWindow(admitted, extractor, packer);
+        window.put("selector", "LearningAdmission.admitted -> the last 20 ADMITTED records "
+            + "(RealSleepScheduler.runInduction)");
+        window.put("excluded", entries.size() - admitted.size());
         return window;
     }
 

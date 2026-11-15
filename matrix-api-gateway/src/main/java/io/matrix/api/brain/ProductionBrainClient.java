@@ -1,6 +1,7 @@
 package io.matrix.api.brain;
 
 import io.matrix.brain.runtime.EpisodicLog;
+import io.matrix.brain.runtime.EpisodeRole;
 import io.matrix.brain.runtime.RealSleepScheduler;
 import io.matrix.brain.runtime.TrueMindCycle;
 import io.matrix.brain.runtime.MindResult;
@@ -85,6 +86,21 @@ public final class ProductionBrainClient implements BrainCycle {
     private final EpisodicLog episodicLog;
 
     /**
+     * EPISTEMIC-INTEGRITY P0.4 (review fix F2) — the provenance of the traffic this
+     * client serves.
+     *
+     * <p>The gateway serves USER traffic, so it declares {@link EpisodeRole#ORGANIC}
+     * at its own boundary — an explicit declaration, made by the component that knows
+     * what it is serving. A deployment that drives this client with evaluation traffic
+     * constructs it with a non-organic role, and the episodes it writes are then
+     * recorded durably and refused as learning material.</p>
+     *
+     * <p>Before this, the role the cycle produced was dropped on the floor and every
+     * gateway episode was written as organic by construction.</p>
+     */
+    private final EpisodeRole trafficRole;
+
+    /**
      * W51: the OPTIONAL bridge to chain A. When it is attached, the conclusion of a cycle
      * is published to chain A as an OBSERVATION with its provenance — never as a claim, never
      * as a fact. Chain A holds the only writer of the epistemic store; the bridge adds an
@@ -150,13 +166,37 @@ public final class ProductionBrainClient implements BrainCycle {
     /**
      * Full constructor — wire HDC + episodic log + sleep scheduler.
      * MIND-W3: the scheduler is optional (pass null to disable sleep).
+     *
+     * <p>EPISTEMIC-INTEGRITY P0.4: the traffic is ORGANIC — this client serves user
+     * requests — and it says so explicitly. Use
+     * {@link #ProductionBrainClient(PersistentHdcStore, EpisodicLog, RealSleepScheduler, EpisodeRole)}
+     * for a client that serves evaluation traffic.</p>
      */
     public ProductionBrainClient(PersistentHdcStore hdcStore,
                                  EpisodicLog episodicLog,
                                  RealSleepScheduler sleepScheduler) {
+        this(hdcStore, episodicLog, sleepScheduler, EpisodeRole.ORGANIC);
+    }
+
+    /**
+     * Full constructor with a DECLARED provenance.
+     *
+     * <p>EPISTEMIC-INTEGRITY P0.4 (review fix F2). The declared role travels into the
+     * cycle and into the episode that is written, so a deployment that drives this
+     * client with evaluation traffic cannot have its observations land in the organic
+     * learning feed.</p>
+     *
+     * @param trafficRole the provenance of the traffic this client serves
+     */
+    public ProductionBrainClient(PersistentHdcStore hdcStore,
+                                 EpisodicLog episodicLog,
+                                 RealSleepScheduler sleepScheduler,
+                                 EpisodeRole trafficRole) {
         this.hdcStore = hdcStore;
         this.episodicLog = episodicLog;
         this.sleepScheduler = sleepScheduler;
+        this.trafficRole = trafficRole == null
+            ? EpisodeRole.LEGACY_UNTAGGED : trafficRole;
         // Resolve core jar + load classes via init helper
         InitResult init = tryInit();
         this.classLoader = init.classLoader;
@@ -371,7 +411,7 @@ public final class ProductionBrainClient implements BrainCycle {
         // when matrix-core JAR is unavailable.
         if (mindCycle != null) {
             try {
-                MindResult mr = mindCycle.think(input, original);
+                MindResult mr = mindCycle.think(input, original, trafficRole);
                 long dur = System.currentTimeMillis() - t0;
                 // Cache modulator/step confidences for the next buildExplain() call.
                 cacheExplainConfidences(mr);
@@ -385,8 +425,13 @@ public final class ProductionBrainClient implements BrainCycle {
                     // logging hiccup. Not rethrown either — a failed write must not cost
                     // the caller their reply.
                     try {
+                        // EPISTEMIC-INTEGRITY P0.4 (review fix F2): the role the cycle
+                        // produced is PASSED ON. Before this the five-argument overload
+                        // was used, which declares nothing and wrote every gateway
+                        // episode as organic by construction — the provenance seam
+                        // existed and was dropped on the floor here.
                         episodicLog.append(input, mr.reply(), mr.confidence(),
-                            mr.accepted(), mr.modulatorsFired());
+                            mr.accepted(), mr.modulatorsFired(), mr.role());
                         episodicWriteFailures = 0;
                     } catch (Exception e) {
                         episodicWriteFailures++;

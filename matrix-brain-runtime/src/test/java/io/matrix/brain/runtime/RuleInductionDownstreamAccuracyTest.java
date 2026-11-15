@@ -103,7 +103,7 @@ class RuleInductionDownstreamAccuracyTest {
         // 2. the production path: the 256-bit features, folded by the trainer.
         RuleInductionEngine production = new RuleInductionEngine(
                 new io.matrix.bir.BirRegistry(), null);
-        RuleInductionEngine.RuleInductionResult asIs = production.induce(ids, features, labels);
+        RuleInductionEngine.RuleInductionResult asIs = production.induce(ids, features, labels, rolesFor(ids.size()));
 
         // 3. the informative projection: the same features, projected onto the bits that
         //    vary, so that the fold becomes the identity.
@@ -111,7 +111,7 @@ class RuleInductionDownstreamAccuracyTest {
         RuleInductionEngine informativeEngine = new RuleInductionEngine(
                 new io.matrix.bir.BirRegistry(), null);
         RuleInductionEngine.RuleInductionResult narrowed =
-                informativeEngine.induce(ids, projected, labels);
+                informativeEngine.induce(ids, projected, labels, rolesFor(ids.size()));
 
         System.out.printf("[REP-01] the downstream fidelity: the production fold %.4f, "
                         + "the informative projection %.4f%n",
@@ -285,4 +285,20 @@ class RuleInductionDownstreamAccuracyTest {
         }
         return projected;
     }
+    /**
+     * The roles of a fixture's episodes.
+     *
+     * <p>EPISTEMIC-INTEGRITY P0.4 (review fix F10): the provenance-free overload now
+     * REFUSES. A fixture declares no provenance, and {@link EpisodeRole#LEGACY_UNTAGGED}
+     * says exactly that.</p>
+     *
+     * @param count how many episodes the fixture holds
+     * @return the roles, one per episode
+     */
+    private static List<EpisodeRole> rolesFor(int count) {
+        List<EpisodeRole> roles = new java.util.ArrayList<>(count);
+        for (int i = 0; i < count; i++) roles.add(EpisodeRole.LEGACY_UNTAGGED);
+        return roles;
+    }
+
 }

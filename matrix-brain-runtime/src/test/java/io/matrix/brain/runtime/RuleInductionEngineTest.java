@@ -29,8 +29,8 @@ class RuleInductionEngineTest {
         long[][] features = generateTransitivity(20);
         boolean[] labels = positiveLabels(20, 16);
         List<String> ids = idsFor(20);
-        var res1 = r1.induce(ids, features, labels);
-        var res2 = r2.induce(ids, features, labels);
+        var res1 = r1.induce(ids, features, labels, rolesFor(ids.size()));
+        var res2 = r2.induce(ids, features, labels, rolesFor(ids.size()));
         // Same seed + same episodes ⇒ same provenance
         assertThat(res1.provenance()).isEqualTo(res2.provenance());
         assertThat(res1.chosenFidelity()).isEqualTo(res2.chosenFidelity());
@@ -43,7 +43,7 @@ class RuleInductionEngineTest {
         RuleInductionEngine r = new RuleInductionEngine(42L, reg);
         long[][] features = generateTransitivity(10);
         boolean[] labels = positiveLabels(10, 8);
-        var res = r.induce(idsFor(10), features, labels);
+        var res = r.induce(idsFor(10), features, labels, rolesFor(10));
         assertThat(reg.size()).isGreaterThan(0);
         assertThat(reg.listAll()).extracting(BirRegistry.Entry::id).contains(res.entry().id());
     }
@@ -54,7 +54,7 @@ class RuleInductionEngineTest {
         RuleInductionEngine r = new RuleInductionEngine(42L, reg);
         long[][] features = generateTransitivity(25);   // 25 > K_MAX=20
         boolean[] labels = positiveLabels(25, 20);
-        assertThatThrownBy(() -> r.induce(idsFor(25), features, labels))
+        assertThatThrownBy(() -> r.induce(idsFor(25), features, labels, rolesFor(25)))
             .hasMessageContaining("K_MAX=20")
             .hasMessageContaining("Article II");
     }
@@ -77,7 +77,7 @@ class RuleInductionEngineTest {
         RuleInductionEngine r = new RuleInductionEngine(42L, reg);
         long[][] features = generateTransitivity(20);
         boolean[] labels = positiveLabels(20, 16);   // 80% positive
-        var res = r.induce(idsFor(20), features, labels);
+        var res = r.induce(idsFor(20), features, labels, rolesFor(20));
         // Bir is a ClauseSetForm (real BIR, not a string predicate)
         assertThat(res.entry().bir()).isInstanceOf(io.matrix.bir.ClauseSetForm.class);
         // Provenance carries seed + episodeRange + fidelity (Article III)
@@ -91,7 +91,7 @@ class RuleInductionEngineTest {
         RuleInductionEngine r = new RuleInductionEngine(42L, reg);
         long[][] features = generateTransitivity(20);
         boolean[] labels = positiveLabels(20, 16);
-        var res = r.induce(idsFor(20), features, labels);
+        var res = r.induce(idsFor(20), features, labels, rolesFor(20));
         double chosen = res.chosenFidelity();
         double tsetlin = res.tsetlinFidelity();
         double mpdt = res.mpdtFidelity();
@@ -103,7 +103,7 @@ class RuleInductionEngineTest {
     void empty_input_rejected() {
         BirRegistry reg = new BirRegistry();
         RuleInductionEngine r = new RuleInductionEngine(42L, reg);
-        assertThatThrownBy(() -> r.induce(List.of(), new long[0][], new boolean[0]))
+        assertThatThrownBy(() -> r.induce(List.of(), new long[0][], new boolean[0], List.of()))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -113,7 +113,7 @@ class RuleInductionEngineTest {
         RuleInductionEngine r = new RuleInductionEngine(42L, reg);
         long[][] features = new long[5][1];
         boolean[] labels = new boolean[3];
-        assertThatThrownBy(() -> r.induce(idsFor(5), features, labels))
+        assertThatThrownBy(() -> r.induce(idsFor(5), features, labels, rolesFor(5)))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -149,5 +149,23 @@ class RuleInductionEngineTest {
         List<String> ids = new ArrayList<>();
         for (int i = 0; i < n; i++) ids.add("ep-" + i);
         return ids;
+    }
+
+    /**
+     * The roles of a fixture's episodes.
+     *
+     * <p>EPISTEMIC-INTEGRITY P0.4 (review fix F10): the provenance-free
+     * {@code induce(ids, features, labels)} overload now REFUSES, so every training
+     * call states the roles of its episodes. A test fixture declares no provenance,
+     * and {@link EpisodeRole#LEGACY_UNTAGGED} says exactly that — it is not a claim
+     * that the fixture is organic traffic.</p>
+     *
+     * @param count how many episodes the fixture holds
+     * @return the roles, one per episode
+     */
+    private static List<EpisodeRole> rolesFor(int count) {
+        List<EpisodeRole> roles = new ArrayList<>(count);
+        for (int i = 0; i < count; i++) roles.add(EpisodeRole.LEGACY_UNTAGGED);
+        return roles;
     }
 }

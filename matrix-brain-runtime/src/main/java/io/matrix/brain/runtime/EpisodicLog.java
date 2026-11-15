@@ -32,8 +32,26 @@ public final class EpisodicLog {
         double confidence,   // 0..1
         boolean accepted,     // false if modulators vetoed
         List<String> modulatorsFired,
-        long tsMillis
+        long tsMillis,
+        EpisodeRole role      // EPISTEMIC-INTEGRITY P0.4: the provenance of the traffic
     ) {
+        /**
+         * The legacy shape: an interaction with no declared provenance.
+         *
+         * <p>EPISTEMIC-INTEGRITY P0.4 (review fix F3): the default is
+         * {@link EpisodeRole#LEGACY_UNTAGGED} — UNDECLARED, not organic. A record
+         * whose provenance nobody stated must not carry a false provenance claim into
+         * the permanent audit trail, and an absent declaration must not silently
+         * disable learning either: {@code LEGACY_UNTAGGED} is learning-eligible, so
+         * the record still enters the window. Only an explicit
+         * {@link EpisodeRole#ORGANIC} declaration writes "organic".</p>
+         */
+        public Entry(String id, String input, String reply, double confidence,
+                     boolean accepted, List<String> modulatorsFired, long tsMillis) {
+            this(id, input, reply, confidence, accepted, modulatorsFired, tsMillis,
+                EpisodeRole.LEGACY_UNTAGGED);
+        }
+
         public String toJson() {
             StringBuilder sb = new StringBuilder(64 + input.length() + reply.length());
             sb.append("{\"id\":\"").append(escape(id))
@@ -49,7 +67,9 @@ public final class EpisodicLog {
                 first = false;
             }
             sb.append("],\"ts\":").append(tsMillis)
-              .append("}");
+              .append(",\"role\":\"").append(escape(role == null
+                    ? EpisodeRole.LEGACY_UNTAGGED.wire() : role.wire()))
+              .append("\"}");
             return sb.toString();
         }
         static Entry fromJson(String line) {
@@ -70,7 +90,11 @@ public final class EpisodicLog {
             boolean acc = extractBool(line, "accepted");
             long ts = (long) extractNumber(line, "ts");
             List<String> mods = extractStringArray(line, "modulators");
-            return new Entry(id, input, reply, conf, acc, mods, ts);
+            // EPISTEMIC-INTEGRITY P0.4: a record written before the role tag existed
+            // reads back as LEGACY_UNTAGGED — never as ORGANIC. The old rows are not
+            // rewritten; they are simply read with an honest label.
+            EpisodeRole role = EpisodeRole.parse(extractString(line, "role"));
+            return new Entry(id, input, reply, conf, acc, mods, ts, role);
         }
         private static String escape(String s) {
             if (s == null) return "";
@@ -173,9 +197,16 @@ public final class EpisodicLog {
      * was lost. The chain keeps it, and the chain is tamper-evident.
      */
     private final AuditChain auditChain;
+    /**
+     * EPISTEMIC-INTEGRITY P0.4 — the reversible quarantine that governs this log.
+     * Bound to the log's sibling ledger file by default, so it works with NO
+     * configuration: an absent ledger means "nothing is quarantined".
+     */
+    private final EpisodeQuarantine quarantine;
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     private long appendCount = 0;
     private long rejectedCount = 0;
+    private long recordedNotAdmittedCount = 0;
 
     public EpisodicLog(Path logPath) {
         this(logPath, new AuditChain());
@@ -183,8 +214,27 @@ public final class EpisodicLog {
 
     /** The log with an explicit chain, so a caller can read the decisions back. */
     public EpisodicLog(Path logPath, AuditChain auditChain) {
+        this(logPath, auditChain, null);
+    }
+
+    /**
+     * The log with an explicit chain and an explicit quarantine.
+     *
+     * <p>The quarantine is the mechanism that keeps an ALREADY-WRITTEN record out of
+     * the learning window without touching its bytes. It defaults to the sibling
+     * ledger file of this log.</p>
+     */
+    public EpisodicLog(Path logPath, AuditChain auditChain, EpisodeQuarantine quarantine) {
         this.logPath = logPath;
         this.auditChain = auditChain;
+        this.quarantine = quarantine != null
+            ? quarantine
+            : new EpisodeQuarantine(EpisodeQuarantine.defaultLedgerPath(logPath));
+    }
+
+    /** The quarantine that governs this log. */
+    public EpisodeQuarantine quarantine() {
+        return quarantine;
     }
 
     /**
@@ -196,10 +246,12 @@ public final class EpisodicLog {
      * mind was training on its own test paper, and a memorised answer is
      * indistinguishable from a known one once it carries provenance and confidence.</p>
      *
-     * <p>Rejected entries are NOT written and NOT deleted: they never enter the
-     * learning feed, so they cannot become knowledge or reach rule induction. The count
-     * is exposed for the status endpoint so an operator can see the gate working rather
-     * than infer it from a missing answer.</p>
+     * <p>EPISTEMIC-INTEGRITY P0.4 adds one more dimension: the record's
+     * {@link EpisodeRole}. A record whose traffic is not organic (evaluation,
+     * experiment, synthetic) is <b>written</b> — the audit trail keeps it, and a
+     * refusal that leaves a durable trace is a correct refusal — but it is
+     * <b>not promoted</b>, so it can never become knowledge or reach rule induction.
+     * Every other rejection keeps its historic behaviour: not written at all.</p>
      *
      * @return the gate decision, so a caller can surface {@code reason} in its trace
      */
@@ -212,16 +264,24 @@ public final class EpisodicLog {
         }
         PromotionGate.Decision d = PromotionGate.evaluate(
             PromotionGate.Candidate.forInteraction(
-                e.input(), e.reply(), e.confidence(), e.modulatorsFired(), e.accepted()));
-        auditChain.append(d.promoted() ? "episode.promoted" : "episode.rejected",
+                e.input(), e.reply(), e.confidence(), e.modulatorsFired(), e.accepted(),
+                e.role()));
+        auditChain.append(
+            d.promoted() ? "episode.promoted"
+                : (d.written() ? "episode.recorded-not-admitted" : "episode.rejected"),
             e.id() + "|" + d.reason().name() + "|" + d.trace());
-        if (!d.promoted()) {
+        if (!d.written()) {
             lock.writeLock().lock();
             try { rejectedCount++; }
             finally { lock.writeLock().unlock(); }
             return d;
         }
         appendUnchecked(e);
+        if (!d.promoted()) {
+            lock.writeLock().lock();
+            try { recordedNotAdmittedCount++; }
+            finally { lock.writeLock().unlock(); }
+        }
         return d;
     }
 
@@ -253,13 +313,39 @@ public final class EpisodicLog {
      * Convenience: build an Entry with auto-id and current timestamp, then append
      * through the promotion gate.
      *
+     * <p>EPISTEMIC-INTEGRITY P0.4 (review fix F3): this overload declares NOTHING,
+     * so the record it writes is {@link EpisodeRole#LEGACY_UNTAGGED} — an undeclared
+     * record, not an organic one. It stays usable with no configuration (an undeclared
+     * record is learning-eligible, so an absent declaration must not silently disable
+     * learning), but it must not write a provenance claim nobody made. A caller that
+     * KNOWS its traffic is organic says so with the six-argument overload.</p>
+     *
      * @return the gate decision; the entry was written only if it was promoted
      */
     public PromotionGate.Decision append(String input, String reply, double confidence,
                                          boolean accepted, List<String> modulators) {
+        return append(input, reply, confidence, accepted, modulators,
+            EpisodeRole.LEGACY_UNTAGGED);
+    }
+
+    /**
+     * The write path with a DECLARED provenance.
+     *
+     * <p>An evaluation or experiment caller declares what it is, and the gate then
+     * keeps the record out of the learning feed while still recording it durably.
+     * This is the seam that makes "an evaluation record is written durably but never
+     * enters the learning window" a property of the system rather than a habit.</p>
+     *
+     * <p>A null role means UNDECLARED ({@link EpisodeRole#LEGACY_UNTAGGED}), never
+     * organic.</p>
+     */
+    public PromotionGate.Decision append(String input, String reply, double confidence,
+                                         boolean accepted, List<String> modulators,
+                                         EpisodeRole role) {
         long ts = System.currentTimeMillis();
         String id = "ep-" + ts + "-" + Long.toHexString(fnv1a64(input + "|" + reply));
-        return append(new Entry(id, input, reply, confidence, accepted, modulators, ts));
+        return append(new Entry(id, input, reply, confidence, accepted, modulators, ts,
+            role == null ? EpisodeRole.LEGACY_UNTAGGED : role));
     }
 
     /** The chain of the promotion decisions — the refusals included. */
@@ -282,7 +368,23 @@ public final class EpisodicLog {
         finally { lock.readLock().unlock(); }
     }
 
-    /** Read all entries. */
+    /**
+     * Entries that were WRITTEN but refused as learning material since construction.
+     *
+     * <p>EPISTEMIC-INTEGRITY P0.4. These are the evaluation, experiment and synthetic
+     * records: durable, auditable, and never learnable. A non-zero value is the
+     * isolation mechanism working, and it is reported separately from
+     * {@link #rejectedCount()} because the two are different events: one was not
+     * written, the other was written and kept out of the learning feed.</p>
+     */
+    public long recordedNotAdmittedCount() {
+        lock.readLock().lock();
+        try { return recordedNotAdmittedCount; }
+        finally { lock.readLock().unlock(); }
+    }
+
+    // ---- The learning view (EPISTEMIC-INTEGRITY P0.4) ---------------------
+
     /**
      * Malformed lines skipped by the most recent {@link #readAll()}.
      *
@@ -304,20 +406,11 @@ public final class EpisodicLog {
     private static final int MAX_REPORTED_SKIPS = 10;
 
     /**
-     * Malformed lines skipped by the most recent {@link #readAll()}.
+     * The AUDIT view: every record in the log, in the order it was written.
      *
-     * <p>RECON-W32.21. An episode that cannot be read cannot be learned from, so this is
-     * a learning-capacity number and not merely a parse statistic. A skipped episode
-     * used to vanish with no count and no log, which meant the mind had silently lost
-     * the interaction and nothing recorded that it ever had it.</p>
-     *
-     * <p>Unit: lines. Zero after a clean read.</p>
+     * <p>This is the complete history — contaminated records included. Nothing is
+     * hidden and nothing is deleted.</p>
      */
-
-    /** Malformed lines skipped by the most recent read. Unit: lines. */
-
-    /** Skips printed individually before the rest are summarised. Unit: lines. */
-
     public List<Entry> readAll() {
         lock.readLock().lock();
         try {
@@ -368,6 +461,35 @@ public final class EpisodicLog {
         lock.readLock().lock();
         try { return (int) appendCount; }
         finally { lock.readLock().unlock(); }
+    }
+
+    /**
+     * The LEARNING view: the records this mind may learn from.
+     *
+     * <p>EPISTEMIC-INTEGRITY P0.4. A record is admitted when its
+     * {@link EpisodeRole} is learning-eligible and its id is not named in the
+     * {@link EpisodeQuarantine} ledger. Everything else — evaluation records,
+     * experiment records, quarantined legacy records — is excluded here and stays in
+     * {@link #readAll()}.</p>
+     */
+    public List<Entry> learningCandidates() {
+        return LearningAdmission.assess(this, quarantine).candidates();
+    }
+
+    /**
+     * The production learning window: the last {@link KMaxEnforcer#K_MAX} admitted
+     * records.
+     *
+     * <p>The recency selector and the size cap are the production ones; only the
+     * eligibility rule is new. The window therefore reaches further back into the
+     * organic history instead of stopping at the contamination.</p>
+     *
+     * <p>EPISTEMIC-INTEGRITY P0.4 (review fix F8): this is the ONE definition of the
+     * window — {@link LearningAdmission#learningWindow} — and the scheduler and the
+     * operator tool go through it too.</p>
+     */
+    public List<Entry> learningWindow() {
+        return LearningAdmission.learningWindow(this, quarantine, KMaxEnforcer.K_MAX);
     }
 
     public Path path() {
