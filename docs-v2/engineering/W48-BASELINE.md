@@ -106,14 +106,14 @@ rather than a documentation defect.** That is the defect W48-05 must correct.
 
 ### 2.3 The GraalVM distribution identifier is not supported
 
-`.github/workflows/branch-validation.yml:105-108` requests `graalvm/setup-graalvm@v1` with
+the branch-validation workflow (removed on 2026-11-15 by the CI simplification), lines 105-108 requests `graalvm/setup-graalvm@v1` with
 `distribution: 'graalvm-ce'`. The action rejects that value; the supported identifier for
 GraalVM Community Edition is `graalvm-community`. The job failed at the action itself, so
 no compilation evidence was produced.
 
 ### 2.4 The version-constant gate greps for a word, not for a contract
 
-`.github/workflows/branch-validation.yml:84-95` requires the string `VERSION` to appear
+the branch-validation workflow (removed on 2026-11-15 by the CI simplification), lines 84-95 requires the string `VERSION` to appear
 somewhere under `$module/src/main`. `matrix-api-gateway` has it; **`matrix-sdk-java` does
 not** — its public facade is `matrix-sdk-java/src/main/java/io/matrix/sdk/MatrixClient.java`,
 and it declares no version at all. The gate's `grep -rq "VERSION"` cannot tell a real
