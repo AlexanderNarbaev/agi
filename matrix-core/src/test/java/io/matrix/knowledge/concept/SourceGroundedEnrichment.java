@@ -64,8 +64,69 @@ import java.util.Set;
  */
 public final class SourceGroundedEnrichment {
 
-    /** The name of the method that finds a definition candidate. */
+    /** The name of the method that finds a definition candidate (the v1.0 rule). */
     public static final String DEFINITION_METHOD = "definitional-copula-first-sentence-v1";
+
+    /** The name of the method that finds a definition candidate (the v1.1 rule). */
+    public static final String DEFINITION_METHOD_V1_1 =
+            "definitional-adjacency-first-sentence-v1.1";
+
+    /**
+     * The longest a definition may be, in characters (the v1.1 rule).
+     *
+     * <p>A definition is ONE sentence. The extractor joins the lines of a segment, so a
+     * "sentence" can be a whole paragraph; the cap keeps a paragraph out of the concept's
+     * definition field. The cap is a property of the RULE, not of the corpus: it is stated in
+     * the freeze v1.1 §3.1 and applied to every sentence.</p>
+     */
+    public static final int MAX_DEFINITION_LENGTH = 400;
+
+    /**
+     * The rule that decides whether a sentence states the definition of a concept.
+     *
+     * <p>The two rules are the two FREEZE VERSIONS of §3.1, and both are measured: the loose
+     * rule is the rule the first measurement used, the tight rule is the rule the v1.1 freeze
+     * froze after that measurement showed that the loose rule does not test the hypothesis it
+     * claims to test.</p>
+     */
+    public enum DefinitionRule {
+
+        /**
+         * The v1.0 rule: the sentence holds the concept's name as a word AND a definitional
+         * copula SOMEWHERE in the sentence.
+         */
+        LOOSE_V1_0(DEFINITION_METHOD, Integer.MAX_VALUE),
+
+        /**
+         * The v1.1 rule: the sentence holds the concept's name as a word AND the name is
+         * IMMEDIATELY followed by a definitional copula, AND the sentence is at most
+         * {@link SourceGroundedEnrichment#MAX_DEFINITION_LENGTH} characters long.
+         */
+        TIGHT_V1_1(DEFINITION_METHOD_V1_1, MAX_DEFINITION_LENGTH);
+
+        private final String method;
+        private final int maxLength;
+
+        DefinitionRule(String method, int maxLength) {
+            this.method = method;
+            this.maxLength = maxLength;
+        }
+
+        /** The name of the extraction method this rule records on every candidate. */
+        public String method() {
+            return method;
+        }
+
+        /** The longest a definition may be under this rule, in characters. */
+        public int maxLength() {
+            return maxLength;
+        }
+
+        /** Whether the name must be immediately followed by a definitional copula. */
+        public boolean requiresAdjacency() {
+            return this == TIGHT_V1_1;
+        }
+    }
 
     /** The name of the method that finds a relation candidate. */
     public static final String RELATION_METHOD = "typed-relation-trigger-phrase-v1";
@@ -345,12 +406,24 @@ public final class SourceGroundedEnrichment {
     // ── the extraction ────────────────────────────────────────────────────────
 
     /**
-     * Extracts the definitions and the typed relations of a workspace.
+     * Extracts the definitions and the typed relations of a workspace, under the rule of the
+     * CURRENT freeze (v1.1, the tight rule).
      *
      * @param snapshot the workspace as the production store exports it
      * @return what was found, with every count the report needs
      */
     public static Extraction extract(KnowledgeSnapshot snapshot) {
+        return extract(snapshot, DefinitionRule.TIGHT_V1_1);
+    }
+
+    /**
+     * Extracts the definitions and the typed relations of a workspace, under one definition rule.
+     *
+     * @param snapshot the workspace as the production store exports it
+     * @param rule the definition rule of the freeze version under measurement
+     * @return what was found, with every count the report needs
+     */
+    public static Extraction extract(KnowledgeSnapshot snapshot, DefinitionRule rule) {
         long started = System.nanoTime();
         Map<String, CorpusDocument> documents = corpus();
 
@@ -402,7 +475,8 @@ public final class SourceGroundedEnrichment {
         List<String> withoutDefinition = new ArrayList<>();
         for (Concept concept : snapshot.concepts()) {
             List<String> own = sourceIdsByConcept.getOrDefault(concept.id(), List.of());
-            DefinitionCandidate candidate = definitionOf(concept, own, snapshot, sentencesBySource);
+            DefinitionCandidate candidate =
+                    definitionOf(concept, own, snapshot, sentencesBySource, rule);
             if (candidate == null) {
                 withoutDefinition.add(concept.name());
             } else {
@@ -446,10 +520,22 @@ public final class SourceGroundedEnrichment {
      *
      * <p>The concept's own source documents are the sources of its claims, taken in the order the
      * snapshot lists the sources; the sentences are scanned in document order; the FIRST
-     * sentence that carries the concept's name AND a definitional copula wins.</p>
+     * sentence that CARRIES the definition wins.</p>
+     *
+     * <p>What "carries the definition" means is the rule:</p>
+     *
+     * <ul>
+     *   <li>the loose rule (v1.0): the sentence holds the concept's name as a word AND a
+     *       definitional copula somewhere in the sentence;</li>
+     *   <li>the tight rule (v1.1): the sentence holds the concept's name as a word AND the
+     *       name is IMMEDIATELY followed by a definitional copula (or by the explicit phrase
+     *       "is defined as"), AND the sentence is at most {@link #MAX_DEFINITION_LENGTH}
+     *       characters long.</li>
+     * </ul>
      */
     private static DefinitionCandidate definitionOf(Concept concept, List<String> own,
-            KnowledgeSnapshot snapshot, Map<String, List<Sentence>> sentencesBySource) {
+            KnowledgeSnapshot snapshot, Map<String, List<Sentence>> sentencesBySource,
+            DefinitionRule rule) {
         for (Source source : snapshot.sources()) {
             if (!own.contains(source.id())) {
                 continue;
@@ -458,7 +544,7 @@ public final class SourceGroundedEnrichment {
                 if (!holdsName(sentence.text(), concept.name())) {
                     continue;
                 }
-                if (!holdsCopula(sentence.text())) {
+                if (!statesDefinition(sentence.text(), concept.name(), rule)) {
                     continue;
                 }
                 boolean supported = EpistemicPolicy.isCitable(sentence.claim().status());
@@ -467,12 +553,69 @@ public final class SourceGroundedEnrichment {
                         sentence.document() == null ? "" : sentence.document().file(),
                         sentence.document() == null ? "" : sentence.document().sha256(),
                         sentence.start(), sentence.end(), OFFSET_UNIT, sentence.precision(),
-                        DEFINITION_METHOD,
+                        rule.method(),
                         supported ? EvidentiaryStatus.SUPPORTED : EvidentiaryStatus.CANDIDATE,
                         sentence.claim().id());
             }
         }
         return null;
+    }
+
+    /**
+     * Whether a sentence states the definition of a concept, under one rule.
+     *
+     * @param sentence the sentence
+     * @param name the concept's name
+     * @param rule the rule of the freeze version under measurement
+     * @return whether the sentence states the definition
+     */
+    static boolean statesDefinition(String sentence, String name, DefinitionRule rule) {
+        if (sentence == null || sentence.length() > rule.maxLength()) {
+            return false;
+        }
+        if (!rule.requiresAdjacency()) {
+            return holdsCopula(sentence);
+        }
+        return holdsCopulaAfterName(sentence, name);
+    }
+
+    /**
+     * Whether the concept's name is IMMEDIATELY followed by a definitional copula.
+     *
+     * <p>The rule of the freeze v1.1 §3.1: the name must be ADJACENT to the copula, not merely
+     * in the same sentence. A sentence that names the concept and states something else about
+     * it — "A trench forms and, as the subducted plate is heated, ..." — does not state its
+     * definition, and the loose rule cannot tell the two apart.</p>
+     *
+     * @param sentence the sentence
+     * @param name the concept's name
+     * @return whether the name is immediately followed by a definitional copula
+     */
+    static boolean holdsCopulaAfterName(String sentence, String name) {
+        List<String> nameWords = words(name);
+        List<String> sentenceWords = words(sentence);
+        if (nameWords.isEmpty() || nameWords.size() > sentenceWords.size()) {
+            return false;
+        }
+        for (int start = 0; start + nameWords.size() <= sentenceWords.size(); start++) {
+            boolean matched = true;
+            for (int offset = 0; offset < nameWords.size(); offset++) {
+                if (!sentenceWords.get(start + offset).equals(nameWords.get(offset))) {
+                    matched = false;
+                    break;
+                }
+            }
+            if (!matched) {
+                continue;
+            }
+            int after = start + nameWords.size();
+            for (String copula : DEFINITIONAL_COPULAS) {
+                if (matches(sentenceWords, after, words(copula))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /** Whether a sentence holds a definitional copula. */

@@ -443,3 +443,184 @@ reader can see exactly what was touched and what was not:
 after the measurement.** The amendments above name rules that were always implemented; they do
 not introduce a new rule, and the results were produced against the file as it stands now — its
 SHA-256 is the one in the results file.
+
+---
+
+# FREEZE VERSION 1.1 (appended; it supersedes v1.0)
+
+**Status:** `FROZEN` — written **before** the v1.1 measurement.
+**Date of this version:** 2026-11-15.
+**Supersedes:** version 1.0 of this file, whose SHA-256 is
+`14251fbcdf06001b670d919621b64079a35229ebabe1577081fb0b6222c08cf4`.
+**The v1.0 text above is NOT rewritten and NOT deleted.** It is the record of the definitions the
+first measurement was produced against, and the first measurement itself is preserved: its
+numbers are quoted **as they were published** in `C2A-CONCEPT-ENRICHMENT-EXPERIMENT.md` §0 and
+under `v1_0Measurement` in `C2A-CONCEPT-ENRICHMENT-RESULTS.json`.
+
+## A. Why this version exists
+
+An independent scientific review reproduced every number of the first measurement and found
+defects in it. Three of them are defects of the METRIC DEFINITIONS and one is a defect of the
+DEFINITION RULE; the rest are defects of the reporting. This version fixes the first four and
+states, for each of them, what changed, why, and what did not change.
+
+The findings that produced this version:
+
+1. **The definition rule of §3.1 does not test the hypothesis it claims to test.** The rule only
+   asked for the concept's name as a word AND a definitional copula SOMEWHERE in the sentence.
+   The first measurement showed that most of the definitions it produced are not definitions:
+   of the 162 definitions it gave the seed scope, only 109 (67.3 %) have the name **immediately**
+   followed by a definitional copula, and 3 of the 162 are longer than the 400 characters this
+   version allows. The sentences the rule accepted include "A trench forms and, as the
+   subducted plate is heated, it releases volatiles …" as the definition of "A trench",
+   "Consideration of plate tectonics is a part of the search for extraterrestrial intelligence
+   and extraterrestrial life." as the definition of "Consideration of plate tectonics", and a
+   paragraph that begins "Possible tidal effect on plate tectonics …" as the definition of a
+   concept named "As a".
+2. **The H4 classification was applied per CASE, with ANY semantics over the case's golds.**
+   The freeze's tree is per GOLD. Five of the seven failures the first report called
+   `BELOW_FLOOR` have at least one gold that is not in the floor-0.0 candidate list at all, so
+   that gold is unreachable at ANY floor. The classification therefore attributed to the floor a
+   share of the failures the floor does not carry, and it gave P-01 (two of three golds
+   unreachable) and P-02 (three of three) different codes for the same defect.
+3. **The MRR was not an MRR.** It took the reciprocal rank of the FIRST gold in the CASE'S LIST
+   ORDER rather than of the TOPMOST gold by rank.
+4. **The supported-answer accuracy and the unsupported-answer rate ignored the case's own gold
+   condition.** The freeze requires "all of `requiredPropositions`, or AT LEAST ONE of
+   `requiredPropositionsAny`"; the implementation required every gold to be cited, so an
+   `Any`-case could pass and still be counted unsupported.
+
+## B. What this version changes
+
+### B.1 §3.1 — the definition rule (tightened)
+
+The rule of §3.1 is replaced by the following. Everything else of §3.1 (the sources of the
+concept, the document order, the FIRST qualifying sentence wins, the closed copula vocabulary,
+the verbatim sentence as the definition, nothing paraphrased and nothing invented) is unchanged.
+
+A **definition candidate** for a concept `C` is found **only** by this method:
+
+1. `C`'s **own source documents** are the sources of `C`'s claims, taken in the order the
+   snapshot lists the sources.
+2. The sentences of those documents are scanned **in document order**.
+3. A sentence **QUALIFIES** when all three of the following hold:
+   1. it **contains `C`'s name as a word** (for a multi-word name: the whole token sequence,
+      case-insensitively, as a contiguous subsequence of the sentence's tokens) — the same rule
+      as v1.0;
+   2. the name is **IMMEDIATELY FOLLOWED by a definitional copula**: the token sequence that
+      follows the occurrence of the name is one of the closed vocabulary of §3.1 —
+      `is · are · refers to · means · describes · consists of · is defined as · is called`. The
+      explicit phrase "is defined as" is a member of that vocabulary and therefore satisfies
+      this condition in the ordinary way;
+   3. the sentence is **at most 400 characters long**.
+4. The **FIRST** qualifying sentence wins. If no sentence qualifies, the concept has **NO
+   definition** — recorded as `no definition found`.
+
+**Method name:** `definitional-adjacency-first-sentence-v1.1`.
+
+**The length cap.** A definition is ONE sentence. The production extractor joins the lines of a
+segment, so a "sentence" can be a whole paragraph; the cap keeps a paragraph out of the
+concept's definition field. The cap is a property of the RULE, not of the corpus: it is the
+same 400 characters for every sentence of every scope.
+
+**What the tightening does NOT change.** The relation extraction of §3.2 is untouched: the
+relations, the trigger phrases, the passive guard, the longest-match tie-break, the rejections
+and the evidentiary status are exactly the ones of v1.0. H2 and H3 are therefore measured under
+both versions with the same relation candidates.
+
+### B.2 §5 — the H4 classification is per GOLD
+
+The taxonomy of §5 is unchanged; the tree is walked **per gold proposition**, and the
+classification is computed for the **FAILING cases only** — a passing case carries no code at
+all.
+
+For every gold proposition `g` of a failing case, in this order:
+
+1. `g` is **cited** by the answer → `GOLD_REACHED` — the gold was reached, it is not a defect;
+2. `g` is **not a claim of the workspace** → `GOLD_NOT_IN_WORKSPACE`;
+3. `g` is **not in the floor-0.0 candidate list** → `NO_LEXICAL_MATCH`;
+4. the **gold's concept is not among the answer's concepts** (and the answer has concepts) →
+   `WRONG_SCOPE`;
+5. otherwise → `BELOW_FLOOR`.
+
+The **code of the case** is then:
+
+* every gold is cited → `GOLD_CITED_CASE_FAILED` (the case failed on another condition);
+* the golds that are not cited **agree** on one code → that code;
+* the golds that are not cited **disagree** → `MIXED_GOLD_CODES`.
+
+The abstention branch is unchanged: the answer abstained → the abstention code, read from the
+abstention reason.
+
+### B.3 §6 — the metrics
+
+| Metric | The v1.1 definition |
+|---|---|
+| **MRR** | over the same cases: the reciprocal rank of the **TOPMOST GOLD** — the gold with the **SMALLEST** rank in the floor-0.0 candidate list; **a case whose gold is not in the list contributes 0** — the misses are in the denominator |
+| **Supported answer accuracy** | over the **14 answerable cases**: the share that produced `answered = true` **AND met the case's own gold condition** — **all of `requiredPropositions`, or AT LEAST ONE of `requiredPropositionsAny`** |
+| **Unsupported-answer rate** | over the **14 answerable cases**: the share that answered **without** meeting the case's own gold condition |
+| **Unsupported-answer rate, third reading** | over the **14 answerable cases**: the share that answered and cited **NO** gold at all — reported separately, because it is a different defect from "answered without the condition" |
+| **Unsupported-answer rate over ALL the ask cases** | over the **20 ask cases** (the 14 answerable and the 6 unanswerable ones): answering an unanswerable case counts as an unsupported answer |
+| **False-positive retrieval (b)** | the number of cases whose **top-ranked claim** (rank 1 of the floor-0.0 list) **is not a gold claim** |
+| **Global (micro) recall share** | over **every gold proposition of the answerable cases**: the share found within the top K — the cases are not weighted equally |
+| **Aggregate gold availability** | the mean over the answerable cases of the share of the gold set the answer cites at floor 0.25 |
+| **Latency overhead** | the mean retrieval time of the candidate minus the mean retrieval time of `BASELINE-RETRIEVER`, in ms per case, written out |
+
+The definitions that are **unchanged**: the recall@K (the mean over the answerable cases of the
+share of the gold set found within the top K of the floor-0.0 list), the abstention accuracy
+(over the unanswerable cases), the mean number of non-gold claims cited (over the answerable
+cases), the latency (the mean over the answerable cases, the total over every row of the
+candidate), and the coverage shift (the same measurement — but see B.5 for its presentation).
+
+### B.4 §6 — the metrics that were never delivered
+
+The v1.0 freeze named four metrics that the first measurement did not write out: the global
+(micro) recall share, the unsupported-answer rate over all the ask cases, the latency overhead,
+and the aggregate gold availability. This version **delivers** them; the table above is their
+definition, and every one of them is in the results file.
+
+### B.5 §4 and §6 — the scale of every candidate, and the coverage shift
+
+* For every candidate, the **number of concepts it wrote into** and the **number of claims whose
+  searchable text it changed** are measured and reported. The searchable text of a claim is its
+  proposition, its concept's name and its concept's definition
+  (`KnowledgeRetriever.java:148-154`), so a claim's text changes exactly when the definition of
+  ITS concept changes.
+* The **coverage shift** is measured for **H3 as well** — over the unmodified snapshot and with
+  the **expanded question**, which is the candidate H3 actually is.
+* The coverage floor is a **bracket**: the floors are scanned from 0.00 upwards in steps of 0.01,
+  so the reported value is the upper bound of a 0.01-wide interval, and it is reported **as the
+  interval**.
+
+### B.6 The reporting
+
+* Every table states its **denominator** in its caption.
+* The latency table says which **instrument** each row is: `BASELINE-PATH` is the full
+  production path, the other rows are the pure retriever, and the two are not comparable.
+* The comparison of the two baseline rows is **computed from the run**, and the gate is read
+  from the **abstention reason the production path itself gives** — not from prose.
+
+## C. What this version does NOT change
+
+* The corpus, its manifest and its digests (§1.1); the sentences and their provenance (§1.2);
+  the gold matching rule (§1.4).
+* The baseline rows, the floors and the two baseline rows' definitions (§2, §4.5).
+* The extraction contract of §3.2 — the typed relations, their trigger phrases, the passive
+  guard, the rejections, the one-hop rule, the evidentiary status (§3.3, §3.4).
+* The candidates H1, H2, H3 and H1+H2 themselves (§4): what they change, where they change it
+  and what they never touch (§4.4).
+* The scope preparation (§7) and the judging rules (the official runner's rules).
+* The held-out dataset. It is owned by another worker and it is not touched by this version.
+
+## D. The identity of this version
+
+* The SHA-256 of this file **as it stands after this section was appended** is the digest the
+  v1.1 results and the v1.1 held-out run are bound to; it is written into
+  `C2A-CONCEPT-ENRICHMENT-RESULTS.json` under `freeze.sha256` and into
+  `C2A-HELDOUT-EVALUATION.json`.
+* The SHA-256 of the **v1.0** version of this file is
+  `14251fbcdf06001b670d919621b64079a35229ebabe1577081fb0b6222c08cf4`. It is recorded here, in
+  the first measurement's block of the results file, and in the first measurement's own
+  artefacts; the held-out evaluation of the first measurement cites it.
+* The v1.1 measurement is produced against **this** file, and the v1.1 held-out evaluation is
+  produced against **this** file — the same definitions for both, as §8 of v1.0 requires.

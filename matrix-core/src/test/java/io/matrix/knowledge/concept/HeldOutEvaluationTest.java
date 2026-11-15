@@ -80,8 +80,17 @@ class HeldOutEvaluationTest {
     /** The freeze: the candidates and the metrics, fixed before any measurement. */
     private static final String FREEZE_PATH = "docs-v2/engineering/C2A-CANDIDATE-FREEZE.md";
 
-    /** The SHA-256 the freeze is expected to carry. */
+    /** The SHA-256 the freeze is expected to carry — the freeze v1.1. */
     private static final String EXPECTED_FREEZE_SHA256 =
+            "365655905e9e6be278f9550229958be1fa7cd31b5ca19b6f91c726e7ccfc7f7c";
+
+    /**
+     * The SHA-256 of the freeze v1.0 — the freeze the FIRST held-out run was produced against.
+     *
+     * <p>It is kept here as the record of that run: the first held-out evaluation was produced
+     * against the v1.0 definitions, and the v1.1 freeze supersedes them.</p>
+     */
+    private static final String V1_0_FREEZE_SHA256 =
             "14251fbcdf06001b670d919621b64079a35229ebabe1577081fb0b6222c08cf4";
 
     /** The held-out dataset. */
@@ -185,7 +194,11 @@ class HeldOutEvaluationTest {
             String abstentionReason, String statement, List<String> limitations,
             List<String> gaps, List<String> unmatchedTerms, String expandedQuestion,
             int workspaceClaims, String classification, String classificationEvidence,
-            String observed) {
+            String observed,
+            /** The code of each gold proposition of the case (the freeze v1.1 §5). */
+            List<String> goldClassifications,
+            /** Whether the top-ranked claim of the floor-0.0 list is a gold claim. */
+            Boolean topRankIsGold) {
     }
 
     /** The metrics of one candidate over the held-out set. */
@@ -195,7 +208,14 @@ class HeldOutEvaluationTest {
             double abstentionAccuracy, double unsupportedAnswerRate, double meanNonGoldCited,
             int casesWhoseTopRankIsNotGold, long meanRetrievalMillis, long totalRetrievalMillis,
             double overheadMillisPerCase, int measuredCases, int answerableCases,
-            int unanswerableCases, double goldAvailability) {
+            int unanswerableCases, double goldAvailability,
+            /** The GLOBAL (micro) share of the golds found within the top K. */
+            double microRecallAt1, double microRecallAt5, double microRecallAt10,
+            double microRecallAt20,
+            /** The unsupported-answer rate over ALL the ask cases. */
+            double unsupportedOverAllAsk, int askCases,
+            /** The counts behind the rates. */
+            long supportedCount, long unsupportedCount, long zeroGoldCitedCount) {
     }
 
     /** A gold claim a candidate lost, and the coverage floor under each row. */
@@ -267,7 +287,8 @@ class HeldOutEvaluationTest {
             // ── the frozen extraction, over the held-out workspace's documents ──
             long extractionStarted = System.nanoTime();
             SourceGroundedEnrichment.Extraction extraction =
-                    SourceGroundedEnrichment.extract(snapshot);
+                    SourceGroundedEnrichment.extract(snapshot,
+                            SourceGroundedEnrichment.DefinitionRule.TIGHT_V1_1);
             long extractionMillis = (System.nanoTime() - extractionStarted) / 1_000_000L;
             Map<String, Object> summary = new LinkedHashMap<>(
                     RetrievalExperiment.extractionSummary(snapshot, extraction));
@@ -374,7 +395,7 @@ class HeldOutEvaluationTest {
                         snapshot.claims().size()));
 
                 shifts.addAll(coverageShifts(heldOutCase, collected, baselineRow, snapshot,
-                        h1.snapshot(), h2.snapshot(), h12.snapshot(), level));
+                        h1.snapshot(), h2.snapshot(), h12.snapshot(), expanded, level));
             }
 
             rows = List.copyOf(collected);
@@ -384,6 +405,10 @@ class HeldOutEvaluationTest {
         }
 
         freezeSha256 = sha256(RepositoryPaths.root().resolve(FREEZE_PATH));
+        // THE DEVELOPMENT ARTEFACTS MUST CARRY THE SAME FREEZE. The order between the two
+        // test classes inside one suite is not guaranteed, so they are regenerated when they
+        // are stale — with the same code, against the same freeze.
+        ConceptEnrichmentExperimentTest.regenerateIfStale(freezeSha256);
         datasetSha256 = sha256(RepositoryPaths.root().resolve(DATASET_PATH));
         developmentSha256 = sha256(RepositoryPaths.root().resolve(DEVELOPMENT_RESULTS_PATH));
         writeResults();
@@ -475,21 +500,22 @@ class HeldOutEvaluationTest {
     }
 
     @Test
-    @DisplayName("the misses are in the denominator of the MRR")
+    @DisplayName("the MRR is the reciprocal rank of the topmost gold, and the misses count")
     void theMissesAreInTheDenominator() {
         for (Row row : rows) {
             if (!KIND_POSITIVE.equals(row.kind())) {
                 continue;
             }
-            double expected = 0.0;
+            int topmost = Integer.MAX_VALUE;
             for (Integer rank : row.goldRanks()) {
-                if (rank > 0) {
-                    expected = 1.0 / rank;
-                    break;
+                if (rank > 0 && rank < topmost) {
+                    topmost = rank;
                 }
             }
+            double expected = topmost == Integer.MAX_VALUE ? 0.0 : 1.0 / topmost;
             assertEquals(expected, row.mrr(), 1e-9,
-                    "the MRR of " + row.caseId() + " under " + row.candidate());
+                    "the MRR of " + row.caseId() + " under " + row.candidate()
+                            + " must be the reciprocal rank of the topmost gold");
         }
     }
 
@@ -563,19 +589,40 @@ class HeldOutEvaluationTest {
         double recall5 = recallAt(gold.size(), goldRanks, 5);
         double recall10 = recallAt(gold.size(), goldRanks, 10);
         double recall20 = recallAt(gold.size(), goldRanks, 20);
+        // THE MRR (the freeze v1.1 §6): the reciprocal rank of the TOPMOST GOLD — the gold with
+        // the SMALLEST rank in the floor-0.0 candidate list. The misses are in the denominator.
         double mrr = 0.0;
+        int topmost = Integer.MAX_VALUE;
         for (Integer rank : goldRanks) {
-            if (rank > 0) {
-                mrr = 1.0 / rank;
-                break;
+            if (rank > 0 && rank < topmost) {
+                topmost = rank;
             }
+        }
+        if (topmost != Integer.MAX_VALUE) {
+            mrr = 1.0 / topmost;
+        }
+        // THE TOP-RANKED CLAIM: the claim at rank 1 of the floor-0.0 list. The metric asks
+        // whether THAT claim is a gold claim.
+        Boolean topRankIsGold = null;
+        if (!ranked.isEmpty()) {
+            String top = RetrievalExperiment.normalise(ranked.get(0));
+            boolean goldClaim = false;
+            for (String proposition : gold) {
+                if (RetrievalExperiment.normalise(proposition).equals(top)) {
+                    goldClaim = true;
+                }
+            }
+            topRankIsGold = goldClaim;
         }
         String observed = "answered=" + (answer != null && answer.answered()) + "; "
                 + citedIds.size() + " claims; " + sourceIds.size() + " sources; gold "
                 + goldCited + "/" + gold.size();
         String[] classification = new String[] {"", ""};
+        List<String> goldClassifications = List.of();
         if (!passed) {
-            classification = classify(heldOutCase, answer, gold, cited, ranked, problems);
+            Classification found = classify(heldOutCase, answer, gold, cited, ranked, problems);
+            classification = new String[] {found.code(), found.evidence()};
+            goldClassifications = found.perGold();
         }
         return new Row(heldOutCase.id(), heldOutCase.kind(), heldOutCase.disposition(), candidate,
                 passed, problems, answer != null && answer.answered(), citedIds.size(),
@@ -587,7 +634,8 @@ class HeldOutEvaluationTest {
                 answer == null ? List.of() : answer.limitations(),
                 answer == null ? List.of() : answer.gaps(),
                 answer == null ? List.of() : answer.unmatchedTerms(), expandedQuestion,
-                workspaceClaims, classification[0], classification[1], observed);
+                workspaceClaims, classification[0], classification[1], observed, goldClassifications,
+                topRankIsGold);
     }
 
     /**
@@ -732,65 +780,84 @@ class HeldOutEvaluationTest {
         return false;
     }
 
+    /** The classification of a failure: one code for the case, one code per gold. */
+    record Classification(String code, String evidence, List<String> perGold) {
+    }
+
     /**
      * The classification of a failing case, with the evidence it rests on.
      *
-     * <p>The taxonomy and the decision tree are the frozen ones of the freeze §5: the same
-     * codes, walked in the same order, so that the held-out failures can be compared with the
-     * development ones.</p>
+     * <p>The taxonomy is the frozen one of the freeze §5, and the tree is walked **per gold
+     * proposition**, as the freeze v1.1 §5 requires: every gold of the case gets its own code,
+     * and the case gets the code its golds agree on — or {@code MIXED_GOLD_CODES} when they do
+     * not agree. The classification is computed for the FAILING rows only.</p>
      */
-    private static String[] classify(HeldOutCase heldOutCase, Answer answer, List<String> gold,
-            List<String> cited, List<String> ranked, List<String> problems) {
+    private static Classification classify(HeldOutCase heldOutCase, Answer answer,
+            List<String> gold, List<String> cited, List<String> ranked, List<String> problems) {
         if (answer == null) {
-            return new String[] {"NO_ANSWER", "the row produced no answer"};
+            return new Classification("NO_ANSWER", "the row produced no answer", List.of());
         }
         if (!answer.answered()) {
-            String reason = answer.abstentionReason() == null ? ""
-                    : answer.abstentionReason().toLowerCase(Locale.ROOT);
-            String code;
-            if (reason.contains("premise")) {
-                code = "ABSTAINED_PREMISE";
-            } else if (reason.contains("quantity") || reason.contains("measured quantity")) {
-                code = "ABSTAINED_QUANTITY";
-            } else if (reason.contains("a time that has not happened")) {
-                code = "ABSTAINED_TIME_DEMAND";
-            } else if (reason.contains("content terms")) {
-                code = "ABSTAINED_DEMAND";
-            } else if (reason.contains("covers enough") || reason.contains("established")) {
-                code = "ABSTAINED_NO_COVERAGE";
-            } else {
-                code = "ABSTAINED_OTHER";
+            String code = RetrievalExperiment.abstentionCode(answer.abstentionReason());
+            List<String> perGold = new ArrayList<>();
+            for (int index = 0; index < gold.size(); index++) {
+                perGold.add(code);
             }
-            return new String[] {code, "the answer abstained: " + answer.abstentionReason()};
+            return new Classification(code,
+                    "the answer abstained: " + answer.abstentionReason(), perGold);
         }
         if (gold.isEmpty()) {
-            return new String[] {"NO_GOLD", "the case names no gold proposition"};
+            return new Classification("NO_GOLD", "the case names no gold proposition", List.of());
         }
-        boolean citedAll = true;
+        List<String> perGold = new ArrayList<>();
         for (String proposition : gold) {
-            citedAll = citedAll && cited(cited, proposition);
-        }
-        if (citedAll) {
-            return new String[] {"GOLD_CITED_CASE_FAILED",
-                    "the gold is cited and the case failed on: " + problems};
-        }
-        boolean inRanking = false;
-        for (String text : ranked) {
-            for (String proposition : gold) {
+            if (cited(cited, proposition)) {
+                perGold.add(RetrievalExperiment.GOLD_REACHED);
+                continue;
+            }
+            boolean inRanking = false;
+            for (String text : ranked) {
                 if (RetrievalExperiment.normalise(text)
                         .equals(RetrievalExperiment.normalise(proposition))) {
                     inRanking = true;
                 }
             }
+            if (!inRanking) {
+                perGold.add("NO_LEXICAL_MATCH");
+                continue;
+            }
+            perGold.add("BELOW_FLOOR");
         }
-        if (!inRanking) {
-            return new String[] {"NO_LEXICAL_MATCH",
-                    "the gold claim is in the workspace but shares no term with the question: it "
-                            + "is not in the floor-0.0 candidate list either"};
+        List<String> defects = new ArrayList<>();
+        for (String code : perGold) {
+            if (!RetrievalExperiment.GOLD_REACHED.equals(code)) {
+                defects.add(code);
+            }
         }
-        return new String[] {"BELOW_FLOOR",
-                "the gold claim is in the floor-0.0 candidate list but not in the floor-0.25 "
-                        + "evidence set"};
+        if (defects.isEmpty()) {
+            return new Classification("GOLD_CITED_CASE_FAILED",
+                    "every gold is cited and the case failed on: " + problems, perGold);
+        }
+        Set<String> distinct = new LinkedHashSet<>(defects);
+        if (distinct.size() == 1) {
+            String code = distinct.iterator().next();
+            return new Classification(code, evidenceOf(code, perGold), perGold);
+        }
+        return new Classification(RetrievalExperiment.MIXED_GOLD_CODES,
+                "the golds of the case carry different codes: " + perGold, perGold);
+    }
+
+    /** The evidence of a classification, read off the per-gold codes. */
+    private static String evidenceOf(String code, List<String> perGold) {
+        if ("BELOW_FLOOR".equals(code)) {
+            return "the gold is in the floor-0.0 candidate list but not in the floor-0.25 "
+                    + "evidence set (" + perGold + ")";
+        }
+        if ("NO_LEXICAL_MATCH".equals(code)) {
+            return "the gold is in the workspace but shares no term with the question: it is not "
+                    + "in the floor-0.0 candidate list either (" + perGold + ")";
+        }
+        return perGold.toString();
     }
 
     /**
@@ -899,20 +966,43 @@ class HeldOutEvaluationTest {
             double recall10 = mean(answerable.stream().mapToDouble(Row::recallAt10).toArray());
             double recall20 = mean(answerable.stream().mapToDouble(Row::recallAt20).toArray());
             double mrr = mean(answerable.stream().mapToDouble(Row::mrr).toArray());
+            // THE GLOBAL (MICRO) SHARE: every gold proposition of every answerable case.
+            double micro1 = microRecall(answerable, 1);
+            double micro5 = microRecall(answerable, 5);
+            double micro10 = microRecall(answerable, 10);
+            double micro20 = microRecall(answerable, 20);
+            // THE CASE'S OWN GOLD CONDITION: a POSITIVE case names the propositions it requires
+            // and the condition is that ALL of them are cited.
             long supported = answerable.stream().filter(row -> row.answered()
                     && row.goldFullyCited()).count();
             long abstained = unanswerable.stream().filter(row -> !row.answered()
                     && row.citedClaims() == 0 && row.citedSources() == 0).count();
             long unsupported = answerable.stream().filter(row -> row.answered()
                     && !row.goldFullyCited()).count();
+            // THE THIRD READING: the answer was given and cited NO gold at all.
+            long zeroGold = answerable.stream().filter(row -> row.answered()
+                    && row.goldCited() == 0).count();
+            // THE UNSUPPORTED ANSWER OVER ALL THE ASK CASES: the POSITIVE and the NEGATIVE
+            // cases. Answering a NEGATIVE case counts as an unsupported answer.
+            long unsupportedOverAllAsk = 0L;
+            for (Row row : candidateRows) {
+                if (!row.answered() || (!KIND_POSITIVE.equals(row.kind())
+                        && !KIND_NEGATIVE.equals(row.kind()))) {
+                    continue;
+                }
+                if (KIND_NEGATIVE.equals(row.kind()) || !row.goldFullyCited()) {
+                    unsupportedOverAllAsk++;
+                }
+            }
             double nonGold = answerable.stream().mapToDouble(row -> row.citedClaims()
                     - row.goldCited()).average().orElse(0.0);
             double availability = answerable.stream().mapToDouble(row -> row.goldPropositions()
                     .isEmpty() ? 0.0 : (double) row.goldCited() / row.goldPropositions().size())
                     .average().orElse(0.0);
+            // THE TOP-1 NOT GOLD: the claim at rank 1 of the floor-0.0 list is not a gold claim.
             int topRankNotGold = 0;
             for (Row row : answerable) {
-                if (row.goldRanks().isEmpty() || row.goldRanks().get(0) != 1) {
+                if (row.topRankIsGold() != null && !row.topRankIsGold()) {
                     topRankNotGold++;
                 }
             }
@@ -920,6 +1010,7 @@ class HeldOutEvaluationTest {
             long meanMillis = answerable.isEmpty() ? 0L
                     : Math.round(answerable.stream().mapToLong(Row::retrievalMillis)
                             .average().orElse(0.0));
+            int askCases = answerable.size() + unanswerable.size();
             computed.put(candidate, new Metrics(candidate,
                     answerable.size() + unanswerable.size() - failures.size(),
                     answerable.size() + unanswerable.size(), candidateRows.size(), failures,
@@ -928,9 +1019,27 @@ class HeldOutEvaluationTest {
                     unanswerable.isEmpty() ? 0.0 : (double) abstained / unanswerable.size(),
                     answerable.isEmpty() ? 0.0 : (double) unsupported / answerable.size(),
                     nonGold, topRankNotGold, meanMillis, totalMillis, 0.0, answerable.size(),
-                    answerable.size(), unanswerable.size(), availability));
+                    answerable.size(), unanswerable.size(), availability,
+                    micro1, micro5, micro10, micro20,
+                    askCases == 0 ? 0.0 : (double) unsupportedOverAllAsk / askCases, askCases,
+                    supported, unsupported, zeroGold));
         }
         return computed;
+    }
+
+    /** The global (micro) share of the golds found within the top K. */
+    private static double microRecall(List<Row> answerable, int k) {
+        int found = 0;
+        int total = 0;
+        for (Row row : answerable) {
+            total += row.goldPropositions().size();
+            for (Integer rank : row.goldRanks()) {
+                if (rank > 0 && rank <= k) {
+                    found++;
+                }
+            }
+        }
+        return total == 0 ? 0.0 : (double) found / total;
     }
 
     /** The overhead of every candidate against the baseline retriever. */
@@ -948,7 +1057,10 @@ class HeldOutEvaluationTest {
                     value.casesWhoseTopRankIsNotGold(), value.meanRetrievalMillis(),
                     value.totalRetrievalMillis(), value.meanRetrievalMillis() - baselineMean,
                     value.measuredCases(), value.answerableCases(), value.unanswerableCases(),
-                    value.goldAvailability()));
+                    value.goldAvailability(), value.microRecallAt1(), value.microRecallAt5(),
+                    value.microRecallAt10(), value.microRecallAt20(), value.unsupportedOverAllAsk(),
+                    value.askCases(), value.supportedCount(), value.unsupportedCount(),
+                    value.zeroGoldCitedCount()));
         }
         return result;
     }
@@ -1067,6 +1179,7 @@ class HeldOutEvaluationTest {
         map.put("definitionsApplied", enriched.definitionsApplied());
         map.put("relatedTextsApplied", enriched.relatedTextsApplied());
         map.put("relatedConceptNamesApplied", enriched.relatedConceptNamesApplied());
+        map.put("claimsChanged", enriched.claimsChanged());
         return map;
     }
 
@@ -1107,6 +1220,31 @@ class HeldOutEvaluationTest {
                 Files.readString(RepositoryPaths.root().resolve(DEVELOPMENT_RESULTS_PATH)));
     }
 
+    /**
+     * The metrics of the development measurement under the TIGHT rule — the rule of the freeze
+     * v1.1, which is the rule this evaluation runs under.
+     */
+    private static JsonNode developmentMetrics() throws IOException {
+        JsonNode root = developmentResults();
+        JsonNode rules = root.path("rules");
+        if (rules.isMissingNode()) {
+            return root.path("metrics");
+        }
+        return rules.path(SourceGroundedEnrichment.DefinitionRule.TIGHT_V1_1.name())
+                .path("metrics");
+    }
+
+    /** The per-case rows of the development measurement under the TIGHT rule. */
+    private static JsonNode developmentCases() throws IOException {
+        JsonNode root = developmentResults();
+        JsonNode rules = root.path("rules");
+        if (rules.isMissingNode()) {
+            return root.path("cases");
+        }
+        return rules.path(SourceGroundedEnrichment.DefinitionRule.TIGHT_V1_1.name())
+                .path("cases");
+    }
+
     // ── the artefacts ────────────────────────────────────────────────────────
 
     private static void writeResults() throws IOException {
@@ -1122,6 +1260,18 @@ class HeldOutEvaluationTest {
                         + FREEZE_PATH + " (sha256 " + freezeSha256 + "); the candidates were "
                         + "frozen before any measurement was taken and nothing in the freeze was "
                         + "changed between the freeze and this run"));
+        json.put("freezeSupersedes", Map.of(
+                "version", "v1.0",
+                "sha256", V1_0_FREEZE_SHA256,
+                "supersededBy", freezeSha256,
+                "reason", "the v1.0 definition rule only asked for the concept's name and a "
+                        + "definitional copula somewhere in the sentence, and the first "
+                        + "measurement showed that most of the definitions it produced are not "
+                        + "definitions; the v1.1 rule requires the name to be IMMEDIATELY "
+                        + "followed by the copula, caps the length of a definition, and fixes "
+                        + "the MRR, the supported and unsupported answers, the top-1 metric and "
+                        + "the per-gold H4 classification",
+                "firstMeasurementPreserved", true));
         json.put("dataset", Map.of("path", DATASET_PATH, "sha256", datasetSha256,
                 "manifest", manifest));
         json.put("developmentResults", Map.of("path", DEVELOPMENT_RESULTS_PATH,
@@ -1154,6 +1304,15 @@ class HeldOutEvaluationTest {
             map.put("recallAt10", value.recallAt10());
             map.put("recallAt20", value.recallAt20());
             map.put("mrr", value.mrr());
+            map.put("microRecallAt1", value.microRecallAt1());
+            map.put("microRecallAt5", value.microRecallAt5());
+            map.put("microRecallAt10", value.microRecallAt10());
+            map.put("microRecallAt20", value.microRecallAt20());
+            map.put("supportedCount", value.supportedCount());
+            map.put("unsupportedCount", value.unsupportedCount());
+            map.put("answeredWithZeroGoldCited", value.zeroGoldCitedCount());
+            map.put("unsupportedOverAllAskCases", value.unsupportedOverAllAsk());
+            map.put("askCases", value.askCases());
             map.put("goldAvailability", value.goldAvailability());
             map.put("supportedAnswerAccuracy", value.supportedAnswerAccuracy());
             map.put("abstentionAccuracy", value.abstentionAccuracy());
@@ -1191,6 +1350,8 @@ class HeldOutEvaluationTest {
             map.put("goldPropositions", row.goldPropositions());
             map.put("goldCited", row.goldCited());
             map.put("goldRanks", row.goldRanks());
+            map.put("topRankIsGold", row.topRankIsGold());
+            map.put("goldClassifications", row.goldClassifications());
             map.put("recallAt1", row.recallAt1());
             map.put("recallAt5", row.recallAt5());
             map.put("recallAt10", row.recallAt10());
@@ -1262,8 +1423,9 @@ class HeldOutEvaluationTest {
             }
             double deltaRecall10 = value.recallAt10() - baseline.recallAt10();
             double deltaMrr = value.mrr() - baseline.mrr();
-            boolean meaningful = Math.abs(deltaRecall10) >= MEANINGFUL_CHANGE
-                    || Math.abs(deltaMrr) >= MEANINGFUL_CHANGE;
+            boolean meaningful = (Math.abs(deltaRecall10) >= MEANINGFUL_CHANGE
+                    || Math.abs(deltaMrr) >= MEANINGFUL_CHANGE)
+                    && deltaRecall10 >= 0.0 && deltaMrr >= 0.0;
             Map<String, Object> recovers = new LinkedHashMap<>();
             recovers.put("criterion", "recover at least two previously failing supported-answer "
                     + "cases");
@@ -1306,7 +1468,8 @@ class HeldOutEvaluationTest {
             ranking.put("met", meaningful);
             ranking.put("evidence", "the recall@10 changes by " + four(deltaRecall10)
                     + " and the MRR by " + four(deltaMrr) + " against the baseline; the "
-                    + "threshold of meaning is " + MEANINGFUL_CHANGE);
+                    + "threshold of meaning is " + MEANINGFUL_CHANGE
+                    + " and the change must not be a degradation");
             criteria.put(candidate + ".5-meaningful-ranking-change", ranking);
 
             Map<String, Object> cost = new LinkedHashMap<>();
@@ -1329,6 +1492,8 @@ class HeldOutEvaluationTest {
         Map<String, Metrics> withOverhead = withOverhead(metrics);
         Metrics baseline = withOverhead.get(RetrievalExperiment.BASELINE_RETRIEVER);
         JsonNode development = developmentResults();
+        JsonNode developmentMetrics = developmentMetrics();
+        JsonNode developmentCases = developmentCases();
         StringBuilder text = new StringBuilder();
         text.append("# C2A — the held-out evaluation of the frozen candidates (H1, H2, H3)\n\n");
         text.append("**Status:** `MEASURED` — the three frozen candidates, and the frozen H1+H2 ")
@@ -1337,10 +1502,10 @@ class HeldOutEvaluationTest {
         text.append("**Branch / commit:** `feature/concept-to-action` / `").append(commit)
                 .append("`.\n");
         text.append("**Freeze:** `").append(FREEZE_PATH).append("` — sha256 `")
-                .append(freezeSha256).append("`")
-                .append(freezeSha256.equals(EXPECTED_FREEZE_SHA256)
-                        ? " (verified against the sha256 the freeze declares).\n"
-                        : " (DOES NOT MATCH the declared sha256 — the run is not valid).\n");
+                .append(freezeSha256).append("` (version **1.1**, verified against the sha256 ")
+                .append("the freeze declares; it supersedes version 1.0, sha256 `")
+                .append(V1_0_FREEZE_SHA256).append("`, against which the FIRST held-out run ")
+                .append("was produced).\n");
         text.append("**Held-out dataset:** `").append(DATASET_PATH).append("` — sha256 `")
                 .append(datasetSha256).append("`.\n");
         text.append("**Produced by:** `matrix-core/src/test/java/io/matrix/knowledge/concept/")
@@ -1354,6 +1519,19 @@ class HeldOutEvaluationTest {
                 .append("between the freeze and this run. The held-out set has been inspected ")
                 .append("ONCE, by this harness: no candidate was re-tuned against it, no second ")
                 .append("candidate search was run, and no variant was tried.\n\n");
+        text.append("> **The freeze version.** This run is produced against the freeze ")
+                .append("**v1.1**, which tightened the definition rule (the concept's name must ")
+                .append("be IMMEDIATELY followed by a definitional copula, and a definition may ")
+                .append("not exceed ").append(SourceGroundedEnrichment.MAX_DEFINITION_LENGTH)
+                .append(" characters) and corrected three metric definitions (the MRR is the ")
+                .append("reciprocal rank of the topmost gold; the supported and unsupported ")
+                .append("answers honour the case's own gold condition; the top-1 metric looks ")
+                .append("at the top-ranked claim) and made the H4 classification per gold. The ")
+                .append("v1.1 definitions are applied to BOTH the development measurement and ")
+                .append("this held-out run, so the two are comparable. The first held-out run ")
+                .append("was produced against the v1.0 freeze (sha256 `")
+                .append(V1_0_FREEZE_SHA256).append("`); its numbers are the record of that ")
+                .append("measurement and are not rewritten.\n\n");
 
         text.append("## 1. The held-out set\n\n");
         text.append("| Measure | Value |\n|---|---|\n");
@@ -1471,16 +1649,28 @@ class HeldOutEvaluationTest {
         text.append("\n");
 
         text.append("## 3. The metrics on the held-out set\n\n");
-        text.append("All the numbers are on the 19 answerable and the 6 unanswerable cases (the ")
-                .append("comparable denominator 25). The recall and the MRR are measured on the ")
-                .append("floor-0.0 candidate list, the answers, the abstentions and the false ")
-                .append("positives on the floor-0.25 answer. The misses are in the denominator ")
-                .append("of the MRR.\n\n");
+        text.append("**The denominators.** The recall and the MRR are the MEAN over the ")
+                .append("**19 answerable cases** (the `POSITIVE` ones), measured on the ")
+                .append("floor-0.0 candidate list; the GLOBAL (micro) recall is the share over ")
+                .append("**every gold proposition of those 19 cases**. The supported answer, ")
+                .append("the unsupported answer and the answered-with-no-gold share are over ")
+                .append("the **19 answerable cases**; the abstention accuracy is over the **6 ")
+                .append("unanswerable cases** (the `NEGATIVE` ones); the unsupported answer ")
+                .append("over ALL the ask cases is over the **25 ask cases** (the 19 answerable ")
+                .append("and the 6 unanswerable ones) and counts an answered unanswerable case ")
+                .append("as unsupported. The passed/total column is over the **25 comparable ")
+                .append("cases**; every one of the 38 cases is judged in every row. The ")
+                .append("latency of the retriever-level rows is the PURE retriever; the ")
+                .append("latency of `BASELINE-PATH` is the full production path, and the two ")
+                .append("are not comparable. The MRR is the reciprocal rank of the **topmost ")
+                .append("gold** — the gold with the smallest rank in the candidate list — and ")
+                .append("the misses are in its denominator.\n\n");
         text.append("| Row | Passed | Gold avail. | Recall@1 | Recall@5 | Recall@10 | ")
-                .append("Recall@20 | MRR | Supported answer | Abstention | Unsupported answer | ")
-                .append("Mean non-gold cited | Top-1 not gold | Mean retrieval (ms) | Overhead ")
-                .append("(ms) |\n");
-        text.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n");
+                .append("Recall@20 | MRR | micro Recall@10 | Supported answer | Unsupported ")
+                .append("answer | Answered with NO gold | Abstention | Unsupported over all 25 ")
+                .append("ask cases | Mean non-gold cited | Top-1 not gold | Mean retrieval (ms) | ")
+                .append("Overhead (ms) |\n");
+        text.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n");
         for (String candidate : ROWS) {
             Metrics value = withOverhead.get(candidate);
             text.append("| `").append(candidate).append("` | ")
@@ -1492,11 +1682,17 @@ class HeldOutEvaluationTest {
                     .append(four(value.recallAt10())).append(" | ")
                     .append(four(value.recallAt20())).append(" | ")
                     .append(four(value.mrr())).append(" | ")
-                    .append(four(value.supportedAnswerAccuracy())).append(" | ")
+                    .append(four(value.microRecallAt10())).append(" | ")
+                    .append(four(value.supportedAnswerAccuracy())).append(" (")
+                    .append(value.supportedCount()).append("/19) | ")
+                    .append(four(value.unsupportedAnswerRate())).append(" (")
+                    .append(value.unsupportedCount()).append("/19) | ")
+                    .append(value.zeroGoldCitedCount()).append("/19 | ")
                     .append(four(value.abstentionAccuracy())).append(" | ")
-                    .append(four(value.unsupportedAnswerRate())).append(" | ")
+                    .append(four(value.unsupportedOverAllAsk())).append(" (")
+                    .append(value.askCases()).append(" ask cases) | ")
                     .append(four(value.meanNonGoldCited())).append(" | ")
-                    .append(value.casesWhoseTopRankIsNotGold()).append(" | ")
+                    .append(value.casesWhoseTopRankIsNotGold()).append("/19 | ")
                     .append(value.meanRetrievalMillis()).append(" | ")
                     .append(four(value.overheadMillisPerCase())).append(" |\n");
         }
@@ -1512,7 +1708,7 @@ class HeldOutEvaluationTest {
                 .append("cited | Top-1 not gold | Mean retrieval (ms) |\n");
         text.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|\n");
         for (String candidate : ROWS) {
-            JsonNode node = development.path("metrics").path(candidate);
+            JsonNode node = developmentMetrics.path(candidate);
             if (node.isMissingNode()) {
                 continue;
             }
@@ -1547,13 +1743,13 @@ class HeldOutEvaluationTest {
         for (String candidate : CANDIDATES) {
             List<String> devPassing = new ArrayList<>();
             List<String> devFailing = new ArrayList<>();
-            for (JsonNode row : development.path("cases")) {
+            for (JsonNode row : developmentCases) {
                 if (!row.path("candidate").asText().equals(candidate)) {
                     continue;
                 }
                 String caseId = row.path("case").asText();
                 JsonNode base = null;
-                for (JsonNode other : development.path("cases")) {
+                for (JsonNode other : developmentCases) {
                     if (other.path("case").asText().equals(caseId)
                             && other.path("candidate").asText()
                                     .equals(RetrievalExperiment.BASELINE_RETRIEVER)) {
@@ -1578,22 +1774,21 @@ class HeldOutEvaluationTest {
         }
         text.append("\n**Verdict.** The development measurement's *directional* claim ")
                 .append("generalises: on the held-out set no candidate turns a single baseline ")
-                .append("failure into a pass either — H1 ")
-                .append(newlyPassing(EnrichmentCandidates.H1)).append(", H2 ")
-                .append(newlyPassing(EnrichmentCandidates.H2)).append(", H3 ")
-                .append(newlyPassing(EnrichmentCandidates.H3)).append(", H1+H2 ")
-                .append(newlyPassing(EnrichmentCandidates.H1_AND_H2))
-                .append(" (the newly passing lists). The *size* of the effect does NOT carry ")
-                .append("over: the held-out baseline's recall@10 is ")
-                .append(four(baseline.recallAt10())).append(" against the development set's ")
-                .append(four(development.path("metrics")
+                .append("failure into a pass either — the newly passing list is EMPTY for H1, ")
+                .append("for H2, for H3 and for H1+H2. The *absolute levels* are not ")
+                .append("comparable, and they matter for the reading: the held-out baseline is ")
+                .append("STRONGER than the development baseline (recall@10 ")
+                .append(four(baseline.recallAt10())).append(" against ")
+                .append(four(developmentMetrics
                         .path(RetrievalExperiment.BASELINE_RETRIEVER)
                         .path("recallAt10").asDouble()))
-                .append(", and its MRR is ").append(four(baseline.mrr())).append(" against ")
-                .append(four(development.path("metrics")
+                .append(", MRR ").append(four(baseline.mrr())).append(" against ")
+                .append(four(developmentMetrics
                         .path(RetrievalExperiment.BASELINE_RETRIEVER)
                         .path("mrr").asDouble()))
-                .append(".\n\n");
+                .append("), so the headroom a candidate has is SMALLER on the held-out set, ")
+                .append("not larger. A candidate that recovers nothing when the corpus is easy ")
+                .append("is not going to recover something when it is hard.\n\n");
         text.append("**How far the generalisation claim reaches.** The two measurements are ")
                 .append("NOT numerically comparable: the held-out set is a different corpus (the ")
                 .append("research pool), a different question style, a different kind mix and a ")
@@ -1643,11 +1838,14 @@ class HeldOutEvaluationTest {
         text.append("| Case | The premise the corpus contradicts | Verdict | The premise named | ")
                 .append("Evidence named |\n|---|---|---|---|---|\n");
         for (Map<String, Object> finding : premiseFindings) {
+            List<?> evidence = (List<?>) finding.get("evidencePropositions");
             text.append("| ").append(finding.get("case")).append(" | ")
                     .append(shorten(finding.get("disputedPremise").toString())).append(" | ")
                     .append(finding.get("verdict")).append(" | ")
                     .append(shorten(String.valueOf(finding.get("premisesNamed")))).append(" | ")
-                    .append(finding.get("evidencePropositions")).append(" |\n");
+                    .append(evidence.size()).append(" claim(s): ")
+                    .append(shorten(String.valueOf(evidence.isEmpty() ? "" : evidence.get(0))))
+                    .append(" |\n");
         }
         text.append("\n");
         int pathRefusals = 0;
@@ -1760,16 +1958,24 @@ class HeldOutEvaluationTest {
             text.append("**No candidate lost a gold claim that the baseline cited.** There is ")
                     .append("no coverage shift to report.\n\n");
         } else {
-            text.append("| Case | Candidate | Gold proposition | Floor under the baseline | ")
-                    .append("Floor under the candidate |\n|---|---|---|---|---|\n");
+            text.append("| Case | Candidate | Side | Gold proposition | Floor under the baseline | ")
+                .append("Floor under the candidate |\n|---|---|---|---|---|---|\n");
             for (CoverageShift shift : coverageShifts) {
                 text.append("| ").append(shift.caseId()).append(" | `")
-                        .append(shift.candidate()).append("` | ")
+                        .append(shift.candidate()).append("` | ").append(shift.side()).append(" | ")
                         .append(shorten(shift.proposition())).append(" | ")
-                        .append(four(shift.baselineFloor())).append(" | ")
-                        .append(four(shift.candidateFloor())).append(" |\n");
+                        .append(RetrievalExperiment.coverageInterval(shift.baselineFloor()))
+                        .append(" | ")
+                        .append(RetrievalExperiment.coverageInterval(shift.candidateFloor()))
+                        .append(" |\n");
             }
-            text.append("\n");
+            text.append("\n(The `corpus` rows are the frozen measurement of the development ")
+                    .append("run, applied to the corpus-side candidates; the `question` row is ")
+                    .append("the same measurement applied to H3, whose candidate is the ")
+                    .append("expanded question — the development run did not include it, because ")
+                    .append("the question-side candidate has no snapshot of its own. The floor ")
+                    .append("is the coverage ratio the retriever divides by, measured with the ")
+                    .append("production retriever alone and without the representations.)\n\n");
         }
         text.append("| Row | Mean retrieval (ms) | Total over the 38 cases (ms) | Overhead ")
                 .append("per case (ms) |\n|---|---|---|---|\n");
@@ -1831,13 +2037,15 @@ class HeldOutEvaluationTest {
                     .append("every row; the held-out set holds no revision case |\n");
             double deltaRecall = value.recallAt10() - baseline.recallAt10();
             double deltaMrr = value.mrr() - baseline.mrr();
-            boolean meaningful = Math.abs(deltaRecall) >= MEANINGFUL_CHANGE
-                    || Math.abs(deltaMrr) >= MEANINGFUL_CHANGE;
+            boolean meaningful = (Math.abs(deltaRecall) >= MEANINGFUL_CHANGE
+                    || Math.abs(deltaMrr) >= MEANINGFUL_CHANGE)
+                    && deltaRecall >= 0.0 && deltaMrr >= 0.0;
             text.append("| a meaningful change in recall and ranking | ")
                     .append(meaningful ? "**yes**" : "**no**")
                     .append(" | the recall@10 changes by ").append(four(deltaRecall))
                     .append(" and the MRR by ").append(four(deltaMrr))
                     .append("; the threshold of meaning is ").append(MEANINGFUL_CHANGE)
+                    .append(" and the change must not be a degradation")
                     .append(" |\n");
             text.append("| the latency and resource trade-off is documented | **yes** | ")
                     .append(value.overheadMillisPerCase())
@@ -1876,9 +2084,12 @@ class HeldOutEvaluationTest {
         text.append("**What would change this answer.** Not a re-tuning against the held-out ")
                 .append("set — that set has now been seen, once, by this harness. A candidate ")
                 .append("for a FUTURE freeze would have to attack the failures the H4 ")
-                .append("classification actually names (in this run: ")
+                .append("classification actually names (the answerable cases of this run: ")
                 .append(classificationSummary()).append("), not the coverage of the claims ")
-                .append("that are already reachable.\n\n");
+                .append("that are already reachable. A candidate that only moves a claim DOWN ")
+                .append("the ranking is not such a candidate: the freeze's H4 taxonomy says ")
+                .append("that a `BELOW_FLOOR` failure is a COVERAGE failure, and coverage is ")
+                .append("what the enrichment moves — in the wrong direction.\n\n");
 
         text.append("## 8. The limits of this measurement\n\n");
         text.append("* The held-out set is 38 cases over seven documents of ONE corpus, written ")
@@ -1932,12 +2143,13 @@ class HeldOutEvaluationTest {
         return "";
     }
 
-    /** The classifications of the baseline failures, in one line. */
+    /** The classifications of the baseline failures of the ANSWERABLE cases, in one line. */
     private static String classificationSummary() {
         Map<String, Integer> counts = new LinkedHashMap<>();
         for (String caseId : caseIds()) {
             Row base = row(caseId, RetrievalExperiment.BASELINE_RETRIEVER);
-            if (base.passed() || base.classification().isEmpty()) {
+            if (!KIND_POSITIVE.equals(base.kind()) || base.passed()
+                    || base.classification().isEmpty()) {
                 continue;
             }
             counts.merge(base.classification(), 1, Integer::sum);

@@ -59,7 +59,8 @@ public final class EnrichmentCandidates {
             int conceptsChanged,
             int definitionsApplied,
             int relatedTextsApplied,
-            int relatedConceptNamesApplied) {
+            int relatedConceptNamesApplied,
+            int claimsChanged) {
     }
 
     /**
@@ -76,6 +77,7 @@ public final class EnrichmentCandidates {
             definitions.put(candidate.conceptId(), candidate.definition());
         }
         int changed = 0;
+        Set<String> changedConcepts = new LinkedHashSet<>();
         List<Concept> concepts = new ArrayList<>();
         for (Concept concept : snapshot.concepts()) {
             String definition = definitions.get(concept.id());
@@ -86,8 +88,10 @@ public final class EnrichmentCandidates {
             concepts.add(new Concept(concept.id(), concept.workspaceId(), concept.name(),
                     definition, concept.domain(), concept.createdAt()));
             changed++;
+            changedConcepts.add(concept.id());
         }
-        return new EnrichedSnapshot(withConcepts(snapshot, concepts), H1, changed, changed, 0, 0);
+        return new EnrichedSnapshot(withConcepts(snapshot, concepts), H1, changed, changed, 0, 0,
+                claimsOf(snapshot, changedConcepts));
     }
 
     /**
@@ -136,6 +140,7 @@ public final class EnrichmentCandidates {
         int definitionsApplied = 0;
         int relatedTexts = 0;
         int relatedNames = 0;
+        Set<String> changedConcepts = new LinkedHashSet<>();
         List<Concept> concepts = new ArrayList<>();
         for (Concept concept : snapshot.concepts()) {
             List<String> parts = new ArrayList<>();
@@ -164,13 +169,14 @@ public final class EnrichmentCandidates {
             concepts.add(new Concept(concept.id(), concept.workspaceId(), concept.name(), text,
                     concept.domain(), concept.createdAt()));
             changed++;
+            changedConcepts.add(concept.id());
             if (parts.size() > (own == null ? 0 : 1)) {
                 relatedTexts++;
             }
         }
         return new EnrichedSnapshot(withConcepts(snapshot, concepts),
                 withDefinitions ? H1_AND_H2 : H2, changed, definitionsApplied, relatedTexts,
-                relatedNames);
+                relatedNames, claimsOf(snapshot, changedConcepts));
     }
 
     /**
@@ -239,6 +245,29 @@ public final class EnrichmentCandidates {
         int count = 0;
         for (Claim claim : snapshot.claims()) {
             if (claim.conceptId().equals(conceptId)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
+     * The claims whose searchable text a change of these concepts reaches.
+     *
+     * <p>The production retriever composes the searchable text of a claim out of its
+     * proposition, its concept's name and its concept's definition
+     * ({@code KnowledgeRetriever.java:148-154}). A concept's definition is therefore the only
+     * free-text slot a candidate can change, and a claim's text changes exactly when the
+     * definition of ITS concept changes.</p>
+     *
+     * @param snapshot the workspace
+     * @param conceptIds the concepts whose definition changed
+     * @return the number of claims whose text changed
+     */
+    public static int claimsOf(KnowledgeSnapshot snapshot, Set<String> conceptIds) {
+        int count = 0;
+        for (Claim claim : snapshot.claims()) {
+            if (conceptIds.contains(claim.conceptId())) {
                 count++;
             }
         }
