@@ -190,11 +190,19 @@ GitHub matches a required check by its **job name**, so the names to register ar
 ```
 Scope the pull request
 Branch name
-Compile + targeted tests (<module>)      ← one job per touched module; the name varies
+Compile + targeted tests                ← the stable aggregator (see below)
 CONSTITUTION + frozen boundary gate
 Documentation consistency
 Secret scan
 ```
+
+**The aggregator is not decoration — it is what makes the gate registrable.** GitHub matches a
+required status check by its exact check-run name, and the matrix job's name carries its matrix
+value (`Compile + targeted tests (matrix-core)`), so it changes with the change set and could
+never be registered. The lane therefore publishes the matrix's outcome a second time under one
+stable name, `Compile + targeted tests`. That job runs with `if: always()` and inspects the
+matrix's result explicitly: a job that was merely **skipped** because its dependency failed must
+not look successful, and GitHub counts a skipped required check as passed.
 
 **The owner-side action, exactly.** The repository ruleset `Protected main` (id `20469548`)
 currently carries these rules: `deletion`, `creation`, `update`, `required_linear_history`

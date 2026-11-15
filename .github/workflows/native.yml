@@ -1,9 +1,12 @@
 name: GraalVM Native Build
 on:
+  # RELEASE LANE (OD-053): the native image build is out of the ordinary pull-request
+  # path. It runs on the release path and on demand through `workflow_dispatch`.
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   native-build:
@@ -34,13 +37,35 @@ jobs:
             -x test
 
       - name: Verify Native Binary
+        id: binary
         run: |
-          ls -la matrix-core/build/*-runner
-          file matrix-core/build/*-runner
+          set -euo pipefail
+          # The GraalVM package type writes the binary under
+          # build/native/nativeCompile/, NOT as build/*-runner. The old step looked only
+          # for the second spelling, so the step failed on a build that had actually
+          # succeeded — the red run 43708206093 (PR #61) is that failure, not a broken
+          # build. Both spellings are probed so that a rename in the toolchain cannot
+          # turn a successful build into a false negative.
+          BINARY=""
+          for candidate in matrix-core/build/native/nativeCompile/matrix-core* \
+                          matrix-core/build/*-runner; do
+            if [ -f "$candidate" ]; then
+              BINARY="$candidate"
+              break
+            fi
+          done
+          if [ -z "$BINARY" ]; then
+            echo "::error::no native binary was produced under matrix-core/build/native/nativeCompile/"
+            ls -la matrix-core/build/native/ 2>/dev/null || true
+            exit 1
+          fi
+          ls -la "$BINARY"
+          file "$BINARY"
+          echo "path=$BINARY" >> "$GITHUB_OUTPUT"
 
       - name: Upload Native Binary
         uses: actions/upload-artifact@v4
         with:
           name: matrix-core-native
-          path: matrix-core/build/*-runner
+          path: ${{ steps.binary.outputs.path }}
           retention-days: 7

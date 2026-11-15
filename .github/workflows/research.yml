@@ -1,0 +1,40 @@
+# WEEKLY RESEARCH LANE — the research and property suites, on a schedule.
+#
+# Unchanged from the ci.yml of 2026-11-15: the weekly scheduled run of the research/property
+# suites only (not the full pipeline), by RECON-W38.0 / D7. It was split out of ci.yml
+# because ci.yml became the RELEASE lane, whose trigger is a pull request to `main` or a
+# manual dispatch — a schedule is neither.
+
+name: research-suites
+
+on:
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+jobs:
+  research-suites:
+    name: Weekly Research & Property Suites
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: Run property / research suites (matrix-core)
+        run: ./gradlew :matrix-core:test --no-daemon \
+          --tests "io.matrix.**.*PropertyTest" \
+          --tests "io.matrix.**.*PropertyBasedVerifierTest" \
+          --tests "io.matrix.**.*StudyTest"
+
+      - name: Run property / research suites (matrix-brain-runtime)
+        run: ./gradlew :matrix-brain-runtime:test --no-daemon \
+          --tests "io.matrix.**.*PropertyTest" \
+          --tests "io.matrix.**.*Pbt*Test" \
+          --tests "io.matrix.**.*StudyTest"

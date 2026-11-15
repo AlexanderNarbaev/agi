@@ -9,8 +9,11 @@ name: Formal Specs (TLA+)
 # which properties were actually evaluated.
 
 on:
+  # RELEASE LANE (OD-053): the model checking no longer runs on the ordinary
+  # `develop` path. It runs on the release path (a push to `main`, a pull request
+  # whose base is `main`) and on demand through `workflow_dispatch`.
   push:
-    branches: [develop, main]
+    branches: [main]
     paths:
       - 'formal/**'
       - '.github/workflows/tla.yml'
@@ -181,7 +184,7 @@ on:
       - 'matrix-quality/src/test/java/io/matrix/quality/SpecImplementationMapTest.java'
       # END generated-formal-paths
   pull_request:
-    branches: [develop, main]
+    branches: [main]
     paths:
       - 'formal/**'
       - '.github/workflows/tla.yml'

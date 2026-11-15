@@ -1,0 +1,352 @@
+# FAST PR LANE — the owner-authorized narrow lane.
+#
+# Approval basis: the owner's directive of 2026-11-15, §11 Gate 1 ("retain minimal PR/local
+# gates, move publish/Graal/full expensive runs out of ordinary path") and §4, together with
+# OD-053: "the FAST PR lane's checks (path-sensitive compile of touched modules, targeted
+# tests, the deterministic constitution/frozen-boundary gate, the documentation-consistency
+# check) become REQUIRED on develop".
+#
+# The four checks of this lane are the required status checks of `develop`:
+#   1. "Compile + targeted tests"  — the path-sensitive compile of the touched modules
+#      and the targeted tests of the touched packages (one job per touched module)
+#   2. "CONSTITUTION + frozen boundary gate"
+#   3. "Documentation consistency"
+#   4. "Secret scan"
+# plus two path-sensitive companions: "ShellCheck" (only when scripts/ changed) and
+# "Web UI tests" (only when matrix-web-ui/ changed).
+#
+# What is NOT here, and where it went: the full regression, the packaged smoke test and the
+# model checking are in the RELEASE lane (ci.yml, tla.yml, native.yml); the publish and the
+# deploys are in the credential-gated PUBLISH lane (publish.yml). That is the owner's
+# OD-053 decision, not an optimisation of this workflow's author.
+#
+# THE KNOWN FLAKE IS NOT SILENCED AND NOT REMOVED. When the changed module is matrix-core,
+# the targeted test scope includes `io.matrix.cognitive.*`, and that scope contains
+#   CognitiveKernelRemoteTest > a delegation that settles the proposition leaves no
+#   uncertainty of its own
+# which failed in the CI run 43720389219 (java.lang.NullPointerException at
+# CognitiveKernelRemoteTest.java:198) and passes locally. The reproduction and the
+# reasoning are in docs-v2/engineering/CI-SIMPLIFICATION-RFC.md §7. It is neither skipped
+# nor retried here: a lane that hides a flake is a lane that has stopped measuring.
+
+name: fast-pr
+
+on:
+  pull_request:
+    branches: [develop]
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fast-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  GRADLE_OPTS: "-Xmx8g -Dorg.gradle.daemon=false"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # The scope of the pull request: which modules, which test packages, which
+  # companion checks. This job decides what the rest of the lane runs; it
+  # measures nothing.
+  # ---------------------------------------------------------------------------
+  scope:
+    name: "Scope the pull request"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      build-matrix: ${{ steps.scope.outputs.build_matrix }}
+      web-ui: ${{ steps.scope.outputs.web_ui }}
+      scripts: ${{ steps.scope.outputs.scripts }}
+      docs: ${{ steps.scope.outputs.docs }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The frozen-boundary gate compares the frozen zones against a historical
+          # baseline ref, so the history must be here.
+          fetch-depth: 0
+
+      - id: scope
+        name: "Compute the touched modules and packages"
+        run: |
+          set -euo pipefail
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+          git diff --name-only "$base" "$head" > /tmp/changed.txt
+
+          # The Gradle module of a changed path: <module>/src/<source-set>/<package>/<file>
+          # The modules are the ones that own a src/main/java tree.
+          module_of() {
+            case "$1" in
+              matrix-core/*)          echo "matrix-core" ;;
+              matrix-brain-runtime/*) echo "matrix-brain-runtime" ;;
+              matrix-api-gateway/*)   echo "matrix-api-gateway" ;;
+              matrix-audit/*)         echo "matrix-audit" ;;
+              matrix-billing/*)        echo "matrix-billing" ;;
+              matrix-observability/*) echo "matrix-observability" ;;
+              matrix-sdk-java/*)      echo "matrix-sdk-java" ;;
+              *) echo "" ;;
+            esac
+          }
+
+          build_matrix='[]'
+          touched_modules=""
+          while read -r file; do
+            [ -n "$file" ] || continue
+            module="$(module_of "$file")"
+            [ -n "$module" ] || continue
+            case " $touched_modules " in *" $module "*) continue ;; esac
+            touched_modules="$touched_modules $module"
+
+            # The targeted test scope of this module:
+            #   - a changed TEST source contributes its own package;
+            #   - a changed PRODUCTION source contributes the package of the same name
+            #     (this repository keeps the test of a class in the class's own package);
+            #   - nothing else is included. A change in a production package can break a
+            #     test in another package; that residual risk is named in the RFC and is
+            #     covered by the LOCAL AGENT lane and by the RELEASE lane.
+            filters=""
+            case "$file" in
+              */src/test/java/*)
+                pkg="$(printf '%s' "$file" | sed -n 's#^.*/src/test/java/\(.*\)/[^/]*$#\1#p' | tr '/' '.')"
+                filters="--tests ${pkg}.*"
+                ;;
+              */src/main/java/*)
+                pkg="$(printf '%s' "$file" | sed -n 's#^.*/src/main/java/\(.*\)/[^/]*$#\1#p' | tr '/' '.')"
+                filters="--tests ${pkg}.*"
+                ;;
+            esac
+            build_matrix="$(printf '%s' "$build_matrix" | python3 -c 'import json,sys; m=json.load(sys.stdin); m.append({"module":sys.argv[1],"filter":sys.argv[2]}); print(json.dumps(m))' "$module" "$filters")"
+          done < /tmp/changed.txt
+
+          echo "build_matrix=$build_matrix" >> "$GITHUB_OUTPUT"
+          grep -qE '^matrix-web-ui/' /tmp/changed.txt && echo "web-ui=true" >> "$GITHUB_OUTPUT" || echo "web-ui=false" >> "$GITHUB_OUTPUT"
+          grep -qE '^scripts/.*\.sh$' /tmp/changed.txt && echo "scripts=true" >> "$GITHUB_OUTPUT" || echo "scripts=false" >> "$GITHUB_OUTPUT"
+          grep -qE '^docs-v2/' /tmp/changed.txt && echo "docs=true" >> "$GITHUB_OUTPUT" || echo "docs=false" >> "$GITHUB_OUTPUT"
+          echo "--- the scope ---"
+          cat /tmp/changed.txt
+          echo "--- the build matrix ---"
+          echo "$build_matrix"
+
+  # ---------------------------------------------------------------------------
+  # The branch-naming convention. It was a check of branch-validation.yml; it
+  # moves here with the rest of the lane, because branch-validation.yml no
+  # longer exists.
+  # ---------------------------------------------------------------------------
+  branch-name:
+    name: "Branch name"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check the branch naming convention
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          if [ "$BRANCH" = "develop" ] || [ "$BRANCH" = "main" ]; then
+            echo "✅ Integration branch '$BRANCH' — the naming convention applies to work branches"
+          elif [[ "$BRANCH" =~ ^(feature|fix|feat|chore|docs|test|refactor|perf|security)/.+$ ]]; then
+            echo "✅ Branch name follows convention"
+          elif [[ "$BRANCH" =~ ^backup-.+-[0-9]{8}-[0-9]{6}$ ]]; then
+            echo "✅ Backup branch allowed"
+          else
+            echo "::error::Branch name '$BRANCH' violates convention"
+            echo "Expected: feature/*, fix/*, feat/*, chore/*, docs/*, test/*, refactor/*, perf/*, security/*"
+            echo "Or: backup-<name>-<YYYYMMDD-HHMMSS>"
+            exit 1
+          fi
+
+  # ---------------------------------------------------------------------------
+  # Check 1 of 4: the path-sensitive compile of the touched modules and the
+  # targeted tests of the touched packages.
+  # ---------------------------------------------------------------------------
+  build-and-test:
+    name: "Compile + targeted tests (${{ matrix.module }})"
+    needs: scope
+    if: needs.scope.outputs.build-matrix != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.scope.outputs.build-matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: "Compile the module (production + test sources)"
+        run: ./gradlew :${{ matrix.module }}:compileJava :${{ matrix.module }}:compileTestJava --no-daemon --console=plain
+
+      - name: "Run the targeted tests"
+        if: matrix.filter != ''
+        run: ./gradlew :${{ matrix.module }}:test --no-daemon --console=plain ${{ matrix.filter }}
+
+  # ---------------------------------------------------------------------------
+  # Check 2 of 4: the deterministic constitution / frozen-boundary gate.
+  # It runs no service, needs no build and no network: the whole gate is
+  # 4 seconds locally (measured 2026-11-15).
+  # ---------------------------------------------------------------------------
+  # A stable check name for the matrix job.
+  #
+  # GitHub matches a required status check by its exact check-run name, and a
+  # matrix job's name carries the matrix value ("Compile + targeted tests
+  # (matrix-core)"). A required check whose name varies can never be satisfied,
+  # so this job re-publishes the matrix's outcome under one stable name. It
+  # runs `always()` and inspects the matrix's result explicitly: a job that is
+  # merely skipped because its dependency failed must NOT look successful.
+  build-and-test-gate:
+    name: "Compile + targeted tests"
+    needs: [scope, build-and-test]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: "The compile and the targeted tests must have succeeded"
+        run: |
+          result="${{ needs.build-and-test.result }}"
+          echo "the compile and the targeted tests: ${result}"
+          if [ "${result}" != "success" ]; then
+            echo "the compile or the targeted tests did not succeed: ${result}"
+            exit 1
+          fi
+          echo "the compile and the targeted tests succeeded"
+
+  constitution-gate:
+    name: "CONSTITUTION + frozen boundary gate"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: "Forbid LLM imports in production runtime paths"
+        run: |
+          set -euo pipefail
+          FORBIDDEN=""
+          for module in matrix-api-gateway matrix-sdk-java matrix-audit matrix-billing matrix-observability; do
+            if [ -d "$module/src/main" ]; then
+              if grep -rE "openai|anthropic|cohere|gemini" "$module/src/main" --include="*.java" --include="*.py" --include="*.ts" 2>/dev/null; then
+                FORBIDDEN="$FORBIDDEN $module"
+              fi
+            fi
+          done
+          if [ -n "$FORBIDDEN" ]; then
+            echo "::error::LLM imports detected in:$FORBIDDEN"
+            echo "CONSTITUTION I violation: no LLM in runtime paths."
+            exit 1
+          fi
+          echo "✅ No LLM imports in production runtime paths"
+
+      - name: "Require version constants in module facades"
+        run: |
+          set -euo pipefail
+          check_facade() {
+            module="$1"; facade="$2"
+            if [ ! -d "$module/src/main" ]; then
+              echo "— $module is not in the tree; nothing to check"
+              return 0
+            fi
+            if [ ! -f "$module/src/main/java/$facade" ]; then
+              echo "::error::$module has no public facade at $facade"
+              exit 1
+            fi
+            if ! grep -qE 'public +static +final +String +VERSION *=' "$module/src/main/java/$facade"; then
+              echo "::error::$module's facade $facade declares no public VERSION constant"
+              exit 1
+            fi
+            echo "✅ $module declares a version in $facade"
+          }
+          check_facade matrix-api-gateway      io/matrix/api/ApiModule.java
+          check_facade matrix-sdk-java         io/matrix/sdk/MatrixClient.java
+          check_facade matrix-audit            io/matrix/audit/AuditModule.java
+          check_facade matrix-billing          io/matrix/billing/BillingModule.java
+          check_facade matrix-observability    io/matrix/observability/ObservabilityModule.java
+          echo "✅ All T-01 modules declare a version in their public facade"
+
+      - name: "The clean-code and frozen-zone gate"
+        # This gate carries FROZEN-1 (the five frozen zones have zero diff against the
+        # recorded baseline) as well as the magic-literal baseline and the documentation
+        # and retention rules. It exits non-zero on a NEW violation.
+        run: scripts/quality-gate.sh
+
+  # ---------------------------------------------------------------------------
+  # Check 3 of 4: the documentation-consistency check.
+  # ---------------------------------------------------------------------------
+  docs-consistency:
+    name: "Documentation consistency"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "The documentation links and the stable identifiers resolve"
+        run: python3 scripts/docs-link-check.py --root . --strict
+
+      - name: "The current-state documents agree with each other"
+        run: python3 scripts/validate-current-state.py --root . --strict
+
+  # ---------------------------------------------------------------------------
+  # Check 4 of 4: the secret scan.
+  # ---------------------------------------------------------------------------
+  secret-scan:
+    name: "Secret scan"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: "Check for secrets in code"
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          extra_args: --results=verified,unverified,unknown
+
+  # ---------------------------------------------------------------------------
+  # Two path-sensitive companions. Neither is a required check on its own: they
+  # only run when the pull request touches what they check.
+  # ---------------------------------------------------------------------------
+  shellcheck:
+    name: "ShellCheck"
+    needs: scope
+    if: needs.scope.outputs.scripts == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ShellCheck
+        run: sudo apt-get install -y shellcheck
+      - name: Run ShellCheck
+        run: find . -name "*.sh" -exec shellcheck {} +
+
+  web-ui:
+    name: "Web UI tests (matrix-web-ui)"
+    needs: scope
+    if: needs.scope.outputs.web-ui == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: matrix-web-ui
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: matrix-web-ui/package-lock.json
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps --no-audit --no-fund
+      - name: Run the web console test suite
+        run: npx jest --ci
