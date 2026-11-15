@@ -896,7 +896,7 @@ that follows it ran as well, for the first time as well.
 ```
 
 The step needs `secrets.DOCKERHUB_USERNAME` and `secrets.DOCKERHUB_TOKEN`
-(`.github/workflows/ci.yml:460-463`), and **the repository has no secrets
+(the `ci` workflow's Docker Hub login step (the workflow was rewritten on 2026-11-15 by the CI simplification)), and **the repository has no secrets
 configured at all**:
 
 ```

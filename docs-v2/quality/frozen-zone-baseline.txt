@@ -184,5 +184,23 @@
 # recorded here rather than waved through, so that the amount of the change
 # stays visible and the expiry stays real.
 
-.github/ | 1701 | repo-owner | 2026-12-31
+#
+# 2026-11-15, the .github/ exception was raised from 1701 to 2350 diff lines.
+#
+# The change is SANCTIONED by the owner twice over. The EPISTEMIC-INTEGRITY
+# directive of 2026-11-15 authorizes "a narrowly scoped CI workflow RFC"
+# (section 4), and the owner's answer to question D1-CI-APPLY-007 (answered
+# A, the recommended option) approved the RFC as it stands. The constitution
+# requires an explicit RFC for this zone; the RFC is
+# docs-v2/engineering/CI-SIMPLIFICATION-RFC.md (532 lines, with the measured
+# before and after taken from the real GitHub runs), and the decision is
+# recorded as OD-057 in docs-v2/governance/DECISION-REGISTER.md.
+#
+# What changed: the CI was narrowed to four lanes (FAST PR, LOCAL AGENT,
+# MANUAL/RELEASE, PUBLISH). What did NOT change: every safety guard, the
+# 82 % method-coverage standard, the permission set, and the release lane's
+# own content. The exception is recorded here rather than waved through, so
+# that the amount of the change stays visible and the expiry stays real.
+
+.github/ | 2350 | repo-owner | 2026-12-31
 AGENTS.md | 63 | repo-owner | 2026-12-31
