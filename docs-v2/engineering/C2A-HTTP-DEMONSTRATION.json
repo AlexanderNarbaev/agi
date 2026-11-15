@@ -1,0 +1,496 @@
+{
+  "record": "C2A-HTTP-DEMONSTRATION",
+  "date": "2026-11-15",
+  "commit": "6b485ef089c41edd8cc827943917aad0864dd4c3",
+  "route": "POST /v1/workbench/workspaces/{id}/reports",
+  "baseUrl": "http://127.0.0.1:9099",
+  "workspace": "c2a-demo",
+  "question": "What is plate tectonics and what does it say about the Earth's lithosphere?",
+  "checks": {
+    "claimsComeFromTheStore": {
+      "cited": 41,
+      "storeClaims": 348,
+      "everyCitedClaimIsInTheStore": true,
+      "everyReferenceCarriesASource": true
+    },
+    "artifact": {
+      "path": "data/c2a-demo/output/report-f7d48afbbb80.md",
+      "bytes": 52971,
+      "sha256": "eba139f74ad250acc5b8511b32786d207ab7dd73e119043572d12d915c6909ec",
+      "reportedSha256": "eba139f74ad250acc5b8511b32786d207ab7dd73e119043572d12d915c6909ec",
+      "digestMatches": true,
+      "carriesEveryCitedClaim": true,
+      "startsWithHeading": true
+    },
+    "repeat": {
+      "status": 200,
+      "disposition": "REPLAYED",
+      "artifactsAfter": [
+        "report-f7d48afbbb80.md"
+      ],
+      "artifactCount": 1,
+      "noDuplicate": true
+    },
+    "refusal": {
+      "status": 403,
+      "body": {
+        "error": "consent_required",
+        "detail": "the request must carry consent: true — the report is written to the server's output root, and the consent says so"
+      },
+      "artifactsBefore": [
+        "report-f7d48afbbb80.md"
+      ],
+      "artifactsAfter": [
+        "report-f7d48afbbb80.md"
+      ],
+      "noArtifactWritten": true
+    },
+    "concurrency": {
+      "requests": 4,
+      "statuses": [
+        200,
+        200,
+        200,
+        201
+      ],
+      "dispositions": [
+        "REPLAYED",
+        "REPLAYED",
+        "REPLAYED",
+        "WRITTEN"
+      ],
+      "probeIdentity": "c2a.report.v1.bc2492fd001a2c2935ff2e3e",
+      "probeStagedRecords": 1,
+      "probeCommittedRecords": 1,
+      "probeArtifactNames": [
+        "report-2c2935ff2e3e.md"
+      ],
+      "oneArtifactPerIdentity": true,
+      "oneStagedOneCommitted": true,
+      "mainIdentityStaged": 1,
+      "mainIdentityCommitted": 1,
+      "artifactsAfter": [
+        "report-2c2935ff2e3e.md",
+        "report-f7d48afbbb80.md"
+      ],
+      "artifactCount": 2
+    },
+    "afterRestart": {
+      "status": 200,
+      "disposition": "REPLAYED",
+      "sha256": "eba139f74ad250acc5b8511b32786d207ab7dd73e119043572d12d915c6909ec",
+      "artifactPresent": true,
+      "digestStillMatches": true,
+      "artifactCount": 2,
+      "artifactCountBefore": 2,
+      "noNewArtifact": true
+    }
+  },
+  "notVerified": [
+    "the truth of the report's propositions: the route records what the workspace said, and the workspace's own epistemic rules decide that",
+    "a network-facing deployment: the action is refused outside a local-only process, and no network-exposed run was made",
+    "the durability of the artifact across a power loss: the writer forces the bytes and the directory, but no power was cut"
+  ],
+  "load": {
+    "status": 200,
+    "body": {
+      "workspaceId": "c2a-demo",
+      "question": "seed corpus",
+      "uncoveredTerms": [],
+      "questionTerms": [],
+      "candidatesConsidered": [
+        "usgs-this-dynamic-earth.md",
+        "wikipedia-plate-tectonics.md"
+      ],
+      "acquired": [
+        "usgs-this-dynamic-earth.md",
+        "wikipedia-plate-tectonics.md"
+      ],
+      "steps": [
+        {
+          "file": "usgs-this-dynamic-earth.md",
+          "licence": "US-PUBLIC-DOMAIN",
+          "sourceUrl": "https://pubs.usgs.gov/gip/dynamic/understanding.html",
+          "accessedAt": "2026-11-07",
+          "revision": "snapshot 2026-11-07",
+          "segments": 1,
+          "claimsProposed": 77,
+          "claimsAdded": 77,
+          "conceptsCreated": 77,
+          "skipped": [],
+          "status": "imported"
+        },
+        {
+          "file": "wikipedia-plate-tectonics.md",
+          "licence": "CC-BY-SA-4.0",
+          "sourceUrl": "https://en.wikipedia.org/w/index.php?title=Plate%20tectonics&oldid=1381934246",
+          "accessedAt": "2026-11-07",
+          "revision": "oldid=1381934246",
+          "segments": 1,
+          "claimsProposed": 271,
+          "claimsAdded": 271,
+          "conceptsCreated": 249,
+          "skipped": [],
+          "status": "imported"
+        }
+      ],
+      "boundary": "the licensed seed corpus that ships with the application",
+      "documentsAcquired": 2,
+      "claimsAdded": 348,
+      "warnings": []
+    }
+  },
+  "storeClaims": {
+    "status": 200,
+    "count": 348
+  },
+  "request": {
+    "status": 201,
+    "body": {
+      "taskId": "c2a.report.v1.0a0d1a81fa91f7d48afbbb80",
+      "actionName": "report.artifact.write",
+      "actionVersion": 1,
+      "disposition": "WRITTEN",
+      "artifactName": "report-f7d48afbbb80.md",
+      "artifactLocator": "report-f7d48afbbb80.md",
+      "sha256": "eba139f74ad250acc5b8511b32786d207ab7dd73e119043572d12d915c6909ec",
+      "evidence": [
+        {
+          "claimId": "clm-9f75a447",
+          "proposition": "Plate tectonics (from Latin tectonicus, from Ancient Greek τεκτονικός (tektonikós) 'pertaining to building') is the scientific theory that Earth's lithosphere comprises a number of large tectonic plates, which have been slowly moving since 3–4 billion years ago.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-4a65c2f1",
+          "proposition": "Surge tectonics Another theory is that the mantle flows neither in cells nor large plumes but rather as a series of channels just below Earth's crust, which then provide basal friction to the lithosphere.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-ca49abe7",
+          "proposition": "Earth's lithosphere, the rigid outer shell of the planet including the crust and upper mantle, is fractured into seven or eight major plates (depending on how they are defined) and many minor plates or \"platelets\".",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-48ced5ef",
+          "proposition": "Jupiter's moon Europa shows signs of ice crustal plates moving and interacting, similar to Earth's plate tectonics.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-87b85247",
+          "proposition": "Emergence of plate tectonics and past plate motions The timing of the emergence of plate tectonics on Earth has been the subject of considerable controversy, with the estimated time varying wildly between researchers, spanning 85% of Earth's history.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-90b7f273",
+          "proposition": "The processes that result in plates and shape Earth's crust are called tectonics.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-a5279dae",
+          "proposition": "They concluded that tidal forces (the tidal lag or \"friction\") caused by Earth's rotation and the forces acting upon it by the Moon are a driving force for plate tectonics.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-9797d2aa",
+          "proposition": "The Pacific plate, for instance, is essentially surrounded by zones of subduction (the so-called Ring of Fire) and moves much faster than the plates of the Atlantic basin, which are attached (perhaps one could say 'welded') to adjacent continents instead of subducting plates.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-bbaa000",
+          "proposition": "There is debatable evidence of active tectonics in the planet's distant past; however, events taking place since then (such as the plausible and generally accepted hypothesis that the Venusian lithosphere has thickened greatly over the course of several hundred million years) has made constraining the course of its geologic record difficult.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-810dcbba",
+          "proposition": "Tectonic plates are composed of the oceanic lithosphere and the thicker continental lithosphere, each topped by its own kind of crust.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-b052c9ed",
+          "proposition": "Driving forces of plate motion Tectonic plates are able to move because of the relative density of oceanic lithosphere and the relative weakness of the asthenosphere.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-f5065248",
+          "proposition": "The key principle of plate tectonics is that the lithosphere exists as separate and distinct tectonic plates, which ride on the viscoelastic asthenosphere.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-168d7d32",
+          "proposition": "Jason Morgan proposed that Earth's surface consists of 12 rigid plates that move relative to each other.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-a2ae21f",
+          "proposition": "During the 2020s, new proposals have come forward that divide Earth's crust into many smaller plates, called terranes, which reflects the fact that Plate reconstructions show that the larger plates have been internally deformed and oceanic and continental plates have been fragmented over time.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-3b523fbe",
+          "proposition": "One explanation for Venus's lack of plate tectonics is that on Venus temperatures are too high for significant water to be present.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-92d0c098",
+          "proposition": "Relative significance of each driving force mechanism The vector of a plate's motion is a function of all the forces acting on the plate; however, therein lies the problem regarding the degree to which each process contributes to the overall motion of each tectonic plate.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-138dd12e",
+          "proposition": "Role of water The role of water has traditionally been proposed to be crucial in plate tectonics on Earth, because it lowers viscosities in the asthenosphere, enabling subduction.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-5277027f",
+          "proposition": "Other celestial bodies The appearance of plate tectonics on terrestrial planets is related to planetary mass, with more massive planets than Earth expected to exhibit plate tectonics.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-7c0f18c6",
+          "proposition": "Icy moons Exoplanets On Earth-sized planets, plate tectonics is more likely if there are oceans of water.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-a0c576ce",
+          "proposition": "Some authors have suggested that during at least part of the Archean period (~4-2.5 billion years ago) the mantle was between 100 and 250 °C warmer than at present, which is thought to be incompatible with modern-style plate tectonics, and that Earth may have had a stagnant lid or other kinds of regimes.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-a4b3f746",
+          "proposition": "While Earth is the only planet known to currently have active plate tectonics, evidence suggests that other planets and moons have experienced or exhibit forms of tectonic activity.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-e427b331",
+          "proposition": "Key principles The outer layers of Earth are divided into the lithosphere and asthenosphere.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-104e0f0c",
+          "proposition": "Earth's crust is soaked with water, and water plays an important role in the development of shear zones.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-31d4d1dd",
+          "proposition": "Historically Active Volcanoes, East Africa [38 k] East Africa may be the site of the Earth's next major ocean.",
+          "status": "SUPPORTED",
+          "sourceId": "src-575cf3eb",
+          "sourceTitle": "usgs-this-dynamic-earth.md"
+        },
+        {
+          "claimId": "clm-36a55107",
+          "proposition": "Lateral density variations in the mantle result in convection currents, the slow creeping motion of Earth's solid mantle.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-404de9b5",
+          "proposition": "Furthermore, the oceanic crust came to be appreciated as a natural \"tape recording\" of the history of the geomagnetic field reversals (GMFR) of Earth's magnetic field.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-421410ce",
+          "proposition": "The reference points (small squares) show the amount of uplift of an imaginary point in the Earth's crust during this mountain-building process.",
+          "status": "SUPPORTED",
+          "sourceId": "src-575cf3eb",
+          "sourceTitle": "usgs-this-dynamic-earth.md"
+        },
+        {
+          "claimId": "clm-49afd1e9",
+          "proposition": "The supercontinent Rodinia is thought to have formed about 1 billion years ago and to have embodied most or all of Earth's continents, and broken up into eight continents around 600 million years ago.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-565f72f4",
+          "proposition": "Continental drift In the late 19th and early 20th centuries, geologists assumed that Earth's major features were fixed, and that most geologic features such as basin development and mountain ranges could be explained by vertical crustal movement, described in what is called the geosynclinal theory.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-5c4c5729",
+          "proposition": "Among the three techniques, to date the GPS has been the most useful for studying the Earth's crustal movements.",
+          "status": "SUPPORTED",
+          "sourceId": "src-575cf3eb",
+          "sourceTitle": "usgs-this-dynamic-earth.md"
+        },
+        {
+          "claimId": "clm-6d1f622e",
+          "proposition": "When newly formed rock cools, such magnetic materials recorded Earth's magnetic field at the time.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-af833229",
+          "proposition": "The Earth's unchanging size implies that the crust must be destroyed at about the same rate as it is being created, as Harry Hess surmised.",
+          "status": "SUPPORTED",
+          "sourceId": "src-575cf3eb",
+          "sourceTitle": "usgs-this-dynamic-earth.md"
+        },
+        {
+          "claimId": "clm-b77ea6b3",
+          "proposition": "This had previously been estimated by its cooling rate under the assumption that Earth's surface radiated like a black body.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-d48c6c07",
+          "proposition": "Two- and three-dimensional imaging of Earth's interior (seismic tomography) shows a varying lateral density distribution throughout the mantle.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-f2b80f5f",
+          "proposition": "If Earth's crust was expanding along the oceanic ridges, Hess and Dietz reasoned like Holmes and others before them, it must be shrinking elsewhere.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-120c98d",
+          "proposition": "It is more accurate to refer to this mechanism as \"gravitational sliding\", since the topography across the whole plate can vary considerably and spreading ridges are only the most prominent feature.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-63658a5c",
+          "proposition": "It is thus thought that forces associated with the downgoing plate (slab pull and slab suction) are the driving forces which determine the motion of plates, except for those plates which are not being subducted.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-712419e2",
+          "proposition": "It has been suggested in Lovett (2006) that this observation may also explain why Venus and Mars have no plate tectonics, as Venus has no moon and Mars' moons are too small to have significant tidal effects on the planet.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-c176b32e",
+          "proposition": "It has followers amongst the scientists involved in the theory of Earth expansion.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-dc3d474b",
+          "proposition": "It was observed as early as 1596 that the opposite coasts of the Atlantic Ocean—or, more precisely, the edges of the continental shelves—have similar shapes and seem to have once fitted together.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        },
+        {
+          "claimId": "clm-e6487e21",
+          "proposition": "Furthermore, it was supposed that a static shell of strata was present under the continents.",
+          "status": "SUPPORTED",
+          "sourceId": "src-ff33b52a",
+          "sourceTitle": "wikipedia-plate-tectonics.md"
+        }
+      ],
+      "epistemicDisposition": "ANSWERED",
+      "traceReference": "artifact-index:c2a.report.v1.0a0d1a81fa91f7d48afbbb80",
+      "limitations": [
+        "Supported but not independently verified: Plate tectonics (from Latin tectonicus, from Ancient Greek τεκτονικός (tektonikós) 'pertaining to building') is the scientific theory that Earth's lithosphere comprises a number of large tectonic plates, which have been slowly moving since 3–4 billion years ago.",
+        "Supported but not independently verified: Surge tectonics Another theory is that the mantle flows neither in cells nor large plumes but rather as a series of channels just below Earth's crust, which then provide basal friction to the lithosphere.",
+        "Supported but not independently verified: Earth's lithosphere, the rigid outer shell of the planet including the crust and upper mantle, is fractured into seven or eight major plates (depending on how they are defined) and many minor plates or \"platelets\".",
+        "Supported but not independently verified: Jupiter's moon Europa shows signs of ice crustal plates moving and interacting, similar to Earth's plate tectonics.",
+        "Supported but not independently verified: Emergence of plate tectonics and past plate motions The timing of the emergence of plate tectonics on Earth has been the subject of considerable controversy, with the estimated time varying wildly between researchers, spanning 85% of Earth's history.",
+        "Supported but not independently verified: The processes that result in plates and shape Earth's crust are called tectonics.",
+        "Supported but not independently verified: They concluded that tidal forces (the tidal lag or \"friction\") caused by Earth's rotation and the forces acting upon it by the Moon are a driving force for plate tectonics.",
+        "Supported but not independently verified: The Pacific plate, for instance, is essentially surrounded by zones of subduction (the so-called Ring of Fire) and moves much faster than the plates of the Atlantic basin, which are attached (perhaps one could say 'welded') to adjacent continents instead of subducting plates.",
+        "Supported but not independently verified: There is debatable evidence of active tectonics in the planet's distant past; however, events taking place since then (such as the plausible and generally accepted hypothesis that the Venusian lithosphere has thickened greatly over the course of several hundred million years) has made constraining the course of its geologic record difficult.",
+        "Supported but not independently verified: Tectonic plates are composed of the oceanic lithosphere and the thicker continental lithosphere, each topped by its own kind of crust.",
+        "Supported but not independently verified: Driving forces of plate motion Tectonic plates are able to move because of the relative density of oceanic lithosphere and the relative weakness of the asthenosphere.",
+        "Supported but not independently verified: The key principle of plate tectonics is that the lithosphere exists as separate and distinct tectonic plates, which ride on the viscoelastic asthenosphere.",
+        "Supported but not independently verified: Jason Morgan proposed that Earth's surface consists of 12 rigid plates that move relative to each other.",
+        "Supported but not independently verified: During the 2020s, new proposals have come forward that divide Earth's crust into many smaller plates, called terranes, which reflects the fact that Plate reconstructions show that the larger plates have been internally deformed and oceanic and continental plates have been fragmented over time.",
+        "Supported but not independently verified: One explanation for Venus's lack of plate tectonics is that on Venus temperatures are too high for significant water to be present.",
+        "Supported but not independently verified: Relative significance of each driving force mechanism The vector of a plate's motion is a function of all the forces acting on the plate; however, therein lies the problem regarding the degree to which each process contributes to the overall motion of each tectonic plate.",
+        "Supported but not independently verified: Role of water The role of water has traditionally been proposed to be crucial in plate tectonics on Earth, because it lowers viscosities in the asthenosphere, enabling subduction.",
+        "Supported but not independently verified: Other celestial bodies The appearance of plate tectonics on terrestrial planets is related to planetary mass, with more massive planets than Earth expected to exhibit plate tectonics.",
+        "Supported but not independently verified: Icy moons Exoplanets On Earth-sized planets, plate tectonics is more likely if there are oceans of water.",
+        "Supported but not independently verified: Some authors have suggested that during at least part of the Archean period (~4-2.5 billion years ago) the mantle was between 100 and 250 °C warmer than at present, which is thought to be incompatible with modern-style plate tectonics, and that Earth may have had a stagnant lid or other kinds of regimes.",
+        "Supported but not independently verified: While Earth is the only planet known to currently have active plate tectonics, evidence suggests that other planets and moons have experienced or exhibit forms of tectonic activity.",
+        "Supported but not independently verified: Key principles The outer layers of Earth are divided into the lithosphere and asthenosphere.",
+        "Supported but not independently verified: Earth's crust is soaked with water, and water plays an important role in the development of shear zones.",
+        "Supported but not independently verified: Historically Active Volcanoes, East Africa [38 k] East Africa may be the site of the Earth's next major ocean.",
+        "Supported but not independently verified: Lateral density variations in the mantle result in convection currents, the slow creeping motion of Earth's solid mantle.",
+        "Supported but not independently verified: Furthermore, the oceanic crust came to be appreciated as a natural \"tape recording\" of the history of the geomagnetic field reversals (GMFR) of Earth's magnetic field.",
+        "Supported but not independently verified: The reference points (small squares) show the amount of uplift of an imaginary point in the Earth's crust during this mountain-building process.",
+        "Supported but not independently verified: The supercontinent Rodinia is thought to have formed about 1 billion years ago and to have embodied most or all of Earth's continents, and broken up into eight continents around 600 million years ago.",
+        "Supported but not independently verified: Continental drift In the late 19th and early 20th centuries, geologists assumed that Earth's major features were fixed, and that most geologic features such as basin development and mountain ranges could be explained by vertical crustal movement, described in what is called the geosynclinal theory.",
+        "Supported but not independently verified: Among the three techniques, to date the GPS has been the most useful for studying the Earth's crustal movements.",
+        "Supported but not independently verified: When newly formed rock cools, such magnetic materials recorded Earth's magnetic field at the time.",
+        "Supported but not independently verified: The Earth's unchanging size implies that the crust must be destroyed at about the same rate as it is being created, as Harry Hess surmised.",
+        "Supported but not independently verified: This had previously been estimated by its cooling rate under the assumption that Earth's surface radiated like a black body.",
+        "Supported but not independently verified: Two- and three-dimensional imaging of Earth's interior (seismic tomography) shows a varying lateral density distribution throughout the mantle.",
+        "Supported but not independently verified: If Earth's crust was expanding along the oceanic ridges, Hess and Dietz reasoned like Holmes and others before them, it must be shrinking elsewhere.",
+        "Supported but not independently verified: It is more accurate to refer to this mechanism as \"gravitational sliding\", since the topography across the whole plate can vary considerably and spreading ridges are only the most prominent feature.",
+        "Supported but not independently verified: It is thus thought that forces associated with the downgoing plate (slab pull and slab suction) are the driving forces which determine the motion of plates, except for those plates which are not being subducted.",
+        "Supported but not independently verified: It has been suggested in Lovett (2006) that this observation may also explain why Venus and Mars have no plate tectonics, as Venus has no moon and Mars' moons are too small to have significant tidal effects on the planet.",
+        "Supported but not independently verified: It has followers amongst the scientists involved in the theory of Earth expansion.",
+        "Supported but not independently verified: It was observed as early as 1596 that the opposite coasts of the Atlantic Ocean—or, more precisely, the edges of the continental shelves—have similar shapes and seem to have once fitted together.",
+        "Supported but not independently verified: Furthermore, it was supposed that a static shell of strata was present under the continents.",
+        "41 of the 41 cited claims carry no authored confidence: the support score is 0.0 for them, and the citation is not a probability.",
+        "a written report is a record of what the workspace said; it is not independent evidence for the propositions it repeats"
+      ],
+      "refusalReasons": []
+    }
+  }
+}

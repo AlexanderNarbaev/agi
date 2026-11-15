@@ -318,21 +318,40 @@ def main() -> int:
         for thread in threads:
             thread.join()
         dispositions = sorted(str((item[1] or {}).get("disposition")) for item in results)
-        records = [r for r in index_records() if r.get("actionId") == (body or {}).get("taskId")]
+        # the probe carries its own idempotency key, so it names its own action identity:
+        # the contract under test is that ONE identity yields ONE artifact, whatever the
+        # number of racing requests
+        probe_identity = next(((item[1] or {}).get("taskId") for item in results
+                               if (item[1] or {}).get("taskId")), None)
+        probe_records = [r for r in index_records() if r.get("actionId") == probe_identity]
+        probe_files = sorted({r.get("fileName") for r in probe_records})
+        main_records = [r for r in index_records()
+                        if r.get("actionId") == (body or {}).get("taskId")]
         report["checks"]["concurrency"] = {
             "requests": len(results),
             "statuses": sorted(item[0] for item in results),
             "dispositions": dispositions,
+            "probeIdentity": probe_identity,
+            "probeStagedRecords": len([r for r in probe_records if r.get("status") == "STAGED"]),
+            "probeCommittedRecords": len([r for r in probe_records
+                                          if r.get("status") == "COMMITTED"]),
+            "probeArtifactNames": probe_files,
+            "oneArtifactPerIdentity": len(probe_files) == 1,
+            "oneStagedOneCommitted": (
+                len([r for r in probe_records if r.get("status") == "STAGED"]) == 1
+                and len([r for r in probe_records if r.get("status") == "COMMITTED"]) == 1),
+            "mainIdentityStaged": len([r for r in main_records if r.get("status") == "STAGED"]),
+            "mainIdentityCommitted": len([r for r in main_records
+                                          if r.get("status") == "COMMITTED"]),
             "artifactsAfter": artifacts(),
             "artifactCount": len(artifacts()),
-            "stagedRecords": len([r for r in records if r.get("status") == "STAGED"]),
-            "committedRecords": len([r for r in records if r.get("status") == "COMMITTED"]),
         }
         log(f"the concurrent requests answered {dispositions}")
     finally:
         stop_server(server)
 
     # ── the result survives a restart ──────────────────────────────────────
+    artifacts_before_restart = len(artifacts())
     PHASE[0] = "two"
     server = start_server()
     try:
@@ -346,7 +365,8 @@ def main() -> int:
             "digestStillMatches": artifact.is_file()
             and sha256_of(artifact) == (after_restart or {}).get("sha256"),
             "artifactCount": len(artifacts()),
-            "noSecondFile": len(artifacts()) == 1,
+            "artifactCountBefore": artifacts_before_restart,
+            "noNewArtifact": len(artifacts()) == artifacts_before_restart,
         }
         log(f"after the restart the repeated request answered {status} "
             f"({(after_restart or {}).get('disposition')})")
@@ -372,10 +392,12 @@ def main() -> int:
         failures.append("the repeated request produced a second artifact")
     if checks.get("refusal", {}).get("noArtifactWritten") is not True:
         failures.append("a request without consent produced an artifact")
-    if checks.get("concurrency", {}).get("artifactCount") != 1:
-        failures.append("concurrent requests produced more than one artifact")
-    if checks.get("afterRestart", {}).get("noSecondFile") is not True:
-        failures.append("the restarted server produced a second artifact")
+    if checks.get("concurrency", {}).get("oneArtifactPerIdentity") is not True:
+        failures.append("the concurrent requests produced more than one artifact for one identity")
+    if checks.get("concurrency", {}).get("oneStagedOneCommitted") is not True:
+        failures.append("the concurrent requests produced more than one staged or committed record")
+    if checks.get("afterRestart", {}).get("noNewArtifact") is not True:
+        failures.append("the restarted server produced an artifact that was not there before")
     if failures:
         for failure in failures:
             log(f"FAILED: {failure}")
