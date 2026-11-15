@@ -1,0 +1,1302 @@
+{
+  "dataset" : "c2a-heldout-plate-tectonics",
+  "version" : "1.0",
+  "date" : "2026-11-15",
+  "purpose" : "an independent, source-verified held-out evaluation set for the retrieval subsystem, built before any candidate exists",
+  "manifest" : {
+    "corpus" : "research-pool/plate-tectonics",
+    "corpusManifest" : "matrix-core/src/main/resources/research-pool/plate-tectonics/corpus-manifest.json",
+    "corpusManifestSha256" : "fa7ba16e9baddea9d58109100c27d19a2404ee34391514a1ff4e2d785c0413b5",
+    "workspace" : "c2a-heldout-plate-tectonics",
+    "acquisitionPath" : "io.matrix.knowledge.acquisition.AcquisitionCycle.RESEARCH_POOL -> io.matrix.knowledge.acquisition.ClasspathCorpus.extract -> io.matrix.knowledge.KnowledgeWorkbench.importDocument",
+    "builder" : "io.matrix.knowledge.HeldOutSetBuilderTest",
+    "method" : "the pool documents are imported through the production acquisition path; every gold claim is the production claim whose proposition equals a sentence of a pool document, and the builder proves the sentence is verbatim in that document before the case is written out",
+    "verifications" : [ "the gold proposition occurs verbatim in its pool document", "the gold claim exists in the production workspace and was introduced by that document's source", "a negative case's content terms occur in no pool document", "a held-out question shares no normalised token sequence of length >= 4 with any development question", "the five kinds are present, the set is not empty, and every pool document has a case" ],
+    "kinds" : {
+      "POSITIVE" : "answerable from the research pool; the expected disposition is ANSWERED and the cited claims must carry the gold propositions",
+      "NEGATIVE" : "answerable in principle but with no supporting claim; the content terms occur in no pool document and the expected disposition is ABSTAINED",
+      "UNSUPPORTED" : "a question whose premise the corpus contradicts or cannot support; the expected disposition is UNSUPPORTED and the disputed premise is named",
+      "AMBIGUOUS" : "a question that admits more than one reading in the corpus; the expected disposition is AMBIGUOUS and both readings are recorded with their spans",
+      "CONTRADICTORY" : "two claims in the corpus that cannot both hold; the expected disposition is CONTRADICTORY and both claims are recorded with their spans"
+    },
+    "documents" : [ {
+      "file" : "wikipedia-continental-drift.md",
+      "sourceId" : "src-8b44c3d8",
+      "contentHash" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+      "claimsAdded" : 90,
+      "conceptsCreated" : 85,
+      "representationsCreated" : 88,
+      "licence" : "CC-BY-SA-4.0",
+      "licenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "sourceUrl" : "https://en.wikipedia.org/w/index.php?title=Continental%20drift&oldid=1376987312",
+      "attribution" : "'Continental drift', Wikipedia (CC BY-SA 4.0), revision 1376987312, 2026-09-27T07:32:57Z",
+      "revision" : "oldid=1376987312",
+      "accessedAt" : "2026-11-07",
+      "sha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2"
+    }, {
+      "file" : "wikipedia-seafloor-spreading.md",
+      "sourceId" : "src-16b81207",
+      "contentHash" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+      "claimsAdded" : 92,
+      "conceptsCreated" : 88,
+      "representationsCreated" : 91,
+      "licence" : "CC-BY-SA-4.0",
+      "licenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "sourceUrl" : "https://en.wikipedia.org/w/index.php?title=Seafloor%20spreading&oldid=1372521821",
+      "attribution" : "'Seafloor spreading', Wikipedia (CC BY-SA 4.0), revision 1372521821, 2026-09-01T02:40:51Z",
+      "revision" : "oldid=1372521821",
+      "accessedAt" : "2026-11-07",
+      "sha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4"
+    }, {
+      "file" : "wikipedia-subduction.md",
+      "sourceId" : "src-279a971d",
+      "contentHash" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+      "claimsAdded" : 152,
+      "conceptsCreated" : 139,
+      "representationsCreated" : 149,
+      "licence" : "CC-BY-SA-4.0",
+      "licenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "sourceUrl" : "https://en.wikipedia.org/w/index.php?title=Subduction&oldid=1381148652",
+      "attribution" : "'Subduction', Wikipedia (CC BY-SA 4.0), revision 1381148652, 2026-10-20T08:21:35Z",
+      "revision" : "oldid=1381148652",
+      "accessedAt" : "2026-11-07",
+      "sha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74"
+    }, {
+      "file" : "wikipedia-mid-ocean-ridge.md",
+      "sourceId" : "src-5c281231",
+      "contentHash" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+      "claimsAdded" : 82,
+      "conceptsCreated" : 76,
+      "representationsCreated" : 82,
+      "licence" : "CC-BY-SA-4.0",
+      "licenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "sourceUrl" : "https://en.wikipedia.org/w/index.php?title=Mid-ocean%20ridge&oldid=1383981232",
+      "attribution" : "'Mid-ocean ridge', Wikipedia (CC BY-SA 4.0), revision 1383981232, 2026-11-05T23:54:59Z",
+      "revision" : "oldid=1383981232",
+      "accessedAt" : "2026-11-07",
+      "sha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd"
+    }, {
+      "file" : "wikipedia-mantle-convection.md",
+      "sourceId" : "src-b9eb0cc6",
+      "contentHash" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+      "claimsAdded" : 45,
+      "conceptsCreated" : 39,
+      "representationsCreated" : 45,
+      "licence" : "CC-BY-SA-4.0",
+      "licenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "sourceUrl" : "https://en.wikipedia.org/w/index.php?title=Mantle%20convection&oldid=1382079218",
+      "attribution" : "'Mantle convection', Wikipedia (CC BY-SA 4.0), revision 1382079218, 2026-10-26T13:34:06Z",
+      "revision" : "oldid=1382079218",
+      "accessedAt" : "2026-11-07",
+      "sha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682"
+    }, {
+      "file" : "wikipedia-slab-pull.md",
+      "sourceId" : "src-9b8764d",
+      "contentHash" : "3bddce4afba68cf2bf424083acad6f92bc048de755df0b172468503a3111bc30",
+      "claimsAdded" : 14,
+      "conceptsCreated" : 13,
+      "representationsCreated" : 14,
+      "licence" : "CC-BY-SA-4.0",
+      "licenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "sourceUrl" : "https://en.wikipedia.org/w/index.php?title=Slab%20pull&oldid=1379867088",
+      "attribution" : "'Slab pull', Wikipedia (CC BY-SA 4.0), revision 1379867088, 2026-10-12T09:47:08Z",
+      "revision" : "oldid=1379867088",
+      "accessedAt" : "2026-11-07",
+      "sha256" : "3bddce4afba68cf2bf424083acad6f92bc048de755df0b172468503a3111bc30"
+    }, {
+      "file" : "wikipedia-paleomagnetism.md",
+      "sourceId" : "src-77f1debd",
+      "contentHash" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+      "claimsAdded" : 65,
+      "conceptsCreated" : 64,
+      "representationsCreated" : 65,
+      "licence" : "CC-BY-SA-4.0",
+      "licenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "sourceUrl" : "https://en.wikipedia.org/w/index.php?title=Paleomagnetism&oldid=1381061770",
+      "attribution" : "'Paleomagnetism', Wikipedia (CC BY-SA 4.0), revision 1381061770, 2026-10-19T19:31:23Z",
+      "revision" : "oldid=1381061770",
+      "accessedAt" : "2026-11-07",
+      "sha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00"
+    } ],
+    "counts" : {
+      "cases" : 38,
+      "distinctGoldClaims" : 59,
+      "distinctSourceDocuments" : 7,
+      "casesPerKind" : {
+        "POSITIVE" : 19,
+        "NEGATIVE" : 6,
+        "UNSUPPORTED" : 6,
+        "AMBIGUOUS" : 4,
+        "CONTRADICTORY" : 3
+      },
+      "casesPerDocument" : {
+        "wikipedia-continental-drift.md" : 5,
+        "wikipedia-seafloor-spreading.md" : 4,
+        "wikipedia-mid-ocean-ridge.md" : 7,
+        "wikipedia-subduction.md" : 10,
+        "wikipedia-mantle-convection.md" : 5,
+        "wikipedia-paleomagnetism.md" : 3,
+        "wikipedia-slab-pull.md" : 3
+      },
+      "goldClaimsPerDocument" : {
+        "wikipedia-continental-drift.md" : 7,
+        "wikipedia-seafloor-spreading.md" : 7,
+        "wikipedia-mid-ocean-ridge.md" : 12,
+        "wikipedia-subduction.md" : 20,
+        "wikipedia-mantle-convection.md" : 7,
+        "wikipedia-paleomagnetism.md" : 4,
+        "wikipedia-slab-pull.md" : 4
+      }
+    },
+    "developmentSet" : {
+      "file" : "matrix-core/src/main/resources/epistemic-eval/cases.json",
+      "sha256" : "214e0b9a7e59a227e2cf3c688623b05d8e039a53de9c5cffb8b2d82b4b575a1f",
+      "version" : "1.1",
+      "cases" : 29,
+      "textsCompared" : 25,
+      "textsComparedNote" : "every development question and every development assertion; the held-out questions share no normalised token sequence of length >= 4 with any of them"
+    }
+  },
+  "cases" : [ {
+    "id" : "H-P01",
+    "kind" : "POSITIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "Which mechanism did Arthur Holmes advance for the movement of the continents, and what is said to power it?",
+    "expectedDisposition" : "ANSWERED",
+    "goldClaims" : [ {
+      "claimId" : "clm-b9c3dddf",
+      "proposition" : "In 1931, English geologist Arthur Holmes proposed mantle convection for that mechanism, which is now known to be powered by radioactive decay and primordial heat and a much smaller amount of heat from tidal heating.",
+      "sourceSpan" : "In 1931, English geologist Arthur Holmes proposed mantle convection for that mechanism, which is now known to be powered by radioactive decay and primordial heat and a much smaller amount of heat from tidal heating.",
+      "claimContext" : "wikipedia-continental-drift.md: \"Continental drift\" (line 1) [characters 21-19384]",
+      "sourceId" : "src-8b44c3d8",
+      "sourceTitle" : "wikipedia-continental-drift.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-continental-drift.md" ],
+    "note" : "answerable from the research pool; the gold is the sentence the source wrote"
+  }, {
+    "id" : "H-P02",
+    "kind" : "POSITIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "In the research pool, what did Wegener call the single landmass from which the continents later broke apart?",
+    "expectedDisposition" : "ANSWERED",
+    "goldClaims" : [ {
+      "claimId" : "clm-4d007bba",
+      "proposition" : "He proposed that the continents had once formed a single landmass, which he called Pangaea, before breaking apart and drifting to their present locations.",
+      "sourceSpan" : "He proposed that the continents had once formed a single landmass, which he called Pangaea, before breaking apart and drifting to their present locations.",
+      "claimContext" : "wikipedia-continental-drift.md: \"Continental drift\" (line 1) [characters 21-19384]",
+      "sourceId" : "src-8b44c3d8",
+      "sourceTitle" : "wikipedia-continental-drift.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-continental-drift.md" ],
+    "note" : "answerable from the research pool; the gold is the sentence the source wrote"
+  }, {
+    "id" : "H-P03",
+    "kind" : "POSITIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "By how much did a GPS receiver standing in Maui, Hawaii, shift over a fourteen-year period?",
+    "expectedDisposition" : "ANSWERED",
+    "goldClaims" : [ {
+      "claimId" : "clm-eab92f6d",
+      "proposition" : "A GPS device placed in Maui, Hawaii, moved about 48 cm latitudinally and about 84 cm longitudinally over 14 years.",
+      "sourceSpan" : "A GPS device placed in Maui, Hawaii, moved about 48 cm latitudinally and about 84 cm longitudinally over 14 years.",
+      "claimContext" : "wikipedia-continental-drift.md: \"Continental drift\" (line 1) [characters 21-19384]",
+      "sourceId" : "src-8b44c3d8",
+      "sourceTitle" : "wikipedia-continental-drift.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-continental-drift.md" ],
+    "note" : "answerable from the research pool; the gold is the sentence the source wrote"
+  }, {
+    "id" : "H-P04",
+    "kind" : "POSITIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "How do the opening rates of fast, intermediate and slow spreading ridges compare in the research pool?",
+    "expectedDisposition" : "ANSWERED",
+    "goldClaims" : [ {
+      "claimId" : "clm-ca066917",
+      "proposition" : "Spreading rates determine if the ridge is fast, intermediate, or slow.",
+      "sourceSpan" : "Spreading rates determine if the ridge is fast, intermediate, or slow.",
+      "claimContext" : "wikipedia-seafloor-spreading.md: \"Seafloor spreading\" (line 1) [characters 22-15491]",
+      "sourceId" : "src-16b81207",
+      "sourceTitle" : "wikipedia-seafloor-spreading.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-60f8290e",
+      "proposition" : "As a general rule, fast ridges have spreading (opening) rates of more than 90 mm/year.",
+      "sourceSpan" : "As a general rule, fast ridges have spreading (opening) rates of more than 90 mm/year.",
+      "claimContext" : "wikipedia-seafloor-spreading.md: \"Seafloor spreading\" (line 1) [characters 22-15491]",
+      "sourceId" : "src-16b81207",
+      "sourceTitle" : "wikipedia-seafloor-spreading.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-9c5dee0c",
+      "proposition" : "Intermediate ridges have a spreading rate of 40–90 mm/year while slow spreading ridges have a rate less than 40 mm/year.",
+      "sourceSpan" : "Intermediate ridges have a spreading rate of 40–90 mm/year while slow spreading ridges have a rate less than 40 mm/year.",
+      "claimContext" : "wikipedia-seafloor-spreading.md: \"Seafloor spreading\" (line 1) [characters 22-15491]",
+      "sourceId" : "src-16b81207",
+      "sourceTitle" : "wikipedia-seafloor-spreading.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-seafloor-spreading.md" ],
+    "note" : "answerable from the research pool; the gold is the sentence the source wrote"
+  }, {
+    "id" : "H-P05",
+    "kind" : "POSITIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "Where does the research pool say new seafloor is continually formed, and what happens there?",
+    "expectedDisposition" : "ANSWERED",
+    "goldClaims" : [ {
+      "claimId" : "clm-e4764d23",
+      "proposition" : "In locations where two plates move apart, at mid-ocean ridges, new seafloor is continually formed during seafloor spreading.",
+      "sourceSpan" : "In locations where two plates move apart, at mid-ocean ridges, new seafloor is continually formed during seafloor spreading.",
+      "claimContext" : "wikipedia-seafloor-spreading.md: \"Seafloor spreading\" (line 1) [characters 22-15491]",
+      "sourceId" : "src-16b81207",
+      "sourceTitle" : "wikipedia-seafloor-spreading.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-12919f33",
+      "proposition" : "At a spreading center, basaltic magma rises up the fractures and cools on the ocean floor to form new seabed.",
+      "sourceSpan" : "At a spreading center, basaltic magma rises up the fractures and cools on the ocean floor to form new seabed.",
+      "claimContext" : "wikipedia-seafloor-spreading.md: \"Seafloor spreading\" (line 1) [characters 22-15491]",
+      "sourceId" : "src-16b81207",
+      "sourceTitle" : "wikipedia-seafloor-spreading.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-seafloor-spreading.md" ],
+    "note" : "answerable from the research pool; the gold is the sentence the source wrote"
+  }, {
+    "id" : "H-P06",
+    "kind" : "POSITIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "Which rock type crystallises at a ridge axis, and what lies beneath it in the lower oceanic crust?",
+    "expectedDisposition" : "ANSWERED",
+    "goldClaims" : [ {
+      "claimId" : "clm-a21090f2",
+      "proposition" : "The crystallized magma forms a new crust of basalt known as MORB for mid-ocean ridge basalt, and gabbro below it in the lower oceanic crust.",
+      "sourceSpan" : "The crystallized magma forms a new crust of basalt known as MORB for mid-ocean ridge basalt, and gabbro below it in the lower oceanic crust.",
+      "claimContext" : "wikipedia-mid-ocean-ridge.md: \"Mid-ocean ridge\" (line 1) [characters 19-17827]",
+      "sourceId" : "src-5c281231",
+      "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-620c1889",
+      "proposition" : "Mid-ocean ridge basalt is a tholeiitic basalt and is low in incompatible elements.",
+      "sourceSpan" : "Mid-ocean ridge basalt is a tholeiitic basalt and is low in incompatible elements.",
+      "claimContext" : "wikipedia-mid-ocean-ridge.md: \"Mid-ocean ridge\" (line 1) [characters 19-17827]",
+      "sourceId" : "src-5c281231",
+      "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-mid-ocean-ridge.md" ],
+    "note" : "answerable from the research pool; the gold is the sentence the source wrote"
+  }, {
+    "id" : "H-P07",
+    "kind" : "POSITIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "How does a faster spreading rate change the magnesium and calcium balance of seawater?",
+    "expectedDisposition" : "ANSWERED",
+    "goldClaims" : [ {
+      "claimId" : "clm-1b4277ed",
+      "proposition" : "Fast spreading rates will expand the mid-ocean ridge causing basalt reactions with seawater to happen more rapidly.",
+      "sourceSpan" : "Fast spreading rates will expand the mid-ocean ridge causing basalt reactions with seawater to happen more rapidly.",
+      "claimContext" : "wikipedia-mid-ocean-ridge.md: \"Mid-ocean ridge\" (line 1) [characters 19-17827]",
+      "sourceId" : "src-5c281231",
+      "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-890e6ed4",
+      "proposition" : "The magnesium/calcium ratio will be lower because more magnesium ions are being removed from seawater and consumed by the rock, and more calcium ions are being removed from the rock and released into seawater.",
+      "sourceSpan" : "The magnesium/calcium ratio will be lower because more magnesium ions are being removed from seawater and consumed by the rock, and more calcium ions are being removed from the rock and released into seawater.",
+      "claimContext" : "wikipedia-mid-ocean-ridge.md: \"Mid-ocean ridge\" (line 1) [characters 19-17827]",
+      "sourceId" : "src-5c281231",
+      "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-mid-ocean-ridge.md" ],
+    "note" : "answerable from the research pool; the gold is the sentence the source wrote"
+  }, {
+    "id" : "H-P08",
+    "kind" : "POSITIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "Which survey team concluded that a rift valley runs down the middle of the Atlantic Ocean?",
+    "expectedDisposition" : "ANSWERED",
+    "goldClaims" : [ {
+      "claimId" : "clm-2242f7e1",
+      "proposition" : "A team led by Marie Tharp and Bruce Heezen concluded that there was an enormous mountain chain with a rift valley at its crest, running up the middle of the Atlantic Ocean.",
+      "sourceSpan" : "A team led by Marie Tharp and Bruce Heezen concluded that there was an enormous mountain chain with a rift valley at its crest, running up the middle of the Atlantic Ocean.",
+      "claimContext" : "wikipedia-mid-ocean-ridge.md: \"Mid-ocean ridge\" (line 1) [characters 19-17827]",
+      "sourceId" : "src-5c281231",
+      "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-62001d69",
+      "proposition" : "Also, crustal heat flow was higher here than elsewhere in the Atlantic Ocean basin.",
+      "sourceSpan" : "Also, crustal heat flow was higher here than elsewhere in the Atlantic Ocean basin.",
+      "claimContext" : "wikipedia-mid-ocean-ridge.md: \"Mid-ocean ridge\" (line 1) [characters 19-17827]",
+      "sourceId" : "src-5c281231",
+      "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-mid-ocean-ridge.md" ],
+    "note" : "answerable from the research pool; the gold is the sentence the source wrote"
+  }, {
+    "id" : "H-P09",
+    "kind" : "POSITIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "What is the Wadati-Benioff zone, and how deep does it reach?",
+    "expectedDisposition" : "ANSWERED",
+    "goldClaims" : [ {
+      "claimId" : "clm-15b10a7a",
+      "proposition" : "Subduction zones are defined by an inclined zone of earthquakes, the Wadati–Benioff zone, that dips away from the trench and extends down below the volcanic arc to the 660-kilometer discontinuity.",
+      "sourceSpan" : "Subduction zones are defined by an inclined zone of earthquakes, the Wadati–Benioff zone, that dips away from the trench and extends down below the volcanic arc to the 660-kilometer discontinuity.",
+      "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+      "sourceId" : "src-279a971d",
+      "sourceTitle" : "wikipedia-subduction.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-50ace676",
+      "proposition" : "Subduction zone earthquakes occur at greater depths (up to 600 km (370 mi)) than elsewhere on Earth (typically less than 20 km (12 mi) depth); such deep earthquakes may be driven by deep phase transformations, thermal runaway, or dehydration embrittlement.",
+      "sourceSpan" : "Subduction zone earthquakes occur at greater depths (up to 600 km (370 mi)) than elsewhere on Earth (typically less than 20 km (12 mi) depth); such deep earthquakes may be driven by deep phase transformations, thermal runaway, or dehydration embrittlement.",
+      "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+      "sourceId" : "src-279a971d",
+      "sourceTitle" : "wikipedia-subduction.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-subduction.md" ],
+    "note" : "answerable from the research pool; the gold is the sentence the source wrote"
+  }, {
+    "id" : "H-P10",
+    "kind" : "POSITIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "How does the water carried by a subducting slab generate magma beneath a volcanic arc?",
+    "expectedDisposition" : "ANSWERED",
+    "goldClaims" : [ {
+      "claimId" : "clm-ee43e1d1",
+      "proposition" : "Once the oceanic slab reaches about 100 km (62 mi) in depth, hydrous minerals become unstable and release fluids into the asthenosphere.",
+      "sourceSpan" : "Once the oceanic slab reaches about 100 km (62 mi) in depth, hydrous minerals become unstable and release fluids into the asthenosphere.",
+      "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+      "sourceId" : "src-279a971d",
+      "sourceTitle" : "wikipedia-subduction.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-3f374a52",
+      "proposition" : "The fluids act as a flux for the rock within the asthenosphere and cause it to partially melt.",
+      "sourceSpan" : "The fluids act as a flux for the rock within the asthenosphere and cause it to partially melt.",
+      "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+      "sourceId" : "src-279a971d",
+      "sourceTitle" : "wikipedia-subduction.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-fec87d45",
+      "proposition" : "The supercritical water, which is hot and more buoyant than the surrounding rock, rises into the overlying mantle, where it lowers the melting temperature of the mantle rock, generating magma via flux melting.",
+      "sourceSpan" : "The supercritical water, which is hot and more buoyant than the surrounding rock, rises into the overlying mantle, where it lowers the melting temperature of the mantle rock, generating magma via flux melting.",
+      "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+      "sourceId" : "src-279a971d",
+      "sourceTitle" : "wikipedia-subduction.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-subduction.md" ],
+    "note" : "answerable from the research pool; the gold is the sentence the source wrote"
+  }, {
+    "id" : "H-P11",
+    "kind" : "POSITIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "Which metamorphic path do subduction zones follow, and which facies zones does it cross?",
+    "expectedDisposition" : "ANSWERED",
+    "goldClaims" : [ {
+      "claimId" : "clm-45a8e080",
+      "proposition" : "Subduction zone metamorphism is characterized by a low temperature, high-ultrahigh pressure metamorphic path through the zeolite, prehnite-pumpellyite, blueschist, and eclogite facies stability zones of subducted oceanic crust.",
+      "sourceSpan" : "Subduction zone metamorphism is characterized by a low temperature, high-ultrahigh pressure metamorphic path through the zeolite, prehnite-pumpellyite, blueschist, and eclogite facies stability zones of subducted oceanic crust.",
+      "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+      "sourceId" : "src-279a971d",
+      "sourceTitle" : "wikipedia-subduction.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-7c5ae2c1",
+      "proposition" : "The breakdown of hydrous mineral phases typically occurs at depths greater than 10 km (6.2 mi).",
+      "sourceSpan" : "The breakdown of hydrous mineral phases typically occurs at depths greater than 10 km (6.2 mi).",
+      "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+      "sourceId" : "src-279a971d",
+      "sourceTitle" : "wikipedia-subduction.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-subduction.md" ],
+    "note" : "answerable from the research pool; the gold is the sentence the source wrote"
+  }, {
+    "id" : "H-P12",
+    "kind" : "POSITIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "How long does a single shallow mantle convection cycle take, and how does that compare with a deeper one?",
+    "expectedDisposition" : "ANSWERED",
+    "goldClaims" : [ {
+      "claimId" : "clm-dd2ff42e",
+      "proposition" : "A single shallow convection cycle takes on the order of 50 million years, though deeper convection can be closer to 200 million years.",
+      "sourceSpan" : "A single shallow convection cycle takes on the order of 50 million years, though deeper convection can be closer to 200 million years.",
+      "claimContext" : "wikipedia-mantle-convection.md: \"Mantle convection\" (line 1) [characters 21-9180]",
+      "sourceId" : "src-b9eb0cc6",
+      "sourceTitle" : "wikipedia-mantle-convection.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-mantle-convection.md" ],
+    "note" : "answerable from the research pool; the gold is the sentence the source wrote"
+  }, {
+    "id" : "H-P13",
+    "kind" : "POSITIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "What do the elevated helium-3 to helium-4 ratios of ocean island basalts tell geochemists about their source?",
+    "expectedDisposition" : "ANSWERED",
+    "goldClaims" : [ {
+      "claimId" : "clm-57e0d3aa",
+      "proposition" : "The elevated He-3:He-4 ratio of ocean island basalts suggest that they must be sourced from a part of the Earth that has not previously been melted and reproduced in the same way as mid-ocean ridge basalts have been.",
+      "sourceSpan" : "The elevated He-3:He-4 ratio of ocean island basalts suggest that they must be sourced from a part of the Earth that has not previously been melted and reproduced in the same way as mid-ocean ridge basalts have been.",
+      "claimContext" : "wikipedia-mantle-convection.md: \"Mantle convection\" (line 1) [characters 21-9180]",
+      "sourceId" : "src-b9eb0cc6",
+      "sourceTitle" : "wikipedia-mantle-convection.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-4a189df9",
+      "proposition" : "This has been interpreted as their originating from a different less well-mixed region, suggested to be the lower mantle.",
+      "sourceSpan" : "This has been interpreted as their originating from a different less well-mixed region, suggested to be the lower mantle.",
+      "claimContext" : "wikipedia-mantle-convection.md: \"Mantle convection\" (line 1) [characters 21-9180]",
+      "sourceId" : "src-b9eb0cc6",
+      "sourceTitle" : "wikipedia-mantle-convection.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-mantle-convection.md" ],
+    "note" : "answerable from the research pool; the gold is the sentence the source wrote"
+  }, {
+    "id" : "H-P14",
+    "kind" : "POSITIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "At which temperature does magnetite lose its magnetic record, and how does that compare with the crystallisation of basalt?",
+    "expectedDisposition" : "ANSWERED",
+    "goldClaims" : [ {
+      "claimId" : "clm-95a6795e",
+      "proposition" : "The Curie temperature of magnetite, a spinel-group iron oxide, is about 580 °C (1,076 °F), whereas most basalt and gabbro are completely crystallized at temperatures below 900 °C (1,650 °F).",
+      "sourceSpan" : "The Curie temperature of magnetite, a spinel-group iron oxide, is about 580 °C (1,076 °F), whereas most basalt and gabbro are completely crystallized at temperatures below 900 °C (1,650 °F).",
+      "claimContext" : "wikipedia-paleomagnetism.md: \"Paleomagnetism\" (line 1) [characters 18-10955]",
+      "sourceId" : "src-77f1debd",
+      "sourceTitle" : "wikipedia-paleomagnetism.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-paleomagnetism.md" ],
+    "note" : "answerable from the research pool; the gold is the sentence the source wrote"
+  }, {
+    "id" : "H-P15",
+    "kind" : "POSITIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "How are the two varieties of detrital remanent magnetization told apart?",
+    "expectedDisposition" : "ANSWERED",
+    "goldClaims" : [ {
+      "claimId" : "clm-63c39432",
+      "proposition" : "If the magnetization is acquired as the grains are deposited, the result is a depositional detrital remanent magnetization; if it is acquired soon after deposition, it is a post-depositional detrital remanent magnetization.",
+      "sourceSpan" : "If the magnetization is acquired as the grains are deposited, the result is a depositional detrital remanent magnetization; if it is acquired soon after deposition, it is a post-depositional detrital remanent magnetization.",
+      "claimContext" : "wikipedia-paleomagnetism.md: \"Paleomagnetism\" (line 1) [characters 18-10955]",
+      "sourceId" : "src-77f1debd",
+      "sourceTitle" : "wikipedia-paleomagnetism.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-paleomagnetism.md" ],
+    "note" : "answerable from the research pool; the gold is the sentence the source wrote"
+  }, {
+    "id" : "H-P16",
+    "kind" : "POSITIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "Which physical process does the research pool name as the origin of slab pull, and what happens to the rest of the plate?",
+    "expectedDisposition" : "ANSWERED",
+    "goldClaims" : [ {
+      "claimId" : "clm-a3e687d7",
+      "proposition" : "Slab pull is a geophysical mechanism whereby the cooling and subsequent densifying of a subducting tectonic plate produces a downward force along the rest of the plate.",
+      "sourceSpan" : "Slab pull is a geophysical mechanism whereby the cooling and subsequent densifying of a subducting tectonic plate produces a downward force along the rest of the plate.",
+      "claimContext" : "wikipedia-slab-pull.md: \"Slab pull\" (line 1) [characters 13-3247]",
+      "sourceId" : "src-9b8764d",
+      "sourceTitle" : "wikipedia-slab-pull.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-slab-pull.md" ],
+    "note" : "answerable from the research pool; the gold is the sentence the source wrote"
+  }, {
+    "id" : "H-P17",
+    "kind" : "POSITIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "Which large plates keep moving although they are subducted nowhere, and what force is credited with their motion?",
+    "expectedDisposition" : "ANSWERED",
+    "goldClaims" : [ {
+      "claimId" : "clm-a19b2313",
+      "proposition" : "The North American Plate is nowhere being subducted, yet it is in motion, and likewise for the African, Eurasian and Antarctic Plates.",
+      "sourceSpan" : "The North American Plate is nowhere being subducted, yet it is in motion, and likewise for the African, Eurasian and Antarctic Plates.",
+      "claimContext" : "wikipedia-slab-pull.md: \"Slab pull\" (line 1) [characters 13-3247]",
+      "sourceId" : "src-9b8764d",
+      "sourceTitle" : "wikipedia-slab-pull.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-3e3fc5ff",
+      "proposition" : "Ridge push is thought responsible for the motion of these plates.",
+      "sourceSpan" : "Ridge push is thought responsible for the motion of these plates.",
+      "claimContext" : "wikipedia-slab-pull.md: \"Slab pull\" (line 1) [characters 13-3247]",
+      "sourceId" : "src-9b8764d",
+      "sourceTitle" : "wikipedia-slab-pull.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-slab-pull.md" ],
+    "note" : "answerable from the research pool; the gold is the sentence the source wrote"
+  }, {
+    "id" : "H-P18",
+    "kind" : "POSITIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "What did the 1975 inverse-theory study of Forsyth and Uyeda find about the relative strength of the driving forces?",
+    "expectedDisposition" : "ANSWERED",
+    "goldClaims" : [ {
+      "claimId" : "clm-9a35933c",
+      "proposition" : "In 1975 Forsyth and Uyeda used the inverse theory method to show that, of the many forces likely to be driving plate motion, slab pull was the strongest.",
+      "sourceSpan" : "In 1975 Forsyth and Uyeda used the inverse theory method to show that, of the many forces likely to be driving plate motion, slab pull was the strongest.",
+      "claimContext" : "wikipedia-slab-pull.md: \"Slab pull\" (line 1) [characters 13-3247]",
+      "sourceId" : "src-9b8764d",
+      "sourceTitle" : "wikipedia-slab-pull.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-slab-pull.md" ],
+    "note" : "answerable from the research pool; the gold is the sentence the source wrote"
+  }, {
+    "id" : "H-P19",
+    "kind" : "POSITIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "Which minerals carry water into the deep mantle, and what happens to them during subduction?",
+    "expectedDisposition" : "ANSWERED",
+    "goldClaims" : [ {
+      "claimId" : "clm-1df56d5d",
+      "proposition" : "Sea water seeps into oceanic lithosphere through fractures and pores, and reacts with minerals in the crust and mantle to form hydrous minerals (such as serpentine) that store water in their crystal structures.",
+      "sourceSpan" : "Sea water seeps into oceanic lithosphere through fractures and pores, and reacts with minerals in the crust and mantle to form hydrous minerals (such as serpentine) that store water in their crystal structures.",
+      "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+      "sourceId" : "src-279a971d",
+      "sourceTitle" : "wikipedia-subduction.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-662b90",
+      "proposition" : "Water is transported into the deep mantle via hydrous minerals in subducting slabs.",
+      "sourceSpan" : "Water is transported into the deep mantle via hydrous minerals in subducting slabs.",
+      "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+      "sourceId" : "src-279a971d",
+      "sourceTitle" : "wikipedia-subduction.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-1cd4bcc8",
+      "proposition" : "During subduction, a series of minerals in these slabs such as serpentine can be stable at different pressures within the slab geotherms, and may transport a significant amount of water into the Earth's interior.",
+      "sourceSpan" : "During subduction, a series of minerals in these slabs such as serpentine can be stable at different pressures within the slab geotherms, and may transport a significant amount of water into the Earth's interior.",
+      "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+      "sourceId" : "src-279a971d",
+      "sourceTitle" : "wikipedia-subduction.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-subduction.md" ],
+    "note" : "answerable from the research pool; the gold is the sentence the source wrote"
+  }, {
+    "id" : "H-N01",
+    "kind" : "NEGATIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "Which company installed the first transatlantic telegraph cable in 1866?",
+    "expectedDisposition" : "ABSTAINED",
+    "goldClaims" : [ ],
+    "sourceFiles" : [ ],
+    "contentTerms" : [ "company", "installed", "transatlantic", "telegraph", "cable", "1866" ],
+    "note" : "no content term of this question occurs in any pool document; the expected disposition is an abstention"
+  }, {
+    "id" : "H-N02",
+    "kind" : "NEGATIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "Which studio recorded the first orchestral performance of the Sibelius violin concerto?",
+    "expectedDisposition" : "ABSTAINED",
+    "goldClaims" : [ ],
+    "sourceFiles" : [ ],
+    "contentTerms" : [ "studio", "orchestral", "Sibelius", "violin", "concerto" ],
+    "note" : "no content term of this question occurs in any pool document; the expected disposition is an abstention"
+  }, {
+    "id" : "H-N03",
+    "kind" : "NEGATIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "How many wheat sheaves did Rosario export in its busiest year?",
+    "expectedDisposition" : "ABSTAINED",
+    "goldClaims" : [ ],
+    "sourceFiles" : [ ],
+    "contentTerms" : [ "wheat", "sheaves", "Rosario", "export", "busiest" ],
+    "note" : "no content term of this question occurs in any pool document; the expected disposition is an abstention"
+  }, {
+    "id" : "H-N04",
+    "kind" : "NEGATIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "Which pharmaceutical company announced the trial of the substance S-1423 in 1997?",
+    "expectedDisposition" : "ABSTAINED",
+    "goldClaims" : [ ],
+    "sourceFiles" : [ ],
+    "contentTerms" : [ "pharmaceutical", "company", "announced", "trial", "substance", "1997" ],
+    "note" : "no content term of this question occurs in any pool document; the expected disposition is an abstention"
+  }, {
+    "id" : "H-N05",
+    "kind" : "NEGATIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "Which football club recruited the retired midfielder from Zaragoza in 1994?",
+    "expectedDisposition" : "ABSTAINED",
+    "goldClaims" : [ ],
+    "sourceFiles" : [ ],
+    "contentTerms" : [ "football", "club", "recruited", "midfielder", "Zaragoza", "1994" ],
+    "note" : "no content term of this question occurs in any pool document; the expected disposition is an abstention"
+  }, {
+    "id" : "H-N06",
+    "kind" : "NEGATIVE",
+    "level" : "INTRODUCTORY",
+    "question" : "Which cathedral in Oviedo houses the medieval tapestry commissioned in 1388?",
+    "expectedDisposition" : "ABSTAINED",
+    "goldClaims" : [ ],
+    "sourceFiles" : [ ],
+    "contentTerms" : [ "cathedral", "Oviedo", "medieval", "tapestry", "commissioned", "1388" ],
+    "note" : "no content term of this question occurs in any pool document; the expected disposition is an abstention"
+  }, {
+    "id" : "H-U01",
+    "kind" : "UNSUPPORTED",
+    "level" : "INTRODUCTORY",
+    "question" : "Did the continents plow through the ocean floor, as Wegener originally proposed?",
+    "expectedDisposition" : "UNSUPPORTED",
+    "goldClaims" : [ {
+      "claimId" : "clm-8734e4ae",
+      "proposition" : "This was impossible: oceanic crust is both more dense and more rigid than continental crust.",
+      "sourceSpan" : "This was impossible: oceanic crust is both more dense and more rigid than continental crust.",
+      "claimContext" : "wikipedia-seafloor-spreading.md: \"Seafloor spreading\" (line 1) [characters 22-15491]",
+      "sourceId" : "src-16b81207",
+      "sourceTitle" : "wikipedia-seafloor-spreading.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-seafloor-spreading.md" ],
+    "disputedPremise" : "that the continents plowed through the ocean crust",
+    "note" : "the corpus states the proposal and then denies it; the expected disposition is to flag the premise, not to answer as if it held"
+  }, {
+    "id" : "H-U02",
+    "kind" : "UNSUPPORTED",
+    "level" : "INTRODUCTORY",
+    "question" : "Is subduction known to take place on planets other than Earth?",
+    "expectedDisposition" : "UNSUPPORTED",
+    "goldClaims" : [ {
+      "claimId" : "clm-5138c535",
+      "proposition" : "So far, Earth is the only planet where subduction is known to occur, and subduction zones are its most important tectonic feature.",
+      "sourceSpan" : "So far, Earth is the only planet where subduction is known to occur, and subduction zones are its most important tectonic feature.",
+      "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+      "sourceId" : "src-279a971d",
+      "sourceTitle" : "wikipedia-subduction.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-subduction.md" ],
+    "disputedPremise" : "that subduction is known to occur on planets other than Earth",
+    "note" : "the corpus states the opposite; the expected disposition is to flag the premise"
+  }, {
+    "id" : "H-U03",
+    "kind" : "UNSUPPORTED",
+    "level" : "INTRODUCTORY",
+    "question" : "Do the continents gain area as they drift, in the manner the Expanding Earth theory proposed?",
+    "expectedDisposition" : "UNSUPPORTED",
+    "goldClaims" : [ {
+      "claimId" : "clm-be618685",
+      "proposition" : "This led Mantovani to propose a now-discredited Expanding Earth theory.",
+      "sourceSpan" : "This led Mantovani to propose a now-discredited Expanding Earth theory.",
+      "claimContext" : "wikipedia-continental-drift.md: \"Continental drift\" (line 1) [characters 21-19384]",
+      "sourceId" : "src-8b44c3d8",
+      "sourceTitle" : "wikipedia-continental-drift.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-ed3fa5d5",
+      "proposition" : "Continental drift without expansion was proposed by Frank Bursley Taylor, who suggested in 1908 (published in 1910) that the continents were moved into their present positions by a process of \"continental creep\", later proposing a mechanism of increased tidal forces during the Cretaceous dragging the crust towards the equator.",
+      "sourceSpan" : "Continental drift without expansion was proposed by Frank Bursley Taylor, who suggested in 1908 (published in 1910) that the continents were moved into their present positions by a process of \"continental creep\", later proposing a mechanism of increased tidal forces during the Cretaceous dragging the crust towards the equator.",
+      "claimContext" : "wikipedia-continental-drift.md: \"Continental drift\" (line 1) [characters 21-19384]",
+      "sourceId" : "src-8b44c3d8",
+      "sourceTitle" : "wikipedia-continental-drift.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-continental-drift.md" ],
+    "disputedPremise" : "that the continents grow in area as they drift",
+    "note" : "the corpus records the theory as discredited and gives a drift-without-expansion account instead"
+  }, {
+    "id" : "H-U04",
+    "kind" : "UNSUPPORTED",
+    "level" : "INTRODUCTORY",
+    "question" : "Are the lavas of intraplate volcanoes chemically identical to mid-ocean ridge basalts?",
+    "expectedDisposition" : "UNSUPPORTED",
+    "goldClaims" : [ {
+      "claimId" : "clm-31dce393",
+      "proposition" : "Many geochemistry studies have argued that the lavas erupted in intraplate areas are different in composition from shallow-derived mid-ocean ridge basalts.",
+      "sourceSpan" : "Many geochemistry studies have argued that the lavas erupted in intraplate areas are different in composition from shallow-derived mid-ocean ridge basalts.",
+      "claimContext" : "wikipedia-mantle-convection.md: \"Mantle convection\" (line 1) [characters 21-9180]",
+      "sourceId" : "src-b9eb0cc6",
+      "sourceTitle" : "wikipedia-mantle-convection.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-c3bb3eb6",
+      "proposition" : "This debate is linked to the controversy regarding whether intraplate volcanism is caused by shallow, upper mantle processes or by plumes from the lower mantle.",
+      "sourceSpan" : "This debate is linked to the controversy regarding whether intraplate volcanism is caused by shallow, upper mantle processes or by plumes from the lower mantle.",
+      "claimContext" : "wikipedia-mantle-convection.md: \"Mantle convection\" (line 1) [characters 21-9180]",
+      "sourceId" : "src-b9eb0cc6",
+      "sourceTitle" : "wikipedia-mantle-convection.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-mantle-convection.md" ],
+    "disputedPremise" : "that intraplate lavas are chemically identical to mid-ocean ridge basalts",
+    "note" : "the corpus states that the two differ and records the open controversy; the expected disposition is to flag the premise"
+  }, {
+    "id" : "H-U05",
+    "kind" : "UNSUPPORTED",
+    "level" : "INTRODUCTORY",
+    "question" : "Do the continents and the oceans exchange places over geological time, as the fixists of the nineteenth century maintained?",
+    "expectedDisposition" : "UNSUPPORTED",
+    "goldClaims" : [ {
+      "claimId" : "clm-11019ce0",
+      "proposition" : "This suggested that the oceans were a permanent feature of the Earth's surface, rather than having \"changed places\" with the continents.",
+      "sourceSpan" : "This suggested that the oceans were a permanent feature of the Earth's surface, rather than having \"changed places\" with the continents.",
+      "claimContext" : "wikipedia-continental-drift.md: \"Continental drift\" (line 1) [characters 21-19384]",
+      "sourceId" : "src-8b44c3d8",
+      "sourceTitle" : "wikipedia-continental-drift.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-1375442d",
+      "proposition" : "Dana was enormously influential in America—his Manual of Mineralogy is still in print in revised form—and the theory became known as the Permanence theory.",
+      "sourceSpan" : "Dana was enormously influential in America—his Manual of Mineralogy is still in print in revised form—and the theory became known as the Permanence theory.",
+      "claimContext" : "wikipedia-continental-drift.md: \"Continental drift\" (line 1) [characters 21-19384]",
+      "sourceId" : "src-8b44c3d8",
+      "sourceTitle" : "wikipedia-continental-drift.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-continental-drift.md" ],
+    "disputedPremise" : "that the continents and the oceans exchanged places over geological time",
+    "note" : "the corpus states the opposite and names the theory that denied it; the expected disposition is to flag the premise"
+  }, {
+    "id" : "H-U06",
+    "kind" : "UNSUPPORTED",
+    "level" : "INTRODUCTORY",
+    "question" : "Do the reversals of the geomagnetic field occur at regular intervals through the history of the Earth?",
+    "expectedDisposition" : "UNSUPPORTED",
+    "goldClaims" : [ {
+      "claimId" : "clm-f54f1d95",
+      "proposition" : "Reversals have occurred at irregular intervals throughout Earth's history.",
+      "sourceSpan" : "Reversals have occurred at irregular intervals throughout Earth's history.",
+      "claimContext" : "wikipedia-paleomagnetism.md: \"Paleomagnetism\" (line 1) [characters 18-10955]",
+      "sourceId" : "src-77f1debd",
+      "sourceTitle" : "wikipedia-paleomagnetism.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-93f093a2",
+      "proposition" : "The age and pattern of these reversals is known from the study of sea floor spreading zones and the dating of volcanic rocks.",
+      "sourceSpan" : "The age and pattern of these reversals is known from the study of sea floor spreading zones and the dating of volcanic rocks.",
+      "claimContext" : "wikipedia-paleomagnetism.md: \"Paleomagnetism\" (line 1) [characters 18-10955]",
+      "sourceId" : "src-77f1debd",
+      "sourceTitle" : "wikipedia-paleomagnetism.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-paleomagnetism.md" ],
+    "disputedPremise" : "that the geomagnetic reversals occur at regular intervals",
+    "note" : "the corpus states that they are irregular; the expected disposition is to flag the premise"
+  }, {
+    "id" : "H-A01",
+    "kind" : "AMBIGUOUS",
+    "level" : "INTRODUCTORY",
+    "question" : "In the research pool, which plate does the word slab name?",
+    "expectedDisposition" : "AMBIGUOUS",
+    "goldClaims" : [ {
+      "claimId" : "clm-3aa5de32",
+      "proposition" : "The lower plate itself is the subject.",
+      "sourceSpan" : "The lower plate itself is the subject.",
+      "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+      "sourceId" : "src-279a971d",
+      "sourceTitle" : "wikipedia-subduction.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-fcd11907",
+      "proposition" : "It subducts, in the sense of retreat, or removes itself, and while doing so, is the \"subducting plate\".",
+      "sourceSpan" : "It subducts, in the sense of retreat, or removes itself, and while doing so, is the \"subducting plate\".",
+      "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+      "sourceId" : "src-279a971d",
+      "sourceTitle" : "wikipedia-subduction.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-cf4881d2",
+      "proposition" : "Moreover, the word slab is specifically attached to the \"subducting plate\", even though in English the upper plate is just as much of a slab.",
+      "sourceSpan" : "Moreover, the word slab is specifically attached to the \"subducting plate\", even though in English the upper plate is just as much of a slab.",
+      "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+      "sourceId" : "src-279a971d",
+      "sourceTitle" : "wikipedia-subduction.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-cb80563b",
+      "proposition" : "The upper plate is left hanging, so to speak.",
+      "sourceSpan" : "The upper plate is left hanging, so to speak.",
+      "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+      "sourceId" : "src-279a971d",
+      "sourceTitle" : "wikipedia-subduction.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-subduction.md" ],
+    "readings" : [ {
+      "reading" : "the lower, subducting plate",
+      "file" : "wikipedia-subduction.md",
+      "spans" : [ {
+        "proposition" : "The lower plate itself is the subject.",
+        "sourceSpan" : "The lower plate itself is the subject.",
+        "claimId" : "clm-3aa5de32",
+        "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+        "sourceId" : "src-279a971d"
+      }, {
+        "proposition" : "It subducts, in the sense of retreat, or removes itself, and while doing so, is the \"subducting plate\".",
+        "sourceSpan" : "It subducts, in the sense of retreat, or removes itself, and while doing so, is the \"subducting plate\".",
+        "claimId" : "clm-fcd11907",
+        "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+        "sourceId" : "src-279a971d"
+      } ]
+    }, {
+      "reading" : "the overriding upper plate, which the corpus says is just as much a slab",
+      "file" : "wikipedia-subduction.md",
+      "spans" : [ {
+        "proposition" : "Moreover, the word slab is specifically attached to the \"subducting plate\", even though in English the upper plate is just as much of a slab.",
+        "sourceSpan" : "Moreover, the word slab is specifically attached to the \"subducting plate\", even though in English the upper plate is just as much of a slab.",
+        "claimId" : "clm-cf4881d2",
+        "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+        "sourceId" : "src-279a971d"
+      }, {
+        "proposition" : "The upper plate is left hanging, so to speak.",
+        "sourceSpan" : "The upper plate is left hanging, so to speak.",
+        "claimId" : "clm-cb80563b",
+        "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+        "sourceId" : "src-279a971d"
+      } ]
+    } ],
+    "note" : "the corpus attaches the word slab to the subducting plate and says the upper plate is just as much a slab; the expected disposition is to report both readings"
+  }, {
+    "id" : "H-A02",
+    "kind" : "AMBIGUOUS",
+    "level" : "INTRODUCTORY",
+    "question" : "In the research pool, which kinds of arc are distinguished, and what tells them apart?",
+    "expectedDisposition" : "AMBIGUOUS",
+    "goldClaims" : [ {
+      "claimId" : "clm-819a2ac5",
+      "proposition" : "Island arcs (intraoceanic or primitive arcs) are produced by the subduction of oceanic lithosphere beneath another oceanic lithosphere (ocean-ocean subduction) while continental arcs (Andean arcs) form during the subduction of oceanic lithosphere beneath a continental lithosphere (ocean-continent subduction).",
+      "sourceSpan" : "Island arcs (intraoceanic or primitive arcs) are produced by the subduction of oceanic lithosphere beneath another oceanic lithosphere (ocean-ocean subduction) while continental arcs (Andean arcs) form during the subduction of oceanic lithosphere beneath a continental lithosphere (ocean-continent subduction).",
+      "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+      "sourceId" : "src-279a971d",
+      "sourceTitle" : "wikipedia-subduction.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-83cbdaff",
+      "proposition" : "Accretionary arcs have a well-developed forearc basin behind the accretionary wedge, while the forearc basin is poorly developed in non-accretionary arcs.",
+      "sourceSpan" : "Accretionary arcs have a well-developed forearc basin behind the accretionary wedge, while the forearc basin is poorly developed in non-accretionary arcs.",
+      "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+      "sourceId" : "src-279a971d",
+      "sourceTitle" : "wikipedia-subduction.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-subduction.md" ],
+    "readings" : [ {
+      "reading" : "island arcs and continental arcs, told apart by what subducts beneath what",
+      "file" : "wikipedia-subduction.md",
+      "spans" : [ {
+        "proposition" : "Island arcs (intraoceanic or primitive arcs) are produced by the subduction of oceanic lithosphere beneath another oceanic lithosphere (ocean-ocean subduction) while continental arcs (Andean arcs) form during the subduction of oceanic lithosphere beneath a continental lithosphere (ocean-continent subduction).",
+        "sourceSpan" : "Island arcs (intraoceanic or primitive arcs) are produced by the subduction of oceanic lithosphere beneath another oceanic lithosphere (ocean-ocean subduction) while continental arcs (Andean arcs) form during the subduction of oceanic lithosphere beneath a continental lithosphere (ocean-continent subduction).",
+        "claimId" : "clm-819a2ac5",
+        "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+        "sourceId" : "src-279a971d"
+      } ]
+    }, {
+      "reading" : "accretionary and non-accretionary arcs, told apart by the forearc basin behind the accretionary wedge",
+      "file" : "wikipedia-subduction.md",
+      "spans" : [ {
+        "proposition" : "Accretionary arcs have a well-developed forearc basin behind the accretionary wedge, while the forearc basin is poorly developed in non-accretionary arcs.",
+        "sourceSpan" : "Accretionary arcs have a well-developed forearc basin behind the accretionary wedge, while the forearc basin is poorly developed in non-accretionary arcs.",
+        "claimId" : "clm-83cbdaff",
+        "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+        "sourceId" : "src-279a971d"
+      } ]
+    } ],
+    "note" : "the corpus distinguishes island from continental arcs, and accretionary from non-accretionary arcs; the expected disposition is to report both readings"
+  }, {
+    "id" : "H-A03",
+    "kind" : "AMBIGUOUS",
+    "level" : "INTRODUCTORY",
+    "question" : "In the research pool, what does the word ridge stand for?",
+    "expectedDisposition" : "AMBIGUOUS",
+    "goldClaims" : [ {
+      "claimId" : "clm-bf4b3d56",
+      "proposition" : "A mid-ocean ridge (MOR) is a seafloor mountain system formed by plate tectonics.",
+      "sourceSpan" : "A mid-ocean ridge (MOR) is a seafloor mountain system formed by plate tectonics.",
+      "claimContext" : "wikipedia-mid-ocean-ridge.md: \"Mid-ocean ridge\" (line 1) [characters 19-17827]",
+      "sourceId" : "src-5c281231",
+      "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-620c1889",
+      "proposition" : "Mid-ocean ridge basalt is a tholeiitic basalt and is low in incompatible elements.",
+      "sourceSpan" : "Mid-ocean ridge basalt is a tholeiitic basalt and is low in incompatible elements.",
+      "claimContext" : "wikipedia-mid-ocean-ridge.md: \"Mid-ocean ridge\" (line 1) [characters 19-17827]",
+      "sourceId" : "src-5c281231",
+      "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-53e0c5e9",
+      "proposition" : "Ridge push refers to the gravitational sliding of the ocean plate that is raised above the hotter asthenosphere, thus creating a body force causing sliding of the plate downslope.",
+      "sourceSpan" : "Ridge push refers to the gravitational sliding of the ocean plate that is raised above the hotter asthenosphere, thus creating a body force causing sliding of the plate downslope.",
+      "claimContext" : "wikipedia-mid-ocean-ridge.md: \"Mid-ocean ridge\" (line 1) [characters 19-17827]",
+      "sourceId" : "src-5c281231",
+      "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-mid-ocean-ridge.md" ],
+    "readings" : [ {
+      "reading" : "a seafloor mountain system",
+      "file" : "wikipedia-mid-ocean-ridge.md",
+      "spans" : [ {
+        "proposition" : "A mid-ocean ridge (MOR) is a seafloor mountain system formed by plate tectonics.",
+        "sourceSpan" : "A mid-ocean ridge (MOR) is a seafloor mountain system formed by plate tectonics.",
+        "claimId" : "clm-bf4b3d56",
+        "claimContext" : "wikipedia-mid-ocean-ridge.md: \"Mid-ocean ridge\" (line 1) [characters 19-17827]",
+        "sourceId" : "src-5c281231"
+      } ]
+    }, {
+      "reading" : "a rock, mid-ocean ridge basalt",
+      "file" : "wikipedia-mid-ocean-ridge.md",
+      "spans" : [ {
+        "proposition" : "Mid-ocean ridge basalt is a tholeiitic basalt and is low in incompatible elements.",
+        "sourceSpan" : "Mid-ocean ridge basalt is a tholeiitic basalt and is low in incompatible elements.",
+        "claimId" : "clm-620c1889",
+        "claimContext" : "wikipedia-mid-ocean-ridge.md: \"Mid-ocean ridge\" (line 1) [characters 19-17827]",
+        "sourceId" : "src-5c281231"
+      } ]
+    }, {
+      "reading" : "a force, ridge push",
+      "file" : "wikipedia-mid-ocean-ridge.md",
+      "spans" : [ {
+        "proposition" : "Ridge push refers to the gravitational sliding of the ocean plate that is raised above the hotter asthenosphere, thus creating a body force causing sliding of the plate downslope.",
+        "sourceSpan" : "Ridge push refers to the gravitational sliding of the ocean plate that is raised above the hotter asthenosphere, thus creating a body force causing sliding of the plate downslope.",
+        "claimId" : "clm-53e0c5e9",
+        "claimContext" : "wikipedia-mid-ocean-ridge.md: \"Mid-ocean ridge\" (line 1) [characters 19-17827]",
+        "sourceId" : "src-5c281231"
+      } ]
+    } ],
+    "note" : "the corpus uses ridge for a mountain system, for a rock and for a force; the expected disposition is to report the readings rather than to pick one"
+  }, {
+    "id" : "H-A04",
+    "kind" : "AMBIGUOUS",
+    "level" : "INTRODUCTORY",
+    "question" : "In the research pool, what does the word plate denote?",
+    "expectedDisposition" : "AMBIGUOUS",
+    "goldClaims" : [ {
+      "claimId" : "clm-ee9a8e4c",
+      "proposition" : "Individual plates often include both regions of the oceanic lithosphere and continental lithosphere.",
+      "sourceSpan" : "Individual plates often include both regions of the oceanic lithosphere and continental lithosphere.",
+      "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+      "sourceId" : "src-279a971d",
+      "sourceTitle" : "wikipedia-subduction.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-3f690769",
+      "proposition" : "The plate has a constant temperature at its base and spreading edge.",
+      "sourceSpan" : "The plate has a constant temperature at its base and spreading edge.",
+      "claimContext" : "wikipedia-seafloor-spreading.md: \"Seafloor spreading\" (line 1) [characters 22-15491]",
+      "sourceId" : "src-16b81207",
+      "sourceTitle" : "wikipedia-seafloor-spreading.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-d71217ee",
+      "proposition" : "Plate tectonics was a suitable explanation for seafloor spreading, and the acceptance of plate tectonics by the majority of geologists resulted in a major paradigm shift in geological thinking.",
+      "sourceSpan" : "Plate tectonics was a suitable explanation for seafloor spreading, and the acceptance of plate tectonics by the majority of geologists resulted in a major paradigm shift in geological thinking.",
+      "claimContext" : "wikipedia-mid-ocean-ridge.md: \"Mid-ocean ridge\" (line 1) [characters 19-17827]",
+      "sourceId" : "src-5c281231",
+      "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-subduction.md", "wikipedia-seafloor-spreading.md", "wikipedia-mid-ocean-ridge.md" ],
+    "readings" : [ {
+      "reading" : "a real lithospheric plate",
+      "file" : "wikipedia-subduction.md",
+      "spans" : [ {
+        "proposition" : "Individual plates often include both regions of the oceanic lithosphere and continental lithosphere.",
+        "sourceSpan" : "Individual plates often include both regions of the oceanic lithosphere and continental lithosphere.",
+        "claimId" : "clm-ee9a8e4c",
+        "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+        "sourceId" : "src-279a971d"
+      } ]
+    }, {
+      "reading" : "the model plate of the cooling calculation",
+      "file" : "wikipedia-seafloor-spreading.md",
+      "spans" : [ {
+        "proposition" : "The plate has a constant temperature at its base and spreading edge.",
+        "sourceSpan" : "The plate has a constant temperature at its base and spreading edge.",
+        "claimId" : "clm-3f690769",
+        "claimContext" : "wikipedia-seafloor-spreading.md: \"Seafloor spreading\" (line 1) [characters 22-15491]",
+        "sourceId" : "src-16b81207"
+      } ]
+    }, {
+      "reading" : "the theory, plate tectonics",
+      "file" : "wikipedia-mid-ocean-ridge.md",
+      "spans" : [ {
+        "proposition" : "Plate tectonics was a suitable explanation for seafloor spreading, and the acceptance of plate tectonics by the majority of geologists resulted in a major paradigm shift in geological thinking.",
+        "sourceSpan" : "Plate tectonics was a suitable explanation for seafloor spreading, and the acceptance of plate tectonics by the majority of geologists resulted in a major paradigm shift in geological thinking.",
+        "claimId" : "clm-d71217ee",
+        "claimContext" : "wikipedia-mid-ocean-ridge.md: \"Mid-ocean ridge\" (line 1) [characters 19-17827]",
+        "sourceId" : "src-5c281231"
+      } ]
+    } ],
+    "note" : "the corpus uses plate for a real lithospheric plate, for the model plate of the cooling calculation and for the theory; the expected disposition is to report the readings rather than to pick one"
+  }, {
+    "id" : "H-C01",
+    "kind" : "CONTRADICTORY",
+    "level" : "INTRODUCTORY",
+    "question" : "Does mantle convection cause the movement of the plates?",
+    "expectedDisposition" : "CONTRADICTORY",
+    "goldClaims" : [ {
+      "claimId" : "clm-3d688305",
+      "proposition" : "Mantle convection causes tectonic plates to move around the Earth's surface.",
+      "sourceSpan" : "Mantle convection causes tectonic plates to move around the Earth's surface.",
+      "claimContext" : "wikipedia-mantle-convection.md: \"Mantle convection\" (line 1) [characters 21-9180]",
+      "sourceId" : "src-b9eb0cc6",
+      "sourceTitle" : "wikipedia-mantle-convection.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-9ee22dc1",
+      "proposition" : "Computer modeling of the plates and mantle motions suggest that plate motion and mantle convection are not connected, and the main plate driving force is slab pull.",
+      "sourceSpan" : "Computer modeling of the plates and mantle motions suggest that plate motion and mantle convection are not connected, and the main plate driving force is slab pull.",
+      "claimContext" : "wikipedia-mid-ocean-ridge.md: \"Mid-ocean ridge\" (line 1) [characters 19-17827]",
+      "sourceId" : "src-5c281231",
+      "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-mantle-convection.md", "wikipedia-mid-ocean-ridge.md" ],
+    "note" : "the two claims cannot both hold: one says mantle convection moves the plates, the other says the two are not connected and that slab pull is the main driving force; the expected disposition is to say so rather than to pick one silently"
+  }, {
+    "id" : "H-C02",
+    "kind" : "CONTRADICTORY",
+    "level" : "INTRODUCTORY",
+    "question" : "How long is the global system of mid-ocean ridges, according to the research pool?",
+    "expectedDisposition" : "CONTRADICTORY",
+    "goldClaims" : [ {
+      "claimId" : "clm-17f3a06d",
+      "proposition" : "Oceanic subduction zones are located along 55,000 km (34,000 mi) of convergent plate margins, almost equal to the cumulative plate formation rate of 60,000 km (37,000 mi) of mid-ocean ridges.",
+      "sourceSpan" : "Oceanic subduction zones are located along 55,000 km (34,000 mi) of convergent plate margins, almost equal to the cumulative plate formation rate of 60,000 km (37,000 mi) of mid-ocean ridges.",
+      "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+      "sourceId" : "src-279a971d",
+      "sourceTitle" : "wikipedia-subduction.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-cdca2944",
+      "proposition" : "The continuous mountain range is 65,000 km (40,400 mi) long (several times longer than the Andes, the longest continental mountain range), and the total length of the oceanic ridge system is 80,000 km (49,700 mi) long.",
+      "sourceSpan" : "The continuous mountain range is 65,000 km (40,400 mi) long (several times longer than the Andes, the longest continental mountain range), and the total length of the oceanic ridge system is 80,000 km (49,700 mi) long.",
+      "claimContext" : "wikipedia-mid-ocean-ridge.md: \"Mid-ocean ridge\" (line 1) [characters 19-17827]",
+      "sourceId" : "src-5c281231",
+      "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-subduction.md", "wikipedia-mid-ocean-ridge.md" ],
+    "note" : "the two articles state the length of the global ridge system differently (60,000 km against 80,000 km; the second sentence of the same claim also gives 65,000 km for the continuous mountain range) and the corpus does not reconcile them; the expected disposition is to report both figures with their sources"
+  }, {
+    "id" : "H-C03",
+    "kind" : "CONTRADICTORY",
+    "level" : "INTRODUCTORY",
+    "question" : "Is subduction the driving force behind plate tectonics, or is it mantle convection?",
+    "expectedDisposition" : "CONTRADICTORY",
+    "goldClaims" : [ {
+      "claimId" : "clm-63553c9",
+      "proposition" : "Subduction is the driving force behind plate tectonics, and without it, plate tectonics could not occur.",
+      "sourceSpan" : "Subduction is the driving force behind plate tectonics, and without it, plate tectonics could not occur.",
+      "claimContext" : "wikipedia-subduction.md: \"Subduction\" (line 1) [characters 14-29694]",
+      "sourceId" : "src-279a971d",
+      "sourceTitle" : "wikipedia-subduction.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    }, {
+      "claimId" : "clm-3d688305",
+      "proposition" : "Mantle convection causes tectonic plates to move around the Earth's surface.",
+      "sourceSpan" : "Mantle convection causes tectonic plates to move around the Earth's surface.",
+      "claimContext" : "wikipedia-mantle-convection.md: \"Mantle convection\" (line 1) [characters 21-9180]",
+      "sourceId" : "src-b9eb0cc6",
+      "sourceTitle" : "wikipedia-mantle-convection.md",
+      "sourceLicence" : "CC-BY-SA-4.0",
+      "sourceLicenceUrl" : "https://creativecommons.org/licenses/by-sa/4.0/",
+      "extractionMethod" : "document extraction",
+      "claimStatus" : "SUPPORTED"
+    } ],
+    "sourceFiles" : [ "wikipedia-subduction.md", "wikipedia-mantle-convection.md" ],
+    "note" : "the two claims cannot both hold: one says subduction is the driving force without which plate tectonics could not occur, the other says mantle convection moves the plates; the expected disposition is to say so rather than to pick one silently"
+  } ]
+}
