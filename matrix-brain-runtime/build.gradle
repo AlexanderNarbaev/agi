@@ -58,6 +58,13 @@ tasks.withType(Test) {
     // EVID-BASE E1: the measurement harness writes its artifact to the path
     // this property names; when it is unset the harness only prints.
     systemProperty 'matrix.e1.result', System.getProperty('matrix.e1.result', '')
+    // CONCEPT-TO-ACTION: the measured episode collection writes into the machine's real
+    // episodic log, so it is opt-in — the property carries the flag and the paths.
+    systemProperty 'matrix.c2a.collect', System.getProperty('matrix.c2a.collect', '')
+    systemProperty 'matrix.c2a.mind-dir', System.getProperty('matrix.c2a.mind-dir', '')
+    systemProperty 'matrix.c2a.hdc', System.getProperty('matrix.c2a.hdc', '')
+    systemProperty 'matrix.c2a.log', System.getProperty('matrix.c2a.log', '')
+    systemProperty 'matrix.c2a.result', System.getProperty('matrix.c2a.result', '')
     // RECON-W38.4: CognitiveConductorGuardTest scans the production sources
     // of several modules, which Gradle does not track as a test input.
     // Without this the task can be UP-TO-DATE and the guard would report a
