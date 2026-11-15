@@ -104,6 +104,12 @@ RUNTIME_PREFIXES = (
     "matrix-core/bin/",
     "matrix-core/data/",
     "matrix-core/build/",
+    # every module's build output is a runtime artefact as well: the C2A wave's
+    # documents cited the brain runtime's retained JUnit XML, and the gate failed
+    # because the list named matrix-core's build directory and not the others'
+    "matrix-brain-runtime/build/",
+    "matrix-api-gateway/build/",
+    "matrix-web-ui/build/",
     "target/",
     "build/",
 )
