@@ -202,7 +202,7 @@ Measured **before** any enrichment was proposed
 | the concepts without a definition | **164** (the seed scope's 162 + the pool's) |
 | the persisted concept→concept relations | **0** — `Representation.prerequisiteConceptIds` is the narrowest existing persisted channel and it is always empty; `EvidenceRelation` is a typed vocabulary of 7 values that nothing writes; `KnowledgeGraphStore.Relation(fromId,toId,predicate,weight)` exists and is discarded |
 | the gold entries with no lexical match at the floor 0.0 | 11 of 27 (9 propositions) — A-05, A-06, M-01, M-03, P-01, P-02 and others |
-| the ambiguous or broken concept names | **61 of 326 (19 %)** end in a dangling function word ("Convergence can", "Magmas that"), **9** are a bare function word (It, There, This, To); the three largest concepts of the seed corpus are the pronouns *This* (10 claims), *It* (6) and *There* (4) |
+| the ambiguous or broken concept names | **61 of 326 (19 %)** end in a dangling function word ("Convergence can", "Magmas that") — **a band, not a number**: the word list behind the figure was never published, and the 2026-11-15 reconstruction gives 61 (18.7 %) on a 120-word list and 75 (23.0 %) on a wider one (`EPISTEMIC-CONCEPT-IDENTITY.md`); the root cause is measured: the name is the claim's subject phrase and the id is its digest. **9** are a bare function word (It, There, This, To); the three largest concepts of the seed corpus are the pronouns *This* (10 claims), *It* (6) and *There* (4) |
 
 **The provenance model.** Every candidate definition and relation carries its originating source
 id, the source file and its sha256, the exact span offsets, the unit and precision, the

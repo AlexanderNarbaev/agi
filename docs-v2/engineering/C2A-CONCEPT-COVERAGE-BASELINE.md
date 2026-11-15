@@ -441,7 +441,7 @@ Measured on the S1 workspace (326 concepts):
 
 The dominant ambiguity is therefore **not** id collision — it is **identity fragmentation**: the
 same real entity acquires a different concept whenever the document's sentence subject phrase
-differs, and 61 of the 326 names (19 %) are grammatical fragments rather than entity names.
+differs, and 61 of the 326 names (19 %) are grammatical fragments rather than entity names. **[corrected 2026-11-15 — the EPISTEMIC-CONCEPT-IDENTITY measurement could not reproduce this figure from the repository: the 120-word list behind it was never published. The reconstructed count is 61 on that list (18.7 %) and 75 on a wider one (23.0 %), so the honest statement is a BAND, and any acceptance criterion of the form "the rate is 0" must name its list]**
 
 The fragmentation is visible in the claim distribution itself — the concepts that hold the **most**
 claims are the fragments, because a pronoun or a dangling phrase is the subject of many sentences
@@ -574,7 +574,7 @@ The per-case `citedRank` values of the 16 cited entries are
 | **derivations** | **0** in every acquisition scope; 3 in the whole repository, all in `logic.pack.json`, all logical inferences | §3.3 |
 | **representations above INTRODUCTORY** | 7 of 335 (S1); 18 of 654 (P1) — all INTERMEDIATE; **0** ADVANCED, **0** MECHANISTIC | §3.1 |
 | **representations carrying a prerequisite concept** | **0** of 335 / 654 / 733 | §3.1 |
-| **concept identities fragmented** | 61 of 326 names (19 %) end in a dangling function word; 124 ordered substring pairs | §3.6 |
+| **concept identities fragmented** | 61 of 326 names (19 %) end in a dangling function word — **a band, not a number**: the list behind it was never published, and the reconstruction gives 61 (18.7 %) on a 120-word list and 75 (23.0 %) on a wider one (EPISTEMIC-CONCEPT-IDENTITY.md, 2026-11-15); the root cause is measured: the concept NAME is the claim's subject phrase (`DocumentImporter.java:225-231`) and the concept ID is a digest of that name (`:338-341`), so a concept is the left side of a copula, cut wherever the verb list stopped | §3.6 |
 | **gold propositions unreachable by lexical retrieval** | 11 of 27 entries, 9 distinct propositions, cases A-05, A-06, M-01, M-03, P-01, P-02 | §3.7 Reading B |
 | **gold propositions missing from the corpus** | **0** of 43 — the content is all there | §3.7 Reading A |
 
