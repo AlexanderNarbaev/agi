@@ -293,7 +293,7 @@ public class KnowledgeWorkbench implements AutoCloseable {
     }
 
     /** The identifiers of the workspaces that exist. */
-    public List<String> workspaces() {
+    public synchronized List<String> workspaces() {
         return store().workspaces();
     }
 
@@ -390,7 +390,16 @@ public class KnowledgeWorkbench implements AutoCloseable {
      * cannot tell the user what it does not know. The record is a tombstone
      * log - it is kept when the question becomes answerable.
      */
-    public Answer ask(String workspaceId, String question, AbstractionLevel level) {
+    /**
+     * Asks a question of a workspace.
+     *
+     * <p>CONCEPT-TO-ACTION: the method is synchronized. The store holds ONE database
+     * connection, and the asking path reads the workspace and then records the asking on
+     * it; two questions at once made the second one fail with a connection error rather
+     * than an answer. The workbench is a local, single-user application: one question at a
+     * time is a contract, not a limitation of the machine.</p>
+     */
+    public synchronized Answer ask(String workspaceId, String question, AbstractionLevel level) {
         KnowledgeSnapshot snapshot = workspace(workspaceId);
         // The conversation resolves the reference BEFORE the retrieval, so
         // that "Explain this in more detail" reaches the concept the last
@@ -582,7 +591,13 @@ public class KnowledgeWorkbench implements AutoCloseable {
      * <p>The store's own {@code asked_question} table remains the durable
      * record of what was asked and whether the workspace could answer it.
      */
-    public DialogueContext context(String workspaceId) {
+    public synchronized DialogueContext context(String workspaceId) {
+        // CONCEPT-TO-ACTION: the method is synchronized for the same reason ask() is. The
+        // mapping function below runs INSIDE the map's own lock, and it calls store(),
+        // which takes the workbench's monitor. A second thread that reached the map
+        // without the monitor would hold the map's lock and wait for the monitor while
+        // the asking thread held the monitor and waited for the map's lock — the two
+        // orders are a deadlock. One lock order: the workbench's monitor, then the map.
         return contexts.computeIfAbsent(workspaceId, key -> {
             DialogueContext context = new DialogueContext(key);
             context.load(store().dialogueTurns(workspaceId, DialogueContext.MAXIMUM_TURNS));
@@ -768,7 +783,15 @@ public class KnowledgeWorkbench implements AutoCloseable {
     }
 
     /** The conversations of the workspaces. */
-    private final Map<String, DialogueContext> contexts = new LinkedHashMap<>();
+    /**
+     * The dialogue contexts, by workspace.
+     *
+     * <p>CONCEPT-TO-ACTION: the map is written by {@link #context(String)}, which the
+     * asking path reaches, and the HTTP surface can receive two questions at once. A plain
+     * {@link LinkedHashMap} threw {@link java.util.ConcurrentModificationException} under
+     * that load, so the map is concurrent.</p>
+     */
+    private final Map<String, DialogueContext> contexts = new java.util.concurrent.ConcurrentHashMap<>();
 
     /** The recorded transitions of a workspace, oldest first. */
     public List<LearningTransition> learningTransitions(String workspaceId) {

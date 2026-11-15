@@ -411,11 +411,18 @@ class EvidenceToActionTest {
     @Test
     @DisplayName("the artifact budget bounds the root")
     void artifactBudget() throws Exception {
+        // the budget counts the artifacts the root REALLY holds: a record whose artifact is
+        // not on disk reserves nothing, so a forged trace cannot exhaust the root
         for (int index = 0; index < ArtifactWriter.MAX_ARTIFACTS; index++) {
-            Files.writeString(writer.index(), "{\"actionId\":\"a" + index + "\",\"fileName\":\"f"
-                    + index + ".md\",\"sha256\":\"" + "0".repeat(64)
-                    + "\",\"status\":\"COMMITTED\",\"bytes\":1,"
-                    + "\"timestamp\":\"2026-11-14T00:00:00Z\"}\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            String name = "held-" + index + ".md";
+            byte[] content = ("# Held " + index + "\n").getBytes(StandardCharsets.UTF_8);
+            Files.write(root.resolve(name), content);
+            String digest = java.util.HexFormat.of().formatHex(
+                    java.security.MessageDigest.getInstance("SHA-256").digest(content));
+            Files.writeString(writer.index(), "{\"actionId\":\"a" + index + "\",\"fileName\":\""
+                    + name + "\",\"sha256\":\"" + digest + "\",\"status\":\"COMMITTED\",\"bytes\":"
+                    + content.length + "," + "\"timestamp\":\"2026-11-14T00:00:00Z\"}\n",
+                    StandardOpenOption.CREATE, StandardOpenOption.APPEND);
         }
         ArtifactWriter.Result result = writer.write("act-1", "report.md", MARKDOWN);
 

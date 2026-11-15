@@ -137,9 +137,17 @@ class RuleInductionDownstreamAccuracyTest {
         List<EpisodicLog.Entry> all = new EpisodicLog(log).readAll();
         assumeTrue(all.size() > 8, "the episodic log holds too few entries to measure");
 
-        // The production's window, and a label that is a property of the CONTENT (the
-        // reply names the capital of Kenya), so that both classes are present and the
-        // feature - which hashes the text - can learn the rule.
+        // The production's window, and the PRODUCTION'S OWN label rule ("confidence
+        // >= 0.7 AND accepted", RealSleepScheduler:249).
+        //
+        // The earlier version of this test labelled the window by a hardcoded content
+        // ("the reply names the capital of Kenya"). That label belonged to the content
+        // the runtime happened to serve at the time: the runtime's window is a property
+        // of what was served last, and the window has since changed (the wave's own
+        // collection appended the episodes it measured). A label that no longer occurs
+        // in the window makes the measurement vacuous — it measures a single class. The
+        // production's own label is the one the induction actually uses, and it is
+        // defined on every episode.
         int count = Math.min(all.size(), KMaxEnforcer.K_MAX);
         List<EpisodicLog.Entry> window = all.subList(all.size() - count, all.size());
         EpisodeFeatureExtractor extractor = new EpisodeFeatureExtractor();
@@ -150,7 +158,7 @@ class RuleInductionDownstreamAccuracyTest {
         int positives = 0;
         for (EpisodicLog.Entry entry : window) {
             long[] feature = extractor.encode(entry);
-            boolean positive = entry.reply().toLowerCase(java.util.Locale.ROOT).contains("nairobi");
+            boolean positive = entry.confidence() >= 0.7 && entry.accepted();
             if (positive) {
                 positives++;
             }
@@ -177,6 +185,28 @@ class RuleInductionDownstreamAccuracyTest {
                 .withFailMessage("the fold is a function of the original, so the partition it "
                         + "induces can only be coarser: the accuracy cannot be higher")
                 .isLessThanOrEqualTo(originalAccuracy);
+    }
+
+    /**
+     * The bit at a position of a packed feature.
+     *
+     * <p>The bit lives in the word {@code position / 64}, at the offset
+     * {@code position % 64}. Reading it from the FIRST word with a shift of the whole
+     * position is wrong for every position above 63: Java's shift distance is taken
+     * modulo 64, so the first 64 physical bits are read again and again and the later
+     * words are never seen. The production's own counter
+     * ({@code TsetlinTrainer.countInformativeBits}) was fixed on 2026-11-14 after the
+     * EVID-BASE review found exactly that; this helper was left behind, and it only
+     * agreed with the production while the runtime's window happened to hide it. A
+     * projection built on it was not the projection it claimed to be.</p>
+     *
+     * @param feature  the packed feature
+     * @param position the bit position
+     * @return whether the bit is set
+     */
+    private static boolean bitOf(long[] feature, int position) {
+        int word = position >>> 6;
+        return word < feature.length && ((feature[word] >>> (position & 63)) & 1L) != 0L;
     }
 
     /**
@@ -225,7 +255,7 @@ class RuleInductionDownstreamAccuracyTest {
         boolean[] sawZero = new boolean[width];
         for (long[] feature : features) {
             for (int bit = 0; bit < width; bit++) {
-                if (((feature[0] >>> bit) & 1L) != 0L) {
+                if (bitOf(feature, bit)) {
                     sawOne[bit] = true;
                 } else {
                     sawZero[bit] = true;
@@ -247,7 +277,7 @@ class RuleInductionDownstreamAccuracyTest {
         for (int row = 0; row < features.length; row++) {
             long packed = 0L;
             for (int bit = 0; bit < width; bit++) {
-                if (mapping[bit] >= 0 && ((features[row][0] >>> bit) & 1L) != 0L) {
+                if (mapping[bit] >= 0 && bitOf(features[row], bit)) {
                     packed |= 1L << mapping[bit];
                 }
             }

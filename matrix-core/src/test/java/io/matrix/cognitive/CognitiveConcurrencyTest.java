@@ -101,6 +101,40 @@ class CognitiveConcurrencyTest {
     }
 
     @Test
+    @DisplayName("two writers on one database resolve the same position instead of failing")
+    void twoWritersOnOneDatabaseResolveTheSamePosition() throws Exception {
+        // A second store on the same file. The writer lock is held by the PROCESS, so a
+        // second connection to the same database in the same process is allowed (the
+        // contract is one writer per process, not one per connection), and the position
+        // uniqueness is then the DATABASE's to enforce.
+        try (CognitiveStore second = new CognitiveStore(directory.resolve("cognitive.sqlite"))) {
+            CountDownLatch start = new CountDownLatch(1);
+            ExecutorService pool = Executors.newFixedThreadPool(2);
+            List<Future<?>> futures = new ArrayList<>();
+            for (CognitiveStore writer : List.of(store, second)) {
+                futures.add(pool.submit(() -> {
+                    start.await();
+                    // the same event, at the same position, with the same content
+                    writer.appendEvent("event-1", "episode-1", 1L, "OBSERVE", "tester",
+                            "the same content", INSTANT);
+                    return null;
+                }));
+            }
+            start.countDown();
+            for (Future<?> future : futures) {
+                // a raw database error would be thrown here; the append is resolved
+                // against what the database holds
+                future.get(60, TimeUnit.SECONDS);
+            }
+            pool.shutdownNow();
+
+            assertThat(store.events("episode-1"))
+                    .as("the position holds one event, not two")
+                    .hasSize(1);
+        }
+    }
+
+    @Test
     @DisplayName("concurrent reads during a write see a consistent store")
     void concurrentReadsDuringWritesAreConsistent() throws Exception {
         CognitiveKernel kernel = kernel();
