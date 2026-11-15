@@ -34,7 +34,8 @@ public record Answer(
         List<Source> sources,
         List<String> limitations,
         List<String> gaps,
-        List<String> unmatchedTerms) {
+        List<String> unmatchedTerms,
+        PremiseSemantics.Disposition premise) {
 
     public Answer {
         concepts = List.copyOf(concepts == null ? List.of() : concepts);
@@ -43,6 +44,36 @@ public record Answer(
         limitations = List.copyOf(limitations == null ? List.of() : limitations);
         gaps = List.copyOf(gaps == null ? List.of() : gaps);
         unmatchedTerms = List.copyOf(unmatchedTerms == null ? List.of() : unmatchedTerms);
+    }
+
+    /**
+     * The answer of a path that does not assess a premise.
+     *
+     * <p>The disposition is a field of its own, and a caller that builds an answer without
+     * reading the workspace's claims has no disposition to report. The constructor keeps that
+     * caller working: the disposition is simply absent, and the absence says that nothing was
+     * assessed — which is what happened.
+     *
+     * @param question the question
+     * @param level the abstraction level
+     * @param answered whether the question was answered
+     * @param abstentionReason why it was not, or null
+     * @param statement the answer
+     * @param supportScore the support score
+     * @param support what the support score means
+     * @param concepts the concepts the answer cites
+     * @param claims the claims the answer cites
+     * @param sources the sources the answer cites
+     * @param limitations what the answer does not establish
+     * @param gaps what the workspace does not know
+     * @param unmatchedTerms the terms of the question nothing covers
+     */
+    public Answer(String question, AbstractionLevel level, boolean answered,
+            String abstentionReason, String statement, double supportScore, SupportScore support,
+            List<Concept> concepts, List<Claim> claims, List<Source> sources,
+            List<String> limitations, List<String> gaps, List<String> unmatchedTerms) {
+        this(question, level, answered, abstentionReason, statement, supportScore, support,
+                concepts, claims, sources, limitations, gaps, unmatchedTerms, null);
     }
 
     /** True when the workspace could not answer, and said so. */

@@ -78,6 +78,42 @@ public final class PremiseChecker {
     private static final int MINIMUM_PREMISE_LENGTH = 12;
 
     /**
+     * The verbs that REPORT an account rather than assert one.
+     *
+     * <p>A question that says "as Wegener originally proposed" attributes the account in its
+     * main clause to somebody, and the attribution is what makes the clause a premise: the
+     * question asks under it, and it is the part the user may have got wrong. The verbs are
+     * past-tense reporting verbs, so the question's own verb ("What did Wegener propose?")
+     * does not match.
+     */
+    private static final List<String> REPORTING_VERBS = List.of(
+            "proposed", "suggested", "believed", "thought", "claimed", "argued", "held",
+            "assumed", "concluded", "maintained", "stated", "supposed", "hypothesized",
+            "posited", "postulated", "утверждал", "считал", "предполагал", "заявил");
+
+    /**
+     * The phrases that introduce an attribution.
+     *
+     * <p>An attribution needs a cue as well as a reporting verb: the verb says that an account
+     * was reported, and the cue says that the account is being attributed rather than asserted.
+     */
+    private static final List<String> ATTRIBUTION_CUES = List.of(
+            "as ", "according to ", "in the manner ", "in the way ", "как ", "по мнению ");
+
+    /**
+     * The interrogative auxiliaries a presupposition opens with.
+     *
+     * <p>A presupposition extracted from a polar question ("Did the continents plow through the
+     * ocean floor?") keeps the question's own words, and the auxiliary is what makes it a
+     * question. Removing it turns the clause back into the statement it presupposes, and it is
+     * the only word removed: the subject and the predicate are not parsed, because a rule that
+     * tried to find them would be a parser and a parser is what this project refused to build.
+     */
+    private static final List<String> INTERROGATIVE_AUXILIARIES = List.of(
+            "do ", "does ", "did ", "is ", "are ", "was ", "were ", "can ", "could ", "will ",
+            "would ", "has ", "have ", "had ", "should ", "must ", "may ", "might ");
+
+    /**
      * The share of a premise's content terms a claim must carry for the
      * claim to speak about it.
      *
@@ -135,9 +171,190 @@ public final class PremiseChecker {
     }
 
     /**
+     * The premise a question PRESUPPOSES, or null when it presupposes none.
+     *
+     * <p><b>Why a second entry point is needed.</b> {@link #premiseOf(String)} finds the
+     * premise a question INTRODUCES with a marker — "since X, ...". A question can also
+     * presuppose without a marker: "Did the continents plow through the ocean floor, as Wegener
+     * originally proposed?" asks under the premise that the continents plowed through the ocean
+     * floor, and the attribution is what says so. The measured defect was that the production
+     * asking path named no premise at all in six of the six unsupported probes, and three of
+     * those six presuppose in exactly this way.
+     *
+     * <p><b>What an attribution is.</b> A reporting verb ("proposed", "believed", "claimed")
+     * inside a clause that carries an attribution cue ("as", "according to", "in the manner").
+     * The premise is what comes BEFORE that clause: the account being attributed. The clause
+     * itself says who held it, which is not the proposition under question.
+     *
+     * <p><b>What is NOT done here.</b> The subject and the predicate of the clause are not
+     * parsed. The only word removed is the interrogative auxiliary that made the clause a
+     * question, and a rule that tried to find the subject would be a parser — and a parser is
+     * exactly what this project refused to build.
+     *
+     * @param question the question
+     * @return the presupposed premise, or null
+     */
+    public static String presuppositionOf(String question) {
+        if (question == null || question.isBlank()) {
+            return null;
+        }
+        String lower = question.toLowerCase(Locale.ROOT);
+        int verbAt = lastReportingVerbAt(lower);
+        if (verbAt < 0) {
+            return null;
+        }
+        // The attribution clause begins at the clause boundary before the reporting verb, or at
+        // the attribution cue when the clause has no boundary of its own.
+        int boundary = -1;
+        for (int i = verbAt - 1; i >= 0; i--) {
+            char c = lower.charAt(i);
+            if (c == ',' || c == ';' || c == ':') {
+                boundary = i + 1;
+                break;
+            }
+        }
+        int start = boundary;
+        if (start < 0) {
+            start = attributionCueAt(lower, verbAt);
+        }
+        if (start < 0) {
+            return null;
+        }
+        String clause = lower.substring(start, verbAt);
+        if (!carriesAttributionCue(clause)) {
+            return null;
+        }
+        String premise = question.substring(0, start).strip();
+        premise = stripTrailingPunctuation(premise);
+        premise = stripInterrogativeAuxiliary(premise);
+        if (premise.length() < MINIMUM_PREMISE_LENGTH) {
+            return null;
+        }
+        return premise;
+    }
+
+    /** The place of the last reporting verb in a lower-cased question, or -1. */
+    private static int lastReportingVerbAt(String lower) {
+        int at = -1;
+        for (String verb : REPORTING_VERBS) {
+            int from = 0;
+            while (true) {
+                int found = lower.indexOf(verb, from);
+                if (found < 0) {
+                    break;
+                }
+                int end = found + verb.length();
+                boolean whole = end >= lower.length()
+                        || !Character.isLetter(lower.charAt(end));
+                boolean starts = found == 0 || !Character.isLetter(lower.charAt(found - 1));
+                if (whole && starts && found > at) {
+                    at = found;
+                }
+                from = found + 1;
+            }
+        }
+        return at;
+    }
+
+    /** The place of the attribution cue that governs a reporting verb, or -1. */
+    private static int attributionCueAt(String lower, int verbAt) {
+        int at = -1;
+        for (String cue : ATTRIBUTION_CUES) {
+            int found = lower.lastIndexOf(cue, verbAt);
+            if (found > at) {
+                at = found;
+            }
+        }
+        return at;
+    }
+
+    /** Whether a clause carries an attribution cue. */
+    private static boolean carriesAttributionCue(String clause) {
+        for (String cue : ATTRIBUTION_CUES) {
+            if (clause.contains(cue)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** A clause without the punctuation that ended it. */
+    private static String stripTrailingPunctuation(String text) {
+        String stripped = text.strip();
+        while (!stripped.isEmpty()) {
+            char last = stripped.charAt(stripped.length() - 1);
+            if (last == ',' || last == ';' || last == ':') {
+                stripped = stripped.substring(0, stripped.length() - 1).strip();
+                continue;
+            }
+            break;
+        }
+        return stripped;
+    }
+
+    /**
+     * A clause without the interrogative auxiliary that opened it.
+     *
+     * @param clause the clause
+     * @return the clause as a statement
+     */
+    private static String stripInterrogativeAuxiliary(String clause) {
+        String lower = clause.toLowerCase(Locale.ROOT);
+        for (String auxiliary : INTERROGATIVE_AUXILIARIES) {
+            if (lower.startsWith(auxiliary)) {
+                return clause.substring(auxiliary.length()).strip();
+            }
+        }
+        return clause;
+    }
+
+    /**
+     * The proposition a POLAR question asks about, or null when the question is not polar.
+     *
+     * <p><b>Why only a polar question.</b> "Did the continents plow through the ocean floor?"
+     * asserts a proposition and asks whether it holds, and that proposition is what the
+     * workspace can confirm or deny. "What is a mid-ocean ridge?" asks for a description, and
+     * the proposition behind it is not written anywhere in the question — recovering it would
+     * mean parsing the question into a subject and a predicate, and this project does not build
+     * a parser.
+     *
+     * <p><b>What is removed.</b> The interrogative auxiliary and the question mark. Nothing
+     * else: the clause keeps the words the user wrote, so that the caller can quote it back.
+     *
+     * @param question the question
+     * @return the proposition, or null
+     */
+    public static String assertionOf(String question) {
+        if (question == null || question.isBlank()) {
+            return null;
+        }
+        String lower = question.toLowerCase(Locale.ROOT);
+        for (String auxiliary : INTERROGATIVE_AUXILIARIES) {
+            if (!lower.startsWith(auxiliary)) {
+                continue;
+            }
+            String proposition = question.substring(auxiliary.length()).strip();
+            while (!proposition.isEmpty()) {
+                char last = proposition.charAt(proposition.length() - 1);
+                if (last == '?' || last == '.' || last == '!') {
+                    proposition = proposition.substring(0, proposition.length() - 1).strip();
+                    continue;
+                }
+                break;
+            }
+            if (proposition.length() >= MINIMUM_PREMISE_LENGTH) {
+                return proposition;
+            }
+            return null;
+        }
+        return null;
+    }
+
+    /**
      * The claim that refutes the premise, or null when none does.
      *
-     * <p><b>The terms are compared in the form the index uses.</b> The
+     * <p><b>The terms are compared in the form the index uses.</b>
+     * The
      * premise and the claims are tokenised the way the retriever tokenises
      * them — folded, with the stopwords out — and a claim carries its
      * concept's name and definition alongside its proposition, because the
@@ -163,6 +380,10 @@ public final class PremiseChecker {
         for (Concept concept : snapshot.concepts()) {
             conceptsById.put(concept.id(), concept);
         }
+        // The scan reads the whole workspace: the refuting claim of a false premise is often
+        // a claim the retrieval does not rank high (it states the misconception in the
+        // corpus's own words), and a refutation that only looked at the retrieved claims
+        // would miss it — the false premise would be answered as if it held.
         for (Claim claim : snapshot.claims()) {
             Set<String> claimTerms = termsOf(claimText(claim, conceptsById));
             long covered = terms.stream().filter(term -> covers(claimTerms, term)).count();
@@ -210,8 +431,24 @@ public final class PremiseChecker {
      * @return whether the claim denies the premise
      */
     private static boolean denies(Claim claim, Set<String> premiseTerms, String premise) {
+        return denialOf(claim, premiseTerms, premise) != null;
+    }
+
+    /**
+     * The clause of the claim that denies the premise, or null when none does.
+     *
+     * <p>It is the clause and not only the verdict, because a caller that reports the denial
+     * has to say WHICH words deny the premise: a clause about a mechanism or about the
+     * reception of a theory is not the same denial as a clause about the premise itself.
+     *
+     * @param claim the claim
+     * @param premiseTerms the premise's terms
+     * @param premise the premise
+     * @return the denying clause, or null
+     */
+    static String denialOf(Claim claim, Set<String> premiseTerms, String premise) {
         if (negates(premise)) {
-            return false;
+            return null;
         }
         for (String clause : clausesOf(claim.proposition())) {
             if (!negates(clause)) {
@@ -224,10 +461,10 @@ public final class PremiseChecker {
             long covered = premiseTerms.stream()
                     .filter(term -> covers(clauseTerms, term)).count();
             if ((double) covered / premiseTerms.size() >= MINIMUM_COVERAGE) {
-                return true;
+                return clause.strip();
             }
         }
-        return false;
+        return null;
     }
 
     /**

@@ -65,7 +65,7 @@ fix that closed them, because the defects are the reason the mechanism is shaped
 | F6 | MINOR | The "after" fidelity of 1.00 was the degenerate single-class window, presented next to the "before" 0.50 as if it were a gain. | The class balance of the window is now reported on the runtime path (`windowPositives`/`windowNegatives`) and the evidence test ASSERTS that both classes are present in the measured window. The measured fidelity after the remediation is 0.75 on a 15+/2− window — not 1.00. |
 | F7 | MINOR | The gate asked the ledger about every record separately, and every question re-read and re-parsed the whole file: the cost of a pass grew with the square of the log size. | The ledger is read ONCE per pass (`LearningAdmission.admitted`); the reads are counted (`EpisodeQuarantine.ledgerReads()`) and the test asserts one read for the whole pass. |
 | F8 | MINOR | The production window was defined in three places (the scheduler, the log's API, the operator tool). | One definition: `LearningAdmission.assess` reads and admits, `LearningAdmission.window` selects. The scheduler, `EpisodicLog.learningWindow()` and the tool all go through them; the test asserts that the three call sites agree and that the ids the induction was given ARE the window's ids. |
-| F9 | NIT | `EvalBattery.standardBattery()` carried an unused `Random r = new Random(42L)` inside the frozen corpus builder — an invitation for the next change to make the firewall non-reproducible. | Removed, together with the import. |
+| F9 | NIT | `EvalBattery.standardBattery()` carries an unused `Random r = new Random(42L)` inside the frozen corpus builder — an invitation for the next change to make the firewall non-reproducible. | **NOT CHANGED, by the coordinator's instruction: the frozen `EvalBattery` must stay untouched.** The corpus's purity is pinned by a test instead (`LearningWindowDefinitionTest.theFrozenCorpusIsTheSameEveryTimeItIsBuilt`: two builds of the battery are equal, and neither corpus may shrink). The unused handle is a hazard only if somebody consumes it; until then, changing a frozen file is the larger risk. |
 | F10 | NIT | `RuleInductionEngine.induce(ids, features, labels)` applied NO role filter: a training call that could not say where its episodes came from. | The overload now REFUSES (`IllegalStateException`). Every training call states its roles; a caller with no provenance to state says `LEGACY_UNTAGGED`. The two unit tests of the fold were updated to state their fixtures' roles. |
 
 ---
@@ -126,6 +126,58 @@ stays in the ledger's history; `release-all` reverses every mark. The log is nev
 
 ---
 
+## 4b. The canary — the ledger is machine state, and the machine state is guarded
+
+The quarantine ledger lives next to the log it governs, under `data/mind/`, which is
+gitignored (`.gitignore:83`) for the same reason the log is: **both are machine state, not
+repository content**. That is correct, and it left one hole: nothing in the repository guarded
+the ledger. A cleanup that removed `data/mind/` would take the ledger with it, the admission
+gate would fall back to its documented default ("nothing is quarantined"), all 226 records would
+be admitted again, and the contamination would return **without a trace**.
+
+The hole is closed by a small TRACKED file,
+`docs-v2/engineering/EPISTEMIC-LEARNING-QUARANTINE-CANARY.json`, and by
+`LearningIsolationLedgerCanaryTest`:
+
+| Field | Value | What it is |
+|---|---|---|
+| `recordedRecords` | 226 | how many records the log held when the remediation ran |
+| `recordedMarks` | 209 | how many quarantine marks the ledger held then |
+| `logSha256AtRemediation` | `5732004d…` | the log's digest AT THAT MOMENT — a historical fact, **not asserted** |
+| `rule` | RULE A ∨ RULE B, by record id | the identity of the rule that decided |
+
+**The rule the test enforces.** If the real log exists and holds **at least** the recorded
+number of records, then the ledger **must** exist and hold **at least** the recorded number of
+marks. A missing ledger is then a build failure, not a silent fallback.
+
+**Why the comparison is monotonic.** The log grows with every organic interaction and the
+ledger is append-only, so an exact count or a pinned digest would break the build on the next
+real conversation. "At least" is the only comparison that survives growth; the digest is
+recorded as history and is deliberately not asserted.
+
+**A fresh clone skips, and says why.** With no `data/mind/episodic.ndjson` there is no machine
+state to watch, and the test is skipped with that reason — it does not fail a clone that has
+never run a mind.
+
+**The failure is demonstrated, on a copy.** `theCanaryFailsWhenTheLedgerIsMissing` copies the
+machine state into a temporary directory, deletes the ledger copy, and shows what the build
+would say:
+
+```
+[CANARY] the demonstration of the failure: the quarantine ledger is MISSING:
+/tmp/p04-canary-…/episodic.quarantine.ndjson — the log holds 226 records and the canary
+records 209 quarantine marks, but the ledger that holds them does not exist. Without it the
+admission gate falls back to 'nothing is quarantined', every record is admitted again, and the
+contamination returns without a trace. Re-apply the remediation: MATRIX_P0_4_REMEDIATE=true
+./gradlew :matrix-brain-runtime:test
+--tests "io.matrix.brain.runtime.ProductionLearningIsolationRemediation" --offline
+```
+
+The same test then shows that the copy WITH its ledger passes, and that a ledger holding fewer
+marks than recorded also fails.
+
+---
+
 ## 5. The evidence
 
 ```
@@ -138,13 +190,14 @@ flock /tmp/gradle-matrix.lock bash -c 'rm -rf matrix-api-gateway/build/test-resu
 
 | Scope | Tests | Failures | Errors | Skipped |
 |---|---|---|---|---|
-| `io.matrix.brain.runtime.*` | 968 | 0 | 0 | 4 (one is the opt-in remediation) |
+| `io.matrix.brain.runtime.*` | 987 | 0 | 0 | 4 (one is the opt-in remediation) |
 | `io.matrix.api.*` | 286 | 0 | 0 | 0 |
 
-The classes that carry this work: `LearningIsolationTest` (12), `EpisodeQuarantineTest` (12),
-`LearningWindowDefinitionTest` (3), `LearningIsolationEvidenceTest` (1),
-`AdversarialIsolationProbeTest` (6), `CollectionHarnessIsolationTest` (2),
-`ProductionLearningIsolationRemediation` (1, opt-in), and in the gateway
+The classes that carry this work: `LearningIsolationTest` (12), `EpisodeQuarantineTest` (14),
+`LearningWindowDefinitionTest` (4), `LearningIsolationEvidenceTest` (1),
+`LearningIsolationLedgerCanaryTest` (2), `AdversarialIsolationProbeTest` (6),
+`CollectionHarnessIsolationTest` (2), `ProductionLearningIsolationRemediation` (1, opt-in),
+`ReReviewIsolationProbeTest` (14, the independent re-review's own probes), and in the gateway
 `ProductionBrainClientProvenanceTest` (2). The JUnit XML is in
 `matrix-brain-runtime/build/test-results/test/` and `matrix-api-gateway/build/test-results/test/`.
 
@@ -176,8 +229,25 @@ cannot come back silently.
 7. **The residual.** Decide whether the 17 residual records should be quarantined as well
    (section 4), and whether the frozen corpus should match the letter-less arithmetic probes with
    a trailing question mark.
+8. **That the canary is armed.** Delete a COPY of the ledger and confirm
+   `LearningIsolationLedgerCanaryTest` fails; and confirm that the canary JSON still holds
+   `recordedRecords` / `recordedMarks` that are no larger than the machine's real numbers (the
+   comparison is "at least", so a canary that overstates the marks would fail the build
+   forever).
 
-## 7. What was NOT verified
+## 7. Known limits — accepted, documented, not changed
+
+These were raised by the independent re-review as INFO. They are **accepted as they are** and
+recorded here with their consequence, because each of them is a property of the design rather
+than a defect that a small change would remove.
+
+| Limit | Consequence | Why it stays |
+|---|---|---|
+| **The content rule quarantines a GENUINE record that happens to repeat a designed input.** RULE B matches on the record's INPUT, so an organic user who asks a question the collection harness also asked is quarantined with the designed traffic. | A real interaction can be excluded from learning. The rule cannot tell a coincidence of wording from a designed execution. | The alternative — deciding per record whether the wording is a coincidence — needs a judgement no mechanical rule can make. The ledger is reversible, so an operator can release the genuine record, and the release is in the history. |
+| **The quarantine is enforced at the GATE, not at the TRAINER.** `RuleInductionEngine.induce` refuses a record whose ROLE says it is non-organic; it cannot know that a record is in the ledger, because the ledger names ids and the engine is given roles. | A training call that bypasses `LearningAdmission` (a future caller that reads the log itself) would train on quarantined records. | The gate is the single place that knows about the ledger, and the trainer is the single place that knows about provenance. The trainer's check is the second line of defence, not the first. A caller that bypasses the gate also bypasses the window's definition — which is why `LearningAdmission.assess` is the ONE read-and-admit (section 2, F8). |
+| **The gate trusts a SELF-DECLARED role.** A caller that declares `ORGANIC` for evaluation traffic is believed. | A lie in the declaration puts the traffic back into the learning feed. | A role cannot be inferred from content reliably (see the first limit), so the declaration is the only handle. The gateway declares at its own boundary (`ProductionBrainClient`), the collection harness declares `EXPERIMENT`, and the quarantine covers the history that no declaration could cover. |
+
+## 8. What was NOT verified
 
 - The HDC retrieval substrate was not audited for earlier contamination; it is fed by
   `KnowledgeForgeIngest` and not by the query path, but that was read from the source, not
@@ -187,3 +257,17 @@ cannot come back silently.
 - CI was not run — only the two local scopes above.
 - The arithmetic probes with a trailing question mark (`100-7?`) are still matched by neither
   rule; the residual is reported, not fixed.
+- The canary was demonstrated on a COPY (the ledger deleted from the copy, the check failing
+  with the message above); the real ledger was never removed, so the "build actually fails"
+  path was shown by the check, not by a red build.
+- Two processes appending to the same ledger at once were reasoned about (a writer lock
+  serialises them) but not stress-tested.
+- The F9 nit (the unused `Random` in the frozen `EvalBattery`) was implemented and then
+  REVERTED, because the coordinator requires the frozen file to stay untouched. The frozen
+  file in the tree still carries the handle; the corpus's purity is pinned by a test
+  instead. This is a deliberate divergence from the review's recommendation, recorded here
+  rather than quietly dropped.
+- The `EpisodeQuarantine.readable()` contract: the pre-read state is explicit
+  (`state() == NOT_READ_YET`) and the method keeps its "the last read parsed every line"
+  meaning, because the independent re-review's probe pins that meaning. A caller that wants
+  to know whether the ledger has been LOOKED AT must ask `state()`.

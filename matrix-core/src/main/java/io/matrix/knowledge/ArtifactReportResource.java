@@ -43,11 +43,22 @@ import java.util.Map;
 @Consumes(MediaType.APPLICATION_JSON)
 public class ArtifactReportResource {
 
+    /**
+     * The workbench the route asks.
+     *
+     * <p>The field is public so that the route can be driven from a test outside this
+     * package, the way the container drives it. The container injects it either way.
+     */
     @Inject
-    KnowledgeWorkbench workbench;
+    public KnowledgeWorkbench workbench;
 
+    /**
+     * The bounded action the route hands the report to.
+     *
+     * <p>The field is public for the same reason as {@link #workbench}.
+     */
     @Inject
-    ArtifactActionService actions;
+    public ArtifactActionService actions;
 
     /** The longest report name the route accepts. */
     private static final int MAX_REPORT_NAME_LENGTH = 128;
@@ -65,6 +76,45 @@ public class ArtifactReportResource {
                                     String sourceId, String sourceTitle) {
     }
 
+    /**
+     * The epistemic status of the question's premise, as the workspace made of it.
+     *
+     * <p>It is a field of its own, and it is separate from the disposition of the ACTION, from
+     * the epistemic status of the ANSWER, from the limitations and from the refusal reasons:
+     * a caller that wants to know what the workspace made of the premise reads this, and a
+     * caller that wants to know whether the answer was given reads the disposition.
+     */
+    public record PremiseStatus(String status, String kind, String premise, String reason,
+                                 List<String> refutingClaimIds, List<String> refutingSourceIds) {
+
+        public PremiseStatus {
+            refutingClaimIds = List.copyOf(refutingClaimIds == null ? List.of() : refutingClaimIds);
+            refutingSourceIds =
+                    List.copyOf(refutingSourceIds == null ? List.of() : refutingSourceIds);
+        }
+    }
+
+    /** One side of a conflict the corpus holds, with its provenance. */
+    public record ConflictSide(String claimId, String proposition, String sourceId,
+                                String sourceTitle, String sourceLocator, String detail) {
+    }
+
+    /** A conflict the corpus holds: both sides, and the system's refusal to resolve it. */
+    public record ConflictReport(String reason, List<ConflictSide> sides) {
+
+        public ConflictReport {
+            sides = List.copyOf(sides == null ? List.of() : sides);
+        }
+    }
+
+    /** One reading of a question that admits several, with its provenance. */
+    public record ReadingReport(String reading, List<EvidenceReference> evidence) {
+
+        public ReadingReport {
+            evidence = List.copyOf(evidence == null ? List.of() : evidence);
+        }
+    }
+
     /** The outcome of a report request. */
     public record ReportResponse(String taskId,
                                  String actionName,
@@ -77,12 +127,17 @@ public class ArtifactReportResource {
                                  String epistemicDisposition,
                                  String traceReference,
                                  List<String> limitations,
-                                 List<String> refusalReasons) {
+                                 List<String> refusalReasons,
+                                 PremiseStatus premise,
+                                 List<ConflictReport> conflicts,
+                                 List<ReadingReport> readings) {
 
         public ReportResponse {
             evidence = List.copyOf(evidence == null ? List.of() : evidence);
             limitations = List.copyOf(limitations == null ? List.of() : limitations);
             refusalReasons = List.copyOf(refusalReasons == null ? List.of() : refusalReasons);
+            conflicts = List.copyOf(conflicts == null ? List.of() : conflicts);
+            readings = List.copyOf(readings == null ? List.of() : readings);
         }
     }
 
@@ -192,9 +247,90 @@ public class ArtifactReportResource {
                 answer.answered() ? "ANSWERED" : "ABSTAINED",
                 "artifact-index:" + identity,
                 limitations,
-                refusals);
+                refusals,
+                premiseStatus(answer),
+                conflicts(answer),
+                readings(answer));
         int status = written.disposition() == ArtifactWriter.Disposition.REPLAYED ? 200 : 201;
         return Response.status(status).entity(response).build();
+    }
+
+    /**
+     * The epistemic status of the question's premise, as the workspace made of it.
+     *
+     * <p>The claim and source identifiers that refute the premise are named here, because a
+     * refusal that does not say WHAT refuted it is a refusal the caller cannot act on.
+     *
+     * @param answer the answer the workspace gave
+     * @return the status, or null when the question asserted no premise
+     */
+    private PremiseStatus premiseStatus(Answer answer) {
+        PremiseSemantics.Disposition disposition = answer.premise();
+        if (disposition == null || disposition.status() == PremiseSemantics.Status.NO_PREMISE) {
+            return null;
+        }
+        List<String> claimIds = new ArrayList<>();
+        List<String> sourceIds = new ArrayList<>();
+        for (PremiseAssessment.EvidenceRef reference : disposition.evidence()) {
+            if (!"CONTRADICTS".equals(reference.relation())) {
+                continue;
+            }
+            claimIds.add(reference.claimId());
+            if (reference.sourceId() != null) {
+                sourceIds.add(reference.sourceId());
+            }
+        }
+        return new PremiseStatus(disposition.status().name(), disposition.kind().name(),
+                disposition.premise(), disposition.reason(), claimIds, sourceIds);
+    }
+
+    /**
+     * The conflicts the cited evidence holds, both sides with their provenance.
+     *
+     * @param answer the answer the workspace gave
+     * @return the conflicts
+     */
+    private List<ConflictReport> conflicts(Answer answer) {
+        PremiseSemantics.Disposition disposition = answer.premise();
+        if (disposition == null || disposition.conflicts().isEmpty()) {
+            return List.of();
+        }
+        List<ConflictReport> reports = new ArrayList<>();
+        for (ClaimConflictDetector.Conflict conflict : disposition.conflicts()) {
+            List<ConflictSide> sides = new ArrayList<>();
+            for (ClaimConflictDetector.Side side : conflict.sides()) {
+                sides.add(new ConflictSide(side.claimId(), side.proposition(), side.sourceId(),
+                        side.sourceTitle(),
+                        side.sourceLocator() == null ? null : actions.redact(side.sourceLocator()),
+                        side.detail()));
+            }
+            reports.add(new ConflictReport(conflict.reason(), sides));
+        }
+        return reports;
+    }
+
+    /**
+     * The readings of a question that admits several, each with its provenance.
+     *
+     * @param answer the answer the workspace gave
+     * @return the readings
+     */
+    private List<ReadingReport> readings(Answer answer) {
+        PremiseSemantics.Disposition disposition = answer.premise();
+        if (disposition == null || disposition.readings().isEmpty()) {
+            return List.of();
+        }
+        List<ReadingReport> reports = new ArrayList<>();
+        for (PremiseSemantics.Reading reading : disposition.readings()) {
+            List<EvidenceReference> evidence = new ArrayList<>();
+            for (PremiseAssessment.EvidenceRef reference : reading.evidence()) {
+                evidence.add(new EvidenceReference(reference.claimId(), reference.proposition(),
+                        reference.claimStatus() == null ? null : reference.claimStatus().name(),
+                        reference.sourceId(), reference.sourceTitle()));
+            }
+            reports.add(new ReadingReport(reading.label(), evidence));
+        }
+        return reports;
     }
 
     /**
@@ -247,6 +383,55 @@ public class ArtifactReportResource {
             markdown.append("\n## Not covered by the workspace\n\n");
             for (String term : answer.unmatchedTerms()) {
                 markdown.append("- `").append(term).append("`\n");
+            }
+        }
+        PremiseSemantics.Disposition disposition = answer.premise();
+        if (disposition != null && disposition.status() != PremiseSemantics.Status.NO_PREMISE) {
+            markdown.append("\n## The premise of the question\n\n");
+            markdown.append("- **Status.** ").append(disposition.status().name())
+                    .append(" (").append(disposition.kind().name()).append(").\n");
+            markdown.append("- **The premise.** \"").append(disposition.premise()).append("\"\n");
+            markdown.append("- **Why.** ").append(disposition.reason()).append("\n");
+            for (PremiseAssessment.EvidenceRef reference : disposition.evidence()) {
+                if (!"CONTRADICTS".equals(reference.relation())) {
+                    continue;
+                }
+                markdown.append("- **The claim that denies it.** `")
+                        .append(reference.claimId()).append("` — \"").append(reference.proposition())
+                        .append("\" (source ").append(reference.sourceId());
+                if (reference.sourceTitle() != null) {
+                    markdown.append(", \"").append(reference.sourceTitle()).append("\"");
+                }
+                markdown.append(")\n");
+            }
+        }
+        if (disposition != null && !disposition.conflicts().isEmpty()) {
+            markdown.append("\n## Conflicts in the evidence\n\n");
+            markdown.append("The corpus holds claims that cannot both hold. Both sides are given "
+                    + "with their provenance, and the system does not decide between them.\n\n");
+            for (ClaimConflictDetector.Conflict conflict : disposition.conflicts()) {
+                markdown.append("- ").append(conflict.reason()).append("\n");
+                for (ClaimConflictDetector.Side side : conflict.sides()) {
+                    markdown.append("  - `").append(side.claimId()).append("` — \"")
+                            .append(side.proposition()).append("\" (source ")
+                            .append(side.sourceId());
+                    if (side.sourceTitle() != null) {
+                        markdown.append(", \"").append(side.sourceTitle()).append("\"");
+                    }
+                    markdown.append("): ").append(side.detail()).append("\n");
+                }
+            }
+        }
+        if (disposition != null && !disposition.readings().isEmpty()) {
+            markdown.append("\n## The readings of the question\n\n");
+            markdown.append("The question admits more than one reading. The readings are given "
+                    + "with their provenance, and none of them is chosen.\n\n");
+            for (PremiseSemantics.Reading reading : disposition.readings()) {
+                markdown.append("- \"").append(reading.label()).append("\"\n");
+                for (PremiseAssessment.EvidenceRef reference : reading.evidence()) {
+                    markdown.append("  - `").append(reference.claimId()).append("` (source ")
+                            .append(reference.sourceId()).append(")\n");
+                }
             }
         }
         markdown.append("\n## Epistemic status\n\n");

@@ -188,7 +188,7 @@ public final class PremiseAssessment {
      * of the retriever's own would silently decide the second question with
      * the first one's rule.
      */
-    private static final double MINIMUM_RETRIEVAL_COVERAGE = 0.10;
+    public static final double MINIMUM_RETRIEVAL_COVERAGE = 0.10;
 
     /**
      * The words that DENY.
@@ -313,6 +313,80 @@ public final class PremiseAssessment {
     }
 
     /**
+     * Assesses ONE premise against the workspace's stored knowledge.
+     *
+     * <p>This is the single-premise entry point, and it is what the production asking path
+     * uses: a question asserts one premise, and the question's own premise is what the
+     * workspace is asked about. The assessment of a whole assertion
+     * ({@link #assess(KnowledgeWorkbench, String, String)}) splits the assertion into premises
+     * first and then calls this for each of them.
+     *
+     * @param workbench the workbench that holds the workspace
+     * @param workspaceId the workspace to read
+     * @param premise the premise, in the caller's own words
+     * @return the finding
+     */
+    public static Finding assessPremise(KnowledgeWorkbench workbench, String workspaceId,
+            String premise) {
+        if (workbench == null) {
+            throw new IllegalArgumentException("a workbench is required to assess a premise");
+        }
+        String workspace = workspaceId == null ? "" : workspaceId.strip();
+        return assessPremise(workbench.workspace(workspace), premise);
+    }
+
+    /**
+     * Assesses ONE premise against a workspace that has already been read.
+     *
+     * <p>The asking path holds the snapshot it is answering from, and reading the workspace a
+     * second time would ask the store the same question twice.
+     *
+     * @param snapshot the workspace
+     * @param premise the premise, in the caller's own words
+     * @return the finding
+     */
+    public static Finding assessPremise(KnowledgeSnapshot snapshot, String premise) {
+        if (snapshot == null) {
+            throw new IllegalArgumentException("a workspace is required to assess a premise");
+        }
+        String text = premise == null ? "" : premise.strip();
+        if (text.isEmpty()) {
+            return new Finding(text, Verdict.UNSUPPORTED,
+                    "There is no premise to assess, and nothing in the workspace bears on one.",
+                    List.of(), null);
+        }
+        KnowledgeRetriever retriever = new KnowledgeRetriever(snapshot, MINIMUM_RETRIEVAL_COVERAGE);
+        return assessPremise(text, retriever, snapshot);
+    }
+
+    /**
+     * The evidence reference for a claim, for a caller that holds a claim and a workspace.
+     *
+     * <p>The reference is the same one the assessment carries: the claim's proposition, the
+     * source behind it, and the excerpt of the evidence record that backs it.
+     *
+     * @param claim the claim
+     * @param snapshot the workspace
+     * @return the reference
+     */
+    public static EvidenceRef evidenceRefFor(Claim claim, KnowledgeSnapshot snapshot) {
+        return evidenceRef(claim, "MENTIONS", snapshot);
+    }
+
+    /**
+     * The evidence reference for a claim under a stated relation.
+     *
+     * @param claim the claim
+     * @param relation how the claim bears on what is being assessed
+     * @param snapshot the workspace
+     * @return the reference
+     */
+    public static EvidenceRef evidenceRefFor(Claim claim, String relation,
+            KnowledgeSnapshot snapshot) {
+        return evidenceRef(claim, relation, snapshot);
+    }
+
+    /**
      * The assessment of one premise.
      *
      * @param premise the premise, in the caller's own words
@@ -320,10 +394,27 @@ public final class PremiseAssessment {
      * @param snapshot the workspace
      * @return the finding
      */
-    private static Finding assessPremise(String premise, KnowledgeRetriever retriever,
+    static Finding assessPremise(String premise, KnowledgeRetriever retriever,
+            KnowledgeSnapshot snapshot) {
+        return assessPremise(premise, retriever.answer(premise).claims(), snapshot);
+    }
+
+    /**
+     * The assessment of a premise over an already retrieved candidate list.
+     *
+     * <p>The candidate list is passed in and not retrieved here so that the asking path reads
+     * the workspace ONCE: the same list serves the assessment of the premise and the accounts
+     * the question is read against.</p>
+     *
+     * @param premise the premise
+     * @param retrieved the claims the retrieval returned for it
+     * @param snapshot the workspace
+     * @return the finding
+     */
+    static Finding assessPremise(String premise, List<Claim> retrieved,
             KnowledgeSnapshot snapshot) {
         Set<String> premiseStems = distinctiveStems(premise);
-        List<Candidate> candidates = candidatesFor(premise, premiseStems, retriever, snapshot);
+        List<Candidate> candidates = candidatesFor(premise, premiseStems, retrieved, snapshot);
         if (candidates.isEmpty()) {
             return new Finding(premise, Verdict.UNSUPPORTED,
                     "No claim in this workspace is about the same subject as this premise, so "
@@ -404,16 +495,9 @@ public final class PremiseAssessment {
      * @return the candidates, best first, at most {@link #MAXIMUM_EVIDENCE}
      */
     private static List<Candidate> candidatesFor(String premise, Set<String> premiseStems,
-            KnowledgeRetriever retriever, KnowledgeSnapshot snapshot) {
-        Set<String> known = new LinkedHashSet<>();
-        for (Claim claim : snapshot.claims()) {
-            known.add(claim.id());
-        }
+            List<Claim> retrieved, KnowledgeSnapshot snapshot) {
         List<Candidate> candidates = new ArrayList<>();
-        for (Claim claim : retriever.answer(premise).claims()) {
-            if (!known.contains(claim.id())) {
-                continue;
-            }
+        for (Claim claim : retrieved) {
             Set<String> claimStems = distinctiveStems(claim.proposition());
             Set<String> shared = sharedStems(premiseStems, wordsByStem(premise), claimStems);
             if (shared.size() < MINIMUM_SHARED_TERMS) {
@@ -477,6 +561,18 @@ public final class PremiseAssessment {
             return new Reading("CONTRADICTS", premiseLimitation);
         }
         if (sameAssertion(premiseStems, claimStems)) {
+            // A RESTRICTION DOES NOT CARRY A BROADER STATEMENT.
+            //
+            // "So far, Earth is the only planet where subduction is known to occur" and
+            // "subduction is known to occur on planets other than Earth" share every content
+            // term except the one the restriction marker holds, and the marker was left out of
+            // the comparison because it carries no subject. So the two looked like the same
+            // assertion and the workspace appeared to CONFIRM a premise it does not hold. A
+            // claim that says less does not state what is said more: "only X" says less than
+            // "X and others", and the difference is exactly what the premise asks about.
+            if (restricts(proposition) && !restricts(premise)) {
+                return new Reading("MENTIONS", null);
+            }
             return new Reading("SUPPORTS", null);
         }
         return new Reading("MENTIONS", null);
@@ -1169,7 +1265,7 @@ public final class PremiseAssessment {
      * @param text the text
      * @return whether it carries a limitation marker
      */
-    private static boolean restricts(String text) {
+    static boolean restricts(String text) {
         if (text == null || text.isBlank()) {
             return false;
         }

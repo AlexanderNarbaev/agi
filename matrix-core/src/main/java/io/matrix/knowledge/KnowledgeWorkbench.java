@@ -447,7 +447,7 @@ public class KnowledgeWorkbench implements AutoCloseable {
                                     "The reference was resolved against the conversation: the "
                                             + "question was read as being about \"{concept}\".",
                                     Map.of("concept", resolvedSubject))),
-                    answer.gaps(), answer.unmatchedTerms());
+                    answer.gaps(), answer.unmatchedTerms(), answer.premise());
         }
         answer = applyCorrection(context, question, answer);
         answer = applyLanguageNote(question, answer);
@@ -514,7 +514,7 @@ public class KnowledgeWorkbench implements AutoCloseable {
                                 + " The terms are bridged by the bilingual lexicon, which says "
                                 + "which WORDS name the same thing; it does not translate the "
                                 + "answer."),
-                answer.gaps(), answer.unmatchedTerms());
+                answer.gaps(), answer.unmatchedTerms(), answer.premise());
     }
 
     /**
@@ -615,35 +615,87 @@ public class KnowledgeWorkbench implements AutoCloseable {
     /**
      * The premise of the question is checked against the workspace.
      *
-     * <p>RECON-W42.5. A question that asserts a premise - "Since X, ..." -
+     * <p><b>RECON-W42.5.</b> A question that asserts a premise - "Since X, ..." -
      * asks its question UNDER that premise. Answering it as if the premise
      * held would take the premise for granted, and the premise is the part
      * the user may have got wrong.
      *
-     * <p>The workspace already holds what is needed: the photosynthesis
-     * package holds the misconception as a REFUTED claim, and the logic
-     * package holds a verified claim that denies the second premise. The
-     * check is against those claims and not against a world model.
+     * <p><b>EPISTEMIC-INTEGRITY P0.1.</b> The check used to have ONE outcome: the workspace
+     * contradicted the premise and the question was refused. It has five now, and only one of
+     * them refuses. A premise the workspace supports lets the question be answered; a premise
+     * the workspace denies is refused, and the refusal NAMES the claim and the source that
+     * deny it; a premise the workspace knows nothing about is reported as unsupported and the
+     * question still proceeds, because an absence of evidence is not a refutation; a corpus
+     * that holds accounts on both sides is reported as a conflict with both sides, and the
+     * system does not decide between them; and a question that admits several readings is
+     * reported with its readings, not merged into one answer.
+     *
+     * <p>The disposition is a field of the answer of its own. It is not the answer's epistemic
+     * status, not a limitation and not a refusal reason, and a caller that wants to know what
+     * the workspace made of the premise reads it there.
+     *
+     * @param answer the answer the retrieval produced
+     * @param question the question as the user wrote it
+     * @param workspaceId the workspace the question is addressed to
+     * @param snapshot the workspace
+     * @return the answer, carrying the disposition
      */
     private Answer applyPremise(Answer answer, String question, KnowledgeSnapshot snapshot) {
-        String premise = PremiseChecker.premiseOf(question);
-        if (premise == null) {
-            return answer;
+        PremiseSemantics.Disposition disposition =
+                PremiseSemantics.resolve(snapshot, question, answer.claims());
+        boolean nothingToReport = disposition.status() == PremiseSemantics.Status.NO_PREMISE
+                && disposition.conflicts().isEmpty()
+                && disposition.readings().isEmpty();
+        if (nothingToReport) {
+            // There is no premise and nothing to say about one. The disposition is still
+            // carried, so that a caller can read what the workspace made of the question
+            // without having to infer it from the absence of a note.
+            return new Answer(answer.question(), answer.level(), answer.answered(),
+                    answer.abstentionReason(), answer.statement(), answer.supportScore(),
+                    answer.support(), answer.concepts(), answer.claims(), answer.sources(),
+                    answer.limitations(), answer.gaps(), answer.unmatchedTerms(), disposition);
         }
-        Claim refutation = PremiseChecker.refutation(premise, snapshot);
-        if (refutation == null) {
-            return answer;
+        // MINOR-3: the premise's disposition is a field of its own and does NOT go into the
+        // limitations. The limitations say what the ANSWER does not establish; the disposition
+        // says what the workspace made of the PREMISE, and the two are different statements
+        // about different things.
+        List<String> limitations = answer.limitations();
+        if (!disposition.refuses()) {
+            // The premise is not denied, so the question is answered. What the workspace makes
+            // of the premise is reported, and the answer keeps its own status.
+            return new Answer(answer.question(), answer.level(), answer.answered(),
+                    answer.abstentionReason(), answer.statement(), answer.supportScore(),
+                    answer.support(), answer.concepts(), answer.claims(), answer.sources(),
+                    limitations, answer.gaps(), answer.unmatchedTerms(), disposition);
         }
-        List<String> limitations = new ArrayList<>(answer.limitations());
-        limitations.add("The question asserts a premise that this workspace contradicts: \""
-                + premise + "\".");
-        limitations.add("The claim that contradicts it: \"" + refutation.proposition() + "\".");
-        return new Answer(answer.question(), answer.level(), false,
-                "The premise of the question is contradicted by the workspace: \"" + premise
-                        + "\". The workspace holds \"" + refutation.proposition() + "\", "
-                        + "so answering the question under that premise would take it for granted.",
-                "", answer.supportScore(), answer.support(), answer.concepts(), answer.claims(),
-                answer.sources(), limitations, answer.gaps(), answer.unmatchedTerms());
+        PremiseAssessment.EvidenceRef denial = denialOf(disposition);
+        String reason = "The premise of the question is contradicted by the workspace: \""
+                + disposition.premise() + "\".";
+        if (denial != null) {
+            reason = reason + " The claim \"" + denial.proposition() + "\" (claim "
+                    + denial.claimId() + ", source " + denial.sourceId()
+                    + (denial.sourceTitle() == null ? "" : ", \"" + denial.sourceTitle() + "\"")
+                    + ") denies it, so answering the question under that premise would take it "
+                    + "for granted.";
+        }
+        return new Answer(answer.question(), answer.level(), false, reason, "",
+                answer.supportScore(), answer.support(), answer.concepts(), answer.claims(),
+                answer.sources(), limitations, answer.gaps(), answer.unmatchedTerms(), disposition);
+    }
+
+    /**
+     * The evidence that denies the premise, or null when none of it does.
+     *
+     * @param disposition the disposition
+     * @return the denying evidence
+     */
+    private static PremiseAssessment.EvidenceRef denialOf(PremiseSemantics.Disposition disposition) {
+        for (PremiseAssessment.EvidenceRef reference : disposition.evidence()) {
+            if ("CONTRADICTS".equals(reference.relation())) {
+                return reference;
+            }
+        }
+        return null;
     }
 
     private Answer applyDemand(Answer answer, QuestionDemand.Analysis demand) {
@@ -1447,7 +1499,7 @@ public class KnowledgeWorkbench implements AutoCloseable {
                 answer.abstentionReason(), answer.statement(), answer.supportScore(),
                 answer.support(), answer.concepts(), answer.claims(), answer.sources(),
                 withNote(answer.limitations(), String.join("; ", notes)),
-                answer.gaps(), answer.unmatchedTerms());
+                answer.gaps(), answer.unmatchedTerms(), answer.premise());
     }
 
     /**
