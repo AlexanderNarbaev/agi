@@ -383,6 +383,37 @@ promotion rule forbids. The owner was asked (question D1-DEFINITIONS-IN-SEARCH-0
 **C** (OD-060): the definitions **stay out of the searchable text**, and the question of where they
 *help* becomes a **separate measurement** rather than a default.
 
+**The owner's option C executed — and the result is a NULL RESULT.** A four-arm measurement
+(`DefinitionBenefitMeasurementTest`: **WITHOUT** — the production state, **WITH_ALL** — the uniform
+H1, **WITH_RULE** and **WITH_STRICT_RULE** — two rules stated over the concept's *name*, never over a
+case, a question or a corpus phrase) was run over the same corpus, the same questions and the same
+method, **interleaved case by case** so that a busier machine cannot be mistaken for an arm; the
+instrument asserts its own calibration (the production arm must reproduce the published failures).
+
+| the arm | the official 20 ask cases | the unanswerable abstention | answered without the gold | the mean ask |
+|---|---|---|---|---|
+| **WITHOUT** (production) | **12/20** | **6/6** | 8 | 72 ms |
+| **WITH_ALL** (uniform) | 11/20 | **5/6** ✗ | 9 ✗ | 71 ms |
+| **WITH_RULE** | 11/20 | 6/6 ✓ | 9 ✗ | 68 ms |
+| **WITH_STRICT_RULE** | 11/20 | 6/6 ✓ | 9 ✗ | 72 ms |
+
+On the **frozen held-out set every arm is identical** (8/16, 12 answered, 4 abstentions) — the
+definitions change nothing there. Two cases move: the unanswerable **U-04** is *answered* under the
+uniform arm (the refusal degradation, reproduced by an independent instrument), and **A-03** is *lost*
+by both rule arms — and the strict rule still loses it because the concepts it cites whose definitions
+the strict rule admits are the **well-formed** ones ("Plate tectonics", "Continental crust", "Slab
+pull", "Plate boundaries"), so the loss comes from the good definitions, not from the fragments the
+rule filters out. **The verdict: the definitions have no measurable benefit in the retrievable text.**
+A rule exists that preserves the refusal correctness, and it still costs a case and gains none. The H1
+question is therefore **closed by the measurement**, not left open: the definitions are worth keeping as
+**knowledge** (the corpus's own account of a concept, with its span, 120/326, 24/25 human-verified),
+and they are not worth putting into the retriever's searchable text on this corpus, under these rules,
+at this retriever floor. `[speculative]` both rule variants are fitted to one corpus and to the one case
+that moves; the verdict does not depend on them — the held-out set is identical in every arm and no arm
+gains a single case. What the null result does **not** establish: that the definitions are useless (a
+different floor, a query expansion or a semantic match over the definition was not measured), anything
+about the nine non-ask cases, and anything beyond this corpus.
+
 **What this does not establish.** It does not make a concept name right — a definition attached to a
 fragment is a definition of a fragment, and 30 % of the names denote no genuine referent. It does not
 establish the definitions' truth (they are the corpus's own sentences) and it does not improve the
