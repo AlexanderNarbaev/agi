@@ -113,6 +113,7 @@ public final class KnowledgeRetriever {
     Map<String, Set<String>> claimTerms() {
         return claimTerms;
     }
+
     private final Map<String, Set<String>> representationTerms = new LinkedHashMap<>();
     /**
      * The lemmas of the claims' words, by claim.

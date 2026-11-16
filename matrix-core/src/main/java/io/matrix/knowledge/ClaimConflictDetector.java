@@ -118,6 +118,17 @@ public final class ClaimConflictDetector {
     private static final Set<String> POLARITY_WORDS = folded("not", "no", "never", "cannot",
             "nothing", "neither", "nor", "false", "true", "without");
 
+    /**
+     * The polarity words, for the callers that hold the frame apart.
+     *
+     * <p>The same-assertion rule of {@link PremiseChecker} compares the CONTENT terms of two
+     * statements, and the content is what is left when the frame is held apart: the scope
+     * terms, the symbols and these words. The list is here because the frame is here.</p>
+     */
+    static Set<String> polarityWords() {
+        return POLARITY_WORDS;
+    }
+
     /** The words that carry the POSITIVE polarity of a claim. */
     private static final Set<String> POSITIVE_POLARITY = Set.of("true");
 
