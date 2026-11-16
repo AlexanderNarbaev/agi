@@ -3,6 +3,8 @@ package io.matrix.knowledge.epistemic;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.matrix.actions.ArtifactActionService;
+import io.matrix.cognitive.CognitiveService;
+import io.matrix.cognitive.report.ReportJourneyPlanner;
 import io.matrix.knowledge.ArtifactReportResource;
 import io.matrix.knowledge.KnowledgeWorkbench;
 import io.matrix.security.NetworkExposure;
@@ -150,6 +152,10 @@ class PremiseReportResponseTest {
         ArtifactReportResource resource = new ArtifactReportResource();
         resource.workbench = workbench;
         resource.actions = actions;
+        resource.planner = new ReportJourneyPlanner();
+        CognitiveService cognitive = new CognitiveService();
+        cognitive.workbench(workbench);
+        resource.cognitive = cognitive;
         return resource.report(WORKSPACE, new ArtifactReportResource.ReportRequest(
                 question, "report.md", Boolean.TRUE, "key-" + question.hashCode(), null));
     }
