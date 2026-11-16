@@ -370,6 +370,52 @@ native build (OOM, red since 2026-10-31), the PR-event TruffleHog findings, and 
 flaky timing assertions (`CognitiveKernelRemoteTest`, `PortfolioBenchmarkTest`) — **recorded with
 their reproduction, never silenced**; they stay in the lane that runs them.
 
+**The executable handoff — how to continue without re-deriving anything.**
+
+```bash
+export JAVA_HOME=$HOME/jdk25
+cd /home/alexandr-narbaev/Projects/agi
+
+# the P0 gates, in the order they depend on each other
+flock /tmp/gradle-matrix.lock bash -c 'rm -rf matrix-core/build/test-results && ./gradlew :matrix-core:test --tests "io.matrix.knowledge.*" --offline --console=plain'
+flock /tmp/gradle-matrix.lock bash -c 'rm -rf matrix-brain-runtime/build/test-results && ./gradlew :matrix-brain-runtime:test --tests "io.matrix.brain.runtime.*" --offline --console=plain'
+flock /tmp/gradle-matrix.lock bash -c 'rm -rf matrix-api-gateway/build/test-results && ./gradlew :matrix-api-gateway:test --tests "io.matrix.api.*" --offline --console=plain'
+flock /tmp/gradle-matrix.lock bash -c 'rm -rf matrix-core/build/test-results && ./gradlew :matrix-core:test --tests "io.matrix.packaging.*" --offline --console=plain'
+
+# the packaged application, the store without a manual property, from outside the repository
+flock /tmp/gradle-matrix.lock bash -c 'rm -rf matrix-core/build/quarkus-app && ./gradlew :matrix-core:quarkusBuild :matrix-core:verifyPackagedSqliteNativeLibrary --offline --console=plain'
+python3 scripts/packaged-sqlite-smoke.py --skip-build
+
+# the gates of the repository itself
+./scripts/quality-gate.sh
+python3 scripts/validate-current-state.py --strict
+python3 scripts/validate-test-catalogue.py --strict
+python3 scripts/docs-link-check.py --root . --strict
+```
+**The next three pieces of work, in dependency order.**
+1. **The concept-model repair (P1).** The research is done and measured
+   (`EPISTEMIC-CONCEPT-IDENTITY.md`): the concept *name* is the claim's subject phrase and the concept
+   *id* is its digest. The one candidate that raises a measured number is **not** the identity repair but
+   the **source-span-anchored definitions** (0 → 121/326 = 37.1 % adjacency-passing) — adopt it first,
+   because it is orthogonal to the identity and does not need the migration. The identity repair itself
+   (the referent key: a normalised lemma + the source document + the anchor span, with a measured
+   alias and resolution policy) is **owner-gated**: the migration touches ten tables, the concept id is
+   not a surrogate key, and SQLite declares no foreign keys, so a partial migration would be invisible.
+   The rejected alternative (an NP-boundary filter) silently narrows 34 referents and orphans 42 claims.
+2. **The closed-loop cognitive action (P2)** — the report journey (`EPISTEMIC-CLOSED-LOOP-DESIGN.md`,
+   OD-055): the question → the kernel's plan and method choice → the permissioned `ActionRunner` → the
+   artifact → the evidence. The design is deliberately built on the three instruments this initiative
+   produced: the premise semantics, the sealed evaluation and the isolated learning.
+3. **The open defects of §J**, each with its reproduction, and the inherited reds of §J that need the
+   owner's action (the Docker Hub credentials) rather than the coordinator's.
+
+**The two measurement traps this programme paid for, so the next wave does not pay again.** (1) A
+**count** is not a **match**: the ambiguity metric reported 7/7 because it counted the readings it
+showed; the honest number was 3/7. (2) A **before/after against an uncommitted state** is not
+comparable: the latency was reported as "faster" against a tree that was not the historical baseline,
+and the three-point A/B on the historical commits says otherwise. Measure against a **named commit**,
+in a worktree, with the same harness.
+
 **The honest summary of the optimisation target.** The programme did not make the project "big"; it
 made three things true that were not true before: the asking path **states** what it knows about the
 question's premise instead of conflating "unsupported" with "false"; a **sealed** evaluation with
