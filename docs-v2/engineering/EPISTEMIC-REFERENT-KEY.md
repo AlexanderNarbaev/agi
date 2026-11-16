@@ -12,6 +12,14 @@ policy, the key and the resolver — a clearly-marked research package) and
 `matrix-core/src/test/java/io/matrix/knowledge/concept/research/**` (the measurements).
 **Evidence:** the JUnit XML of the run — 9 tests, 0 failures, 0 errors (§11).
 
+> **Revision 3 (2026-11-16, the third pass).** The owner has decided: **OD-062 — the
+> operating point is STRICT** (not the LENIENT point this document recommended), and
+> **OD-061 — the schema fork is the claim-scoped record** (option B, the additive one).
+> This revision records both decisions, names STRICT as the operating point everywhere,
+> and adds **§8, the migration rehearsal** — the copy-forward, the lineage, the
+> recomputed representation ids, the orphan audit (zero on the correct copy, non-zero on
+> a deliberately broken one), the rollback and the re-measurement, all on COPIES.
+>
 > **Revision 2 (2026-11-16, the second pass).** The first version of this document
 > reported a policy that accepted 73 of the frozen 150 spans and got 40 of them wrong
 > (45.21 %). The owner's review was right: **a closed word list cannot fix a clause, an
@@ -117,7 +125,11 @@ more is an **owner's** question, not a researcher's. The policy therefore has tw
 * **STRICT** — LENIENT plus the "-ing" participle rule, which removes more false positives
   and more true referents.
 
-**LENIENT is the recommended operating point** (§4.1).
+**The operating point is STRICT (OD-062).** The owner chose the strict level: the
+precision over what the policy accepts is **29/29 = 100 %** with **no** false positive,
+at the price of **six true referents** the lenient level keeps (§4.1). LENIENT stays in
+the code as the measured alternative, and every number below is labelled with the level
+it was measured at.
 
 ### 1.4 The alias layer
 
@@ -203,8 +215,18 @@ recall over the corpus's true referents is **not measurable here**.
 |---|---|---|---|---|---|
 | **the current splitter** (it accepts every concept it produces) | 150 | **35/150 = 23.33 %** | **[17.28 %, 30.72 %]** | — | — |
 | **the structural rules only** (the residue lexicon removed) | 55 | **34/55 = 61.82 %** | **[48.61 %, 73.48 %]** | 21 | 1 |
-| **the referent key's policy, LENIENT** | **36** | **34/36 = 94.44 %** | **[81.86 %, 98.46 %]** | **2** | 1 |
-| **the referent key's policy, STRICT** | **29** | **29/29 = 100 %** | **[88.30 %, 100 %]** | **0** | 6 |
+| **the referent key's policy, LENIENT** | 36 | 34/36 = 94.44 % | [81.86 %, 98.46 %] | 2 | 1 |
+| **the referent key's policy, STRICT — THE OPERATING POINT (OD-062)** | **29** | **29/29 = 100 %** | **[88.30 %, 100 %]** | **0** | **6** |
+
+**The operating point is STRICT (OD-062).** The trade, in full: the strict level accepts
+**29** of the 150 drawn spans against the lenient level's **36**; it keeps every referent
+that survives the policy **except the six the lenient level would have kept** — the four
+participial collisions ("In this understanding, plate motion", "The greater density of
+old lithosphere relative to the underlying asthenosphere", "Seafloor spreading over the
+past 100 to 200 million years", "Past plate boundaries within existing plates"), the
+concatenation ("Two- and three-dimensional imaging of Earth's interior (seismic
+tomography)") and the same 18-word span. The owner took the strict point: **no false
+positive is worth a real concept.**
 
 **The intervals do not overlap at any level.** The policy's lower bound (81.86 % at
 LENIENT) is above the splitter's upper bound (30.72 %); even the **structural-rules-only**
@@ -222,7 +244,10 @@ generalisation. The honest reading is:
   part that does not generalise;
 * **the out-of-sample precision is UNKNOWN and this corpus cannot measure it**: there is
   no second frozen set. A sealed held-out set would be needed before the number is
-  quoted outside this document.
+  quoted outside this document. **The in-sample caveat travels with every number of this
+  document, and with the operating point: 100 % is the in-sample figure of the strict
+  level, and 61.82 % is the structural floor that does not depend on the residue
+  lexicon.**
 
 **The two false positives that remain at LENIENT** (both are C1, and STRICT removes both):
 
@@ -399,17 +424,17 @@ do not move.
 
 | the measure | (a) the current splitter | (d) the strict source-span rule (implemented) | (c) the referent key + the policy (LENIENT) |
 |---|---|---|---|
-| **A1** the concept-identification precision | 35/150 = **23.33 %** [17.28 %, 30.72 %] | 23.33 % (the names and the ids do not change, so it cannot move) | **34/36 = 94.44 %** [81.86 %, 98.46 %] — **the intervals do not overlap**; the structural-only counterfactual 34/55 = 61.82 % [48.61 %, 73.48 %] |
-| **A1** the accepted share of the drawn spans | 150/150 | 150/150 | 36/150 |
-| **A2 (i)** the definition coverage | 121/326 = 37.1 % adjacency-passing | **120/326 = 36.8 %**; the human-verified share 24/25 = 96 % | **55/107 = 51.4 %** |
+| **A1** the concept-identification precision | 35/150 = **23.33 %** [17.28 %, 30.72 %] | 23.33 % (the names and the ids do not change, so it cannot move) | **29/29 = 100 %** [88.30 %, 100 %] (STRICT, the operating point, **in-sample**); the lenient level 34/36 = 94.44 %; the structural-only counterfactual 34/55 = 61.82 % [48.61 %, 73.48 %] — **the intervals do not overlap** |
+| **A1** the accepted share of the drawn spans | 150/150 | 150/150 | 29/150 |
+| **A2 (i)** the definition coverage | 121/326 = 37.1 % adjacency-passing | **120/326 = 36.8 %**; the human-verified share 24/25 = 96 % | **46/90 = 51.1 %** (STRICT); the lenient level 55/107 = 51.4 % |
 | **A3** the relation usefulness | 19 candidates (the research's own count); the definition half measured **7** candidates and **0/7** human-verified | 7 candidates, 0/7 human-verified | 7 candidates, **2 of them have both endpoints accepted** — the policy rejects exactly the 5 the human labelling rejected |
 | **A4** the retrieval | 18/29 official (12/20 of the ask cases); recall@1 0.2024, recall@5 0.3214, MRR 0.5077; the identical eleven failures | **unchanged** — the definitions are deliberately not in the searchable text | **identical** (the alias arm): 12/20, recall@1 0.2024, MRR 0.5077; the held-out 16 identical |
 | **A5** the false positives | 8 answered without the gold; the abstention **6/6**; the unsupported rate 0.3000 | **unchanged** | **unchanged** (the alias arm); **regressed** with the definitions (5/6, 9 without the gold) |
 | **A6** the answer accuracy | not measurable on this corpus | not claimed | not claimed |
 | **A7** the cost | the import 1 675 ms; the mean ask 69 ms | the definitions are recorded as their own records (+120 rows) | the import is unchanged; the mean ask 66–71 ms; the policy itself is free |
 | **A8** the id stability | — | **no id changed** | **no id changed** — the key is a research artefact; the ids are untouched |
-| the population | 326 concepts (the seed), 813 (the wider) | 326 concepts | **107 referents (the seed), 335 (the wider)** — and **238 / 526 claims have no concept** |
-| the promotion verdict | the baseline | **adopted** (the definition half) | **the promotion rule is met; the schema fork is ready for the owner (§7)** |
+| the population | 326 concepts (the seed), 813 (the wider) | 326 concepts | **90 referents (the seed), 292 (the wider)** under STRICT — and **255 / 569 claims have no referent** |
+| the promotion verdict | the baseline | **adopted** (the definition half) | **the promotion rule is met; the owner has decided the operating point (OD-062) and the schema fork (OD-061); the migration is rehearsed in §8** |
 
 **What the comparison says.** The referent key is the only candidate that moves **A1** (the
 precision of the concept identification nearly quadruples, with non-overlapping intervals)
@@ -459,19 +484,21 @@ regress"*, and the owner's question is the **schema fork** for the claims withou
 
 | the criterion | the measurement | the verdict |
 |---|---|---|
-| **A1 improves** | 23.33 % [17.28; 30.72] → **94.44 %** [81.86; 98.46] (LENIENT); the structural-only floor 61.82 % [48.61; 73.48]; the intervals are disjoint at every level | **YES** |
-| **A2 improves** | the coverage 36.8 % → **51.4 %** | **YES** |
+| **A1 improves** | 23.33 % [17.28; 30.72] → **100 %** [88.30; 100] (STRICT, the operating point, **in-sample**); the structural-only floor 61.82 % [48.61; 73.48]; the intervals are disjoint at every level | **YES** |
+| **A2 improves** | the coverage 36.8 % → **51.1 %** (STRICT) | **YES** |
 | **A4 does not regress** | the alias arm is byte-identical to CURRENT (12/20, recall@1 0.2024, MRR 0.5077; the held-out 16 identical) | **YES** |
 | **A5 does not regress** | the alias arm is byte-identical (the abstention 6/6, 8 answered without the gold) | **YES** (with the definitions it regresses → the definitions stay out of the searchable text) |
 
 **The verdict: the promotion rule is MET for the referent key's policy and its alias layer,
-and the evidence is sufficient to put the schema fork to the owner** — with three
-qualifications that must travel with the question:
+and the owner has answered both questions** — OD-062 (the operating point is STRICT) and
+OD-061 (the schema fork is the claim-scoped record) — with three qualifications that
+travel with the answer:
 
 1. the A1 figure is **in-sample**; the honest floor is the structural-only 61.82 % and the
    out-of-sample figure is **unknown** (no second frozen set exists in this corpus);
-2. the **cost** is quantified and large: **238/348** (the seed) and **526/888** (the wider)
-   claims would lose their concept at LENIENT;
+2. the **cost** is quantified and large: at the STRICT operating point **255/348** (the
+   seed) and **569/888** (the wider) claims have no referent and become claim-scoped
+   records;
 3. **A6** (the answer accuracy) is not measurable here and is not claimed.
 
 ### 7.1 The schema fork, with the measured consequences
@@ -486,7 +513,14 @@ qualifications that must travel with the question:
 | the reversible part | the nullability change is reversible (the migration can fill the NULLs back) | the new table can be dropped; the concept table never moved |
 | the risk | a partial migration becomes **invisible** in the core table — the very failure mode the ten referencing tables make dangerous | two notions of "concept" in the vocabulary; the "referent" and the "record" must be distinguished everywhere |
 
-**The recommendation: (b), the claim-scoped record.** It is additive, it does not touch the
+**The owner's decision (OD-061): (b), the claim-scoped record.** A claim with no concept
+keeps its own text as the retrievable unit through an **additive** structure, and
+`concept_id` in the core table stays **NOT NULL**. The rehearsal of §8 executes exactly
+that: the rejected claims become claim-scoped records, the old concept rows stay (marked
+superseded by the lineage), and the core table's schema does not change. The reasoning
+below is the rehearsal's evidence for the decision.
+
+**The recommendation was: (b), the claim-scoped record.** It is additive, it does not touch the
 ten referencing tables, it does not block the identity migration, and it keeps the concept
 id stable — the constraint that made the identity half owner-gated in the first place.
 **(a) is the better model of the world but the worse order of operations**: it changes the
@@ -514,7 +548,150 @@ option whose behaviour is known.
 
 ---
 
-## 8. The migration rehearsal plan — a plan, not a migration
+## 8. The migration rehearsal — on copies, with the evidence
+
+**What was run:** the copy-forward of the STRICT operating point, the lineage, the
+recomputed representation ids, the prerequisite graph's acyclicity, the explicit orphan
+audit, the rollback and the re-measurement — **on copies of a temporary workspace that
+the production importer built from the seed corpus**. The owner's store was **never
+opened for writing**: the rehearsal's workspace is a fresh temporary database, and every
+mutation happens on copies taken from it with SQLite's `VACUUM INTO` (the store runs
+WAL, so a byte copy of the main file would miss the committed rows that still live in
+the write-ahead log). **The committed schema is untouched**: the additive tables exist
+only in the copies.
+
+The instrument: `matrix-core/src/main/java/io/matrix/knowledge/concept/research/ReferentKeyMigration.java`
+(the plan, the copy-forward, the audit) and
+`matrix-core/src/test/java/io/matrix/knowledge/concept/research/ReferentKeyMigrationRehearsalTest.java`
+(the rehearsal and its evidence).
+
+### 8.1 The rehearsal's steps and their results
+
+| # | the step | the command | the result |
+|---|---|---|---|
+| 1 | **the workspace** | the production importer (`ClasspathCorpus` → `workbench.importDocument`) into a temporary database | the concepts **326**, the claims **348**, the sources **2**, the representations **335**, the prerequisites **0** |
+| 2 | **the snapshot** (the rollback reference) | `store.takeWorkspaceSnapshot(workspace, Kind.MANUAL, createdAt)` | the snapshot `snap-referent-key-rehearsal-1`, the concepts 326, the claims 348, the cost **179–226 ms** (across the runs), the database grew **1 859 584 bytes** (1 875 968 → 3 735 552) |
+| 3 | **the copies** | `VACUUM INTO` (three copies: the migrated one, the broken one, the rollback one) | three self-contained copies; the owner's store untouched |
+| 4 | **the plan** (STRICT) | `ReferentKeyMigration.plan(snapshot, workspace, STRICT, createdAt)` | the **referents 90**, the **claim-scoped records 255**, the rejected claims 255, the **new concept rows 345**, the concept-lineage rows 90 |
+| 5 | **the copy-forward** | `ReferentKeyMigration.apply(copy, plan, workspace)` — one transaction | the concepts inserted **345**, the claims re-pointed **348**, the representations re-pointed **93**, the refines links carried **0**, the prerequisites re-pointed **0**, the other rows re-pointed **759**, the lineage rows **696**, the cost **60 ms** |
+| 6 | **the lineage** | the SQL over `concept_lineage`, `claim_lineage`, `claim_scoped_record` | **348 of the 348** claims point at the concept the lineage names; the claim-scoped records **255**; the definition merges **0** |
+| 7 | **the representation ids** | the before/after comparison over the snapshot | before **335**; the old ids kept **242**, the recomputed **93**; the refines links **0 → 0**, dangling **0** |
+| 8 | **the prerequisite graph** | the depth-first cycle search over the migrated copy | **0 nodes, 0 edges, no cycle** — the seed corpus carries no prerequisites, so this check is **vacuous on this corpus** (§8.5) |
+| 9 | **the orphan audit** (the correct copy) | `ReferentKeyMigration.audit(copy, workspace)` | **13 tables**, the orphans **0**, the stale pointers **0** |
+| 10 | **the orphan audit** (a deliberately broken copy) | the same audit on a migrated copy that was then broken | the orphans **6**, the stale pointers **1** — the audit **sees** the damage |
+| 11 | **the rollback** | `store.restoreWorkspaceSnapshot(snapshotId, createdAt)` | the concepts **671 → 326**, the claims **348 → 348**, the restore **89–127 ms** |
+| 12 | **the re-measurement** | the official ask cases on the migrated scopes, the frozen set on a migrated copy | **12/20** official ask cases (the identical eight failures), the abstention **6/6**, the frozen set **8/16** (12 answered, 4 abstentions) |
+
+### 8.2 The tables and their counts, before and after
+
+| the table | before | after | what changed |
+|---|---|---|---|
+| `concept` | 326 | **671** | the 326 old rows **stay** (marked superseded by the lineage) and the 345 new rows are added |
+| `claim` | 348 | 348 | the rows stay; **their `concept_id` changes** |
+| `representation` | 335 | 335 | the rows stay; **93 of their ids are recomputed** (they embed the concept id) |
+| `concept_definition` | 27 | 27 | the rows are re-pointed; **0 merges** on this corpus |
+| `assessment_item` | 2 654 | 2 654 | the rows are re-pointed (they carry a `concept_id`) |
+| `evidence` | 348 | 348 | untouched — the evidence hangs off the claim, and the claim's id does not change |
+| `concept_lineage` (additive) | — | **90** | the old id → the new id, with the reason and the time |
+| `claim_lineage` (additive) | — | **348** | the claim id (**unchanged**), the old and the new concept id |
+| `claim_scoped_record` (additive) | — | **255** | the claim-scoped record: the concept id, the claim id, the claim's own text, the reason |
+| `concept_definition_merge` (additive) | — | **0** | the definitions that collided — none on this corpus, but the table is there because they can |
+
+**Which ids change and which do not.**
+
+| the id | changes? | why |
+|---|---|---|
+| the **claim id** | **NO** | it is a digest of the workspace, the content hash and the proposition — none of the three moves, so the claims, the evidence and the proposition-based golds survive |
+| the **concept id** (a referent) | **YES** | it is now `digest(workspace + "|referent|" + the referent key)` — the lemma, the source and the anchor |
+| the **concept id** (a claim-scoped record) | **YES** | it is `digest(workspace + "|claim|" + the claim id)` |
+| the **representation id** | **YES, for the 93 whose concept changed** | `Ids.representation(workspace, conceptId, level, statement)` embeds the concept id; the other 242 keep their ids because their concept did not change |
+| the **source id**, the **evidence id**, the **workspace id** | NO | they do not embed the concept id |
+| the **old concept rows** | they stay | superseded, never removed; the lineage is what marks them |
+
+### 8.3 The orphan audit — the proof
+
+**Why the audit exists.** SQLite declares no foreign key for the concept id, so the
+store's own `validate` **will not see a partial migration**. The audit therefore walks
+**every table that carries a `concept_id`** — discovered from the live schema, not from a
+hand-written list — and reports two numbers per table: the **orphans** (the rows whose
+referenced concept does not exist) and the **stale pointers** (the rows that still point
+at a concept the lineage marks as superseded).
+
+| the copy | the tables walked | the orphans | the stale pointers | where they were found |
+|---|---|---|---|---|
+| **the migrated copy** (correct) | **13** | **0** | **0** | — |
+| **the broken copy** (3 concept rows deleted, one claim re-pointed at its old concept) | 13 | **6** | **1** | the orphans: `claim` (3), `claim_scoped_record` (3); the stale pointer: `claim` (1) |
+
+**The audit is therefore tested in both directions**: it reports zero on a correct
+copy-forward and it finds both kinds of damage on a deliberately broken one. Without the
+broken copy the audit would be an untested claim.
+
+**The tables the audit walked** (the live schema's ten referencing tables plus the
+migration's own additive tables): `assessment_item`, `assessment_outcome`, `claim`,
+`claim_scoped_record`, `concept_definition`, `epistemic_case`, `hebbian_binding`,
+`learning_error`, `learning_state`, `learning_transition`, `prerequisite` (+ the
+prerequisite's `requires_concept_id`), `representation` — **13**.
+
+### 8.4 The rollback
+
+| the measure | the value |
+|---|---|
+| the snapshot's kind | `MANUAL` (taken on request, nothing replaced) |
+| the snapshot's cost | **190–226 ms** for a 326-concept workspace |
+| the snapshot's size | the database grew **1 859 584 bytes** (1.86 MB) — the workspace's content written twice |
+| the restore's cost | **89–127 ms** |
+| the restore's result | the concepts **671 → 326**, the claims **348 → 348** — the workspace is back |
+
+**The restore is exactly as destructive as a load**, and exactly as safe: it takes a
+snapshot of what it replaces before it erases anything (the store's own contract, and the
+reason the rehearsal's rollback works at all).
+
+### 8.5 What the rehearsal does NOT establish
+
+1. **The prerequisite graph's acyclicity is not exercised.** The seed corpus carries **no
+   prerequisite rows** (0 nodes, 0 edges), so the cycle search returned "no cycle" over an
+   empty graph. The check is implemented and it runs, but on this corpus it proves
+   nothing. **The real migration must be rehearsed on a workspace that has prerequisites.**
+2. **The `refines` chain is not exercised either.** The seed corpus has **no** refines
+   links (0 → 0), so the chain-carrying code path ran without a link to carry. The
+   representation **ids** are proven (93 recomputed), the chain is not.
+3. **The C2A `BASELINE-PATH` (17/25) was not re-measured.** That number is produced by
+   `HeldOutEvaluationTest`, whose judgement (the premise assessment, the gold accounting)
+   is private to that harness and whose workspace it prepares itself; re-running it
+   against a migrated copy would mean editing that harness, which is outside this task's
+   scope. **What the rehearsal does measure is the same A4/A5 row the instrument produces
+   (the official ask cases: 12/20 before and after, the identical eight failures, the
+   abstention 6/6) and the frozen set (8/16 before and after).**
+4. **The A1/A2 figures are in-sample.** The A1 is a property of the policy, not of the
+   store: the migration does not change it, and it stays the in-sample **29/29 = 100 %**
+   (STRICT) with the structural floor **61.82 %**. The A2 (the definitions' coverage) was
+   re-measured on the migrated copy (§8.6).
+5. **The owner's store was never exercised.** The rehearsal's workspace is a fresh
+   temporary database built by the production importer; the owner's store is a different
+   database with a different history, and the migration's cost on it is unknown.
+6. **The migration is not proposed yet.** What the rehearsal proposes is the *order*:
+   the snapshot, the copy-forward, the lineage, the audit, the re-measurement, the
+   rollback — and the owner's schema decision (the additive tables in the committed
+   schema) still has to be taken before any of it runs for real.
+
+### 8.6 The re-measurement on the migrated copy
+
+| the measure | before the migration | after the copy-forward | the verdict |
+|---|---|---|---|
+| the official ask cases | 12/20 | **12/20** | unchanged ✓ |
+| the ask-case failures | A-02, A-04, A-05, A-06, M-01, P-01, P-02, M-03 | **the identical eight** | unchanged ✓ |
+| the unanswerable abstention | 6/6 | **6/6** | unchanged ✓ |
+| the frozen held-out set (16) | 8/16, 12 answered, 4 abstentions | **8/16, 12 answered, 4 abstentions** | unchanged ✓ |
+| the A1 on the frozen draw (STRICT) | 29/29 = 100 % [88.30; 100], **in-sample** | the same (the policy does not change) | unchanged, in-sample |
+| the definitions' count | 27 | 27 | no definition lost ✓ |
+| the A2, the definitions' coverage | the seed workspace as it stands: **27 definitions over 326 concepts (8.3 %)** | the same **27 definitions over 90 referents (30.0 %)** — no definition was lost and no merge was needed | the rate rises, the absolute number is unchanged |
+
+**The rehearsal's verdict: the copy-forward, as rehearsed, does NOT regress the
+retrieval and does NOT regress the refusal.** Every scope of the official dataset was
+prepared, migrated and asked on its own migrated workspace — the same method the A4/A5
+instrument uses — and the row is byte-identical.
+
+## 9. The migration rehearsal plan — a plan, not a migration
 
 **Nothing in this section was executed.** The identity half is owner-gated: the concept id
 is referenced by ten tables (`claim.concept_id`, `representation.concept_id` — and through
@@ -524,7 +701,7 @@ the representation id every representation row —, `prerequisite.concept_id`,
 `dialogue_turn.concept_ids`), and **SQLite declares no FOREIGN KEY** for any of them, so a
 partial migration is **invisible** to the database.
 
-### 8.1 The steps
+### 9.1 The steps
 
 | # | the step | the detail |
 |---|---|---|
@@ -538,7 +715,7 @@ partial migration is **invisible** to the database.
 | 8 | **the re-measurement** | the **18/29** official row (with the identical eleven failures), the **6/6** abstention, the **C2A `BASELINE-PATH`**, the frozen held-out set, the A1 precision on the frozen 150, the definitions' coverage, and the four published artefacts — because the retriever's searchable text is `proposition + concept name + definition` and **both the name and the definition change**. |
 | 9 | **the rollback** | `restoreWorkspaceSnapshot` of the pre-migration snapshot; the lineage table is left in place (append-only) so the rollback itself is auditable. |
 
-### 8.2 The rehearsal the owner would need before deciding
+### 9.2 The rehearsal the owner would need before deciding
 
 1. a **rehearsal on a copy** of the seed workspace: the copy-forward of 326 concepts and 348
    claims, the recomputation of the representation ids, the lineage table, the orphan audit
@@ -552,7 +729,7 @@ partial migration is **invisible** to the database.
 
 ---
 
-## 9. What this corpus cannot support
+## 10. What this corpus cannot support
 
 * **Nine documents, one domain (plate tectonics), one language (English), two licence
   families**, one register (encyclopaedic prose plus one USGS explainer), no dialogue, no
@@ -578,7 +755,7 @@ partial migration is **invisible** to the database.
 
 ---
 
-## 10. Every rule chosen here, marked
+## 11. Every rule chosen here, marked
 
 | the rule | where it comes from | its status |
 |---|---|---|
@@ -599,7 +776,7 @@ partial migration is **invisible** to the database.
 
 ---
 
-## 11. The evidence
+## 12. The evidence
 
 ```
 export JAVA_HOME=$HOME/jdk25
@@ -631,7 +808,7 @@ store was never touched.**
 
 ---
 
-## 12. Related documents
+## 13. Related documents
 
 * `docs-v2/engineering/EPISTEMIC-CONCEPT-IDENTITY.md` — the baseline and the four
   alternatives; the source of the shape this document completes.

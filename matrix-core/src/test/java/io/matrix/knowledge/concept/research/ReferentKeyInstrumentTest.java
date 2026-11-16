@@ -54,7 +54,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *   <li>the <b>four properties</b> the directive names — the same word in different
  *       contexts, the synonym, the paraphrase, the homonym — on a hand-labelled set
  *       of the corpus's own cases;</li>
- *   <li>the <b>definition coverage</b> under the key, against the current 120/326.</li>
+ *   <li>the <b>definition coverage</b> under the key, against the current 27/326.</li>
  * </ol>
  *
  * <p><b>The write-up</b> is {@code docs-v2/engineering/EPISTEMIC-REFERENT-KEY.md}.</p>
@@ -300,7 +300,7 @@ class ReferentKeyInstrumentTest {
     // ── 5. the definition coverage ────────────────────────────────────────────
 
     @Test
-    @DisplayName("the definition coverage under the key, against the current 120/326")
+    @DisplayName("the definition coverage under the key, against the current 27/326")
     void theDefinitionCoverageIsMeasured() {
         ReferentResolver.Result seed = ReferentResolver.resolve(seedSnapshot.claims(),
                 seedSnapshot.concepts());
@@ -349,7 +349,12 @@ class ReferentKeyInstrumentTest {
                     level, withOne, strict.clusters(),
                     strict.clusters() == 0 ? 0 : (double) withOne / strict.clusters());
         }
-        assertThat(definitions).as("the production import writes the definitions").isEqualTo(120);
+        // The corrected rule (the name must be the SUBJECT of the sentence, a denial is
+        // not a definition, and a name that is not a referent is rejected) finds 27
+        // definitions, not the 120 the earlier, weaker rule found. See
+        // docs-v2/engineering/EPISTEMIC-CONCEPT-DEFINITIONS.md section 10.
+        assertThat(definitions).as("the production import writes the definitions")
+                .isEqualTo(27);
     }
 
     // ── 6. the relations ──────────────────────────────────────────────────────
