@@ -836,7 +836,7 @@ public final class PremiseChecker {
         if (claimTerms.contains(premiseTerm)) {
             return true;
         }
-        for (String counterpart : BilingualLexicon.instance().translations(premiseTerm)) {
+        for (String counterpart : BilingualLexicon.instance().translationsOfCaseForm(premiseTerm)) {
             if (coversCounterpart(claimTerms, counterpart)) {
                 return true;
             }
@@ -869,7 +869,7 @@ public final class PremiseChecker {
             Set<String> covering = new LinkedHashSet<>();
             covering.add(term);
             List<String> phraseCounterparts = new ArrayList<>();
-            for (String counterpart : BilingualLexicon.instance().translations(term)) {
+            for (String counterpart : BilingualLexicon.instance().translationsOfCaseForm(term)) {
                 if (counterpart.contains(" ")) {
                     phraseCounterparts.add(counterpart);
                     for (String word : counterpart.split(" ")) {
@@ -982,7 +982,7 @@ public final class PremiseChecker {
     private static Set<String> knownTerms(Set<String> terms) {
         Set<String> known = new LinkedHashSet<>();
         for (String term : terms) {
-            if (!BilingualLexicon.instance().translations(term).isEmpty()) {
+            if (!BilingualLexicon.instance().translationsOfCaseForm(term).isEmpty()) {
                 known.add(term);
             }
         }
@@ -1174,7 +1174,7 @@ public final class PremiseChecker {
      */
     private static boolean bridgedCarries(Set<String> claimContent, String claimTerm,
             String premiseTerm) {
-        for (String counterpart : BilingualLexicon.instance().translations(premiseTerm)) {
+        for (String counterpart : BilingualLexicon.instance().translationsOfCaseForm(premiseTerm)) {
             if (!counterpart.contains(" ")) {
                 if (counterpart.equals(claimTerm)) {
                     return true;
@@ -1223,7 +1223,7 @@ public final class PremiseChecker {
      * @return whether the bridge carries it
      */
     private static boolean bridged(Set<String> claimTerms, String premiseTerm) {
-        for (String counterpart : BilingualLexicon.instance().translations(premiseTerm)) {
+        for (String counterpart : BilingualLexicon.instance().translationsOfCaseForm(premiseTerm)) {
             if (coversCounterpart(claimTerms, counterpart)) {
                 return true;
             }
