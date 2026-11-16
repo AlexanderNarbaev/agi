@@ -348,6 +348,47 @@ reconstruction gives 61 (18.7 %) on that list and 75 (23.0 %) on a wider one. Th
 a **band**, and the acceptance criterion "the dangling rate is 0" must name its list. The two
 documents that carried the number are corrected.
 
+**The definition half is implemented and measured (P1, committed).** The **tight v1.1 rule** of the
+candidate freeze is implemented verbatim in `acquisition/SourceSpanDefinitions.java`: the concept's own
+sources in the snapshot's order, the sentences in document order, a sentence qualifies when it holds
+the concept's name as a word **and** the name is immediately followed by a definitional copula (a
+closed vocabulary) **and** it is at most 400 characters, the **first** qualifying sentence wins and the
+definition **is** that sentence verbatim, and no qualifying sentence means **no definition** (an honest
+state, not an invented one). One detail the research instrument had and the production path needed:
+the sentence must be **located inside its segment's span**, because a claim's context carries the
+*segment*'s span and the segment's span alone cannot say which of a segment's sentences comes first —
+without it 10 of the 120 definitions were a different (also qualifying) sentence; with it, the
+production set is **identical, set by set, to the research instrument's 120**. The definition is a
+record of its own (`ConceptDefinition`: the sentence, the source id, the offsets, the carrying claim,
+the method), stored in an **additive** table (schema v20): nothing is copied, nothing is dropped, no
+claim id moves.
+
+**The acceptance table, measured.**
+
+| | the baseline | after |
+|---|---|---|
+| **A1** the concept names' precision | 30 % (12 of 40) | **35/150 = 23.3 %** on the frozen 150-span set; the first 40 of the draw give **12/40 = 30 %** — the same share, from an independent sample |
+| **A2(i)** the usable definitions | **0** | **120/326 = 36.8 %** (the research's table says 121/326 = 37.1 %; the instrument in the repository finds 120 on the same corpus and the production set is byte-identical to the instrument's — the one-definition difference is the research's number, reported and not papered over) |
+| **A2(ii)** the human-verified share | not measured | **24/25 = 96 %** — the one failure is the generic class "Scientists" |
+| **A3** the relation precision | not measured | **0/7 = 0 %** (five fragmentary endpoints, one with its direction reversed) — the change does not touch the relations |
+| **A4/A5** the retrieval | 18/29, 6/6, 0.3000 | **unchanged, every content column identical** — deliberately: see below |
+| **A7** the cost | — | the retriever is **within the noise** (702–1080 µs against 692–794 µs); the baseline path's own timing drifts 59 → 68 → 76 ms across runs of the **same** code |
+| **A8** the id stability | — | **no concept id changed** (all 326 asserted, one by one) |
+
+**The decision the measurement forced, and the owner's answer.** The definitions were first written
+into the `concept.definition` column, which the retriever appends to every claim's searchable text.
+Measured, that moves the official evaluation **18/29 → 17/29**, the unanswerable abstention **6/6 → 5/6**
+and the unsupported-answer rate **0.3000 → 0.4500** — a degradation of the refusal correctness that the
+promotion rule forbids. The owner was asked (question D1-DEFINITIONS-IN-SEARCH-011) and chose
+**C** (OD-060): the definitions **stay out of the searchable text**, and the question of where they
+*help* becomes a **separate measurement** rather than a default.
+
+**What this does not establish.** It does not make a concept name right — a definition attached to a
+fragment is a definition of a fragment, and 30 % of the names denote no genuine referent. It does not
+establish the definitions' truth (they are the corpus's own sentences) and it does not improve the
+retrieval (they are deliberately not in the searchable text). It does not generalise beyond nine
+documents, one domain, one language and one register.
+
 **The migration is sketched, not executed** (the concept id is referenced by ten tables; the claim id
 does not change, so claims, evidence and the proposition-based golds survive; SQLite declares no
 foreign keys, so a partial migration would be invisible to the database — an explicit orphan audit is
