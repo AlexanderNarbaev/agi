@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.matrix.knowledge.AbstractionLevel;
 import io.matrix.knowledge.Answer;
 import io.matrix.knowledge.Claim;
+import io.matrix.knowledge.ClaimConflictDetector;
 import io.matrix.knowledge.KnowledgeSnapshot;
 import io.matrix.knowledge.KnowledgeWorkbench;
 import io.matrix.knowledge.Source;
@@ -19,6 +20,8 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -486,5 +489,241 @@ class AdversarialProbePremiseTest {
             return "";
         }
         return text.replaceAll("\\s+", " ").trim();
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ROUND 2 — the implementer's claims, checked independently.
+//
+// 9  the conflict detector on the logic package: the count, and each pair
+// 10 a genuine contradiction of the SAME assertion is still caught
+// 11 the frozen conflict case reaches the caller with both sides
+// 12 the frozen ambiguity cases surface the readings they NAME (a match,
+//    not a count — the harness counts, it does not match)
+// 13 the two open defects
+// ═══════════════════════════════════════════════════════════════════════════
+class AdversarialProbeRound2Test {
+
+    /** The frozen epistemic held-out set of the P0.3 wave. */
+    private static final String EPISTEMIC_DATASET =
+            "docs-v2/engineering/EPISTEMIC-HELDOUT-SET.json";
+
+    /** The research pool's workspace. */
+    private static final String POOL_WORKSPACE = "adversarial-probe-pool";
+
+    private static KnowledgeWorkbench workbench;
+    private static List<JsonNode> cases;
+    private static KnowledgeSnapshot pool;
+
+    @TempDir
+    Path directory;
+
+    @BeforeAll
+    static void prepare() throws Exception {
+        Path database = Files.createTempDirectory("adversarial-probe-r2-").resolve("knowledge.sqlite");
+        workbench = KnowledgeWorkbench.at(database.toString());
+        ClasspathCorpus corpus = ClasspathCorpus.extract(AcquisitionCycle.SEED_CORPUS);
+        for (ClasspathCorpus.Entry entry : corpus.entries()) {
+            workbench.importDocument(POOL_WORKSPACE, entry.path(), entry.file(), entry.language());
+        }
+        pool = workbench.workspace(POOL_WORKSPACE);
+        workbench.loadBundledPackage("photosynthesis");
+        workbench.loadBundledPackage("logic");
+        JsonNode root = new ObjectMapper().readTree(
+                Files.readString(RepositoryPaths.root().resolve(EPISTEMIC_DATASET)));
+        cases = new ArrayList<>();
+        for (JsonNode node : root.get("cases")) {
+            cases.add(node);
+        }
+    }
+
+    @Test
+    @DisplayName("probe 9: the conflict detector on the logic package")
+    void theConflictDetectorOnTheLogicPackage() {
+        KnowledgeSnapshot logic = workbench.workspace("logic");
+        Map<String, Source> sources = new HashMap<>();
+        for (Source source : logic.sources()) {
+            sources.put(source.id(), source);
+        }
+        List<ClaimConflictDetector.Conflict> found =
+                ClaimConflictDetector.detect(logic.claims(), sources);
+        System.out.println("### PROBE 9 - the logic package: claims=" + logic.claims().size()
+                + " conflicts=" + found.size());
+        for (ClaimConflictDetector.Conflict conflict : found) {
+            System.out.println("  reason: " + conflict.reason());
+            for (ClaimConflictDetector.Side side : conflict.sides()) {
+                System.out.println("     side " + side.claimId() + ": " + side.proposition());
+            }
+        }
+        // the pairs the reviewer named as FALSE in round 1 must not be reported
+        for (ClaimConflictDetector.Conflict conflict : found) {
+            String text = conflict.sides().toString();
+            assertFalse(text.contains("implies the propositional variable q"),
+                    "a conflict was reported between UNRELATED propositions: " + conflict.reason());
+            assertFalse(text.contains("false in the assignment under consideration.")
+                            && text.contains("not true in the other assignment"),
+                    "a conflict was reported between accounts of DIFFERENT assignments: "
+                            + conflict.reason());
+            assertFalse(text.contains("false in the assignment under consideration.")
+                            && text.contains("not true in the assignment"),
+                    "a conflict was reported between two accounts that SAY THE SAME THING: "
+                            + conflict.reason());
+        }
+    }
+
+    @Test
+    @DisplayName("probe 10: a genuine contradiction of the same assertion is still caught")
+    void aGenuineContradictionIsStillCaught() {
+        KnowledgeSnapshot logic = workbench.workspace("logic");
+        Map<String, Source> sources = new HashMap<>();
+        for (Source source : logic.sources()) {
+            sources.put(source.id(), source);
+        }
+        Claim asserts = null;
+        Claim denies = null;
+        for (Claim claim : logic.claims()) {
+            if (claim.proposition().startsWith("The propositional variable p is true in the assignment")) {
+                asserts = claim;
+            }
+            if (claim.proposition().startsWith("The propositional variable p is false in the assignment")) {
+                denies = claim;
+            }
+        }
+        System.out.println("### PROBE 10 - the same assertion, the opposite polarity");
+        System.out.println("  asserts: " + (asserts == null ? "none" : asserts.id()));
+        System.out.println("  denies:  " + (denies == null ? "none" : denies.id()));
+        assertNotNull(asserts, "the logic package holds no 'p is true in the assignment' claim");
+        assertNotNull(denies, "the logic package holds no 'p is false in the assignment' claim");
+        List<ClaimConflictDetector.Conflict> found =
+                ClaimConflictDetector.detect(List.of(asserts, denies), sources);
+        System.out.println("  conflicts=" + found.size());
+        for (ClaimConflictDetector.Conflict conflict : found) {
+            System.out.println("  reason: " + conflict.reason());
+            for (ClaimConflictDetector.Side side : conflict.sides()) {
+                System.out.println("     side " + side.claimId() + ": " + side.proposition());
+            }
+        }
+        assertTrue(!found.isEmpty(),
+                "the same assertion with the opposite polarity was NOT reported as a conflict");
+    }
+
+    @Test
+    @DisplayName("probe 11: the frozen conflict case reaches the caller with both sides")
+    void theFrozenConflictCaseReachesTheCaller() {
+        JsonNode heldOut = caseOf("E-C01");
+        Answer answer = workbench.ask(POOL_WORKSPACE, heldOut.get("question").asText(),
+                AbstractionLevel.INTRODUCTORY);
+        String body = body(answer);
+        System.out.println("### PROBE 11 - E-C01 (CONFLICTING_EVIDENCE)");
+        System.out.println("  answered=" + answer.answered()
+                + " disposition=" + dispositionOf(answer));
+        int visible = 0;
+        for (JsonNode gold : heldOut.get("goldClaims")) {
+            String proposition = gold.get("proposition").asText();
+            boolean seen = body.contains(proposition);
+            if (seen) {
+                visible++;
+            }
+            System.out.println("  gold " + gold.get("claimId").asText() + " visible=" + seen
+                    + " | " + proposition.substring(0, Math.min(90, proposition.length())));
+        }
+        System.out.println("  sides surfaced=" + visible + "/" + heldOut.get("goldClaims").size());
+        for (String limitation : answer.limitations()) {
+            System.out.println("  limitation: " + oneLine(limitation));
+        }
+    }
+
+    @Test
+    @DisplayName("probe 12: the frozen ambiguity cases surface the readings they name")
+    void theFrozenAmbiguityCasesSurfaceTheirReadings() {
+        for (String id : List.of("E-A01", "E-A02")) {
+            JsonNode heldOut = caseOf(id);
+            Answer answer = workbench.ask(POOL_WORKSPACE, heldOut.get("question").asText(),
+                    AbstractionLevel.INTRODUCTORY);
+            String body = body(answer);
+            int named = 0;
+            int matched = 0;
+            System.out.println("### PROBE 12 - " + id + " (AMBIGUOUS_READINGS)");
+            System.out.println("  disposition=" + dispositionOf(answer));
+            for (JsonNode reading : heldOut.get("readings")) {
+                String label = reading.get("reading").asText();
+                for (JsonNode span : reading.get("spans")) {
+                    named++;
+                    String proposition = span.get("proposition").asText();
+                    boolean seen = body.contains(proposition);
+                    if (seen) {
+                        matched++;
+                    }
+                    System.out.println("  reading \"" + label + "\" -> span visible=" + seen
+                            + " | " + proposition.substring(0, Math.min(80, proposition.length())));
+                }
+            }
+            System.out.println("  readings NAMED=" + named + " MATCHED=" + matched
+                    + " reported=" + (answer.premise() == null ? 0 : answer.premise().readings().size()));
+        }
+    }
+
+    @Test
+    @DisplayName("probe 13: the two open defects")
+    void theTwoOpenDefects() {
+        System.out.println("### PROBE 13 - the two open defects");
+        System.out.println("  (a) the photosynthesis premise the corpus states");
+        Answer a = workbench.ask("photosynthesis",
+                "Since plants release oxygen during the day, what does a plant release during the day?",
+                AbstractionLevel.INTRODUCTORY);
+        System.out.println("     answered=" + a.answered() + " disposition=" + dispositionOf(a));
+        System.out.println("     refusal=" + oneLine(a.abstentionReason()));
+        for (String limitation : a.limitations()) {
+            System.out.println("     limitation: " + oneLine(limitation));
+        }
+        System.out.println("  (b) the paraphrase pairs of the frozen set");
+        for (String id : List.of("E-S01", "E-S02", "E-P01", "E-P02")) {
+            JsonNode heldOut = caseOf(id);
+            Answer answer = workbench.ask(POOL_WORKSPACE, heldOut.get("question").asText(),
+                    AbstractionLevel.INTRODUCTORY);
+            System.out.println("     " + id + " answered=" + answer.answered()
+                    + " status=" + statusOf(answer)
+                    + " | " + heldOut.get("question").asText());
+        }
+    }
+
+    // ── the helpers ──────────────────────────────────────────────────────────
+
+    private static JsonNode caseOf(String id) {
+        for (JsonNode heldOut : cases) {
+            if (id.equals(heldOut.get("id").asText())) {
+                return heldOut;
+            }
+        }
+        throw new IllegalStateException("the frozen set holds no case " + id);
+    }
+
+    private static String body(Answer answer) {
+        StringBuilder text = new StringBuilder();
+        text.append(answer.statement()).append(' ').append(answer.abstentionReason()).append(' ');
+        text.append(answer.limitations()).append(' ');
+        if (answer.premise() != null) {
+            text.append(answer.premise().readings()).append(' ');
+            text.append(answer.premise().conflicts()).append(' ');
+        }
+        return text.toString();
+    }
+
+    private static String dispositionOf(Answer answer) {
+        if (answer.premise() == null) {
+            return "NONE";
+        }
+        return answer.premise().status() + " | conflicts="
+                + answer.premise().conflicts().size()
+                + " readings=" + answer.premise().readings().size()
+                + " | " + oneLine(answer.premise().reason());
+    }
+
+    private static String statusOf(Answer answer) {
+        return answer.premise() == null ? "NONE" : String.valueOf(answer.premise().status());
+    }
+
+    private static String oneLine(String text) {
+        return text == null ? "" : text.replaceAll("\\s+", " ").trim();
     }
 }

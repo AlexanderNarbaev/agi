@@ -369,6 +369,30 @@ public final class PremiseChecker {
      * @return the refuting claim, or null
      */
     public static Claim refutation(String premise, KnowledgeSnapshot snapshot) {
+        return refutation(premise, snapshot, false);
+    }
+
+    /**
+     * The claim the workspace HOLDS AS TRUE that denies a premise.
+     *
+     * <p><b>Why the claim the workspace calls false is not among them.</b> The photosynthesis
+     * package holds the misconception "the oxygen a plant releases comes from the carbon
+     * dioxide it absorbs" as a REFUTED claim, and its scope says it is "the misconception,
+     * stated so that it can be refuted". A claim the workspace has already called false is the
+     * STATEMENT of a falsehood; using it as the evidence that something else is false inverts
+     * its meaning. The corpus's own correction of the misconception is the claim that carries
+     * the truth, and that is the claim that refutes the premise.</p>
+     *
+     * @param premise the premise
+     * @param snapshot the workspace
+     * @return the refuting claim, or null
+     */
+    static Claim refutationHeldAsTrue(String premise, KnowledgeSnapshot snapshot) {
+        return refutation(premise, snapshot, true);
+    }
+
+    private static Claim refutation(String premise, KnowledgeSnapshot snapshot,
+            boolean heldAsTrue) {
         if (premise == null || snapshot == null) {
             return null;
         }
@@ -389,14 +413,42 @@ public final class PremiseChecker {
             long covered = terms.stream().filter(term -> covers(claimTerms, term)).count();
             double coverage = (double) covered / terms.size();
             if (coverage < MINIMUM_COVERAGE) {
+                // The claim has to be about the premise: it has to carry at least half of the
+                // premise's terms. The coverage is read through the lexicon, so a Russian
+                // premise and the English claim about it meet.
+                continue;
+            }
+            if (claim.status() == ClaimStatus.REFUTED && heldAsTrue) {
+                // A CLAIM THE WORKSPACE CALLS FALSE DOES NOT REFUTE ANOTHER PROPOSITION.
+                //
+                // The photosynthesis package holds the misconception "the oxygen a plant
+                // releases comes from the carbon dioxide it absorbs" as a REFUTED claim, and
+                // its scope says it is "the misconception, stated so that it can be
+                // refuted". A claim the workspace has already called false is the STATEMENT
+                // of a falsehood; using it as the evidence that something else is false
+                // inverts its meaning — the premise "plants release oxygen during the day"
+                // is TRUE, and the misconception denies something else (where the oxygen
+                // comes from).
+                //
+                // It DOES refute the proposition it states: when the question repeats the
+                // misconception, the workspace's own record that the misconception is false
+                // is the evidence that the question's premise does not hold. The workspace's
+                // correction of the misconception carries the truth in the other case.
+                if (statesTheSame(claimTerms, terms)) {
+                    return claim;
+                }
                 continue;
             }
             if (claim.status() == ClaimStatus.REFUTED || claim.status() == ClaimStatus.CONTESTED) {
                 return claim;
             }
+            if (claim.status() == ClaimStatus.CONTESTED) {
+                return claim;
+            }
             // The claim denies what the premise asserts. The denial has to
             // be ABOUT the premise: see denies().
-            if (denies(claim, terms, premise)) {
+            if (heldAsTrue ? deniesWithItsScope(claim, terms, premise)
+                    : denies(claim, terms, premise)) {
                 return claim;
             }
         }
@@ -430,6 +482,18 @@ public final class PremiseChecker {
      * @param premise the premise
      * @return whether the claim denies the premise
      */
+    /**
+     * Whether the claim denies the premise, the claim's scope read with its proposition.
+     *
+     * @param claim the claim
+     * @param premiseTerms the premise's terms
+     * @param premise the premise
+     * @return whether it denies
+     */
+    static boolean deniesWithItsScope(Claim claim, Set<String> premiseTerms, String premise) {
+        return denialOf(claim, premiseTerms, premise, true) != null;
+    }
+
     private static boolean denies(Claim claim, Set<String> premiseTerms, String premise) {
         return denialOf(claim, premiseTerms, premise) != null;
     }
@@ -447,6 +511,20 @@ public final class PremiseChecker {
      * @return the denying clause, or null
      */
     static String denialOf(Claim claim, Set<String> premiseTerms, String premise) {
+        return denialOf(claim, premiseTerms, premise, false);
+    }
+
+    /**
+     * The clause of the claim that denies the premise.
+     *
+     * @param claim the claim
+     * @param premiseTerms the premise's terms
+     * @param premise the premise
+     * @param includeScope whether the claim's SCOPE is read with its proposition
+     * @return the denied clause, or null
+     */
+    static String denialOf(Claim claim, Set<String> premiseTerms, String premise,
+            boolean includeScope) {
         if (negates(premise)) {
             return null;
         }
@@ -454,17 +532,48 @@ public final class PremiseChecker {
             if (!negates(clause)) {
                 continue;
             }
-            Set<String> clauseTerms = termsOf(clause);
-            if (clauseTerms.isEmpty()) {
+            if (denialLandsOn(clause, premiseTerms)) {
+                return clause.strip();
+            }
+        }
+        if (!includeScope) {
+            return null;
+        }
+        // THE SCOPE IS PART OF THE CLAIM'S STATEMENT (see PremiseAssessment.read).
+        for (String clause : clausesOf(claim.scope() == null ? "" : claim.scope())) {
+            if (!negates(clause)) {
                 continue;
             }
-            long covered = premiseTerms.stream()
-                    .filter(term -> covers(clauseTerms, term)).count();
-            if ((double) covered / premiseTerms.size() >= MINIMUM_COVERAGE) {
+            if (denialLandsOn(clause, premiseTerms)) {
                 return clause.strip();
             }
         }
         return null;
+    }
+
+    /**
+     * Whether a denial lands on the premise.
+     *
+     * <p>The object of the denial has to carry a third of the premise's terms: a negation
+     * that scopes over something else denies something else.</p>
+     *
+     * @param clause the denied clause
+     * @param premiseTerms the premise's terms
+     * @return whether the denial is about the premise
+     */
+    private static boolean denialLandsOn(String clause, Set<String> premiseTerms) {
+        Set<String> deniedTerms = termsOf(PremiseAssessment.deniedObject(clause));
+        if (deniedTerms.isEmpty()) {
+            return false;
+        }
+        // The premise's terms are covered BY the denied object, and the coverage is read
+        // through the lexicon: a Russian premise and an English denial carry the same words
+        // in two languages, and the raw words do not meet.
+        long covered = premiseTerms.stream()
+                .filter(term -> covers(deniedTerms, term))
+                .count();
+        return (double) covered / deniedTerms.size()
+                >= PremiseAssessment.MINIMUM_DENIAL_OBJECT_COVERAGE;
     }
 
     /**
@@ -594,12 +703,33 @@ public final class PremiseChecker {
      * @param counterpart the term's counterpart
      * @return whether the claim carries it
      */
+    /**
+     * Whether a claim states the same thing as the premise.
+     *
+     * @param claimTerms the claim's terms
+     * @param premiseTerms the premise's terms
+     * @return whether the claim carries every term of the premise
+     */
+    private static boolean statesTheSame(Set<String> claimTerms, Set<String> premiseTerms) {
+        if (claimTerms.isEmpty() || premiseTerms.isEmpty()) {
+            return false;
+        }
+        long covered = premiseTerms.stream().filter(term -> covers(claimTerms, term)).count();
+        // The floor is the same one the denial rules use: a cross-lingual premise and the
+        // claim it repeats share three of five words through the lexicon, and the workspace's
+        // own record that the claim is false is the evidence that the premise does not hold.
+        return (double) covered / premiseTerms.size()
+                >= PremiseAssessment.MINIMUM_DENIAL_OBJECT_COVERAGE;
+    }
+
     private static boolean coversCounterpart(Set<String> claimTerms, String counterpart) {
         if (!counterpart.contains(" ")) {
             return claimTerms.contains(counterpart);
         }
         for (String word : counterpart.split(" ")) {
-            if (!claimTerms.contains(word)) {
+            // The claim's terms are folded words and the counterpart is written out, so the
+            // word is folded before it is looked for.
+            if (!claimTerms.contains(word) && !claimTerms.contains(PremiseAssessment.stem(word))) {
                 return false;
             }
         }

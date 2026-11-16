@@ -251,12 +251,14 @@ public final class PremiseSemantics {
             throw new IllegalArgumentException("a workspace is required to resolve a premise");
         }
         Map<String, Source> sources = sourcesById(snapshot);
-        List<ClaimConflictDetector.Conflict> conflicts =
-                ClaimConflictDetector.detect(citedClaims, sources, snapshot);
         // ONE retriever for the whole resolution (MINOR-4): the assessment and the readings
         // read the same workspace through the same candidate list.
         KnowledgeRetriever retriever =
                 new KnowledgeRetriever(snapshot, PremiseAssessment.MINIMUM_RETRIEVAL_COVERAGE);
+
+        String subject = subjectOf(snapshot, question);
+        List<ClaimConflictDetector.Conflict> conflicts = conflictsAbout(
+                ClaimConflictDetector.detect(citedClaims, sources, snapshot), subject);
 
         String premise = PremiseChecker.premiseOf(question);
         Kind kind = Kind.BACKGROUND;
@@ -272,7 +274,6 @@ public final class PremiseSemantics {
         // ONE retrieval for the whole resolution (MINOR-4): the accounts the question is read
         // against and the candidates of the premise's assessment are the same list whenever
         // the question's subject IS its premise, which is the case that carries a premise.
-        String subject = subjectOf(snapshot, question);
         List<Claim> retrieved = subject == null
                 ? List.of() : retriever.answer(subject).claims();
         List<Reading> readings = readingsOf(retrieved, snapshot, question);
@@ -345,7 +346,19 @@ public final class PremiseSemantics {
                     // assessment's own subject rule does not reach. It is consulted here, and
                     // only here: a premise the workspace denies is a premise the workspace
                     // denies.
-                    Claim refutation = PremiseChecker.refutation(premise, snapshot);
+                    // A CLAIM THE WORKSPACE CALLS FALSE CANNOT REFUTE ANOTHER PROPOSITION.
+                    //
+                    // The photosynthesis package holds the misconception "the oxygen a
+                    // plant releases comes from the carbon dioxide it absorbs" as a REFUTED
+                    // claim, and its scope says it is "the misconception, stated so that it
+                    // can be refuted". A claim the workspace has already called false is the
+                    // statement of a falsehood, and using it as the evidence that something
+                    // else is false inverts its meaning: the premise "plants release oxygen
+                    // during the day" is TRUE, and the misconception denies something else
+                    // (where the oxygen comes from). The corpus's own correction is the
+                    // claim that carries the truth.
+                    Claim refutation =
+                            PremiseChecker.refutationHeldAsTrue(premise, snapshot);
                     if (refutation == null
                             || assertedProposition(kind)
                             && !denialIsAboutThePremise(evidence, premise, refutation)) {
@@ -398,6 +411,50 @@ public final class PremiseSemantics {
         reason.append(".");
         return reason.toString();
     }
+
+    /**
+     * The conflicts that are about a subject.
+     *
+     * <p><b>Why the subject matters.</b> The logic package holds two accounts of the same
+     * variable that contradict each other, and that contradiction is about the example the
+     * package uses to explain a variable — not about the question "what are the premises of
+     * modus ponens". A conflict the caller is shown has to be one about what the caller
+     * asked.</p>
+     *
+     * @param conflicts the conflicts the detector found
+     * @param subject the subject of the question
+     * @return the conflicts whose two sides speak about the subject
+     */
+    private static List<ClaimConflictDetector.Conflict> conflictsAbout(
+            List<ClaimConflictDetector.Conflict> conflicts, String subject) {
+        if (conflicts.isEmpty() || subject == null) {
+            return conflicts;
+        }
+        Set<String> subjectTerms = contentTerms(subject);
+        List<ClaimConflictDetector.Conflict> about = new ArrayList<>();
+        for (ClaimConflictDetector.Conflict conflict : conflicts) {
+            Set<String> shared = new LinkedHashSet<>();
+            for (ClaimConflictDetector.Side side : conflict.sides()) {
+                shared.addAll(ClaimConflictDetector.contentTermsOf(side.proposition()));
+            }
+            int overlap = 0;
+            for (String term : subjectTerms) {
+                if (shared.contains(term)) {
+                    overlap++;
+                }
+            }
+            if (overlap >= MINIMUM_CONFLICT_SUBJECT_TERMS) {
+                about.add(conflict);
+            }
+        }
+        return about;
+    }
+
+    /**
+     * The number of terms a conflict and a question's subject have to share for the conflict
+     * to be about the question.
+     */
+    public static final int MINIMUM_CONFLICT_SUBJECT_TERMS = 3;
 
     /**
      * Whether the premise is a proposition the question ASKS ABOUT rather than one it asks

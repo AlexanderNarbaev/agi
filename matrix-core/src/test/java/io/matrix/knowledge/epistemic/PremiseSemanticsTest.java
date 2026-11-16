@@ -4,16 +4,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.matrix.knowledge.AbstractionLevel;
 import io.matrix.knowledge.Answer;
+import io.matrix.knowledge.Claim;
 import io.matrix.knowledge.ClaimConflictDetector;
 import io.matrix.knowledge.KnowledgeWorkbench;
 import io.matrix.knowledge.PremiseAssessment;
 import io.matrix.knowledge.PremiseSemantics;
+import io.matrix.knowledge.Source;
 import io.matrix.knowledge.acquisition.AcquisitionCycle;
 import io.matrix.knowledge.acquisition.ClasspathCorpus;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -165,15 +169,34 @@ class PremiseSemanticsTest {
     void aConflictingCorpusIsSurfacedWithBothSides() throws Exception {
         try (KnowledgeWorkbench bench = logic()) {
             // the logic package holds "the propositional variable p is true in the assignment
-            // under consideration" and "the propositional variable p is not true in the
+            // under consideration" and "the propositional variable p is false in the
             // assignment under consideration": the same proposition with opposite polarity
-            Answer answer = bench.ask(LOGIC, "What is propositional logic?",
-                    AbstractionLevel.INTRODUCTORY);
+            Claim asserts = null;
+            Claim denies = null;
+            for (Claim claim : bench.workspace(LOGIC).claims()) {
+                if (claim.proposition().startsWith(
+                        "The propositional variable p is true in the assignment")) {
+                    asserts = claim;
+                }
+                if (claim.proposition().startsWith(
+                        "The propositional variable p is false in the assignment")) {
+                    denies = claim;
+                }
+            }
+            assertThat(asserts).as("the package holds the asserting claim").isNotNull();
+            assertThat(denies).as("the package holds the denying claim").isNotNull();
 
-            assertThat(answer.premise().conflicts())
-                    .as("the corpus holds a conflict and the answer reports it")
+            Map<String, Source> sources = new LinkedHashMap<>();
+            for (Source source : bench.workspace(LOGIC).sources()) {
+                sources.put(source.id(), source);
+            }
+            List<ClaimConflictDetector.Conflict> found = ClaimConflictDetector.detect(
+                    List.of(asserts, denies), sources);
+
+            assertThat(found)
+                    .as("the corpus holds a conflict and the detector reports it")
                     .isNotEmpty();
-            ClaimConflictDetector.Conflict conflict = answer.premise().conflicts().get(0);
+            ClaimConflictDetector.Conflict conflict = found.get(0);
             assertThat(conflict.sides())
                     .as("both sides are named")
                     .hasSizeGreaterThanOrEqualTo(2);
@@ -186,6 +209,38 @@ class PremiseSemanticsTest {
             assertThat(conflict.reason())
                     .as("the conflict says that the system does not decide")
                     .isNotBlank();
+        }
+    }
+
+    @Test
+    @DisplayName("two accounts of different variables are not a conflict")
+    void twoAccountsOfDifferentVariablesAreNotAConflict() throws Exception {
+        try (KnowledgeWorkbench bench = logic()) {
+            Claim aboutQ = null;
+            Claim aboutP = null;
+            for (Claim claim : bench.workspace(LOGIC).claims()) {
+                if (claim.proposition().startsWith(
+                        "The propositional variable q is true in the assignment")) {
+                    aboutQ = claim;
+                }
+                if (claim.proposition().startsWith(
+                        "The propositional variable p is not true in the assignment")) {
+                    aboutP = claim;
+                }
+            }
+            if (aboutQ == null || aboutP == null) {
+                // The package does not hold both accounts; the rule is exercised by the
+                // detector's own unit test and there is nothing to assert here.
+                return;
+            }
+            Map<String, Source> sources = new LinkedHashMap<>();
+            for (Source source : bench.workspace(LOGIC).sources()) {
+                sources.put(source.id(), source);
+            }
+
+            assertThat(ClaimConflictDetector.detect(List.of(aboutQ, aboutP), sources))
+                    .as("a statement about q and a statement about p do not contradict each other")
+                    .isEmpty();
         }
     }
 

@@ -73,7 +73,7 @@ public final class ClaimConflictDetector {
      * its own SCOPE field, and a term of one letter is a symbol and not a word. What is left
      * has to be shared CONTENT, and three terms of it is the floor.
      */
-    public static final int MINIMUM_SHARED_CONTENT_TERMS = 3;
+    public static final int MINIMUM_SHARED_CONTENT_TERMS = 6;
 
     /**
      * The words that carry the POLARITY of a claim.
@@ -85,8 +85,27 @@ public final class ClaimConflictDetector {
      * corpus does not contain. The negative predicate is a polarity word, and two claims whose
      * polarity is the same do not conflict.
      */
-    private static final Set<String> NEGATIVE_POLARITY = Set.of(
-            "not", "no", "never", "cannot", "nothing", "neither", "nor", "false", "without");
+    private static final Set<String> NEGATIVE_POLARITY = folded("not", "no", "never", "cannot",
+            "nothing", "neither", "nor", "false", "without");
+
+    /**
+     * The words that carry the polarity, in the folded form of the content terms.
+     *
+     * <p>The content of a claim is folded ("true" becomes "tru"), and a polarity list written
+     * in the unfolded form never matches the words it is meant to take out: the two accounts of
+     * the same statement then look like two different statements, and the contradiction
+     * between them goes missing.</p>
+     *
+     * @param words the words
+     * @return their folded forms
+     */
+    private static Set<String> folded(String... words) {
+        Set<String> folded = new LinkedHashSet<>();
+        for (String word : words) {
+            folded.add(PremiseAssessment.stem(word));
+        }
+        return Set.copyOf(folded);
+    }
 
     /**
      * The words that carry the polarity of a claim and are therefore held apart from its
@@ -96,9 +115,8 @@ public final class ClaimConflictDetector {
      * variable p is not true in the assignment" state the same thing in two words, and a
      * comparison that kept the words would see two different propositions.
      */
-    private static final Set<String> POLARITY_WORDS = Set.of(
-            "not", "no", "never", "cannot", "nothing", "neither", "nor", "false", "true",
-            "without");
+    private static final Set<String> POLARITY_WORDS = folded("not", "no", "never", "cannot",
+            "nothing", "neither", "nor", "false", "true", "without");
 
     /** The words that carry the POSITIVE polarity of a claim. */
     private static final Set<String> POSITIVE_POLARITY = Set.of("true");
@@ -206,27 +224,55 @@ public final class ClaimConflictDetector {
     private static Conflict polarityConflict(Claim left, Claim right, Map<String, Source> sources) {
         Set<String> leftContent = contentTerms(left);
         Set<String> rightContent = contentTerms(right);
-        // THE TWO ACCOUNTS MUST STATE THE SAME PROPOSITION.
-        //
-        // Two accounts whose words are the same and whose polarity differs contradict each
-        // other; two accounts whose words differ do not, however many words they share. The
-        // logic package is the case in point: "the propositional variable p is false in the
-        // assignment" and "the propositional variable p is not true in the assignment" are the
-        // SAME assertion in two words (the polarity words are held apart from the content), and
-        // "the propositional variable p implies the propositional variable q" is a different
-        // proposition altogether. A detector that compared the words and the polarity alone
-        // reported both as contradictions, and a false contradiction in a served answer is
-        // worse than a missed one.
-        if (!leftContent.equals(rightContent)) {
+        Set<String> shared = new LinkedHashSet<>(leftContent);
+        shared.retainAll(rightContent);
+        Set<String> leftSymbols = symbols(left);
+        Set<String> rightSymbols = symbols(right);
+        if (!leftSymbols.isEmpty() && !rightSymbols.isEmpty()
+                && !leftSymbols.equals(rightSymbols)) {
+            // THE STATEMENTS ARE ABOUT DIFFERENT VARIABLES.
+            //
+            // "q is true in the assignment" and "p is not true in the assignment" speak about
+            // different things, and a detector that cannot tell them apart calls every pair
+            // of them a contradiction.
             return null;
         }
-        if (!sameScope(left, right)) {
+        boolean theSameStatement = leftContent.equals(rightContent);
+        if (!theSameStatement) {
+            // TWO PHRASINGS OF THE SAME SUBJECT, WITH OPPOSITE ACCOUNTS.
+            //
+            // The corpus holds the same subject in different words — "the forces associated
+            // with the downgoing plate (slab pull and slab suction) are the driving forces"
+            // against "the actual motions of the Pacific plate ... do not correlate mainly
+            // with either slab pull or slab push" — and the accounts contradict each other.
+            // The subject is read from the CONTENT the two accounts share, and six shared
+            // content terms is the floor. The measured cases sit either side of it: the
+            // corpus's two accounts of the driving force of plate motion share seven ("slab",
+            // "pull", "plate", "motion", "force", "driving", "associated"), and the logic
+            // package's two accounts about validity share five ("argument", "valid",
+            // "premises", "modus", "ponens") — and those two are not the same statement.
+            if (shared.size() < MINIMUM_SHARED_CONTENT_TERMS) {
+                return null;
+            }
+            if (leftContent.containsAll(rightContent) || rightContent.containsAll(leftContent)) {
+                // ONE ACCOUNT ADDS SOMETHING TO THE OTHER.
+                //
+                // "An argument is sound when it is valid and all of its premises are true"
+                // and "An argument is sound when it is valid and all of its premises are
+                // true; a modus ponens argument can be valid yet unsound when one of its
+                // premises is false" share every content term, and the second says MORE than
+                // the first. A statement that adds a qualification does not contradict the
+                // statement it qualifies.
+                return null;
+            }
+        }
+        if (theSameStatement && !sameScope(left, right)) {
             // Two accounts under different conditions can both hold, and the corpus says which
             // conditions each of them holds under.
             return null;
         }
-        int leftPolarity = polarityOf(left);
-        int rightPolarity = polarityOf(right);
+        int leftPolarity = polarityOf(left, shared);
+        int rightPolarity = polarityOf(right, shared);
         if (leftPolarity == rightPolarity || leftPolarity == 0 || rightPolarity == 0) {
             return null;
         }
@@ -248,15 +294,11 @@ public final class ClaimConflictDetector {
      * @return the terms of its scope
      */
     private static Set<String> scopeTerms(Claim claim) {
-        Set<String> terms = new LinkedHashSet<>();
         String scope = claim.scope();
         if (scope == null || scope.isBlank()) {
-            return terms;
+            return Set.of();
         }
-        for (String word : TextFeatures.rawWords(scope)) {
-            terms.add(TextProfiles.ofLanguage(TextProfiles.detect(word)).fold(word));
-        }
-        return terms;
+        return PremiseAssessment.distinctiveStems(scope);
     }
 
     /**
@@ -302,8 +344,43 @@ public final class ClaimConflictDetector {
                 claim.proposition()));
         terms.removeAll(scopeTerms(claim));
         terms.removeAll(POLARITY_WORDS);
-        terms.removeIf(term -> term.length() < 2);
         return terms;
+    }
+
+    /**
+     * The symbols an account uses: the one-letter terms.
+     *
+     * <p><b>Why a symbol is content and not noise.</b> A formal statement is identified by the
+     * variable it speaks about: "q is true in the assignment" and "p is not true in the
+     * assignment" are statements about DIFFERENT things, and a detector that drops the
+     * one-letter terms sees them as the same statement with opposite polarity and reports a
+     * contradiction the corpus does not contain. The symbols are therefore kept in the
+     * content, and two accounts that use different symbols are not about the same thing.
+     *
+     * @param claim the account
+     * @return the symbols it uses
+     */
+    /**
+     * The content terms of a text.
+     *
+     * @param proposition the text
+     * @return its content terms
+     */
+    static Set<String> contentTermsOf(String proposition) {
+        Set<String> terms = new LinkedHashSet<>(
+                PremiseAssessment.distinctiveStems(proposition));
+        terms.removeAll(POLARITY_WORDS);
+        return terms;
+    }
+
+    static Set<String> symbols(Claim claim) {
+        Set<String> symbols = new LinkedHashSet<>();
+        for (String term : contentTerms(claim)) {
+            if (term.length() == 1) {
+                symbols.add(term);
+            }
+        }
+        return symbols;
     }
 
     /**
@@ -314,10 +391,51 @@ public final class ClaimConflictDetector {
      * @return the polarity
      */
     static int polarityOf(Claim claim) {
+        return polarityOf(claim, Set.of());
+    }
+
+    /**
+     * The polarity of the part of an account that speaks about a subject.
+     *
+     * <p>An account is read in the clause that carries the subject, not in its tail: "the
+     * forces associated with the downgoing plate are the driving forces, except for those
+     * plates which are not being subducted" asserts what it says about the driving forces,
+     * and the parenthesis about the plates that are not subducted does not turn the assertion
+     * into a denial.</p>
+     *
+     * @param claim the account
+     * @param shared the subject terms the two accounts share
+     * @return the polarity: negative, positive, or zero when the account says nothing
+     */
+    static int polarityOf(Claim claim, Set<String> shared) {
+        int best = 0;
+        int bestScore = -1;
+        for (String clause : PremiseAssessment.fragmentsOf(claim.proposition())) {
+            int score = 0;
+            for (String term : PremiseAssessment.distinctiveStems(clause)) {
+                if (shared.contains(term)) {
+                    score++;
+                }
+            }
+            if (score > bestScore) {
+                bestScore = score;
+                best = polarityOfClause(clause);
+            }
+        }
+        return best;
+    }
+
+    /**
+     * The polarity of a clause.
+     *
+     * @param clause the clause
+     * @return the polarity: negative, positive, or zero when it says nothing
+     */
+    private static int polarityOfClause(String clause) {
         boolean negative = false;
         boolean positive = false;
-        for (String word : TextFeatures.rawWords(claim.proposition())) {
-            String folded = TextProfiles.ofLanguage(TextProfiles.detect(word)).fold(word);
+        for (String word : TextFeatures.rawWords(clause)) {
+            String folded = PremiseAssessment.stem(word);
             if (NEGATIVE_POLARITY.contains(folded)) {
                 negative = true;
             }
@@ -331,7 +449,11 @@ public final class ClaimConflictDetector {
         if (positive) {
             return 1;
         }
-        return 0;
+        // A clause that carries no negation ASSERTS: "the propositional variable p is true in
+        // the assignment" says something, and a detector that reads only the negation marker
+        // sees nothing there and misses the contradiction between it and the account that
+        // denies the same thing.
+        return 1;
     }
 
     /**
