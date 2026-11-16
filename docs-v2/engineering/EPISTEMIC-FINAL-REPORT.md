@@ -67,35 +67,54 @@ refusal names the claim and source ids that do the refuting.
 | false refusals (a supported premise refused) | 0 | **0** |
 | false contradictions (an unsupported or supported premise called refuted) | 0 | **0** |
 | unsupported answering (a refuted premise answered as if true) | 3 | **2** |
-| ambiguity coverage (the gold readings surfaced) | 0 / 7 | **7 / 7** |
-| conflict coverage (both sides surfaced) | 0 / 2 | **0 / 2** |
+| ambiguity coverage (the readings surfaced — **counted**, not matched) | 0 / 7 | **7 / 7 counted, 5 / 7 matched against the gold** |
+| conflict coverage (both sides surfaced) | 0 / 2 | **1 / 2** |
 
 **The regressions do not move.** The official 29-case evaluation: **18/29**, the qualitative columns
 byte-identical, the same eleven failures (`A-02, A-04, A-05, A-06, F-02, M-01, M-03, P-01, P-02,
 R-04, R-05`); the unanswerable abstention **6/6**, accuracy 1.0000, no case lost; the C2A
 `BASELINE-PATH` 17/25. The scope `io.matrix.knowledge.*`: **731 tests, 0 failures**.
 
-**The price, measured.** The latency of one question on the seed corpus rose from 30 ms to **43 ms**
-(the pool corpus fell from 60 ms to 40 ms). The residual cost is `PremiseChecker.refutation`, which
-must scan the workspace because a refuting claim often does not rank high; bounding it by the
-retriever broke 11 tests and was reverted. The extra retrieval was removed (three per question →
-two).
+**The price, measured.** The latency of one question on the seed corpus rose from 30 ms to **44 ms**;
+the frozen set runs at 21–29 ms (mean 24). On the **research pool** the round-3 subject test added
+**+23 ms** (retrieval 63 ms and overhead 55 ms against 40/31 in the previous round) — the proposition
+tokens are now computed per claim inside the refutation scan and the lexicon is consulted inside
+`coversSubject`; a cache would remove it, and it is **not** done. The extra retrieval was removed
+(three per question → two).
 
-**What remains open, and why.** Two defects are **measured limitations, not silences**:
+**The third round, and what it closed.** The second adversarial review found that the correction
+itself had defects: different variables were treated as the same statement, and the same statement
+with opposite polarity was no longer a conflict at all. Both are closed. It also found that a claim
+the workspace itself marks **REFUTED** was being used as the evidence that *another* proposition was
+false — an inversion of meaning, and the cause of the photosynthetic false refusal: a claim the
+workspace calls false cannot evidence the falsity of something else. The rule is now that such a claim
+may refute only the proposition it repeats. Closing it initially broke the earlier wave's **abstention
+floor** (0.861 → 0.694, six of the eight false-premise cases stopped being refused); the floor is
+restored (**0.861**, the gate 0.900) and the scope is green (116 classes, **737 tests, 0 failures**).
+
+**What remains open, and why.** Three defects are **measured limitations, not silences**:
 (a) *"Since plants release oxygen during the day…"* is still `REFUTED` although the corpus states it
 — the refuting claim is itself a `REFUTED` claim whose scope is "the misconception, stated so that it
 can be refuted", and the two premises are lexically indistinguishable against it (each covers 3 of
 its 7 content terms); there is no lexical discriminator, and one would need a semantic parser — which
 the directive forbids. (b) The paraphrase equivalence is partial: two cases of the frozen set report
 `UNSUPPORTED` where the originals report `SUPPORTED`/`ANSWERED`; the coverage threshold that would
-fix them (0.57–0.60) produces a false `SUPPORT` on another case (0.75).
+fix them (0.57–0.60) produces a false `SUPPORT` on another case (0.75). (c) **The ambiguity of the
+frozen set's own two cases does not reach the caller in the status**: both report `UNSUPPORTED` /
+`NO_PREMISE` instead of `AMBIGUOUS`, although the readings are attached and the research-pool
+analogues are `AMBIGUOUS`. The acceptance metric also **counts** the readings instead of **matching**
+them against the gold, which is why it reported 7/7 where the match is 5/7.
 
-**And the deliberate trade.** The conflict detector is now **conservative**: it reports a conflict
-only when the two statements are the *same assertion* with opposite polarity and the same scope. The
-price is that the frozen set's two gold conflict claims — phrased differently — are not reported
-(`0/2`). The alternative measured **13** conflicts on the logic package, including the false ones the
-adversarial review had named. The directive's rule — *a false conflict report is worse than a missed
-one* — decides the trade, and the missed conflict is recorded as an open defect.
+**And the trade, twice reviewed.** After the first review the detector was made **conservative**: it
+reported a conflict only for the *same assertion* with opposite polarity and the same scope. The
+adversarial review showed that this over-corrected — it reported **false** conflicts between
+assertions about *different* one-letter variables (the symbol had been dropped from the comparison)
+and it **missed** the genuine contradiction of the same statement (the polarity words were stemmed,
+so the list that was supposed to remove them never matched). Both are fixed: the symbols are kept,
+the polarity words are folded the same way as the content, and a second path compares the **subject**
+rather than the word sets. The frozen set's E-C01 now reaches the caller with **both sides** and the
+status `CONTRADICTORY`; the false pairs no longer do. The remaining half of the class is an open
+defect (§J).
 
 ---
 
