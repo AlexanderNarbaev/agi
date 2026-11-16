@@ -543,6 +543,29 @@ python3 scripts/docs-link-check.py --root . --strict
 3. **The open defects of §J**, each with its reproduction, and the inherited reds of §J that need the
    owner's action (the Docker Hub credentials) rather than the coordinator's.
 
+**The cold-start resume prompt** (Gate 6 of the directive asks for one; copy it into a fresh session):
+
+> Continue the MATRIX EPISTEMIC-INTEGRITY programme in `/home/alexandr-narbaev/Projects/agi` (branch
+> `develop`). The owner's directive is READ-ONLY at
+> `/home/alexandr-narbaev/.dsh/attachments/v1/files/fa/fad9aeb5d7f1dae77e7070e73c9d9e4e6cfde6cf7537ad95b9a4cc098ec78584/MATRIX_AUTONOMOUS_DEVELOPMENT_MANDATE_2026-11-15.md`.
+> Read first: `docs-v2/engineering/EPISTEMIC-FINAL-REPORT.md` (sections A–J, the state of every
+> workstream and the open items), `docs-v2/engineering/EPISTEMIC-EXECUTION-PLAN.md` (the task graph
+> and the append-only evidence ledger), `docs-v2/governance/DECISION-REGISTER.md` (OD-053 … OD-060).
+> The P0 gates are closed; P1 (the definition half) and P2 (the closed loop) are implemented and
+> measured. The next highest-value work is, in order: the **hard independent review** of P1/P2; the
+> **counterfactual/replay** arm of the closed loop (the directive's own acceptance criterion, still
+> open); **P3** (the learning label's meaning — a research-only independently verified signal); and
+> the **referent key** (the identity half's instrument — the research says the alias and resolution
+> policy is the unsolved part). The identity **migration** is owner-gated: the concept id is
+> referenced by ten tables and SQLite declares no foreign keys. The gates of the repository must stay
+> green: `./scripts/quality-gate.sh` (PASS, 271 literals, 0 violations), `validate-current-state.py
+> --strict`, `validate-test-catalogue.py --strict`, `docs-link-check.py --strict`. Every build runs
+> under `flock /tmp/gradle-matrix.lock` with the `--tests` filter immediately after the task name and
+> never `--rerun`. Answer the owner in Russian; the code, the identifiers and the commit messages stay
+> in English; commits are `WAL: <description>`; never print a secret; mark a guess below 80 %
+> confidence `[speculative]`; every published number needs its command and its artefact, and a null
+> result is a result.
+
 **The two measurement traps this programme paid for, so the next wave does not pay again.** (1) A
 **count** is not a **match**: the ambiguity metric reported 7/7 because it counted the readings it
 showed; the honest number was 3/7. (2) A **before/after against an uncommitted state** is not
