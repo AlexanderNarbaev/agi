@@ -72,6 +72,13 @@ class EpistemicBaselineTest {
      * from the artefact at run time instead of writing it down.</p>
      */
     private static final String PROBE_FILE_MARKER = "AdversarialProbe";
+    /**
+     * The second class of instrument that may NAME the frozen set: the
+     * concept-definition measurement, which reads the set at run time to compare
+     * the retrieval arms. Naming the artefact is not carrying its content — the
+     * question and the gold checks apply to every file, these included.
+     */
+    private static final String MEASUREMENT_PACKAGE_MARKER = "concept/definitions/";
 
     /** The corpus the set was built from and the measurement is run against. */
     private static final String CORPUS = AcquisitionCycle.SEED_CORPUS;
@@ -497,7 +504,8 @@ class EpistemicBaselineTest {
                     // What no file may do is carry a gold proposition or a question
                     // of the set — that check below applies to every file, including
                     // the probes.
-                    boolean isSetInstrument = relative.contains(PROBE_FILE_MARKER);
+                    boolean isSetInstrument = relative.contains(PROBE_FILE_MARKER)
+                            || relative.contains(MEASUREMENT_PACKAGE_MARKER);
                     if (!isSetInstrument && text.contains("EPISTEMIC-HELDOUT-SET")) {
                         offenders.add(relative);
                     }
