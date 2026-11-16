@@ -400,3 +400,22 @@ partial migration would be invisible.
 **The evidence:** `matrix-core/src/test/java/io/matrix/knowledge/concept/definitions/**`, and the JUnit
 XML of the run — 37 tests, 0 failures, 0 errors, 0 skipped
 (`matrix-core/build/test-results/test/*.xml`).
+
+### 10a. The benefit measurement — a null result (2026-11-16)
+
+The owner's answer to the H1 question was **option C** ("A now + a separate measurement task for the
+benefit of the definitions"), and the measurement task has been run: four arms (no definitions, all
+the definitions, the definitions of the concepts a name-shape rule accepts, and the strict variant
+of that rule) over the official 20 ask cases and the frozen 16-case held-out set, interleaved, with
+the official runner's own verdict.
+
+**The definitions have no measurable benefit.** The production arm passes 12/20 with the official
+eight ask-case failures; every arm that puts definitions into the searchable text passes **11/20**;
+the frozen held-out set is **identical in every arm**; the uniform variant additionally loses the
+refusal (the unanswerable abstention 6/6 → 5/6). The detail, the rule and its limits are in
+`docs-v2/engineering/EPISTEMIC-CONCEPT-DEFINITIONS.md` §9.
+
+**What this closes.** The H1 question: the definitions are worth keeping as knowledge — they are the
+corpus's own account of a concept, with its span — and they are **not** worth putting into the
+retriever's searchable text. The tree is in that state: the definitions live in the
+`concept_definition` table and the `concept.definition` column stays empty.

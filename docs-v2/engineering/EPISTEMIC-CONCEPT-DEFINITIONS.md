@@ -224,3 +224,115 @@ The four C2A artefacts (`C2A-CONCEPT-ENRICHMENT-EXPERIMENT.md`,
 **content** columns are identical to the published ones; only the machine's timings differ, and those
 move between runs of the same code. They are not in this wave's write scope: the coordinator decides
 whether to re-publish or to revert them.
+
+---
+
+## 9. WHERE THE DEFINITIONS ACTUALLY HELP — the benefit measurement (2026-11-16)
+
+**The owner's decision (option C):** *"A now + a separate measurement task for the benefit of the
+definitions"* — the definitions stay out of the searchable text, and this section is the measurement
+task: **is there a subset where a definition helps without degrading the refusal correctness?**
+
+### 9.1 The instrument
+
+`matrix-core/src/test/java/io/matrix/knowledge/concept/definitions/DefinitionBenefitMeasurementTest.java`
+— four arms over the same corpus, the same questions and the same method, **interleaved case by
+case** so that a machine that gets busier cannot be mistaken for an arm:
+
+| arm | what the arm puts into the retrievable text |
+|---|---|
+| `WITHOUT` | nothing — the production state (the definitions stay in the `concept_definition` table) |
+| `WITH_ALL` | every recorded definition — the uniform H1 variant |
+| `WITH_RULE` | the definitions of the concepts the **name-shape rule** accepts |
+| `WITH_STRICT_RULE` | the definitions of the concepts the **strict rule** accepts |
+
+* **The corpus.** The six scopes of the official dataset, prepared with the production methods
+  (`AcquisitionCycle.loadSeed` / `.run` / `.acquireAndRevise`), in a temporary database.
+* **The questions.** The official 29 cases — of which **20 are ask cases** and 9 (the five
+  false-premise and four revision cases) are judged by the official runner on their own paths and
+  cannot be measured by an ask — and the **frozen held-out set** (`EPISTEMIC-HELDOUT-SET.json`, the
+  16 P0.3 cases), which is read and never written.
+* **The verdict.** The official runner's own `judgeAnswer` — the comparison the official runner
+  makes, whitespace collapsed and lower-cased — so the arms are comparable with the published row.
+* **The calibration.** The `WITHOUT` arm must reproduce the published failures; the test asserts it
+  (the eight ask-case failures `A-02, A-04, A-05, A-06, M-01, P-01, P-02, M-03` — the other three
+  of the eleven, `F-02, R-04, R-05`, are not ask cases). Without that assertion the instrument would
+  be measuring its own rules rather than the official ones.
+
+### 9.2 The two sets, the four arms
+
+**The official 20 ask cases** (the calibration: `WITHOUT` = 12/20, the eight official failures ✓):
+
+| arm | passed | answered | the unanswerable abstained | answered without the gold | the mean ask |
+|---|---|---|---|---|---|
+| `WITHOUT` (production) | **12 / 20** | 14 | **6 / 6** | 8 | 72 ms |
+| `WITH_ALL` (uniform H1) | **11 / 20** | 15 | **5 / 6** ✗ | 9 ✗ | 71 ms |
+| `WITH_RULE` | **11 / 20** | 14 | 6 / 6 | 9 ✗ | 68 ms |
+| `WITH_STRICT_RULE` | **11 / 20** | 14 | 6 / 6 | 9 ✗ | 72 ms |
+
+**The frozen held-out set (16 cases):** **every arm is identical** — 8/16 passed, 12 answered,
+4 abstentions, 4 answered without the gold, 32–34 ms. **The definitions change nothing there.**
+
+**The two cases that move.**
+
+* **`U-04`** — an **unanswerable** case. Under the uniform arm it is **answered** instead of
+  abstained: the wider searchable text lets a claim cover enough of the question to pass the floor.
+  That is the refusal degradation (the official 6/6 → 5/6, the unsupported-answer rate 0.3000 →
+  0.4500), and it is reproduced here by an independent instrument ✓.
+* **`A-03`** — an answerable case that the two rule arms **lose**. The strict rule still loses it,
+  and the concepts it cites whose definitions the strict rule admits are the **well-formed** ones
+  (`Plate tectonics`, `Continental crust`, `Slab pull`, `Plate boundaries`) — so the loss comes from
+  the good definitions, not from the fragments the rule filters out.
+
+### 9.3 The subset rule
+
+The rule is stated over the **concept's name** — never over a case, a question or a corpus phrase:
+
+> A concept's definition may enter the searchable text only when the concept's name is a
+> **referent** rather than a fragment: not a single function word, not a name that opens with a
+> class word ("these", "many", "such"), not a name the subject extractor cut inside a clause (its
+> last word is one the extractor stops at). The **strict** variant adds: not a name that opens with
+> a preposition, a conjunction or a subordinating adverb ("Because it", "while Earth", "In this
+> understanding, plate motion") and not a name that ends with a relative pronoun ("slabs that").
+
+The rule is a **word-list rule over closed vocabularies**, with every list a named constant and a
+comment — no case id, no corpus phrase, no question string ✓. It admits 356 of the recorded
+definitions across the six workspaces, and the strict variant 269 (the seed workspace's own 120 are
+a part of those numbers).
+
+### 9.4 THE VERDICT — a null result
+
+**The definitions have no measurable benefit.** There is a rule that preserves the refusal
+correctness (both rule arms keep the 6/6), and that rule buys **nothing**: the official ask cases go
+from 12/20 to **11/20** (A-03 is lost and nothing is gained), and the frozen held-out set is
+**identical in every arm**. The uniform variant is worse: it loses the refusal as well.
+
+**A null result here is the result.** The H1 question is closed by this measurement, not left open:
+the definitions are worth keeping as **knowledge** (they are the corpus's own account of a concept,
+with its span), and they are **not** worth putting into the retriever's searchable text — on this
+corpus, under this rule and its strict variant, they cost a case and buy none.
+
+**[speculative]** — the rule itself was written *against the names* and then checked against the
+measurement, and the strict variant was written *after* seeing that the loose one let A-03 through.
+Both are fitted to one corpus of 326 names and to one case that moves; a rule fitted this way is a
+hypothesis, not a result, and it is reported as such. The **verdict** (no benefit) does not depend on
+the rule: the held-out set is identical in every arm, and no arm gains a single case.
+
+### 9.5 What this measurement does not establish
+
+* **It does not establish that the definitions are useless.** It establishes that putting them into
+  the retrievable text buys nothing **on this corpus, under these rules, at this retriever floor**,
+  and that the uniform application costs the refusal correctness. A different retrieval (a different
+  floor, a different query expansion, an embedding-free semantic match over the definition) was not
+  measured.
+* **It does not measure the nine non-ask cases** (the false-premise and revision paths): an ask
+  cannot judge them, and their paths are outside this scope.
+* **It does not measure the answer's correctness** (A6) beyond the official verdict, and it does not
+  establish a gain anywhere: the research is explicit that this corpus cannot support a retrieval
+  gain claim.
+* **It does not generalise beyond the corpus**: nine documents, one domain, one language, one
+  register.
+* **It does not say the definitions are wrong.** 24 of a 25-sample are about their concept; the
+  problem is not their truth but that the retriever does not benefit from them.
+* **The latency**: 68–72 ms across the four arms — inside the noise of the machine, and the arms
+  differ by nothing measurable.

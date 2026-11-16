@@ -4849,6 +4849,44 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     /**
+     * Writes a concept's definition into the column the retriever reads.
+     *
+     * <p><b>EPISTEMIC-INTEGRITY P1 — THE ARM OF THE MEASUREMENT.</b> The
+     * concept's {@code definition} column is appended to every claim's searchable
+     * text ({@code KnowledgeRetriever.java:170-172}), and whether that is a
+     * benefit is the question the benefit measurement asks: it puts the
+     * definitions of a workspace into the column, in one arm, and takes them
+     * out in another, and measures both. The production acquisition path does
+     * NOT write this column — the owner's decision (option C) is that the
+     * definitions stay out of the searchable text — and this accessor is the
+     * write path of the variant under measurement, nothing else.</p>
+     *
+     * @param workspaceId the workspace
+     * @param conceptId the concept whose definition is written
+     * @param definition the definition; null leaves the column empty
+     * @return true when the row was written
+     */
+    public synchronized boolean updateConceptDefinition(String workspaceId, String conceptId,
+                                                         String definition) {
+        if (workspaceId == null || workspaceId.isBlank()) {
+            throw new IllegalArgumentException("a workspace is required");
+        }
+        if (conceptId == null || conceptId.isBlank()) {
+            throw new IllegalArgumentException("a concept id is required");
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE concept SET definition = ? WHERE id = ? AND workspace_id = ?")) {
+            ps.setString(1, definition);
+            ps.setString(2, conceptId);
+            ps.setString(3, workspaceId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to write the definition of the concept "
+                    + conceptId, e);
+        }
+    }
+
+    /**
      * The definitions a workspace holds, by concept.
      *
      * @param workspaceId the workspace
