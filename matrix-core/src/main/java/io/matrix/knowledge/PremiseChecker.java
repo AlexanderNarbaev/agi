@@ -398,6 +398,32 @@ public final class PremiseChecker {
     public static final double MINIMUM_CROSS_LINGUAL_SAME_ASSERTION_COVERAGE = 0.50;
 
     /**
+     * The number of terms a claim and a premise have to share for the claim to be read as a
+     * denier of the premise when the claim does not cover the premise's terms.
+     *
+     * <p><b>What it is.</b> The number of terms two accounts have to share for the
+     * comparison between them to mean anything: the same floor
+     * {@link PremiseAssessment#MINIMUM_SHARED_TERMS} states for the subject of a premise, and
+     * it is read on the retrieval's own index terms so that the claim's scope is read only for
+     * the claims that are about the premise at all.</p>
+     */
+    private static final int MINIMUM_SHARED_SUBJECT_TERMS =
+            PremiseAssessment.MINIMUM_SHARED_TERMS;
+
+    /**
+     * The number of terms the claim's own statement and a premise have to share for the
+     * claim's denial to be about the premise's subject.
+     *
+     * <p><b>What it is.</b> The subject test of {@link PremiseSemantics}: the number of terms
+     * a conflict and a question's subject have to share for the conflict to be about the
+     * question. It is that number and not a second one, because the question it answers is the
+     * same question — are these two accounts about the same thing — and a denial about another
+     * thing is no evidence about this one.</p>
+     */
+    private static final int MINIMUM_DENIAL_SUBJECT_TERMS =
+            PremiseSemantics.MINIMUM_CONFLICT_SUBJECT_TERMS;
+
+    /**
      * The English terms that state the same thing.
      *
      * <p><b>Why a rule that compares words needs this.</b> Two statements state the same
@@ -524,6 +550,7 @@ public final class PremiseChecker {
         // would miss it — the false premise would be answered as if it held.
         for (Claim claim : snapshot.claims()) {
             Set<String> indexedTerms = indexed == null ? null : indexed.get(claim.id());
+            boolean bearsOn = false;
             if (indexedTerms != null) {
                 // THE COVERAGE IS COUNTED ON THE RETRIEVAL'S TERMS, NOT ON THE CLAIM'S OWN.
                 //
@@ -532,7 +559,14 @@ public final class PremiseChecker {
                 // claim that does not cover the premise's terms there cannot cover them
                 // either. The claim is read — and tokenised again — only when the index says
                 // that it can bear on the premise.
-                if (!bearsOnThePremise(terms, indexedTerms, coverings, known)) {
+                bearsOn = bearsOnThePremise(terms, indexedTerms, coverings, known);
+                if (!bearsOn && !sharesAtLeast(indexedTerms, terms,
+                        MINIMUM_SHARED_SUBJECT_TERMS)) {
+                    // THE CHEAP PRE-FILTER: the claim has to be about the premise AT ALL, or
+                    // it cannot deny the premise's subject. It is read on the retrieval's own
+                    // index terms, which the retrieval has already built for every question,
+                    // and the claim's own words are read only for the claims that meet the
+                    // premise there.
                     continue;
                 }
             }
@@ -549,11 +583,17 @@ public final class PremiseChecker {
             // costs more than the re-reading it saves (the index build grew by 2.8 ms a
             // question on the research pool, and the asking path with it).
             Set<String> claimTerms = termsOf(claimText(claim, conceptsById));
-            if (!bearsOnThePremise(terms, claimTerms, coverings, known)) {
+            if (!bearsOn && !bearsOnThePremise(terms, claimTerms, coverings, known)) {
                 // The claim has to be about the premise: it has to carry at least half of the
                 // premise's terms. The coverage is read through the lexicon, so a Russian
                 // premise and the English claim about it meet.
-                continue;
+                //
+                // THE EXCEPTION IS THE DENIAL AT THE SUBJECT LEVEL: a claim that denies the
+                // premise's subject is read even when it does not cover the premise's terms.
+                // See deniesThePremisesSubject.
+                if (!deniesThePremisesSubject(claim, terms, premise, claimTerms)) {
+                    continue;
+                }
             }
             if (claim.status() == ClaimStatus.REFUTED && heldAsTrue) {
                 // A CLAIM THE WORKSPACE CALLS FALSE DOES NOT REFUTE ANOTHER PROPOSITION.
@@ -601,6 +641,76 @@ public final class PremiseChecker {
             }
         }
         return null;
+    }
+
+    /**
+     * Whether the claim denies the premise's subject.
+     *
+     * <p><b>Why a denial at the subject level is enough.</b> The coverage floor decides
+     * whether a claim is read at all, and the corpus's own correction of a misconception is
+     * often written in the SCOPE of the claim that carries the truth: the photosynthesis
+     * package states "Oxygenic photosynthesis releases oxygen as a byproduct of splitting
+     * water" and, in the claim's scope, "the oxygen originates from water, not from carbon
+     * dioxide". A premise that repeats the misconception in other words — "since
+     * photosynthesis produces the oxygen of a plant from the carbon dioxide it absorbs" —
+     * names a distinguishing term the claim does not carry ("produces"), so the coverage of
+     * the premise's terms falls below the floor, the correction was never read, and the
+     * premise the corpus DENIES was answered.</p>
+     *
+     * <p><b>Why the denial still has to land.</b> A denial at the subject level is enough
+     * only when the two statements are about the same thing: the claim's own statement — its
+     * proposition WITH its scope, for the scope is part of the statement — has to be about the
+     * premise's subject, and the denied object has to be the premise's own subject-matter.
+     * The premise "the oxygen a plant releases comes from the water it absorbs" is about the
+     * same subject, but the corpus's correction does not deny it: it denies that the oxygen
+     * comes from the carbon dioxide, and the premise does not say that. And the premise "RuBisCO
+     * fixes carbon dioxide" shares no subject with the correction at all.</p>
+     *
+     * @param claim the claim the workspace holds
+     * @param premiseTerms the premise's terms
+     * @param premise the premise
+     * @param claimTerms the claim's own terms — its proposition with the concept's name beside
+     *     them
+     * @return whether the claim denies the premise's subject
+     */
+    private static boolean deniesThePremisesSubject(Claim claim, Set<String> premiseTerms,
+            String premise, Set<String> claimTerms) {
+        if (claim == null || premiseTerms == null || premiseTerms.isEmpty()) {
+            return false;
+        }
+        // THE CLAIM HAS TO BE ABOUT THE PREMISE AT ALL: the two statements have to meet
+        // before the denial between them means anything.
+        if (!sharesAtLeast(claimTerms, premiseTerms, MINIMUM_SHARED_SUBJECT_TERMS)) {
+            return false;
+        }
+        // THE SUBJECT TEST: the claim's own statement, its proposition WITH its scope, has to
+        // be about the premise's subject.
+        Set<String> statement = new LinkedHashSet<>(claimTerms);
+        statement.addAll(termsOf(claim.scope() == null ? "" : claim.scope()));
+        if (!sharesAtLeast(statement, premiseTerms, MINIMUM_DENIAL_SUBJECT_TERMS)) {
+            return false;
+        }
+        // THE DENIAL HAS TO LAND ON THE PREMISE: the denied object has to be the premise's own
+        // subject-matter, and a denial about something else is no evidence about it.
+        return denialOf(claim, premiseTerms, premise, true) != null;
+    }
+
+    /**
+     * Whether the two sets of terms share at least the given number of terms.
+     *
+     * @param terms the first set of terms
+     * @param other the second set of terms
+     * @param minimum the number of terms they have to share
+     * @return whether they share at least that many
+     */
+    private static boolean sharesAtLeast(Set<String> terms, Set<String> other, int minimum) {
+        int shared = 0;
+        for (String term : other) {
+            if (terms.contains(term) && ++shared >= minimum) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
