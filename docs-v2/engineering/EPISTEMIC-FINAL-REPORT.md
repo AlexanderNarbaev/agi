@@ -67,7 +67,7 @@ refusal names the claim and source ids that do the refuting.
 | false refusals (a supported premise refused) | 0 | **0** |
 | false contradictions (an unsupported or supported premise called refuted) | 0 | **0** |
 | unsupported answering (a refuted premise answered as if true) | 3 | **2** |
-| ambiguity coverage (the readings surfaced, **matched against the gold**) | 0 / 7 | **3 / 7** — the metric counted the readings before; it now matches them, and the honest number is lower |
+| ambiguity coverage (the readings surfaced, **matched against the gold**) | 0 / 7 | **5 / 7** — the metric counted the readings before; it now matches them, and the honest number was 3/7 before the ambiguity was fixed |
 | conflict coverage (both sides surfaced, matched against the gold) | 0 / 2 | **2 / 2** |
 
 **The regressions do not move.** The official 29-case evaluation: **18/29**, the qualitative columns
@@ -75,12 +75,14 @@ byte-identical, the same eleven failures (`A-02, A-04, A-05, A-06, F-02, M-01, M
 R-04, R-05`); the unanswerable abstention **6/6**, accuracy 1.0000, no case lost; the C2A
 `BASELINE-PATH` 17/25. The scope `io.matrix.knowledge.*`: **731 tests, 0 failures**.
 
-**The price, measured.** The latency of one question on the seed corpus rose from 30 ms to **44 ms**;
-the frozen set runs at 21–29 ms (mean 24). On the **research pool** the round-3 subject test added
-**+23 ms** (retrieval 63 ms and overhead 55 ms against 40/31 in the previous round) — the proposition
-tokens are now computed per claim inside the refutation scan and the lexicon is consulted inside
-`coversSubject`; a cache would remove it, and it is **not** done. The extra retrieval was removed
-(three per question → two).
+**The price, measured.** The latency of one question, in-process, two repetitions, 36 questions per
+corpus: the seed corpus **28.67 / 25.83 ms → 22.92 / 23.39 ms** and the research pool
+**35.39 / 34.81 ms → 33.19 / 33.19 ms** — the subject test did cost time, and removing the second
+full workspace scan gave it back: the refutation scan now reads the **retriever's index** (the coverage
+is computed over already-tokenised terms, and only the candidates are tokenised), so the scan dropped
+from **1.59 ms average / 2.40 max** over **every** claim (348 seed, 888 pool) to **0.15–1.2 ms** over
+the candidates. The lexicon is asked **once per term** instead of once per (claim, term) pair. A cache
+was deliberately **not** used: the verdict must stay a function of the workspace's content.
 
 **The third round, and what it closed.** The second adversarial review found that the correction
 itself had defects: different variables were treated as the same statement, and the same statement
@@ -92,20 +94,26 @@ may refute only the proposition it repeats. Closing it initially broke the earli
 floor** (0.861 → 0.694, six of the eight false-premise cases stopped being refused); the floor is
 restored (**0.861**, the gate 0.900) and the scope is green (116 classes, **737 tests, 0 failures**).
 
-**What remains open, and why.** Three defects are **measured limitations, not silences**:
+**The fourth round closed the rest.** The same-assertion rule now compares **clauses** (the
+proposition and the scope), not "the same subject": a claim that *asserts* the premise supports it,
+and the cross-lingual case is bridged explicitly (the Russian formulation of the misconception is
+refuted again). The ambiguity is now the corpus's **accounts about the subject**, and when those
+accounts disagree the status is `AMBIGUOUS` and the reason **names both sides**. The measurements:
+the nine corpus-stated premises → **0 of 9** `REFUTED` (was 3), the plants premise → `UNSUPPORTED`,
+the ambiguity coverage **3/7 → 5/7**, and the whole scope **119 classes / 750 tests / 0 failures**.
+
+**What remains open, and why.** Two defects are **measured limitations, not silences**:
 (a) *"Since plants release oxygen during the day…"* is still `REFUTED` although the corpus states it
 — the refuting claim is itself a `REFUTED` claim whose scope is "the misconception, stated so that it
 can be refuted", and the two premises are lexically indistinguishable against it (each covers 3 of
 its 7 content terms); there is no lexical discriminator, and one would need a semantic parser — which
 the directive forbids. (b) The paraphrase equivalence is partial: two cases of the frozen set report
 `UNSUPPORTED` where the originals report `SUPPORTED`/`ANSWERED`; the coverage threshold that would
-fix them (0.57–0.60) produces a false `SUPPORT` on another case (0.75). (c) **The ambiguity of the
-frozen set's own two cases does not reach the caller in the status**: both report `UNSUPPORTED` /
-`NO_PREMISE` instead of `AMBIGUOUS`, although the readings are attached and the research-pool
-analogues are `AMBIGUOUS`. The acceptance metric used to **count** the readings instead of
-**matching** them against the gold, which is why it reported 7/7 where the match was 3/7; it now
-matches them, and the honest coverage is **3 of 7** — the ambiguity of the frozen set is the weakest
-part of this work and it is the open defect.
+fix them (0.57–0.60) produces a false `SUPPORT` on another case (0.75). (c) Two cases of the frozen set now report `AMBIGUOUS` where the set's expectation says
+`SUPPORTED` / `REFUTED` — the corpus's accounts about the subject do disagree on them, so the
+disposition is defensible, but the set's expectation was written before the rule existed. The
+acceptance metric now **matches** the gold instead of counting the readings, so the coverage number
+(5/7) is the honest one; the remaining two unmatched readings are a known gap.
 
 **And the trade, twice reviewed.** After the first review the detector was made **conservative**: it
 reported a conflict only for the *same assertion* with opposite polarity and the same scope. The
