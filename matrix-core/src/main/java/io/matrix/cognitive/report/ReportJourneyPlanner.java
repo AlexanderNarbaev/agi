@@ -83,11 +83,46 @@ public final class ReportJourneyPlanner {
      * @return the plan: the chosen method and the decision that chose it
      */
     public Plan plan(ProblemRequest request) {
+        return plan(request, null);
+    }
+
+    /**
+     * The plan for one request, with the method FORCED.
+     *
+     * <p><b>What this is for.</b> The counterfactual arm of the closed loop: the same
+     * request, the same workspace and the same consent, with the method chosen by
+     * somebody else. The two arms then differ in exactly one thing — the method — and
+     * every difference in what happened can be attributed to it.</p>
+     *
+     * <p><b>What it does NOT do.</b> It does not widen anything. The consent, the
+     * output-root confinement, the writer's lease and the idempotency are the action's
+     * own rules and they are checked before the journey starts, whatever the plan says.
+     * A forced method still runs inside them, and a forced method whose own
+     * preconditions do not hold refuses the request rather than running anyway.</p>
+     *
+     * <p><b>Who may call it.</b> The serving route never does: the route's request
+     * carries no method, no method id and nothing a caller could turn into one, and the
+     * route's own entry point calls {@link #plan(ProblemRequest)}. This parameter exists
+     * for the counterfactual measurement and for nothing else.</p>
+     *
+     * @param request        the problem, with the facts that are known about it
+     * @param forcedMethodId the method that must run, or null to let the evidence choose
+     * @return the plan: the chosen method and the decision that chose it
+     */
+    public Plan plan(ProblemRequest request, String forcedMethodId) {
         AlgorithmDecision decision = selector.selectTyped(request, COST_WEIGHT).decision();
-        ReportJourneyMethod method = decision.selectedAlgorithmId() == null
+        ReportJourneyMethod chosen = decision.selectedAlgorithmId() == null
                 ? null
                 : methods.get(decision.selectedAlgorithmId());
-        return new Plan(method, decision);
+        if (forcedMethodId == null) {
+            return new Plan(chosen, decision, null);
+        }
+        ReportJourneyMethod forced = methods.get(forcedMethodId);
+        if (forced == null) {
+            throw new IllegalArgumentException("no method with the id " + forcedMethodId
+                    + " serves the report journey");
+        }
+        return new Plan(forced, decision, forcedMethodId);
     }
 
     /**
@@ -112,17 +147,32 @@ public final class ReportJourneyPlanner {
      *
      * @param method   the chosen method, or null when the request was refused
      * @param decision the decision record
+     * @param forcedMethodId the method that was forced, or null when the evidence chose
      */
-    public record Plan(ReportJourneyMethod method, AlgorithmDecision decision) {
+    public record Plan(ReportJourneyMethod method, AlgorithmDecision decision,
+            String forcedMethodId) {
 
         /** Whether the kernel had no method for the request. */
         public boolean refused() {
             return method == null;
         }
 
+        /** Whether the method was forced rather than chosen. */
+        public boolean forced() {
+            return forcedMethodId != null;
+        }
+
         /** Why the method was chosen, or why none was. */
         public String reason() {
-            return decision == null ? "" : decision.reason();
+            if (decision == null) {
+                return "";
+            }
+            if (forcedMethodId == null) {
+                return decision.reason();
+            }
+            return "the method was FORCED to " + forcedMethodId + " for the counterfactual; the "
+                    + "evidence would have chosen " + decision.selectedAlgorithmId() + " ("
+                    + decision.reason() + ")";
         }
     }
 }

@@ -8,10 +8,12 @@ import io.matrix.actions.ArtifactWriter;
 import io.matrix.cognitive.CognitiveService;
 import io.matrix.cognitive.CognitiveStore;
 import io.matrix.cognitive.algorithms.AlgorithmFamilies;
+import io.matrix.cognitive.algorithms.AlgorithmRefusalException;
 import io.matrix.cognitive.algorithms.ComputeBudget;
 import io.matrix.cognitive.algorithms.ProblemRequest;
 import io.matrix.cognitive.report.ArtifactObserver;
 import io.matrix.cognitive.report.ReportJourney;
+import io.matrix.cognitive.report.ReportJourneyOutcome;
 import io.matrix.cognitive.report.ReportJourneyMethod;
 import io.matrix.cognitive.report.ReportJourneyPlanner;
 import io.matrix.cognitive.report.ReportJourneyTrace;
@@ -193,12 +195,58 @@ public class ArtifactReportResource {
     /**
      * Asks the workspace and writes the report.
      *
+     * <p>This is the only method of this resource that carries an HTTP annotation, and
+     * the only one an HTTP caller can reach. The method the journey runs is chosen by the
+     * kernel from the evidence; nothing in the request can name it.</p>
+     *
      * @param workspaceId the workspace the question is addressed to
      * @param request the request
      * @return the outcome
      */
     @POST
     public Response report(@PathParam("id") String workspaceId, ReportRequest request) {
+        return run(workspaceId, request, null);
+    }
+
+    /**
+     * The journey, with the method optionally FORCED.
+     *
+     * <p>This is the entry point the counterfactual arm of the closed loop runs through:
+     * the same request, with the method chosen by somebody else instead of by the
+     * evidence.
+     *
+     * <p><b>This is not an HTTP endpoint.</b> It carries no JAX-RS annotation, the
+     * request it takes carries no field a caller could use to name a method, and the
+     * annotated {@link #report(String, ReportRequest)} never calls it — the serving path
+     * reaches the journey through {@link #run(String, ReportRequest, String)} with no
+     * forced method. The forcing exists so that the two arms of the counterfactual
+     * differ in exactly one thing: the method.</p>
+     *
+     * <p><b>What forcing does NOT do.</b> It does not widen anything. The consent, the
+     * output-root confinement, the writer's lease and the idempotency are checked
+     * before the journey starts, exactly as they are for an ordinary request, and a
+     * forced method whose own preconditions do not hold refuses the request.</p>
+     *
+     * @param workspaceId the workspace the question is addressed to
+     * @param request the request
+     * @param forcedMethodId the method that must run
+     * @return the response and what the journey produced
+     */
+    public JourneyResult journey(String workspaceId, ReportRequest request,
+            String forcedMethodId) {
+        Response response = run(workspaceId, request, forcedMethodId);
+        return new JourneyResult(response, outcomeOf(workspaceId, request, response));
+    }
+
+    /**
+     * The journey, as the serving path and the counterfactual both run it.
+     *
+     * @param workspaceId the workspace the question is addressed to
+     * @param request the request
+     * @param forcedMethodId the method that must run, or null to let the evidence choose
+     * @return the response
+     */
+    private Response run(String workspaceId, ReportRequest request, String forcedMethodId) {
         if (request == null || request.question() == null || request.question().isBlank()) {
             return refused(400, "question_required", "a question is required");
         }
@@ -268,7 +316,7 @@ public class ArtifactReportResource {
                 identity, reportName, level, workbench, actions.writer(), retained, fingerprint);
         ProblemRequest planRequest = new ProblemRequest(AlgorithmFamilies.KNOWLEDGE_REPORT, problem,
                 facts, ComputeBudget.unbounded());
-        ReportJourneyPlanner.Plan plan = planner.plan(planRequest);
+        ReportJourneyPlanner.Plan plan = planner.plan(planRequest, forcedMethodId);
         if (plan.refused()) {
             return refused(422, "no_method_for_request", plan.reason());
         }
@@ -278,6 +326,11 @@ public class ArtifactReportResource {
         try {
             result = planner.measure(plan.method().capability().id(),
                     () -> plan.method().execute(problem, ComputeBudget.unbounded()));
+        } catch (AlgorithmRefusalException refused) {
+            // the method refused: its own preconditions do not hold for this request. A
+            // forced method is refused exactly like a chosen one — forcing chooses what
+            // runs, it does not make the run possible.
+            return refused(422, "method_refused", refused.getMessage());
         } catch (IllegalStateException unusable) {
             return refused(503, "output_root_unavailable", unusable.getMessage());
         }
@@ -312,7 +365,9 @@ public class ArtifactReportResource {
         steps.add(new CognitiveStore.EventRecord(ReportJourneyTrace.PHASE_PERMISSION,
                 ReportJourneyTrace.ACTOR_ROUTE,
                 "the caller consented, the gate was open and the output root is the "
-                        + "server's own; the plan did not widen either"));
+                        + "server's own; the plan did not widen either; "
+                        + (retained == null ? "no retained journey was found"
+                                : "a retained journey was found and consulted")));
         steps.add(new CognitiveStore.EventRecord(ReportJourneyTrace.PHASE_ACTION,
                 ReportJourneyTrace.ACTOR_ACTION,
                 ArtifactAction.NAME + " on " + identity + " produced " + written.disposition().name()
@@ -353,6 +408,92 @@ public class ArtifactReportResource {
 
         int status = written.disposition() == ArtifactWriter.Disposition.REPLAYED ? 200 : 201;
         return Response.status(status).entity(response).build();
+    }
+
+    /**
+     * The outcome of a journey, measured from what the caller and the file system can see.
+     *
+     * <p>The measurement is read from the sources a reader would look at: the response the
+     * caller received, the artifact on the disk, the writer's index and the trace. The
+     * method that ran and the reason it was chosen come from the trace's own plan step —
+     * the trace is where the journey recorded why it did what it did, and the outcome is
+     * read from there rather than from the code that ran it.</p>
+     *
+     * @param workspaceId the workspace the question was addressed to
+     * @param request the request
+     * @param response the response the journey served
+     * @return what the journey produced
+     */
+    private ReportJourneyOutcome outcomeOf(String workspaceId, ReportRequest request,
+            Response response) {
+        String identity = actions.identity(workspaceId, request.idempotencyKey(),
+                request.question());
+        String episodeId = ReportJourneyTrace.episodeId(identity);
+        CognitiveStore store = traceStore();
+        List<io.matrix.cognitive.LearningTrace.Step> steps = store == null ? List.of()
+                : ReportJourneyTrace.steps(store, episodeId);
+        String planDetail = "";
+        for (io.matrix.cognitive.LearningTrace.Step step : steps) {
+            if (ReportJourneyTrace.PHASE_PLAN.equals(step.phase())) {
+                planDetail = step.detail();
+            }
+        }
+        String methodId = "";
+        String reason = "";
+        int colon = planDetail.indexOf(": ");
+        if (colon > 0) {
+            methodId = planDetail.substring(0, colon);
+            reason = planDetail.substring(colon + 2);
+        }
+        List<String> tracePhases = steps.stream()
+                .map(io.matrix.cognitive.LearningTrace.Step::phase).toList();
+
+        Object entity = response.getEntity();
+        if (!(entity instanceof ReportResponse body)) {
+            return new ReportJourneyOutcome(identity, methodId, false, reason,
+                    "REFUSED", "", "", "", "", List.of(), tracePhases, false,
+                    "the journey was refused and left no artifact", "", List.of(), null, 0, 0,
+                    List.of(), List.of(String.valueOf(entity)));
+        }
+        String bytesDigest = "";
+        boolean verified = false;
+        String observationDetail = "the artifact could not be read back";
+        try {
+            ArtifactObserver.Observation observation = ArtifactObserver.observe(actions.writer(),
+                    identity, body.artifactName(), body.sha256());
+            bytesDigest = observation.sha256() == null ? "" : observation.sha256();
+            verified = observation.verified();
+            observationDetail = observation.detail();
+        } catch (IOException unreadable) {
+            observationDetail = "the artifact could not be read back: " + unreadable.getMessage();
+        }
+        List<String> indexStatuses = new ArrayList<>();
+        try {
+            for (ArtifactWriter.Record record : actions.writer().readIndex()) {
+                if (record.actionId().equals(identity)) {
+                    indexStatuses.add(record.status());
+                }
+            }
+        } catch (IOException unreadable) {
+            indexStatuses.add("the index could not be read");
+        }
+        List<String> claimIds = body.evidence().stream()
+                .map(EvidenceReference::claimId).toList();
+        String premiseStatus = body.premise() == null ? "" : body.premise().status();
+        return new ReportJourneyOutcome(identity, methodId, reason.contains("FORCED"), reason,
+                body.disposition(), body.artifactName(), body.artifactLocator(), body.sha256(),
+                bytesDigest, indexStatuses, tracePhases, verified, observationDetail,
+                body.epistemicDisposition(), claimIds, premiseStatus, body.conflicts().size(),
+                body.readings().size(), body.limitations(), body.refusalReasons());
+    }
+
+    /**
+     * The response of a journey and what the journey produced.
+     *
+     * @param response the response the caller received
+     * @param outcome what the journey produced
+     */
+    public record JourneyResult(Response response, ReportJourneyOutcome outcome) {
     }
 
     /**

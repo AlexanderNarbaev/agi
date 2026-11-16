@@ -2180,6 +2180,30 @@ public final class CognitiveStore
         return content;
     }
 
+    /**
+     * The episodes that have events, in order.
+     *
+     * <p>This is a census, not a history: it says which episodes hold recorded events, and
+     * nothing about what they contain. A reader that wants the events of one episode asks
+     * for them by name; this is the cheap question "which episodes are there at all".</p>
+     *
+     * @return the episode ids
+     */
+    public synchronized List<String> eventEpisodeIds() {
+        List<String> out = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT DISTINCT episode_id FROM cognitive_event ORDER BY episode_id")) {
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    out.add(rs.getString(1));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the episodes", e);
+        }
+        return out;
+    }
+
     /** The events of an episode, in order. */
     public synchronized List<LearningTrace.Step> events(String episodeId) {
         List<LearningTrace.Step> out = new ArrayList<>();

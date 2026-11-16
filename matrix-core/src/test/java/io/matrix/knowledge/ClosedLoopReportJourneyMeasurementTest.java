@@ -161,6 +161,69 @@ class ClosedLoopReportJourneyMeasurementTest {
                 .isLessThan(baselineMean);
     }
 
+
+    @Test
+    @DisplayName("the measured counterfactual: the forced arm against the replay")
+    void theMeasuredCounterfactual() throws Exception {
+        Path root = root("counterfactual");
+        ArtifactActionService actions = new ArtifactActionService(true, root.toString());
+        ArtifactReportResource route = route(workbench("counterfactual"), actions,
+                new ReportJourneyPlanner(), new CognitiveService());
+
+        // the first journey establishes the trace
+        route.journey(WORKSPACE, request(), null);
+
+        // THE ARM THE EVIDENCE CHOICES: the replay
+        long replayNanos = 0L;
+        ArtifactReportResource.JourneyResult chosen = null;
+        for (int repetition = 0; repetition < REPETITIONS; repetition++) {
+            long started = System.nanoTime();
+            chosen = route.journey(WORKSPACE, request(), null);
+            replayNanos += System.nanoTime() - started;
+        }
+        double replayMean = replayNanos / 1_000_000.0 / REPETITIONS;
+
+        // THE COUNTERFACTUAL ARM: the same request, the reference forced
+        long forcedNanos = 0L;
+        ArtifactReportResource.JourneyResult forced = null;
+        for (int repetition = 0; repetition < REPETITIONS; repetition++) {
+            long started = System.nanoTime();
+            forced = route.journey(WORKSPACE, request(),
+                    io.matrix.cognitive.report.ReportJourneyMethod.REFERENCE_ID);
+            forcedNanos += System.nanoTime() - started;
+        }
+        double forcedMean = forcedNanos / 1_000_000.0 / REPETITIONS;
+
+        io.matrix.cognitive.report.ReportJourneyDiff diff =
+                io.matrix.cognitive.report.ReportJourneyDiff.between(chosen.outcome(),
+                        forced.outcome());
+        System.out.println("### the replay arm: the mean " + replayMean + " ms over "
+                + REPETITIONS + " repetition(s), the method " + chosen.outcome().methodId());
+        System.out.println("### the forced arm: the mean " + forcedMean + " ms over "
+                + REPETITIONS + " repetition(s), the method " + forced.outcome().methodId());
+        System.out.println("### the forced arm costs " + (forcedMean - replayMean)
+                + " ms more than the replay");
+        for (io.matrix.cognitive.report.ReportJourneyDiff.Aspect aspect : diff.aspects()) {
+            System.out.println("### the diff: " + aspect.aspect() + " | "
+                    + (aspect.identical() ? "IDENTICAL" : "DIFFERENT") + " | "
+                    + aspect.reference() + " | " + aspect.counterfactual());
+        }
+
+        assertThat(replayMean)
+                .as("the replay asks the workspace no second time")
+                .isLessThan(forcedMean);
+        assertThat(diff.unities()).extracting(
+                        io.matrix.cognitive.report.ReportJourneyDiff.Aspect::aspect)
+                .as("the replay skips the ask WITHOUT changing what the caller receives")
+                .contains("the sha256 the response reported",
+                        "the sha256 measured on the artifact's bytes",
+                        "the epistemic disposition of the answer",
+                        "the claims the answer cited");
+        assertThat(diff.differences()).extracting(
+                        io.matrix.cognitive.report.ReportJourneyDiff.Aspect::aspect)
+                .contains("the method that ran", "the reason the method was chosen");
+    }
+
     // ── the fixtures ────────────────────────────────────────────────────────
 
     /** A workbench over its own database, with the bundled package loaded. */

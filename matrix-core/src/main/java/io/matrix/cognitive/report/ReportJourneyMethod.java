@@ -4,6 +4,7 @@ import io.matrix.actions.ArtifactWriter;
 import io.matrix.cognitive.algorithms.AlgorithmCapability;
 import io.matrix.cognitive.algorithms.AlgorithmFamilies;
 import io.matrix.cognitive.algorithms.AlgorithmMethod;
+import io.matrix.cognitive.algorithms.AlgorithmRefusalException;
 import io.matrix.cognitive.algorithms.ComputeBudget;
 import io.matrix.cognitive.algorithms.DeclaredCost;
 import io.matrix.knowledge.Answer;
@@ -197,7 +198,11 @@ public final class ReportJourneyMethod
     @Override
     public ReportJourney.Result execute(ReportJourney.Problem input, ComputeBudget budget) {
         if (!preconditionsHold(input)) {
-            throw new IllegalStateException("the journey's preconditions do not hold");
+            // a method that cannot honour its declared preconditions REFUSES; it does not
+            // run anyway and it does not fall back to another method behind the caller's
+            // back. Forcing a method does not change that.
+            throw new AlgorithmRefusalException("the journey's preconditions do not hold for "
+                    + "this request: the method cannot run inside its applicability domain");
         }
         return replay ? replay(input) : reference(input);
     }
