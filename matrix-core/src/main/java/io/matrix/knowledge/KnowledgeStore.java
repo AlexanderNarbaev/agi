@@ -89,7 +89,7 @@ public final class KnowledgeStore implements AutoCloseable {
      * decision is that the reload fails closed and that the contradiction history is never
      * silently erased.</p>
      */
-    public static final int SCHEMA_VERSION = 19;
+    public static final int SCHEMA_VERSION = 20;
 
     /**
      * The disposition a prediction error carries when no hypothesis of the model explained the
@@ -936,6 +936,40 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     private int migrateFrom(int version) throws SQLException {
+        if (version == 19) {
+            // v20 adds the CONCEPT DEFINATION: the qualifying sentence of a concept's
+            // own source document, with the span it was read from.
+            //
+            // The reason is the EPISTEMIC-INTEGRITY P1 wave. The concept layer held
+            // 348 claims, 326 concepts and 0 usable definitions: nothing in the
+            // acquisition path derived one, so a concept could not say what it is
+            // and the claim's own text was all there was. The definition is a SPAN -
+            // the sentence, its source, its characters, the claim that carries it
+            // and the rule that produced it - and the concept table's definition
+            // column holds a bare text and nothing else.
+            //
+            // The migration is ADDITIVE and there is nothing to backfill: the table
+            // is new, so it holds no legacy rows. A database that was written before
+            // this wave has no definitions to carry over, and a definition is not
+            // something a migration can invent - it has to be derived from the
+            // source the way the rule derives it, and the import does that.
+            //
+            // The migration is safe to run again after an interruption: the table is
+            // created IF NOT EXISTS, nothing is copied, and the version is written
+            // last.
+            try (Statement st = connection.createStatement()) {
+                st.execute("CREATE TABLE IF NOT EXISTS concept_definition ("
+                        + "workspace_id TEXT NOT NULL, concept_id TEXT NOT NULL, "
+                        + "definition TEXT NOT NULL, source_id TEXT NOT NULL, "
+                        + "start_offset INTEGER NOT NULL, end_offset INTEGER NOT NULL, "
+                        + "claim_id TEXT, extraction_method TEXT NOT NULL, "
+                        + "recorded_at TEXT NOT NULL, PRIMARY KEY (workspace_id, concept_id))");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_concept_definition_workspace "
+                        + "ON concept_definition(workspace_id)");
+            }
+            writeSchemaVersion(20);
+            return 20;
+        }
         if (version == 18) {
             // v19 adds the WORKSPACE SNAPSHOT: the recoverable copy of a workspace's content
             // that a destructive replacement leaves behind.
@@ -4773,6 +4807,63 @@ public final class KnowledgeStore implements AutoCloseable {
             throw new IllegalStateException("failed to create the concept " + name, e);
         }
         return concept;
+    }
+
+    /**
+     * Records a concept's definition.
+     *
+     * <p><b>EPISTEMIC-INTEGRITY P1.</b> The concept layer held 348 claims, 326
+     * concepts and 0 usable definitions. The definition is the qualifying
+     * sentence of the concept's own source document, verbatim, and it is
+     * recorded HERE with the span it was read from and the rule that produced
+     * it (see {@code io.matrix.knowledge.acquisition.SourceSpanDefinitions}).</p>
+     *
+     * <p><b>What this method does NOT do.</b> It does not touch the concept's
+     * id, its name, its domain or its creation instant; it does not touch a
+     * claim, an evidence record or a proposition-based gold; and it does not
+     * change a single retrieval — the definition is not appended to the
+     * searchable text of the retriever, because that is the retrieval variant
+     * H1 and it is a separate decision.</p>
+     *
+     * @param definition the definition to record
+     */
+    public synchronized void saveConceptDefinition(ConceptDefinition definition) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO concept_definition(workspace_id, concept_id, definition, "
+                        + "source_id, start_offset, end_offset, claim_id, extraction_method, "
+                        + "recorded_at) VALUES (?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, definition.workspaceId());
+            ps.setString(2, definition.conceptId());
+            ps.setString(3, definition.definition());
+            ps.setString(4, definition.sourceId());
+            ps.setInt(5, definition.startOffset());
+            ps.setInt(6, definition.endOffset());
+            ps.setString(7, definition.claimId());
+            ps.setString(8, definition.extractionMethod());
+            ps.setString(9, definition.recordedAt());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the definition of the concept "
+                    + definition.conceptId(), e);
+        }
+    }
+
+    /**
+     * The definitions a workspace holds, by concept.
+     *
+     * @param workspaceId the workspace
+     * @return the definitions, ordered by the concept id
+     */
+    public List<ConceptDefinition> conceptDefinitions(String workspaceId) {
+        return query("SELECT workspace_id, concept_id, definition, source_id, start_offset, "
+                        + "end_offset, claim_id, extraction_method, recorded_at "
+                        + "FROM concept_definition WHERE workspace_id = ? ORDER BY concept_id",
+                workspaceId, rs -> new ConceptDefinition(
+                        rs.getString("workspace_id"), rs.getString("concept_id"),
+                        rs.getString("definition"), rs.getString("source_id"),
+                        rs.getInt("start_offset"), rs.getInt("end_offset"),
+                        rs.getString("claim_id"), rs.getString("extraction_method"),
+                        rs.getString("recorded_at")));
     }
 
     /** The recorded conflicts of a workspace. */

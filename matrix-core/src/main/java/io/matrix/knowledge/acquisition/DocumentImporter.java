@@ -93,7 +93,12 @@ public final class DocumentImporter {
             int conceptsCreated,
             int representationsCreated,
             List<String> skipped,
-            ClaimValidator.Result validation) {
+            ClaimValidator.Result validation,
+            /**
+             * EPISTEMIC-INTEGRITY P1 — how many concept definitions this import
+             * wrote from the source spans (see {@link SourceSpanDefinitions}).
+             */
+            int definitionsWritten) {
 
         public ImportResult {
             skipped = List.copyOf(skipped == null ? List.of() : skipped);
@@ -287,6 +292,24 @@ public final class DocumentImporter {
                 evidence, representations, List.of()),
                 new ArrayList<>(conceptsById.values()));
 
+        // EPISTEMIC-INTEGRITY P1 — THE DEFINITION IS DERIVED FROM THE SOURCE SPAN.
+        //
+        // The concept layer had 348 claims, 326 concepts and 0 usable definitions:
+        // the importer wrote every concept with `definition = null`, because
+        // nothing in the pipeline derived one. The definition is now the
+        // qualifying sentence of the concept's OWN source document, verbatim,
+        // under the frozen tight v1.1 rule (the name must be IMMEDIATELY
+        // followed by a definitional copula).
+        //
+        // The derivation runs over the WORKSPACE, not over this document alone:
+        // a concept's definition may be found in a source it was imported with
+        // earlier, and the rule takes the first qualifying sentence in the
+        // order the snapshot lists the sources. Only the concepts this import
+        // TOUCHED are re-derived, and that is exact rather than an economy: a
+        // source becomes one of a concept's own sources only through a claim
+        // of that concept, so an untouched concept's rule cannot change.
+        int definitionsWritten = writeDefinitions(workspaceId, claims, document.text());
+
         // THE VALIDATION STAGE OF THE PIPELINE.
         //
         // The mission's §5.4 names the pipeline: SOURCE -> EXTRACTION ->
@@ -306,7 +329,91 @@ public final class DocumentImporter {
 
         return new ImportResult(workspaceId, record, document.segments().size(),
                 claims.size(), claims.size(), created, representations.size(), skipped,
-                validation);
+                validation, definitionsWritten);
+    }
+
+    /**
+     * Derives and writes the definitions of the concepts this import touched.
+     *
+     * <p>The rule is {@link SourceSpanDefinitions}: the first sentence of the
+     * concept's own source document that holds the concept's name immediately
+     * followed by a definitional copula, at most
+     * {@link SourceSpanDefinitions#MAX_DEFINITION_LENGTH} characters long. The
+     * definition is that sentence verbatim; a concept with no such sentence
+     * keeps no definition, which is an honest state.</p>
+     *
+     * <p>A definition that is already stored is not written again: the import
+     * is idempotent in what it writes.</p>
+     *
+     * @param workspaceId the workspace
+     * @param imported the claims this import wrote
+     * @param extractedText the extracted text of the document, which says where
+     *     each of its sentences sits
+     * @return how many definitions were written
+     */
+    private int writeDefinitions(String workspaceId, List<Claim> imported, String extractedText) {
+        Set<String> touched = new LinkedHashSet<>();
+        for (Claim claim : imported) {
+            touched.add(claim.conceptId());
+        }
+        if (touched.isEmpty()) {
+            return 0;
+        }
+        List<Concept> concepts = store.concepts(workspaceId);
+        List<Concept> selected = new ArrayList<>();
+        for (Concept concept : concepts) {
+            if (touched.contains(concept.id())) {
+                selected.add(concept);
+            }
+        }
+        if (selected.isEmpty()) {
+            return 0;
+        }
+        // The sentences of the workspace. The text of THIS document is in hand, so
+        // its sentences are located exactly; the sentences of a source imported
+        // earlier keep the span of their segment.
+        java.util.Map<String, SourceSpanDefinitions.Sentence> byClaimId =
+                new java.util.LinkedHashMap<>();
+        for (SourceSpanDefinitions.Sentence sentence
+                : SourceSpanDefinitions.sentencesOf(store.claims(workspaceId), null)) {
+            byClaimId.put(sentence.claim().id(), sentence);
+        }
+        for (SourceSpanDefinitions.Sentence sentence
+                : SourceSpanDefinitions.sentencesOf(imported, extractedText)) {
+            byClaimId.put(sentence.claim().id(), sentence);
+        }
+        List<SourceSpanDefinitions.Sentence> sentences = new ArrayList<>(byClaimId.values());
+        List<SourceSpanDefinitions.Definition> definitions = SourceSpanDefinitions.derive(
+                selected, store.sources(workspaceId), sentences);
+        // The definitions that are already recorded, so that a definition which
+        // has not changed is not written again.
+        java.util.Map<String, io.matrix.knowledge.ConceptDefinition> recorded =
+                new java.util.LinkedHashMap<>();
+        for (io.matrix.knowledge.ConceptDefinition definition
+                : store.conceptDefinitions(workspaceId)) {
+            recorded.put(definition.conceptId(), definition);
+        }
+        int written = 0;
+        for (SourceSpanDefinitions.Definition definition : definitions) {
+            io.matrix.knowledge.ConceptDefinition existing = recorded.get(definition.conceptId());
+            if (existing != null && existing.definition().equals(definition.text())) {
+                continue;
+            }
+            String claimId = null;
+            for (SourceSpanDefinitions.Sentence sentence : sentences) {
+                if (sentence.claim().conceptId().equals(definition.conceptId())
+                        && sentence.text().equals(definition.text())) {
+                    claimId = sentence.claim().id();
+                    break;
+                }
+            }
+            store.saveConceptDefinition(new io.matrix.knowledge.ConceptDefinition(workspaceId,
+                    definition.conceptId(), definition.text(), definition.sourceId(),
+                    definition.startOffset(), definition.endOffset(), claimId,
+                    definition.method(), clock.instant().toString()));
+            written++;
+        }
+        return written;
     }
 
     /** The quality of the evidence: the extraction's own quality. */

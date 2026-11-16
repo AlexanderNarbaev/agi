@@ -358,3 +358,45 @@ No other build was run. No production file was modified. Nothing was staged or c
 * `docs-v2/engineering/C2A-FINAL-REPORT.md` — the wave report that named the identity layer
   as the blocker.
 * `docs-v2/engineering/EPISTEMIC-EXECUTION-PLAN.md` — the plan this document serves (P1).
+
+---
+
+## 10. The definition half — implemented and measured (2026-11-16)
+
+The research recommended (d) first: *"Adopt (d) first. The definition policy is orthogonal to the
+identity question, independently measurable, and the only candidate that raises a measured coverage
+number (0 → 121/326 adjacency-passing, subject to a human-verified subset). Write the definition
+verbatim, with its source span, and keep the concept's `definition` field nullable — a concept
+without a definition is honest."*
+
+**That is what was implemented**, and the design, the rule and the evidence are in
+`docs-v2/engineering/EPISTEMIC-CONCEPT-DEFINITIONS.md`. The summary:
+
+| # | the measure | the baseline (this document) | after the change |
+|---|---|---|---|
+| A1 | the concept-identification precision | 30 % (12/40) | **35/150 = 23.3 %** on the frozen 150; **12/40 = 30 %** on the first 40 of the draw — unchanged by construction (the labels are over the names, the name is the preimage of the id, and no id changed) |
+| A2 (i) | the definition coverage | **0 usable definitions**; 121/326 = 37.1 % adjacency-passing | **120/326 = 36.8 %**, identical set by set to the research instrument's 120 |
+| A2 (ii) | the human-verified share | not measured | **24/25 = 96 %** (n = 25, single-domain) |
+| A3 | the relation precision | never measured | **0/7 = 0 %** on the seed corpus (5 of the 7 have a fragmentary endpoint, 1 has its direction reversed) |
+| A4 | the retrieval | 18/29 with the identical eleven failures | **18/29 with the identical eleven failures** — unchanged |
+| A5 | the false positives | the unsupported rate 0.3000; the abstention 6/6 | **unchanged** (0.3000; 6/6) |
+| A6 | the answer accuracy | not measurable on this corpus | not claimed |
+| A7 | the cost | the mean retrieval 32 ms / 10 ms | the retriever is unchanged (within the noise); the baseline path's timing moves with the machine (59 → 68 → 76 ms across three runs of the same code) |
+| A8 | the id stability | — | **no concept id changed** (all 326 still the digest of their name) |
+
+**One finding the research did not have, and it is a decision, not a number.** Writing the definition
+into the concept's `definition` column puts it into the retriever's searchable text
+(`KnowledgeRetriever.java:170-172`), and that **degrades the official evaluation**: 18/29 → **17/29**
+and the unanswerable abstention 6/6 → **5/6**, because the wider searchable text lets the unsupported
+question `U-04` pass the floor. The definition is therefore recorded as **its own record**, with its
+source span (`concept_definition`, schema v20, additive), and the retrieval is not touched. Whether
+the definitions should enter the searchable text is the retrieval variant H1 and is the owner's call.
+
+**The identity half was not touched.** No concept was renamed, no id changed, no claim moved, and the
+research's migration sketch (`concept_lineage`, copy-forward, the pre-migration snapshot) was not
+executed: the concept id is referenced by ten tables and SQLite declares no foreign keys, so a
+partial migration would be invisible.
+
+**The evidence:** `matrix-core/src/test/java/io/matrix/knowledge/concept/definitions/**`, and the JUnit
+XML of the run — 37 tests, 0 failures, 0 errors, 0 skipped
+(`matrix-core/build/test-results/test/*.xml`).
