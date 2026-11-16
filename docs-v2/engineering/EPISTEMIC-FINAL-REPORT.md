@@ -363,13 +363,13 @@ record of its own (`ConceptDefinition`: the sentence, the source id, the offsets
 the method), stored in an **additive** table (schema v20): nothing is copied, nothing is dropped, no
 claim id moves.
 
-**The acceptance table, measured.**
+**The acceptance table, measured — and one row of it under hard review.**
 
 | | the baseline | after |
 |---|---|---|
 | **A1** the concept names' precision | 30 % (12 of 40) | **35/150 = 23.3 %** on the frozen 150-span set; the first 40 of the draw give **12/40 = 30 %** — the same share, from an independent sample |
-| **A2(i)** the usable definitions | **0** | **120/326 = 36.8 %** (the research's table says 121/326 = 37.1 %; the instrument in the repository finds 120 on the same corpus and the production set is byte-identical to the instrument's — the one-definition difference is the research's number, reported and not papered over) |
-| **A2(ii)** the human-verified share | not measured | **24/25 = 96 %** — the one failure is the generic class "Scientists" |
+| **A2(i)** the usable definitions | **0** | **120/326 = 36.8 %** — **under hard review**: the independent review measured that **31 of the 120 hang on spans the wave's own frozen hand-labelling calls "not a concept"**, and a further **33 of the 120** have the name **not in the subject position**. The rule is being corrected to require the name to **be** the subject, and the number will be re-measured; the earlier figure is recorded here, not quietly replaced |
+| **A2(ii)** the human-verified share | not measured | **24/25 = 96 %** as first published — **and the metric itself was under review**: it measured *"about the concept"*, not *"is a definition"*, so it is being re-measured under the corrected rule |
 | **A3** the relation precision | not measured | **0/7 = 0 %** (five fragmentary endpoints, one with its direction reversed) — the change does not touch the relations |
 | **A4/A5** the retrieval | 18/29, 6/6, 0.3000 | **unchanged, every content column identical** — deliberately: see below |
 | **A7** the cost | — | the retriever is **within the noise** (702–1080 µs against 692–794 µs); the baseline path's own timing drifts 59 → 68 → 76 ms across runs of the **same** code |
