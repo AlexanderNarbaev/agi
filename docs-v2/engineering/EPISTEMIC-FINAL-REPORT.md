@@ -398,11 +398,52 @@ required).
 
 ## I. P2 — the closed-loop cognitive action (the next step, designed)
 
-`EPISTEMIC-CLOSED-LOOP-DESIGN.md` (status `PROPOSED`, the owner's choice **OD-055**): the closed loop
-targets **the report journey the product already has** — a question over a workspace → the kernel's
-plan and method choice → the permissioned `ActionRunner` → the artifact → the evidence of what
-happened. The design is deliberately built on what exists and is measured: the premise semantics (B),
-the sealed evaluation (C) and the isolated learning (D) are the three instruments it needs.
+`EPISTEMIC-CLOSED-LOOP-DESIGN.md` (the owner's choice **OD-055**): the closed loop targets **the
+report journey the product already has** — a question over a workspace → the kernel's plan and method
+choice → the permissioned `ActionRunner` → the artifact → the evidence of what happened. The design is
+deliberately built on what exists and is measured: the premise semantics (B), the sealed evaluation (C)
+and the isolated learning (D) are the three instruments it needs.
+
+**The defect the directive named, measured.** The route `POST /v1/workbench/workspaces/{id}/reports`
+called `workbench.ask(...)` and the artifact writer **directly**: there was **no method choice in the
+product at all** — a hard-wired path — the reason for the choice was never recorded, and the past
+experience was never read. The kernel's method registry (`AlgorithmRegistry` + `AlgorithmSelector`) did
+not take part in this path.
+
+**The loop, now closed, on the existing surface** (no new route, no new database, no change to the
+permission model):
+
+| the phase | the implementation |
+|---|---|
+| the plan and the method choice | `cognitive/report/ReportJourneyPlanner.java:85` → the kernel's `KernelSelector.selectTyped` (`cognitive/KernelSelector.java:66`) over the `AlgorithmRegistry`; the family `AlgorithmFamilies.KNOWLEDGE_REPORT:42`; **no method → 422 `no_method_for_request`**; the plan cannot widen the consent, the root or the lease |
+| the methods | `ReportJourneyMethod.java:143` (reference) and `:156` (replay); the replay's applicability is the facts *identity-committed / workspace-unchanged / name-unchanged*, checked by the selector and by the method itself |
+| the resolution | unchanged: the consent, the gate, the output root, the writer's lease; the 4xx refusals, `REPLAYED` and "exactly one artifact" all still hold |
+| the observation | `cognitive/report/ArtifactObserver.java:82` — a **reader**, not a writer: the artifact exists, its size, its sha256 **over the bytes**, and the index holds exactly one STAGED and one COMMITTED; a discrepancy is a **failed effect** and is not smoothed over |
+| the trace | `cognitive/report/ReportJourneyTrace.java:105` → `CognitiveStore.appendEvents` (`cognitive/CognitiveStore.java:2087`), the `cognitive_event` table in the workbench's own database; append-only, one transaction per trace; the request, the method, the reason, the action, the effect, the verification |
+| the repeat | `ArtifactReportResource.java:262` → the retained record → the facts → the selector: the second equivalent request reads the trace, chooses **replay**, and does not ask the workspace at all |
+
+**The measured end-to-end run** ("What is photosynthesis?", the workspace `photosynthesis`): the first
+plan selects `report.journey.reference.v1` (score 1.0, one candidate); the second selects
+**`report.journey.replay.v1`** (two candidates, the precision 1.0 over three cases) — **the method
+changed**. The resolution: the consent given, the gate open, the server's root, no widening by the
+plan. The artifact: `report-b3c106428ed0.md`, sha256 `efe568902bf073cef8ade3b8adc49f31d590f6e4db92103e61224fd40dfca0c9`,
+5 084 bytes; the index holds one STAGED and one COMMITTED; the effect verified. The trace: seven steps
+(PLAN / PERMISSION / ACTION / OBSERVE / VERIFY / RESULT / RETAINED). **The latency:** the first run
+139–150 ms (JIT), the replay **8.3–10.0 ms** (five repetitions) against a baseline that writes the
+trace but does not read it at **11.5–13.3 ms** — a win of **3.2–3.3 ms, 25–28 %** (two consecutive
+runs). **The negative result is recorded too**: before the trace's append was batched, the trace cost
+43 ms per run and the win was **negative**; the mechanism was found and removed.
+
+**What the loop does not demonstrate.** The HTTP response contract was not extended (the trace is
+found by the episode id, not by a new field, to avoid breaking the contract); a failed effect is
+recorded in the VERIFY step and in the limitations but does not change the HTTP status (201/200) —
+that is a deliberate, marked choice; the workspace fingerprint is the sha256 over the claims'
+(id, proposition, status), so a change of the workspace's *content* is not detected (a change of its
+*name* is); the typed `ActionRegistry`/`ArtifactAction` are **not** in this path (the route still
+writes through the restricted `ArtifactWriter`); the counterfactual "the same request with a forced
+method" and the read-only design probe of the path's repeatability were **not** implemented; the
+concurrency of two runs of one identity in one route and the behaviour when the cognitive table is
+unavailable were not measured.
 
 ---
 
