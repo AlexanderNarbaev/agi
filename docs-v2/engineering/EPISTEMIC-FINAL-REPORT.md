@@ -67,8 +67,8 @@ refusal names the claim and source ids that do the refuting.
 | false refusals (a supported premise refused) | 0 | **0** |
 | false contradictions (an unsupported or supported premise called refuted) | 0 | **0** |
 | unsupported answering (a refuted premise answered as if true) | 3 | **2** |
-| ambiguity coverage (the readings surfaced — **counted**, not matched) | 0 / 7 | **7 / 7 counted, 5 / 7 matched against the gold** |
-| conflict coverage (both sides surfaced) | 0 / 2 | **1 / 2** |
+| ambiguity coverage (the readings surfaced, **matched against the gold**) | 0 / 7 | **3 / 7** — the metric counted the readings before; it now matches them, and the honest number is lower |
+| conflict coverage (both sides surfaced, matched against the gold) | 0 / 2 | **2 / 2** |
 
 **The regressions do not move.** The official 29-case evaluation: **18/29**, the qualitative columns
 byte-identical, the same eleven failures (`A-02, A-04, A-05, A-06, F-02, M-01, M-03, P-01, P-02,
@@ -102,8 +102,10 @@ the directive forbids. (b) The paraphrase equivalence is partial: two cases of t
 fix them (0.57–0.60) produces a false `SUPPORT` on another case (0.75). (c) **The ambiguity of the
 frozen set's own two cases does not reach the caller in the status**: both report `UNSUPPORTED` /
 `NO_PREMISE` instead of `AMBIGUOUS`, although the readings are attached and the research-pool
-analogues are `AMBIGUOUS`. The acceptance metric also **counts** the readings instead of **matching**
-them against the gold, which is why it reported 7/7 where the match is 5/7.
+analogues are `AMBIGUOUS`. The acceptance metric used to **count** the readings instead of
+**matching** them against the gold, which is why it reported 7/7 where the match was 3/7; it now
+matches them, and the honest coverage is **3 of 7** — the ambiguity of the frozen set is the weakest
+part of this work and it is the open defect.
 
 **And the trade, twice reviewed.** After the first review the detector was made **conservative**: it
 reported a conflict only for the *same assertion* with opposite polarity and the same scope. The
