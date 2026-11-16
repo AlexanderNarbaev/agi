@@ -75,14 +75,19 @@ byte-identical, the same eleven failures (`A-02, A-04, A-05, A-06, F-02, M-01, M
 R-04, R-05`); the unanswerable abstention **6/6**, accuracy 1.0000, no case lost; the C2A
 `BASELINE-PATH` 17/25. The scope `io.matrix.knowledge.*`: **731 tests, 0 failures**.
 
-**The price, measured.** The latency of one question, in-process, two repetitions, 36 questions per
-corpus: the seed corpus **28.67 / 25.83 ms → 22.92 / 23.39 ms** and the research pool
-**35.39 / 34.81 ms → 33.19 / 33.19 ms** — the subject test did cost time, and removing the second
-full workspace scan gave it back: the refutation scan now reads the **retriever's index** (the coverage
-is computed over already-tokenised terms, and only the candidates are tokenised), so the scan dropped
-from **1.59 ms average / 2.40 max** over **every** claim (348 seed, 888 pool) to **0.15–1.2 ms** over
-the candidates. The lexicon is asked **once per term** instead of once per (claim, term) pair. A cache
-was deliberately **not** used: the verdict must stay a function of the workspace's content.
+**The price, measured — and corrected twice.** The implementer's own before/after claimed the path got
+*faster* (the seed corpus 28.67/25.83 ms → 22.92/23.39 ms), because the refutation scan now reads the
+**retriever's index** (the coverage is computed over already-tokenised terms, and only the candidates
+are tokenised), so the scan dropped from **1.59 ms average / 2.40 max** over **every** claim (348 seed,
+888 pool) to **0.15–1.2 ms** over the candidates, and the lexicon is asked **once per term** instead of
+once per (claim, term) pair. **The reviewer's three-point A/B — the same method, the same machine,
+three commits — does not confirm it**: round 2 (`8fac168a`) seed **33.8 ms** / pool **37.3 ms** → round 3
+(`391a0a0a`) 43.3 / 40.8 → round 4 (`d7cc12a5`) **53.0 / 48.5** — the latest round is the **slowest**,
+**+19 ms on the seed corpus and +11 ms on the pool** against round 2. The implementer's numbers were
+taken against an uncommitted intermediate state and were therefore not comparable; the honest reading
+is that the same-assertion rule **costs** time and the scan optimisation did not offset it. The rule
+must reuse the index instead of re-walking the claims — that is the open item. A cache was
+deliberately **not** used: the verdict must stay a function of the workspace's content.
 
 **The third round, and what it closed.** The second adversarial review found that the correction
 itself had defects: different variables were treated as the same statement, and the same statement
