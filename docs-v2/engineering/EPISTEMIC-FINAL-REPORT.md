@@ -116,6 +116,16 @@ accounts disagree the status is `AMBIGUOUS` and the reason **names both sides**.
 the nine corpus-stated premises → **0 of 9** `REFUTED` (was 3), the plants premise → `UNSUPPORTED`,
 the ambiguity coverage **3/7 → 5/7**, and the whole scope **119 classes / 750 tests / 0 failures**.
 
+**The fifth round and the last fix.** The independent reviewer reproduced every pinned number and
+called the work **mergeable**, with two limitations to record. The first was a **false negative** in
+the safe direction: a claim that denies the premise's *subject* without naming its distinguishing term
+was not recognised as a refutation (the same root cause as the two cases the metric counts as
+"unsupported answering"). The fix is one rule, reusing the subject test the conflict detector already
+has: a claim whose statement (proposition **and** scope) is about the premise's subject and denies it
+is read even without the distinguishing term. The reviewer's probe is green, the scope is **123 classes
+/ 770 tests / 0 failures**, and the interleaved A/B shows the change inside the noise (±1 ms). The
+second limitation is the **latency plateau** — recorded as an accepted cost, not as a fix.
+
 **What remains open, and why.** Two defects are **measured limitations, not silences**:
 (a) *"Since plants release oxygen during the day…"* is still `REFUTED` although the corpus states it
 — the refuting claim is itself a `REFUTED` claim whose scope is "the misconception, stated so that it
@@ -127,7 +137,14 @@ fix them (0.57–0.60) produces a false `SUPPORT` on another case (0.75). (c) Tw
 `SUPPORTED` / `REFUTED` — the corpus's accounts about the subject do disagree on them, so the
 disposition is defensible, but the set's expectation was written before the rule existed. The
 acceptance metric now **matches** the gold instead of counting the readings, so the coverage number
-(5/7) is the honest one; the remaining two unmatched readings are a known gap.
+(5/7) is the honest one; the remaining two unmatched readings are a known gap. (d) **The
+"unsupported answering" count is 2 and did not fall to 0.** E-R02's disposition *improved* (its
+disposition is now `CONTRADICTORY`: the corpus's denial is found and reported as the contradicting
+evidence) and E-L01 is a different rule (its premise verdict is `UNRESOLVED` — five contradicting
+accounts that do not settle each other — so it becomes `CONTRADICTORY`). The remainder is the
+**corpus-in-conflict precedence**: the path refuses to settle a refutation that sits in a corpus that
+holds conflicting accounts. That is a separate semantic decision, and it would touch the conflict
+metric, so it was deliberately not taken here.
 
 **And the trade, twice reviewed.** After the first review the detector was made **conservative**: it
 reported a conflict only for the *same assertion* with opposite polarity and the same scope. The
@@ -359,10 +376,14 @@ targets the report journey · **OD-056** the default branch is `develop`, `main`
 question, answered **B** (leave the 17 records; extend the frozen probe corpus with an
 owner-authorized exception so the letter-less arithmetic probes are caught).
 
-**Open and owned:** the two measured defects of §B (the photosynthetic refutation and the partial
-paraphrase equivalence) and the missed conflict of the conservative detector; the HDC substrate's
-contamination history; the residual's content policy; the native image's build; the P2
-implementation.
+**Open and owned:** the measured limitations of §B — the partial paraphrase equivalence, the two
+frozen-set cases whose disposition differs from the set's expectation, and the corpus-in-conflict
+precedence (which keeps "unsupported answering" at 2); the **latency plateau** of the premise path
+(the accepted cost: ~53 ms per question on a loaded machine, ~+19 ms against round 2, the growth
+having happened in rounds 3–4) and the absence of a shared benchmark for that path; the HDC
+substrate's contamination history; the residual's content policy (the owner's decision, applied); the
+native image's build; the concept-identity repair (owner-gated: the migration touches ten tables and
+SQLite declares no foreign keys); the P2 implementation.
 
 **Inherited reds that this programme did not cause and did not hide:** the Docker Hub publication
 (zero repository secrets — the owner's action, never in chat), ShellCheck (43 files), the GraalVM
