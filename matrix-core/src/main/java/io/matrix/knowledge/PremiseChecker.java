@@ -1,5 +1,7 @@
 package io.matrix.knowledge;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -368,6 +370,33 @@ public final class PremiseChecker {
      * @param snapshot the workspace
      * @return the refuting claim, or null
      */
+    /**
+     * The floor of the forward comparison of a REFUTED claim with the premise it may refute:
+     * the claim's proposition has to carry this share of the premise's terms.
+     */
+    public static final double MINIMUM_SAME_ASSERTION_COVERAGE = 0.80;
+
+    /**
+     * The floor of the backward comparison: the claim's proposition may add this share of
+     * terms the premise does not carry (a qualifier), and no more.
+     */
+    public static final double MINIMUM_SAME_ASSERTION_QUALIFIER_SHARE = 0.50;
+
+    /**
+     * The floor of the CROSS-LINGUAL comparison: the share of the premise's terms the
+     * bilingual bridge has to carry when the premise shares NO word with the claim.
+     *
+     * <p><b>Why there is a separate floor.</b> A premise that shares words with the claim in
+     * the same language states the claim only when it IS the claim — a partial overlap is a
+     * shared subject, not a shared assertion. A premise that shares NO word with the claim
+     * can only meet it through the bilingual lexicon, and the lexicon is the bridge between
+     * two languages: such a premise is the claim written in another language, and the share
+     * of the bridge's coverage is what says so. The measured cases sit either side of this
+     * floor: the Russian premise of the misconception covers three of its five terms
+     * (0.60) and the Russian premise of the second misconception four of its eight (0.50).
+     */
+    public static final double MINIMUM_CROSS_LINGUAL_SAME_ASSERTION_COVERAGE = 0.50;
+
     public static Claim refutation(String premise, KnowledgeSnapshot snapshot) {
         return refutation(premise, snapshot, false);
     }
@@ -391,8 +420,35 @@ public final class PremiseChecker {
         return refutation(premise, snapshot, true);
     }
 
+    /**
+     * The claim the workspace HOLDS AS TRUE that denies a premise, read through the
+     * retrieval's own index of the workspace's terms.
+     *
+     * <p><b>Why the index and not the workspace.</b> The scan used to read EVERY claim of the
+     * workspace for every question: the proposition of each one was tokenised again, and the
+     * bilingual lexicon was consulted for every pair of terms. The retrieval has already
+     * tokenised every claim of the workspace — it does it to rank them — so the terms are at
+     * hand, and a claim that shares no term with the premise cannot cover half of the
+     * premise's terms and is not read at all. The verdict does not change: the claim that
+     * could refute the premise is a claim that shares terms with it.</p>
+     *
+     * @param premise the premise
+     * @param snapshot the workspace
+     * @param retriever the retrieval that indexed the workspace's terms
+     * @return the refuting claim, or null
+     */
+    static Claim refutationHeldAsTrue(String premise, KnowledgeSnapshot snapshot,
+            KnowledgeRetriever retriever) {
+        return refutation(premise, snapshot, true, retriever);
+    }
+
     private static Claim refutation(String premise, KnowledgeSnapshot snapshot,
             boolean heldAsTrue) {
+        return refutation(premise, snapshot, heldAsTrue, null);
+    }
+
+    private static Claim refutation(String premise, KnowledgeSnapshot snapshot,
+            boolean heldAsTrue, KnowledgeRetriever retriever) {
         if (premise == null || snapshot == null) {
             return null;
         }
@@ -400,17 +456,39 @@ public final class PremiseChecker {
         if (terms.isEmpty()) {
             return null;
         }
+        // THE LEXICON IS CONSULTED ONCE, NOT ONCE PER CLAIM.
+        //
+        // The premise's terms are translated into the terms a claim may carry INSTEAD of
+        // being translated again for every claim of the workspace.
+        Covering coverings = coveringsOf(terms);
         Map<String, Concept> conceptsById = new LinkedHashMap<>();
         for (Concept concept : snapshot.concepts()) {
             conceptsById.put(concept.id(), concept);
         }
+        Map<String, Set<String>> indexed = retriever == null ? null : retriever.claimTerms();
         // The scan reads the whole workspace: the refuting claim of a false premise is often
         // a claim the retrieval does not rank high (it states the misconception in the
         // corpus's own words), and a refutation that only looked at the retrieved claims
         // would miss it — the false premise would be answered as if it held.
         for (Claim claim : snapshot.claims()) {
+            Set<String> indexedTerms = indexed == null ? null : indexed.get(claim.id());
+            if (indexedTerms != null) {
+                // THE COVERAGE IS COUNTED ON THE RETRIEVAL'S TERMS, NOT ON THE CLAIM'S OWN.
+                //
+                // The retrieval has already tokenised every claim of the workspace, and its
+                // terms are the claim's terms with the concept's definition beside them: a
+                // claim that does not cover the premise's terms there cannot cover them
+                // either. The claim is read — and tokenised again — only when the index says
+                // that it can bear on the premise.
+                long indexedCovered = terms.stream()
+                        .filter(term -> covers(indexedTerms, coverings, term)).count();
+                if ((double) indexedCovered / terms.size() < MINIMUM_COVERAGE) {
+                    continue;
+                }
+            }
             Set<String> claimTerms = termsOf(claimText(claim, conceptsById));
-            long covered = terms.stream().filter(term -> covers(claimTerms, term)).count();
+            long covered = terms.stream()
+                    .filter(term -> covers(claimTerms, coverings, term)).count();
             double coverage = (double) covered / terms.size();
             if (coverage < MINIMUM_COVERAGE) {
                 // The claim has to be about the premise: it has to carry at least half of the
@@ -430,11 +508,22 @@ public final class PremiseChecker {
                 // is TRUE, and the misconception denies something else (where the oxygen
                 // comes from).
                 //
-                // It DOES refute the proposition it states: when the question repeats the
-                // misconception, the workspace's own record that the misconception is false
-                // is the evidence that the question's premise does not hold. The workspace's
-                // correction of the misconception carries the truth in the other case.
-                if (statesTheSame(claimTerms, terms)) {
+                // It DOES refute the proposition it states — and ONLY that proposition.
+                //
+                // THE SAME ASSERTION, NOT THE SAME SUBJECT. A claim the workspace calls false
+                // is the workspace's own record that a PROPOSITION is false; it is the
+                // evidence that a question asserting THAT proposition does not hold. It is
+                // not the evidence that some other proposition about the same subject is
+                // false: "plants release oxygen during the day" and "the oxygen a plant
+                // releases comes from the carbon dioxide it absorbs" are about the same
+                // subject and are not the same assertion, and the corpus does not deny the
+                // first one anywhere.
+                //
+                // The comparison is bidirectional — the premise's terms are carried by the
+                // claim's proposition AND the claim's proposition adds no more than a
+                // qualifier — so a premise that is a different assertion about the same
+                // subject is refused neither way.
+                if (statesTheSameAssertion(claim, terms)) {
                     return claim;
                 }
                 continue;
@@ -697,6 +786,96 @@ public final class PremiseChecker {
     }
 
     /**
+     * The terms a claim may carry INSTEAD of the premise's term.
+     *
+     * <p><b>Why the lexicon is consulted here and not in the comparison.</b> The lexicon is a
+     * table, and a table is cheap to read ONCE: the premise's terms are translated into the
+     * terms a claim may carry — the term itself and the lexicon's counterparts — and the
+     * comparison that follows is a set test. The first version asked the lexicon for every
+     * pair of a claim's terms and the premise's terms, once per claim of the workspace, and
+     * the lexicon was the second half of the cost of a question.</p>
+     *
+     * <p><b>Why the phrases are kept apart.</b> A phrase covers only when EVERY one of its
+     * words is there ("cellular respiration" covers when the claim holds both words), and a
+     * set of words cannot say that. The phrases are therefore kept as they are and read
+     * exactly as before.</p>
+     *
+     * @param premiseTerms the premise's terms
+     * @return what covers each of the premise's terms
+     */
+    private static Covering coveringsOf(Set<String> premiseTerms) {
+        Map<String, Set<String>> terms = new LinkedHashMap<>();
+        Map<String, List<String>> phrases = new LinkedHashMap<>();
+        for (String term : premiseTerms) {
+            Set<String> covering = new LinkedHashSet<>();
+            covering.add(term);
+            List<String> phraseCounterparts = new ArrayList<>();
+            for (String counterpart : BilingualLexicon.instance().translations(term)) {
+                if (counterpart.contains(" ")) {
+                    phraseCounterparts.add(counterpart);
+                    for (String word : counterpart.split(" ")) {
+                        covering.add(word);
+                        covering.add(PremiseAssessment.stem(word));
+                    }
+                } else {
+                    covering.add(counterpart);
+                }
+            }
+            terms.put(term, covering);
+            phrases.put(term, phraseCounterparts);
+        }
+        return new Covering(terms, phrases);
+    }
+
+    /**
+     * What covers a premise's terms: the single terms, and the phrases that cover only when
+     * every one of their words is there.
+     *
+     * @param terms the single terms that cover each of the premise's terms
+     * @param phrases the phrases that cover each of the premise's terms
+     */
+    private record Covering(Map<String, Set<String>> terms, Map<String, List<String>> phrases) {
+
+        /** Every term that can take part in the covering. */
+        Set<String> allTerms() {
+            Set<String> all = new LinkedHashSet<>();
+            for (Set<String> covering : terms.values()) {
+                all.addAll(covering);
+            }
+            return all;
+        }
+    }
+
+    /**
+     * Whether the claim carries the premise's term, read through the coverings.
+     *
+     * @param claimTerms the claim's terms
+     * @param covering what covers the premise's terms
+     * @param premiseTerm the premise's term
+     * @return whether the claim carries it
+     */
+    private static boolean covers(Set<String> claimTerms, Covering covering,
+            String premiseTerm) {
+        Set<String> single = covering.terms().get(premiseTerm);
+        if (single != null) {
+            for (String term : single) {
+                if (claimTerms.contains(term)) {
+                    return true;
+                }
+            }
+        }
+        List<String> phrases = covering.phrases().get(premiseTerm);
+        if (phrases != null) {
+            for (String phrase : phrases) {
+                if (coversCounterpart(claimTerms, phrase)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * Whether the claim carries the counterpart, a word or a phrase.
      *
      * @param claimTerms the claim's terms
@@ -710,16 +889,71 @@ public final class PremiseChecker {
      * @param premiseTerms the premise's terms
      * @return whether the claim carries every term of the premise
      */
-    private static boolean statesTheSame(Set<String> claimTerms, Set<String> premiseTerms) {
+    /**
+     * Whether a claim states the SAME ASSERTION as the premise.
+     *
+     * <p>The test is bidirectional: the premise's terms have to be carried by the claim's
+     * proposition (the claim says everything the premise says) and the claim's proposition
+     * must not add a DIFFERENT predicate (it may add a qualifier). A premise that is only
+     * about the same subject is a different assertion, and the workspace's record that the
+     * claim is false is no evidence about it.</p>
+     *
+     * <p><b>The two languages are read separately.</b> A premise that shares words with the
+     * claim in the SAME language states the claim only when it IS the claim: "plants release
+     * oxygen during the day" shares three words with "The oxygen a plant releases comes from
+     * the carbon dioxide it absorbs" and states a different proposition about the same
+     * subject. A premise that shares NO word with the claim can only meet it through the
+     * bilingual lexicon, and the lexicon is the bridge between the two languages — such a
+     * premise is the claim written in another language, and the bridge's coverage says how
+     * much of it the premise carries.</p>
+     *
+     * @param claim the claim the workspace holds as REFUTED
+     * @param premiseTerms the premise's terms
+     * @return whether the two state the same thing
+     */
+    private static boolean statesTheSameAssertion(Claim claim, Set<String> premiseTerms) {
+        Set<String> claimTerms = termsOf(claim.proposition());
         if (claimTerms.isEmpty() || premiseTerms.isEmpty()) {
             return false;
         }
-        long covered = premiseTerms.stream().filter(term -> covers(claimTerms, term)).count();
-        // The floor is the same one the denial rules use: a cross-lingual premise and the
-        // claim it repeats share three of five words through the lexicon, and the workspace's
-        // own record that the claim is false is the evidence that the premise does not hold.
-        return (double) covered / premiseTerms.size()
-                >= PremiseAssessment.MINIMUM_DENIAL_OBJECT_COVERAGE;
+        // THE SAME WORDS: the premise's terms are the claim's terms.
+        long shared = premiseTerms.stream().filter(term -> claimTerms.contains(term)).count();
+        if ((double) shared / premiseTerms.size() >= MINIMUM_SAME_ASSERTION_COVERAGE) {
+            long back = claimTerms.stream().filter(term -> covers(premiseTerms, term)).count();
+            return (double) back / claimTerms.size() >= MINIMUM_SAME_ASSERTION_QUALIFIER_SHARE;
+        }
+        // THE SAME WORDS IN ANOTHER LANGUAGE.
+        //
+        // The premise's words are not the claim's words, so the two can only meet through the
+        // bilingual bridge — and the bridge is what says that they say the same thing. A
+        // premise that meets the claim only in its own language has no such evidence: the
+        // words it shares are the words of the SUBJECT ("plants release oxygen during the
+        // day" against "The oxygen a plant releases comes from the carbon dioxide it
+        // absorbs"), and a shared subject is not a shared assertion.
+        long bridged = premiseTerms.stream().filter(term -> bridged(claimTerms, term)).count();
+        return (double) bridged / premiseTerms.size()
+                >= MINIMUM_CROSS_LINGUAL_SAME_ASSERTION_COVERAGE;
+    }
+
+    /**
+     * Whether the claim carries the premise's term THROUGH THE BILINGUAL BRIDGE.
+     *
+     * <p>This is {@link #covers} without the direct test: the claim does NOT hold the term
+     * itself, it holds its counterpart in the other language. The distinction is the whole
+     * point — the direct test says that the two texts share a word, and the bridge says that
+     * they name the same thing in two languages.</p>
+     *
+     * @param claimTerms the claim's terms
+     * @param premiseTerm the premise's term
+     * @return whether the bridge carries it
+     */
+    private static boolean bridged(Set<String> claimTerms, String premiseTerm) {
+        for (String counterpart : BilingualLexicon.instance().translations(premiseTerm)) {
+            if (coversCounterpart(claimTerms, counterpart)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean coversCounterpart(Set<String> claimTerms, String counterpart) {

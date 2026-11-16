@@ -157,10 +157,28 @@ public final class PremiseSemantics {
     /**
      * The number of CONTENT terms an account must share with a subject to be about it.
      *
-     * <p>It is the same rule the conflict detector applies, for the same reason: the frame of
-     * two texts is not their content.
+     * <p>It is the rule the assessment applies to the premise's own subject
+     * ({@link PremiseAssessment#MINIMUM_SHARED_TERMS}), and it is applied for the same
+     * reason: the frame of two texts is not their content. An account that shares two
+     * content terms with the subject and covers it is about that subject; an account that
+     * shares one is merely near it, and a reading that is merely near the subject is not a
+     * reading of it.
      */
-    public static final int MINIMUM_SHARED_CONTENT_TERMS = 3;
+    public static final int MINIMUM_SHARED_CONTENT_TERMS = PremiseAssessment.MINIMUM_SHARED_TERMS;
+
+    /**
+     * The number of CONTENT terms two accounts must share to be about the same subject.
+     *
+     * <p><b>Why the ambiguity does not use a floor of its own.</b> The conflict detector
+     * already draws the line between two accounts that are about the same subject and two
+     * that merely share words, and the line was drawn the hard way: a floor that is too low
+     * reports conflicts the corpus does not hold. The ambiguity asks the detector's
+     * question — do these accounts about the subject disagree? — and it does not ask it
+     * again with a weaker rule, because a second rule with a weaker threshold is a second
+     * opinion and not an improvement.</p>
+     */
+    public static final int MINIMUM_AMBIGUITY_SHARED_TERMS =
+            ClaimConflictDetector.MINIMUM_SHARED_CONTENT_TERMS;
 
     /**
      * The share of the subject (or of the account) that the two must cover for the account to
@@ -276,7 +294,14 @@ public final class PremiseSemantics {
         // the question's subject IS its premise, which is the case that carries a premise.
         List<Claim> retrieved = subject == null
                 ? List.of() : retriever.answer(subject).claims();
-        List<Reading> readings = readingsOf(retrieved, snapshot, question);
+        // THE ACCOUNTS OF THE SUBJECT, AND WHETHER THEY DISAGREE.
+        //
+        // The accounts are the corpus's own accounts of what the question is about, and the
+        // question is ambiguous when those accounts do not agree with each other: the corpus
+        // holds several answers and does not choose between them.
+        List<Claim> accounts = accountsAbout(retrieved, subject);
+        Claim[] disagreeing = disagreement(accounts, sources, snapshot, contentTerms(subject));
+        List<Reading> readings = readingsOf(accounts, disagreeing, snapshot);
 
         if (premise == null) {
             // A question that asks what a TERM denotes is ambiguous when the workspace holds
@@ -287,6 +312,13 @@ public final class PremiseSemantics {
             boolean asksAboutATerm = referentTerm(question) != null;
             if (asksAboutATerm && !readings.isEmpty()) {
                 return new Disposition(Status.AMBIGUOUS, kind, null, ambiguityReason(readings),
+                        List.of(), conflicts, readings);
+            }
+            if (disagreeing != null) {
+                // THE CORPUS'S ACCOUNTS DISAGREE WITH EACH OTHER: the question is ambiguous
+                // and the corpus does not choose between them.
+                return new Disposition(Status.AMBIGUOUS, kind, null,
+                        disagreementReason(disagreeing, snapshot),
                         List.of(), conflicts, readings);
             }
             String noPremise = "The question asserts no premise, so there is nothing in it for "
@@ -357,8 +389,11 @@ public final class PremiseSemantics {
                     // during the day" is TRUE, and the misconception denies something else
                     // (where the oxygen comes from). The corpus's own correction is the
                     // claim that carries the truth.
+                    // THE SCAN READS THE RETRIEVAL'S INDEX, NOT THE WHOLE WORKSPACE:
+                    // the retrieval has already tokenised every claim, and a claim that
+                    // shares no term with the premise cannot refute it.
                     Claim refutation =
-                            PremiseChecker.refutationHeldAsTrue(premise, snapshot);
+                            PremiseChecker.refutationHeldAsTrue(premise, snapshot, retriever);
                     if (refutation == null
                             || assertedProposition(kind)
                             && !denialIsAboutThePremise(evidence, premise, refutation)) {
@@ -373,6 +408,17 @@ public final class PremiseSemantics {
             }
         }
 
+        if (status == Status.UNSUPPORTED && disagreeing != null) {
+            // THE CORPUS'S ACCOUNTS DISAGREE WITH EACH OTHER.
+            //
+            // The premise is neither confirmed nor denied, and the accounts the corpus holds
+            // about the subject do not agree with each other: there is more than one answer
+            // and the corpus does not choose between them. The question is ambiguous, and the
+            // disagreement is named in the reason — the reader has to see WHICH accounts
+            // disagree, and that is the whole difference between an ambiguity and a refusal.
+            status = Status.AMBIGUOUS;
+            reason = disagreementReason(disagreeing, snapshot);
+        }
         if (referentTerm(question) != null && !readings.isEmpty() && status != Status.REFUTED) {
             // A question that asks what a TERM denotes is ambiguous when the workspace holds
             // several accounts of that term, and the accounts are reported beside the status.
@@ -713,18 +759,29 @@ public final class PremiseSemantics {
      * @param question the question
      * @return the readings, at most {@link #MAXIMUM_READINGS} of them
      */
-    private static List<Reading> readingsOf(List<Claim> retrieved, KnowledgeSnapshot snapshot,
-            String question) {
-        String subject = subjectOf(snapshot, question);
-        if (subject == null) {
-            return List.of();
-        }
-        List<Claim> accounts = accountsAbout(retrieved, subject);
+    private static List<Reading> readingsOf(List<Claim> accounts, Claim[] disagreeing,
+            KnowledgeSnapshot snapshot) {
         if (accounts.size() < MINIMUM_READINGS) {
             return List.of();
         }
-        List<Reading> readings = new ArrayList<>();
+        // THE DISAGREEING ACCOUNTS COME FIRST.
+        //
+        // The readings of an ambiguous question are the accounts that DISAGREE, and the
+        // reader has to see them before the ones that agree with them: the disagreement is
+        // what the question turns on. The order of the rest is the retrieval's own order,
+        // because it is the order of the answer.
+        List<Claim> ordered = new ArrayList<>();
+        if (disagreeing != null) {
+            ordered.add(disagreeing[0]);
+            ordered.add(disagreeing[1]);
+        }
         for (Claim claim : accounts) {
+            if (!ordered.contains(claim)) {
+                ordered.add(claim);
+            }
+        }
+        List<Reading> readings = new ArrayList<>();
+        for (Claim claim : ordered) {
             if (readings.size() >= MAXIMUM_READINGS) {
                 break;
             }
@@ -733,6 +790,178 @@ public final class PremiseSemantics {
             readings.add(new Reading(claim.proposition(), List.of(reference)));
         }
         return readings.size() < MINIMUM_READINGS ? List.of() : List.copyOf(readings);
+    }
+
+    /**
+     * The reason the corpus's accounts disagree with each other.
+     *
+     * <p>The reader is told WHICH accounts disagree and what each of them says: a reason that
+     * only says "the corpus is in conflict" leaves the reader to find the two accounts
+     * herself, and that is the work the disposition exists to do.</p>
+     *
+     * @param disagreeing the two accounts
+     * @param snapshot the workspace
+     * @return the reason
+     */
+    private static String disagreementReason(Claim[] disagreeing, KnowledgeSnapshot snapshot) {
+        PremiseAssessment.EvidenceRef left =
+                PremiseAssessment.evidenceRefFor(disagreeing[0], snapshot);
+        PremiseAssessment.EvidenceRef right =
+                PremiseAssessment.evidenceRefFor(disagreeing[1], snapshot);
+        return "The question is ambiguous: the corpus holds accounts of its subject that "
+                + "disagree with each other, and it does not choose between them. Claim "
+                + left.claimId() + " of \"" + titleOf(left) + "\" states \"" + left.proposition()
+                + "\", and claim " + right.claimId() + " of \"" + titleOf(right) + "\" states \""
+                + right.proposition() + "\" — the two are about the same subject and cannot both "
+                + "hold. Both are reported with their provenance, the system does not decide "
+                + "between them, and none of them is chosen as the answer.";
+    }
+
+    /**
+     * The two accounts that disagree with each other, or null when none do.
+     *
+     * <p><b>The test is the conflict detector's.</b> The corpus's own accounts of the
+     * subject are read with the detector that the adversarial review put in place — two
+     * accounts that are about the same subject and carry opposite polarity on it — and the
+     * accounts that disagree are the two sides of the first conflict it reports. The
+     * detector is asked because a false disagreement is worse than a missed one: a question
+     * reported as ambiguous when the corpus does not disagree is a question the caller was
+     * told it cannot be answered, and the corpus's two accounts of a plate boundary (the
+     * narrow zone and the broad belt) share too little content for the detector to call
+     * them a conflict.</p>
+     *
+     * @param accounts the accounts about the subject
+     * @param sources the workspace's sources, by identifier
+     * @param snapshot the workspace
+     * @return the disagreeing pair, or null
+     */
+    static Claim[] disagreement(List<Claim> accounts, Map<String, Source> sources,
+            KnowledgeSnapshot snapshot, Set<String> subjectTerms) {
+        Claim[] detected = detectedDisagreement(accounts, sources, snapshot);
+        if (detected != null) {
+            return detected;
+        }
+        return subjectDisagreement(accounts, subjectTerms);
+    }
+
+    /**
+     * The two accounts the CONFLICT DETECTOR reports as a conflict.
+     *
+     * @param accounts the accounts about the subject
+     * @param sources the workspace's sources, by identifier
+     * @param snapshot the workspace
+     * @return the disagreeing pair, or null
+     */
+    private static Claim[] detectedDisagreement(List<Claim> accounts, Map<String, Source> sources,
+            KnowledgeSnapshot snapshot) {
+        List<ClaimConflictDetector.Conflict> conflicts =
+                ClaimConflictDetector.detect(accounts, sources, snapshot);
+        for (ClaimConflictDetector.Conflict conflict : conflicts) {
+            List<ClaimConflictDetector.Side> sides = conflict.sides();
+            if (sides.size() < 2) {
+                continue;
+            }
+            Claim left = claimOf(accounts, sides.get(0).claimId());
+            Claim right = claimOf(accounts, sides.get(1).claimId());
+            if (left != null && right != null) {
+                return new Claim[] {left, right};
+            }
+        }
+        return null;
+    }
+
+    /**
+     * The two accounts that hold opposite accounts of the subject.
+     *
+     * <p><b>Why there is a second path.</b> The detector asks for a lot of shared content,
+     * and the corpus's own two accounts of a plate boundary — the narrow zone and the broad
+     * belt — share two content terms with each other: the detector cannot see them. They are
+     * still the two accounts the question turns on, and a question that asks how the plate
+     * boundary is described has two answers in the corpus that cannot both hold.</p>
+     *
+     * <p><b>What keeps the second path honest.</b> Three conditions, and all three are
+     * needed. The two accounts must be about each other (they share content terms); they must
+     * each COVER the subject the question asks about (an account that merely mentions the
+     * subject's words is not an account of the subject); and they must carry opposite
+     * polarity on what they share. Without the second condition a claim about another
+     * subject that happens to mention the same words would be reported as a second answer,
+     * and the measure that made the corpus's own "the record is not always accurately
+     * recorded" sentence look like a denial of a question about the reversal history would
+     * have done the same.</p>
+     *
+     * @param accounts the accounts about the subject
+     * @param subjectTerms the subject's content terms
+     * @return the disagreeing pair, or null
+     */
+    private static Claim[] subjectDisagreement(List<Claim> accounts, Set<String> subjectTerms) {
+        if (subjectTerms.isEmpty()) {
+            return null;
+        }
+        for (int i = 0; i < accounts.size(); i++) {
+            for (int j = i + 1; j < accounts.size(); j++) {
+                Claim left = accounts.get(i);
+                Claim right = accounts.get(j);
+                if (!coversTheSubject(left, subjectTerms)
+                        || !coversTheSubject(right, subjectTerms)) {
+                    continue;
+                }
+                Set<String> shared = sharedTerms(left, right);
+                if (shared.size() < MINIMUM_AMBIGUITY_SHARED_TERMS) {
+                    continue;
+                }
+                int leftPolarity = ClaimConflictDetector.polarityOf(left, shared);
+                int rightPolarity = ClaimConflictDetector.polarityOf(right, shared);
+                if (leftPolarity != 0 && rightPolarity != 0 && leftPolarity != rightPolarity) {
+                    return new Claim[] {left, right};
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Whether an account covers the subject the question asks about.
+     *
+     * @param claim the account
+     * @param subjectTerms the subject's content terms
+     * @return whether it covers the subject's share
+     */
+    private static boolean coversTheSubject(Claim claim, Set<String> subjectTerms) {
+        Set<String> claimTerms = contentTerms(claim.proposition());
+        Set<String> shared = new LinkedHashSet<>(subjectTerms);
+        shared.retainAll(claimTerms);
+        return (double) shared.size() / subjectTerms.size() >= MINIMUM_SUBJECT_COVERAGE;
+    }
+
+    /**
+     * The content terms two accounts share.
+     *
+     * <p><b>Why the propositions and not the conflict detector's content.</b> The detector
+     * holds the SCOPE apart from the content, because the scope is the frame two accounts
+     * hold under. Here the two accounts are accounts of ONE subject, and the scope is where
+     * the corpus states that subject: the account that says the plate-boundary zones are
+     * broad belts states its subject in its scope, and holding the scope apart would leave
+     * the two accounts of that subject with nothing in common at all.</p>
+     *
+     * @param left the first account
+     * @param right the second account
+     * @return the shared content terms
+     */
+    private static Set<String> sharedTerms(Claim left, Claim right) {
+        Set<String> shared = new LinkedHashSet<>(
+                ClaimConflictDetector.contentTermsOf(left.proposition()));
+        shared.retainAll(ClaimConflictDetector.contentTermsOf(right.proposition()));
+        return shared;
+    }
+
+    /** The claim with the given identifier, or null. */
+    private static Claim claimOf(List<Claim> claims, String claimId) {
+        for (Claim claim : claims) {
+            if (claim.id().equals(claimId)) {
+                return claim;
+            }
+        }
+        return null;
     }
 
     /**
@@ -816,7 +1045,7 @@ public final class PremiseSemantics {
      * The number of shared terms an account needs to be about a subject.
      *
      * <p>It is the smaller of the content floor and the size of the subject: a subject of one
-     * term cannot be covered by three terms, and asking for three would leave every question
+     * term cannot be covered by two terms, and asking for two would leave every question
      * about a single term without an account.
      *
      * @param subjectSize the number of the subject's terms

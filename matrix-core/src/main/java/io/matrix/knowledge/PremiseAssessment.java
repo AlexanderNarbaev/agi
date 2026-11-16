@@ -579,6 +579,30 @@ public final class PremiseAssessment {
             return new Reading("CONTRADICTS", premiseDenial);
         }
         if (claimDenial != null && premiseDenial == null) {
+            // A CLAIM THAT STATES THE PREMISE SUPPORTS IT: a claim cannot be
+            // the evidence that its own assertion is false.
+            //
+            // THE SAME ASSERTION, NOT THE SAME SUBJECT. The denial above is a
+            // SUBJECT-level test: it says that the claim denies something
+            // about the premise's subject. It does not say that the claim
+            // denies THAT PROPOSITION.
+            //
+            // The corpus holds "Subduction is the driving force behind plate
+            // tectonics, and without it, plate tectonics could not occur."
+            // The premise "subduction is the driving force behind plate
+            // tectonics" is that claim's own first clause, and the second
+            // clause's negation ("without it, plate tectonics could not
+            // occur") denies a CONSEQUENCE, not the premise. The subject-level
+            // test read the premise as REFUTED — a false contradiction of a
+            // proposition the corpus states outright.
+            //
+            // The rule: the claim refutes the premise only when it asserts
+            // the OPPOSITE of that proposition. When it states the premise,
+            // it supports it, and the negation elsewhere in the claim is
+            // about something else.
+            if (statesThePremise(premise, claim)) {
+                return new Reading("SUPPORTS", null);
+            }
             return new Reading("CONTRADICTS", premise);
         }
         // A LIMITATION of the other side.
@@ -865,6 +889,68 @@ public final class PremiseAssessment {
             return true;
         }
         return premiseStems.size() >= MINIMUM_SHARED_TERMS && claimStems.containsAll(premiseStems);
+    }
+
+    /**
+     * Whether the claim STATES the premise.
+     *
+     * <p><b>Why the claim's CLAUSES and not the claim.</b> A claim may say more than one
+     * thing, and a negation in one of them says nothing about the others. "Subduction is
+     * the driving force behind plate tectonics, and without it, plate tectonics could not
+     * occur" states the premise "subduction is the driving force behind plate tectonics"
+     * in its first clause and denies a consequence in its second one; a comparison with the
+     * whole claim would see the negation and miss the statement, and the premise would be
+     * called refuted although the corpus states it outright.</p>
+     *
+     * <p><b>Why the SCOPE is read with the proposition.</b> The scope is part of the claim's
+     * statement (see {@link #read}), and a claim whose scope states the premise states it.
+     * A scope that DENIES is not a statement of the premise.</p>
+     *
+     * @param premise the premise
+     * @param claim the claim
+     * @return whether the claim states the premise
+     */
+    private static boolean statesThePremise(String premise, Claim claim) {
+        Set<String> premiseStems = distinctiveStems(premise);
+        if (premiseStems.isEmpty() || claim == null) {
+            return false;
+        }
+        for (String clause : fragmentsOf(claim.proposition())) {
+            if (statesIt(clause, premiseStems)) {
+                return true;
+            }
+        }
+        if (claim.scope() != null) {
+            for (String clause : fragmentsOf(claim.scope())) {
+                if (statesIt(clause, premiseStems)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Whether a clause states the premise.
+     *
+     * <p>The rule is the one {@link #sameAssertion} applies to a whole text: the clause
+     * carries every content term of the premise, and the clause does not deny. A clause
+     * that adds terms states the premise with a qualifier, and a clause that denies states
+     * the opposite of it — neither of them is a statement of the premise.</p>
+     *
+     * @param clause the clause
+     * @param premiseStems the premise's distinctive terms
+     * @return whether the clause states the premise
+     */
+    private static boolean statesIt(String clause, Set<String> premiseStems) {
+        if (clause == null || clause.isBlank() || denied(clause)) {
+            return false;
+        }
+        Set<String> clauseStems = distinctiveStems(clause);
+        if (clauseStems.size() < MINIMUM_SHARED_TERMS) {
+            return false;
+        }
+        return clauseStems.containsAll(premiseStems);
     }
 
     /**

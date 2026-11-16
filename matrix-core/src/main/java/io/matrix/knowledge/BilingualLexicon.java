@@ -49,6 +49,13 @@ public final class BilingualLexicon {
 
     private BilingualLexicon() {
         load();
+        // The sets are frozen ONCE, at load time. The lookup is made once per term of every
+        // claim of the workspace, and a lookup that copies the set it returns is a lookup that
+        // allocates: the table is immutable after the load, and the lookup hands out the
+        // table's own set.
+        for (Map.Entry<String, Set<String>> entry : byTerm.entrySet()) {
+            entry.setValue(Set.copyOf(entry.getValue()));
+        }
     }
 
     /** The lexicon, loaded once. */
@@ -145,7 +152,7 @@ public final class BilingualLexicon {
             return Set.of();
         }
         Set<String> found = byTerm.get(stem.toLowerCase(Locale.ROOT));
-        return found == null ? Set.of() : Set.copyOf(found);
+        return found == null ? Set.of() : found;
     }
 
     /** Whether the lexicon holds the term. */

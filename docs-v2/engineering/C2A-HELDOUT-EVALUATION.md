@@ -2,7 +2,7 @@
 
 **Status:** `MEASURED` — the three frozen candidates, and the frozen H1+H2 combination, were run against the held-out dataset.
 **Date:** 2026-11-15.
-**Branch / commit:** `feature/concept-to-action` / `4ed3848171742edb4f2bbe49ecf74a449c0efdba`.
+**Branch / commit:** `feature/concept-to-action` / `69b0a0338aa8001e94a5e2e9790b6619f1c46fcf`.
 **Freeze:** `docs-v2/engineering/C2A-CANDIDATE-FREEZE.md` — sha256 `365655905e9e6be278f9550229958be1fa7cd31b5ca19b6f91c726e7ccfc7f7c` (version **1.1**, verified against the sha256 the freeze declares; it supersedes version 1.0, sha256 `14251fbcdf06001b670d919621b64079a35229ebabe1577081fb0b6222c08cf4`, against which the FIRST held-out run was produced).
 **Held-out dataset:** `docs-v2/engineering/C2A-HELDOUT-SET.json` — sha256 `bbb3d2ad630ec610df3dbaae3ec10978d6cbbe740e13604dfd827b56b6872d77`.
 **Produced by:** `matrix-core/src/test/java/io/matrix/knowledge/concept/HeldOutEvaluationTest.java` (research only; the production retrieval path is unchanged).
@@ -93,7 +93,7 @@ The candidates, and what each of them changed in the workspace:
 
 | Row | Passed | Gold avail. | Recall@1 | Recall@5 | Recall@10 | Recall@20 | MRR | micro Recall@10 | Supported answer | Unsupported answer | Answered with NO gold | Abstention | Unsupported over all 25 ask cases | Mean non-gold cited | Top-1 not gold | Mean retrieval (ms) | Overhead (ms) |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `BASELINE-PATH` | 17/25 | 0.7368 | 0.5351 | 0.7719 | 0.8158 | 0.8596 | 0.8600 | 0.7576 | 0.5789 (11/19) | 0.3684 (7/19) | 1/19 | 1.0000 | 0.2800 (25 ask cases) | 5.2105 | 4/19 | 53 | 45.0000 |
+| `BASELINE-PATH` | 17/25 | 0.7368 | 0.5351 | 0.7719 | 0.8158 | 0.8596 | 0.8600 | 0.7576 | 0.5789 (11/19) | 0.3684 (7/19) | 1/19 | 1.0000 | 0.2800 (25 ask cases) | 5.2105 | 4/19 | 59 | 51.0000 |
 | `BASELINE-RETRIEVER` | 18/25 | 0.7895 | 0.5351 | 0.7719 | 0.8158 | 0.8596 | 0.8600 | 0.7576 | 0.6316 (12/19) | 0.3684 (7/19) | 1/19 | 1.0000 | 0.2800 (25 ask cases) | 5.2632 | 4/19 | 8 | 0.0000 |
 | `H1-definition-enrichment` | 18/25 | 0.7895 | 0.5351 | 0.7895 | 0.8421 | 0.8860 | 0.8596 | 0.7879 | 0.6316 (12/19) | 0.3684 (7/19) | 1/19 | 1.0000 | 0.2800 (25 ask cases) | 5.0526 | 4/19 | 9 | 1.0000 |
 | `H2-relation-expansion` | 18/25 | 0.7895 | 0.5351 | 0.7544 | 0.8333 | 0.8596 | 0.8605 | 0.7879 | 0.6316 (12/19) | 0.3684 (7/19) | 1/19 | 1.0000 | 0.2800 (25 ask cases) | 5.2632 | 4/19 | 8 | 0.0000 |
@@ -113,14 +113,14 @@ The failure lists (the comparable cases only):
 
 | Row | Passed | Recall@1 | Recall@5 | Recall@10 | Recall@20 | MRR | Supported answer | Abstention | Unsupported answer | Mean non-gold cited | Top-1 not gold | Mean retrieval (ms) |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `BASELINE-PATH` | 18/29 | 0.2024 | 0.3214 | 0.3690 | 0.5952 | 0.5078 | 0.4286 | 1.0000 | 0.5714 | 38.2857 | 8 | 50 |
-| `BASELINE-RETRIEVER` | 8/20 | 0.2024 | 0.3214 | 0.3690 | 0.5952 | 0.5078 | 0.4286 | 0.3333 | 0.5714 | 38.2857 | 8 | 9 |
-| `H1-definition-enrichment` | 8/20 | 0.2381 | 0.3214 | 0.3690 | 0.5952 | 0.5422 | 0.4286 | 0.3333 | 0.5714 | 40.5714 | 7 | 9 |
-| `H2-relation-expansion` | 8/20 | 0.2024 | 0.3214 | 0.3690 | 0.5952 | 0.5075 | 0.4286 | 0.3333 | 0.5714 | 39.0000 | 8 | 8 |
+| `BASELINE-PATH` | 18/29 | 0.2024 | 0.3214 | 0.3690 | 0.5952 | 0.5078 | 0.4286 | 1.0000 | 0.5714 | 38.2857 | 8 | 61 |
+| `BASELINE-RETRIEVER` | 8/20 | 0.2024 | 0.3214 | 0.3690 | 0.5952 | 0.5078 | 0.4286 | 0.3333 | 0.5714 | 38.2857 | 8 | 8 |
+| `H1-definition-enrichment` | 8/20 | 0.2381 | 0.3214 | 0.3690 | 0.5952 | 0.5422 | 0.4286 | 0.3333 | 0.5714 | 40.5714 | 7 | 8 |
+| `H2-relation-expansion` | 8/20 | 0.2024 | 0.3214 | 0.3690 | 0.5952 | 0.5075 | 0.4286 | 0.3333 | 0.5714 | 39.0000 | 8 | 7 |
 | `H3-query-lexical-expansion` | 5/20 | 0.1429 | 0.3214 | 0.4048 | 0.5476 | 0.4395 | 0.2143 | 0.3333 | 0.7857 | 17.6429 | 10 | 8 |
-| `H1+H2-definition-and-relation-expansion` | 8/20 | 0.2024 | 0.3214 | 0.3690 | 0.5595 | 0.4938 | 0.4286 | 0.3333 | 0.5714 | 41.9286 | 8 | 9 |
+| `H1+H2-definition-and-relation-expansion` | 8/20 | 0.2024 | 0.3214 | 0.3690 | 0.5595 | 0.4938 | 0.4286 | 0.3333 | 0.5714 | 41.9286 | 8 | 8 |
 
-(The development table is read from `docs-v2/engineering/C2A-CONCEPT-ENRICHMENT-RESULTS.json`, sha256 `c1edc1eed7d5b735c1432f0124dd4af43ce37b9a963125ce3c55d2b697fd3bdd`; it is the 29-case measurement of the same freeze. Its comparable denominator is 20 cases, the held-out one's is 25.)
+(The development table is read from `docs-v2/engineering/C2A-CONCEPT-ENRICHMENT-RESULTS.json`, sha256 `3ca3bc120fd5cde511c797234a5bce54d53cfc808827485992afdd941043eee3`; it is the 29-case measurement of the same freeze. Its comparable denominator is 20 cases, the held-out one's is 25.)
 
 ### 3.2 The generalisation question
 
@@ -342,12 +342,12 @@ The reading of these seven cases is the same in every row: **the system answers,
 
 | Row | Mean retrieval (ms) | Total over the 38 cases (ms) | Overhead per case (ms) |
 |---|---|---|---|
-| `BASELINE-PATH` | 53 | 2004 | 45.0000 |
-| `BASELINE-RETRIEVER` | 8 | 304 | 0.0000 |
-| `H1-definition-enrichment` | 9 | 343 | 1.0000 |
-| `H2-relation-expansion` | 8 | 300 | 0.0000 |
-| `H3-query-lexical-expansion` | 8 | 306 | 0.0000 |
-| `H1+H2-definition-and-relation-expansion` | 9 | 350 | 1.0000 |
+| `BASELINE-PATH` | 59 | 2603 | 51.0000 |
+| `BASELINE-RETRIEVER` | 8 | 300 | 0.0000 |
+| `H1-definition-enrichment` | 9 | 346 | 1.0000 |
+| `H2-relation-expansion` | 8 | 302 | 0.0000 |
+| `H3-query-lexical-expansion` | 8 | 314 | 0.0000 |
+| `H1+H2-definition-and-relation-expansion` | 9 | 352 | 1.0000 |
 
 The extraction is a one-off cost of 46 ms and 74630 bytes of retained text for the held-out workspace. The candidates themselves cost no extra retrieval time: they change the snapshot the retriever reads, not the retriever.
 
