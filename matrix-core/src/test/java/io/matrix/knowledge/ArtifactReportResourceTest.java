@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.matrix.actions.ArtifactActionService;
 import io.matrix.actions.ArtifactWriter;
+import io.matrix.cognitive.CognitiveService;
+import io.matrix.cognitive.report.ReportJourneyPlanner;
 import io.matrix.security.NetworkExposure;
 import jakarta.ws.rs.core.Response;
 import java.io.IOException;
@@ -460,11 +462,22 @@ class ArtifactReportResourceTest {
         return root;
     }
 
-    /** The resource, wired by hand, the way the container wires it. */
+    /**
+     * The resource, wired by hand, the way the container wires it.
+     *
+     * <p>The planner and the cognitive service are the route's collaborators since P2: the
+     * planner is where the kernel chooses the journey's method, and the cognitive service
+     * owns the store the journey's trace is written into. A route without them would have
+     * no plan and no trace, which is not the product the container serves.</p>
+     */
     private ArtifactReportResource resource(KnowledgeWorkbench bench, ArtifactActionService actions) {
         ArtifactReportResource resource = new ArtifactReportResource();
         resource.workbench = bench;
         resource.actions = actions;
+        resource.planner = new ReportJourneyPlanner();
+        CognitiveService cognitive = new CognitiveService();
+        cognitive.workbench(bench);
+        resource.cognitive = cognitive;
         return resource;
     }
 

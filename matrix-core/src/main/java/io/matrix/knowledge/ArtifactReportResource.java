@@ -1,8 +1,20 @@
 package io.matrix.knowledge;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.matrix.actions.ArtifactAction;
 import io.matrix.actions.ArtifactActionService;
 import io.matrix.actions.ArtifactWriter;
+import io.matrix.cognitive.CognitiveService;
+import io.matrix.cognitive.CognitiveStore;
+import io.matrix.cognitive.algorithms.AlgorithmFamilies;
+import io.matrix.cognitive.algorithms.ComputeBudget;
+import io.matrix.cognitive.algorithms.ProblemRequest;
+import io.matrix.cognitive.report.ArtifactObserver;
+import io.matrix.cognitive.report.ReportJourney;
+import io.matrix.cognitive.report.ReportJourneyMethod;
+import io.matrix.cognitive.report.ReportJourneyPlanner;
+import io.matrix.cognitive.report.ReportJourneyTrace;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
@@ -12,11 +24,14 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * CONCEPT-TO-ACTION — the one product route that turns a question into a real file.
@@ -59,6 +74,40 @@ public class ArtifactReportResource {
      */
     @Inject
     public ArtifactActionService actions;
+
+    /**
+     * The kernel's plan for the journey.
+     *
+     * <p>P2 — the route does not decide how the report is produced. It asks the kernel's
+     * planner for a method and a reason, and it stops when the kernel has no method for
+     * the request. The planner is public for the same reason as {@link #workbench}: the
+     * route is driven from a test the way the container drives it.</p>
+     */
+    @Inject
+    public ReportJourneyPlanner planner;
+
+    /**
+     * The kernel's service, whose store holds the journey's trace.
+     *
+     * <p>The trace is written through the kernel's own durable mechanism — the events of
+     * one episode in the cognitive store, which is the store the kernel writes its own
+     * cycles into. There is no new database and no new file system authority.</p>
+     */
+    @Inject
+    public CognitiveService cognitive;
+
+    /**
+     * Whether the journey consults the trace it left behind.
+     *
+     * <p>This is the seam the design's no-learning baseline is measured through: the same
+     * journey, with the same trace written, but with the retained journey not read back.
+     * The comparison against it is what decides whether consulting the trace is worth
+     * anything — and the answer has to be measured, not assumed.</p>
+     */
+    public boolean consultRetainedTrace = true;
+
+    /** The JSON the response is written in, and the retained response is kept in. */
+    private static final ObjectMapper JSON = new ObjectMapper();
 
     /** The longest report name the route accepts. */
     private static final int MAX_REPORT_NAME_LENGTH = 128;
@@ -192,20 +241,132 @@ public class ArtifactReportResource {
         }
 
         AbstractionLevel level = parseLevel(request.level());
-        Answer answer = workbench.ask(workspaceId, request.question(), level);
-        byte[] content = report(workspaceId, request.question(), answer).getBytes(StandardCharsets.UTF_8);
 
-        ArtifactWriter.Result written;
+        // ── THE PLAN — the kernel chooses a method and says why ──────────────
+        //
+        // P2. The route does not decide how the report is produced. Before the workspace
+        // is asked, the kernel's selector chooses a method for the request from the
+        // registry it owns, and the decision says why. The plan is a PRECONDITION and not
+        // an authority: it cannot widen the consent, the output-root confinement or the
+        // writer's lease, and it cannot make a request servable that the checks above
+        // refused. A request the kernel has no method for is refused here, with a reason —
+        // the route does not fall back to "no method chosen" silently.
+        if (planner == null) {
+            // a route without the kernel's planner has no method to choose; that is a
+            // refusal with a reason, not a silent fall back to "no method chosen"
+            return refused(422, "no_method_for_request", "the kernel's planner is not "
+                    + "available, so no method could be chosen for this request");
+        }
+        String episodeId = ReportJourneyTrace.episodeId(identity);
+        CognitiveStore traceStore = traceStore();
+        ReportJourney.Retained retained = traceStore == null || !consultRetainedTrace ? null
+                : ReportJourneyTrace.retained(traceStore, episodeId);
+        String fingerprint = workspaceFingerprint(workspaceId);
+        Set<String> facts = journeyFacts(identity, retained, fingerprint, reportName);
+
+        ReportJourney.Problem problem = new ReportJourney.Problem(workspaceId, request.question(),
+                identity, reportName, level, workbench, actions.writer(), retained, fingerprint);
+        ProblemRequest planRequest = new ProblemRequest(AlgorithmFamilies.KNOWLEDGE_REPORT, problem,
+                facts, ComputeBudget.unbounded());
+        ReportJourneyPlanner.Plan plan = planner.plan(planRequest);
+        if (plan.refused()) {
+            return refused(422, "no_method_for_request", plan.reason());
+        }
+
+        // ── THE ACTION — the permissioned write, measured ───────────────────
+        ReportJourney.Result result;
         try {
-            written = actions.writer().write(identity, reportName, content);
+            result = planner.measure(plan.method().capability().id(),
+                    () -> plan.method().execute(problem, ComputeBudget.unbounded()));
         } catch (IllegalStateException unusable) {
             return refused(503, "output_root_unavailable", unusable.getMessage());
         }
+        ArtifactWriter.Result written = result.write();
         if (!written.written()) {
             return refused(statusFor(written.disposition()), written.disposition().name(),
                     refusalExplanation(written.disposition()));
         }
 
+        // ── THE OBSERVATION — read by a reader that did not write ────────────
+        //
+        // The action's own report of success is not the observation. The artifact is
+        // measured on its bytes and the append-only index is read, by a reader that
+        // shares nothing with the write path but the root. A disagreement between the
+        // action's report and the observation is a FAILED effect, and it is recorded as
+        // such rather than smoothed over.
+        ArtifactObserver.Observation observation;
+        try {
+            observation = ArtifactObserver.observe(actions.writer(), identity, written.fileName(),
+                    written.sha256());
+        } catch (IOException unreadable) {
+            return refused(503, "output_root_unavailable",
+                    "the artifact could not be read back: " + unreadable.getMessage());
+        }
+
+        // ── THE TRACE — what happened, kept where the next task can read it ─
+        List<String> traceFailures = new ArrayList<>();
+        List<CognitiveStore.EventRecord> steps = new ArrayList<>();
+        String planDetail = plan.method().capability().id() + ": " + plan.reason();
+        steps.add(new CognitiveStore.EventRecord(ReportJourneyTrace.PHASE_PLAN,
+                ReportJourneyTrace.ACTOR_PLANNER, planDetail));
+        steps.add(new CognitiveStore.EventRecord(ReportJourneyTrace.PHASE_PERMISSION,
+                ReportJourneyTrace.ACTOR_ROUTE,
+                "the caller consented, the gate was open and the output root is the "
+                        + "server's own; the plan did not widen either"));
+        steps.add(new CognitiveStore.EventRecord(ReportJourneyTrace.PHASE_ACTION,
+                ReportJourneyTrace.ACTOR_ACTION,
+                ArtifactAction.NAME + " on " + identity + " produced " + written.disposition().name()
+                        + " for " + written.fileName() + " with digest " + written.sha256()));
+        steps.add(new CognitiveStore.EventRecord(ReportJourneyTrace.PHASE_OBSERVE,
+                ReportJourneyTrace.ACTOR_OBSERVER,
+                observation.detail() + "; the index holds " + observation.stagedRecords()
+                        + " STAGED and " + observation.committedRecords() + " COMMITTED record(s)"));
+        steps.add(new CognitiveStore.EventRecord(ReportJourneyTrace.PHASE_VERIFY,
+                ReportJourneyTrace.ACTOR_OBSERVER,
+                observation.verified()
+                        ? "the effect is verified: the artifact is there, its digest is the one "
+                                + "that was reported, and the index holds exactly one committed "
+                                + "record for the identity"
+                        : "the effect FAILED: the artifact and the index do not agree with what "
+                                + "the action reported"));
+        steps.add(new CognitiveStore.EventRecord(ReportJourneyTrace.PHASE_RESULT,
+                ReportJourneyTrace.ACTOR_ROUTE,
+                "the method " + plan.method().capability().id() + " produced "
+                        + written.disposition().name()
+                        + (result.replayed() ? " by replaying the retained journey" : "")));
+        trace(traceFailures, traceStore, episodeId, steps);
+
+        ReportResponse response;
+        try {
+            response = result.replayed()
+                    ? replayedResponse(retained, written, traceFailures)
+                    : response(result, written, traceFailures);
+        } catch (IllegalStateException unreadable) {
+            return refused(503, "output_root_unavailable", unreadable.getMessage());
+        }
+        trace(traceFailures, traceStore, episodeId, List.of(new CognitiveStore.EventRecord(
+                ReportJourneyTrace.PHASE_RETAINED, ReportJourneyTrace.ACTOR_ROUTE,
+                result.replayed() ? "the retained journey was served; the trace is unchanged"
+                        : ReportJourneyTrace.payload(new ReportJourney.Retained(
+                                plan.method().capability().id(), fingerprint, written.sha256(),
+                                written.fileName(), json(response))))));
+
+        int status = written.disposition() == ArtifactWriter.Disposition.REPLAYED ? 200 : 201;
+        return Response.status(status).entity(response).build();
+    }
+
+    /**
+     * The response of a journey that asked the workspace and wrote the report.
+     *
+     * @param workspaceId the workspace the question was asked over
+     * @param question    the question
+     * @param result      what the chosen method produced
+     * @param written     the writer's own result
+     * @return the response
+     */
+    private ReportResponse response(ReportJourney.Result result, ArtifactWriter.Result written,
+            List<String> traceFailures) {
+        Answer answer = result.answer();
         List<EvidenceReference> evidence = new ArrayList<>();
         Map<String, String> sourceTitles = new LinkedHashMap<>();
         for (Source source : answer.sources()) {
@@ -220,6 +381,7 @@ public class ArtifactReportResource {
         List<String> limitations = new ArrayList<>(answer.limitations());
         limitations.add("a written report is a record of what the workspace said; it is not "
                 + "independent evidence for the propositions it repeats");
+        limitations.addAll(traceFailures);
         if (!answer.answered()) {
             limitations.add("the question was not answered; the absence of an answer is the "
                     + "epistemic result, not a defect of the file action");
@@ -235,8 +397,8 @@ public class ArtifactReportResource {
                     + "carries the digest below, but the index does not yet name it");
         }
 
-        ReportResponse response = new ReportResponse(
-                identity,
+        return new ReportResponse(
+                written.actionId(),
                 ArtifactAction.NAME,
                 ArtifactAction.VERSION,
                 written.disposition().name(),
@@ -245,14 +407,164 @@ public class ArtifactReportResource {
                 written.sha256(),
                 evidence,
                 answer.answered() ? "ANSWERED" : "ABSTAINED",
-                "artifact-index:" + identity,
+                "artifact-index:" + written.actionId(),
                 limitations,
                 refusals,
                 premiseStatus(answer),
                 conflicts(answer),
                 readings(answer));
-        int status = written.disposition() == ArtifactWriter.Disposition.REPLAYED ? 200 : 201;
-        return Response.status(status).entity(response).build();
+    }
+
+    /**
+     * The response of a journey that replayed a retained one.
+     *
+     * <p>The answer is the one the earlier journey gave, and the artifact is the one that
+     * was committed then: the workspace was not asked again, and the file was read from
+     * the output root and checked against the digest the trace recorded. The disposition
+     * says REPLAYED, because that is what the writer's own rule says about a second
+     * write under one identity — one identity, one artifact.</p>
+     *
+     * @param result   what the replay method produced
+     * @param retained what the earlier journey left behind
+     * @param written  the writer's own result
+     * @return the response
+     */
+    private ReportResponse replayedResponse(ReportJourney.Retained retained,
+            ArtifactWriter.Result written, List<String> traceFailures) {
+        ReportResponse previous = read(retained.responseJson());
+        List<String> limitations = new ArrayList<>(previous.limitations());
+        limitations.add("the journey replayed the retained one: the workspace was not asked "
+                + "again, and the artifact was read from the output root and checked against "
+                + "the digest the trace recorded");
+        limitations.addAll(traceFailures);
+        return new ReportResponse(previous.taskId(), previous.actionName(),
+                previous.actionVersion(), written.disposition().name(), written.fileName(),
+                written.fileName(), written.sha256(), previous.evidence(),
+                previous.epistemicDisposition(), previous.traceReference(), limitations,
+                previous.refusalReasons(), previous.premise(), previous.conflicts(),
+                previous.readings());
+    }
+
+    /**
+     * The facts the request establishes about itself.
+     *
+     * <p>They are the applicability domain of the replay method, and the selector
+     * enforces them: a request that does not establish the domain cannot select the
+     * replay, and the reference method takes over.</p>
+     *
+     * @param identity    the action identity
+     * @param retained    what the last journey for this identity left behind
+     * @param fingerprint the fingerprint of the workspace as it is now
+     * @param reportName  the requested report name
+     * @return the facts
+     */
+    private Set<String> journeyFacts(String identity, ReportJourney.Retained retained,
+            String fingerprint, String reportName) {
+        Set<String> facts = new LinkedHashSet<>();
+        if (retained != null && ReportJourneyMethod.committed(actions.writer(), identity)) {
+            facts.add(ReportJourneyMethod.FACT_IDENTITY_COMMITTED);
+        }
+        if (retained != null && retained.workspaceFingerprint().equals(fingerprint)) {
+            facts.add(ReportJourneyMethod.FACT_WORKSPACE_UNCHANGED);
+        }
+        if (retained != null && retained.fileName().equals(reportName)) {
+            facts.add(ReportJourneyMethod.FACT_NAME_UNCHANGED);
+        }
+        return facts;
+    }
+
+    /**
+     * The fingerprint of the workspace as it is now.
+     *
+     * <p>It covers the claims the workspace holds — their identifiers, their propositions
+     * and their statuses — so that a workspace whose content changed cannot be answered
+     * from a journey that read the older one.</p>
+     *
+     * @param workspaceId the workspace
+     * @return the fingerprint
+     */
+    private String workspaceFingerprint(String workspaceId) {
+        StringBuilder material = new StringBuilder();
+        workbench.workspace(workspaceId).claims().forEach(claim -> material.append(claim.id())
+                .append('|').append(claim.proposition()).append('|').append(claim.status())
+                .append('\n'));
+        return ArtifactObserver.sha256(material.toString());
+    }
+
+    /**
+     * The kernel's store, where the journey's trace is written.
+     *
+     * <p>It is the store the kernel writes its own cycles into, over the knowledge
+     * database the workbench already uses. When it cannot be opened the journey still
+     * runs — and the response says that the trace was not kept, because an unkept trace
+     * is a fact the caller has to be told.</p>
+     *
+     * @return the store, or null when it cannot be opened
+     */
+    private synchronized CognitiveStore traceStore() {
+        if (cognitive == null) {
+            return null;
+        }
+        try {
+            return cognitive.store();
+        } catch (RuntimeException unavailable) {
+            return null;
+        }
+    }
+
+    /**
+     * Appends the journey's steps to its trace.
+     *
+     * <p>The steps are written in ONE durable write: a trace is wholly there or wholly
+     * absent, and the write costs what it costs once rather than once per step. When the
+     * store is not available the failure is collected and told to the caller — an unkept
+     * trace is a fact the caller has to be told, not a detail the route may swallow.</p>
+     *
+     * @param failures  the failures collected so far
+     * @param store     the kernel's store, or null when there is none
+     * @param episodeId the episode the journey belongs to
+     * @param steps     the steps, in order
+     */
+    private void trace(List<String> failures, CognitiveStore store, String episodeId,
+            List<CognitiveStore.EventRecord> steps) {
+        if (store == null) {
+            failures.add("the journey's trace could not be written: the kernel's store is not "
+                    + "available, and nothing was retained about this run");
+            return;
+        }
+        try {
+            ReportJourneyTrace.appendAll(store, episodeId, steps);
+        } catch (RuntimeException unwritable) {
+            failures.add("the journey's trace could not be written: " + unwritable.getMessage());
+        }
+    }
+
+    /**
+     * The response, as the retained payload keeps it.
+     *
+     * @param response the response
+     * @return the JSON
+     */
+    private static String json(ReportResponse response) {
+        try {
+            return JSON.writeValueAsString(response);
+        } catch (IOException e) {
+            throw new IllegalStateException("failed to write the response as JSON", e);
+        }
+    }
+
+    /**
+     * The response the retained payload holds.
+     *
+     * @param payload the JSON
+     * @return the response
+     */
+    private static ReportResponse read(String payload) {
+        try {
+            return JSON.readValue(payload, ReportResponse.class);
+        } catch (IOException e) {
+            throw new IllegalStateException("failed to read the retained response", e);
+        }
     }
 
     /**
@@ -331,119 +643,6 @@ public class ArtifactReportResource {
             reports.add(new ReadingReport(reading.label(), evidence));
         }
         return reports;
-    }
-
-    /**
-     * The report, assembled only from what the workspace answered.
-     *
-     * <p>The sentences in the report are the workspace's claims, with their identifiers and
-     * their statuses. Nothing is added that the citations do not carry, and a question the
-     * workspace could not answer is written as a refusal to answer.</p>
-     */
-    private String report(String workspaceId, String question, Answer answer) {
-        StringBuilder markdown = new StringBuilder();
-        markdown.append("# Evidence report\n\n");
-        markdown.append("**Question.** ").append(question).append("\n\n");
-        markdown.append("**Workspace.** ").append(workspaceId)
-                .append(" · **Sources.** ").append(answer.sources().size())
-                .append(" · **Claims.** ").append(answer.claims().size()).append("\n\n");
-        markdown.append("## Answer\n\n");
-        if (answer.answered()) {
-            markdown.append(answer.statement()).append("\n\n");
-        } else {
-            markdown.append("The workspace could not answer this question: ")
-                    .append(answer.abstentionReason()).append("\n\n");
-            markdown.append("**UNGROUNDED** — no answer is asserted.\n\n");
-        }
-        markdown.append("## Supported claims\n\n");
-        if (answer.claims().isEmpty()) {
-            markdown.append("_None: the workspace holds no established claim for this question._\n\n");
-        }
-        Map<String, String> sourceById = new LinkedHashMap<>();
-        answer.sources().forEach(source -> sourceById.put(source.id(), source.title()));
-        for (Claim claim : answer.claims()) {
-            markdown.append("- `").append(claim.id()).append("` ").append(claim.proposition())
-                    .append(" — ").append(claim.status());
-            String sourceTitle = sourceById.get(claim.introducedBySourceId());
-            if (sourceTitle != null) {
-                markdown.append(" — ").append(sourceTitle);
-            }
-            markdown.append("\n");
-        }
-        markdown.append("\n## Sources\n\n");
-        for (Source source : answer.sources()) {
-            markdown.append("- ").append(source.title()).append(" (").append(source.id())
-                    .append(")\n");
-        }
-        markdown.append("\n## Limitations\n\n");
-        for (String limitation : answer.limitations()) {
-            markdown.append("- ").append(limitation).append("\n");
-        }
-        if (!answer.unmatchedTerms().isEmpty()) {
-            markdown.append("\n## Not covered by the workspace\n\n");
-            for (String term : answer.unmatchedTerms()) {
-                markdown.append("- `").append(term).append("`\n");
-            }
-        }
-        PremiseSemantics.Disposition disposition = answer.premise();
-        if (disposition != null && disposition.status() != PremiseSemantics.Status.NO_PREMISE) {
-            markdown.append("\n## The premise of the question\n\n");
-            markdown.append("- **Status.** ").append(disposition.status().name())
-                    .append(" (").append(disposition.kind().name()).append(").\n");
-            markdown.append("- **The premise.** \"").append(disposition.premise()).append("\"\n");
-            markdown.append("- **Why.** ").append(disposition.reason()).append("\n");
-            for (PremiseAssessment.EvidenceRef reference : disposition.evidence()) {
-                if (!"CONTRADICTS".equals(reference.relation())) {
-                    continue;
-                }
-                markdown.append("- **The claim that denies it.** `")
-                        .append(reference.claimId()).append("` — \"").append(reference.proposition())
-                        .append("\" (source ").append(reference.sourceId());
-                if (reference.sourceTitle() != null) {
-                    markdown.append(", \"").append(reference.sourceTitle()).append("\"");
-                }
-                markdown.append(")\n");
-            }
-        }
-        if (disposition != null && !disposition.conflicts().isEmpty()) {
-            markdown.append("\n## Conflicts in the evidence\n\n");
-            markdown.append("The corpus holds claims that cannot both hold. Both sides are given "
-                    + "with their provenance, and the system does not decide between them.\n\n");
-            for (ClaimConflictDetector.Conflict conflict : disposition.conflicts()) {
-                markdown.append("- ").append(conflict.reason()).append("\n");
-                for (ClaimConflictDetector.Side side : conflict.sides()) {
-                    markdown.append("  - `").append(side.claimId()).append("` — \"")
-                            .append(side.proposition()).append("\" (source ")
-                            .append(side.sourceId());
-                    if (side.sourceTitle() != null) {
-                        markdown.append(", \"").append(side.sourceTitle()).append("\"");
-                    }
-                    markdown.append("): ").append(side.detail()).append("\n");
-                }
-            }
-        }
-        if (disposition != null && !disposition.readings().isEmpty()) {
-            markdown.append("\n## The readings of the question\n\n");
-            markdown.append("The question admits more than one reading. The readings are given "
-                    + "with their provenance, and none of them is chosen.\n\n");
-            for (PremiseSemantics.Reading reading : disposition.readings()) {
-                markdown.append("- \"").append(reading.label()).append("\"\n");
-                for (PremiseAssessment.EvidenceRef reference : reading.evidence()) {
-                    markdown.append("  - `").append(reference.claimId()).append("` (source ")
-                            .append(reference.sourceId()).append(")\n");
-                }
-            }
-        }
-        markdown.append("\n## Epistemic status\n\n");
-        markdown.append("- The claims above are the workspace's own, with their ids and their "
-                + "statuses; this report asserts nothing the citations do not carry.\n");
-        markdown.append("- A report is a record, not evidence: it does not support the "
-                + "propositions it repeats.\n");
-        if (!answer.answered()) {
-            markdown.append("- The question is **not answered**; the absence of an answer is "
-                    + "the epistemic result, not a defect of the file action.\n");
-        }
-        return markdown.toString();
     }
 
     /**

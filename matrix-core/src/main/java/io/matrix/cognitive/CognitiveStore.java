@@ -629,6 +629,66 @@ public final class CognitiveStore
      * @param name the name of the sequence
      * @return the next value, starting at one
      */
+    /**
+     * Reserves several values of one sequence at once.
+     *
+     * <p>The reservation happens in one transaction, so a batch of events is given its
+     * positions without a transaction per position — and the positions of two concurrent
+     * batches can never overlap.</p>
+     *
+     * @param name  the name of the sequence
+     * @param count how many values to reserve
+     * @return the FIRST value reserved; the rest follow it
+     */
+    public synchronized long nextSequence(String name, int count) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("the name of a sequence must not be blank");
+        }
+        if (count < 1) {
+            throw new IllegalArgumentException("the count of reserved values must be positive");
+        }
+        boolean autoCommit = true;
+        try {
+            autoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT OR IGNORE INTO cognitive_sequence(name, value) VALUES(?, 0)")) {
+                ps.setString(1, name);
+                ps.executeUpdate();
+            }
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "UPDATE cognitive_sequence SET value = value + ? WHERE name = ?")) {
+                ps.setInt(1, count);
+                ps.setString(2, name);
+                ps.executeUpdate();
+            }
+            long value;
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "SELECT value FROM cognitive_sequence WHERE name = ?")) {
+                ps.setString(1, name);
+                try (ResultSet rs = ps.executeQuery()) {
+                    value = rs.next() ? rs.getLong(1) : 0L;
+                }
+            }
+            connection.commit();
+            return value - count + 1L;
+        } catch (SQLException e) {
+            try {
+                connection.rollback();
+            } catch (SQLException ignored) {
+                LOG.log(System.Logger.Level.WARNING, "failed to roll the sequence back", ignored);
+            }
+            throw new IllegalStateException("failed to allocate the next values of the sequence "
+                    + name, e);
+        } finally {
+            try {
+                connection.setAutoCommit(autoCommit);
+            } catch (SQLException ignored) {
+                LOG.log(System.Logger.Level.WARNING, "failed to restore the auto-commit", ignored);
+            }
+        }
+    }
+
     public synchronized long nextSequence(String name) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("the name of a sequence must not be blank");
@@ -1995,6 +2055,69 @@ public final class CognitiveStore
                         "event " + eventId + " conflicts with an event that is already recorded");
             }
             throw new IllegalStateException("failed to append the event", e);
+        }
+    }
+
+    /**
+     * One event to append.
+     *
+     * @param phase  what happened
+     * @param actor  what produced it
+     * @param detail what it was
+     */
+    public record EventRecord(String phase, String actor, String detail) {
+    }
+
+    /**
+     * Appends several events of one episode in ONE transaction.
+     *
+     * <p><b>Why the batch exists.</b> The append-only rule does not require one
+     * transaction per event; it requires that a recorded event is never rewritten and
+     * that the positions of an episode are ordered. A journey that writes six steps
+     * wrote six transactions, and the cost of the durable write was larger than the work
+     * the trace was there to record. The batch keeps the rule and pays for the write
+     * once: the events are appended in order, in one transaction, and a failure leaves
+     * none of them behind — a trace is either wholly there or wholly absent, which is
+     * what a reader of a partial trace would have to assume anyway.</p>
+     *
+     * @param episodeId the episode the events belong to
+     * @param events    the events, in order
+     * @param occurredAt the instant the events happened
+     */
+    public synchronized void appendEvents(String episodeId, List<EventRecord> events,
+                                          String occurredAt) {
+        if (events == null || events.isEmpty()) {
+            return;
+        }
+        long first = nextSequence("cognitive-batch-" + episodeId, events.size());
+        try {
+            connection.setAutoCommit(false);
+            try {
+                for (int index = 0; index < events.size(); index++) {
+                    EventRecord event = events.get(index);
+                    long sequence = first + index;
+                    try (PreparedStatement ps = connection.prepareStatement(
+                            "INSERT INTO cognitive_event(id, episode_id, sequence, type, actor, "
+                                    + "detail, occurred_at) VALUES (?,?,?,?,?,?,?)")) {
+                        ps.setString(1, episodeId + "-evt-" + sequence);
+                        ps.setString(2, episodeId);
+                        ps.setLong(3, sequence);
+                        ps.setString(4, event.phase());
+                        ps.setString(5, event.actor());
+                        ps.setString(6, event.detail());
+                        ps.setString(7, occurredAt);
+                        ps.executeUpdate();
+                    }
+                }
+                connection.commit();
+            } catch (Exception e) {
+                connection.rollback();
+                throw new IllegalStateException("failed to append the events", e);
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to append the events", e);
         }
     }
 

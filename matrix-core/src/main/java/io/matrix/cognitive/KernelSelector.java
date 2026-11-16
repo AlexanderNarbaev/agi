@@ -1,5 +1,7 @@
 package io.matrix.cognitive;
 
+import io.matrix.cognitive.algorithms.AlgorithmDecision;
+import io.matrix.cognitive.algorithms.AlgorithmMethod;
 import io.matrix.cognitive.algorithms.AlgorithmRegistry;
 import io.matrix.cognitive.algorithms.AlgorithmSelector;
 import io.matrix.cognitive.algorithms.CostLedger;
@@ -39,6 +41,43 @@ public final class KernelSelector implements CognitiveKernel.AlgorithmSelectorBr
         AlgorithmSelector.Selection<MicroWorldComputation, Boolean> chosen =
                 selector.select(request, costWeight);
         return new Selection(chosen.method(), chosen.decision());
+    }
+
+    /**
+     * P2 — chooses a method for a request whose payload the caller types.
+     *
+     * <p>The bridge above is typed to the microworld's own computation, because the cycle
+     * that uses it is. A family outside the microworld — the report journey — has a
+     * payload of its own, and the selector's erasure would cast that payload to the
+     * microworld's type when it asks a candidate whether its preconditions hold. The
+     * candidate would answer "I cannot accept this request's payload", and the family
+     * would have no admissible method at all.</p>
+     *
+     * <p>This entry point keeps the type the caller supplies, so the candidate's own
+     * precondition check sees the payload it was written for. The selection itself is
+     * the selector's, unchanged.</p>
+     *
+     * @param request    the problem
+     * @param costWeight how strongly a method's cost counts against its usefulness
+     * @param <I>        the payload's type
+     * @param <O>        the result's type
+     * @return the chosen method and the decision that chose it
+     */
+    public <I, O> TypedSelection<I, O> selectTyped(ProblemRequest request, double costWeight) {
+        AlgorithmSelector selector = new AlgorithmSelector(registry, ledger, costWeight);
+        AlgorithmSelector.Selection<I, O> chosen = selector.select(request, costWeight);
+        return new TypedSelection<>(chosen.method(), chosen.decision());
+    }
+
+    /**
+     * A chosen method and the decision that chose it, typed by the caller.
+     *
+     * @param method   the method to run, or null when the request was refused
+     * @param decision why it was chosen, and what else was considered
+     * @param <I>      the payload's type
+     * @param <O>      the result's type
+     */
+    public record TypedSelection<I, O>(AlgorithmMethod<I, O> method, AlgorithmDecision decision) {
     }
 
     /** The ledger the measured costs are recorded in. */
