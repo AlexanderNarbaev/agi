@@ -127,9 +127,10 @@ class AdversarialProbeRound3Test {
     @DisplayName("R3-2: the Mid-Atlantic Ridge premise on the research-pool corpus")
     void theMidAtlanticRidgePremiseOnTheResearchPool() {
         System.out.println("### R3-2 - the research-pool corpus");
-        Answer answer = workbench.ask(poolWorkspace,
-                "Given that Mid-Atlantic Ridge is a divergent boundary, what takes place along it?",
-                AbstractionLevel.INTRODUCTORY);
+        // The question is READ from the frozen set at run time: a probe may name the
+        // artefact, but it may not carry the set's content.
+        String question = caseOf("E-P01").get("question").asText();
+        Answer answer = workbench.ask(poolWorkspace, question, AbstractionLevel.INTRODUCTORY);
         System.out.println("  answered=" + answer.answered()
                 + " status=" + statusOf(answer)
                 + " reason=" + oneLine(reasonOf(answer)));
@@ -242,8 +243,7 @@ class AdversarialProbeRound3Test {
                         "Since oceanic crust is created at spreading centers, what takes place along the Mid-Atlantic Ridge?"},
                 {poolWorkspace,
                         "Since subduction is the driving force behind plate tectonics, what does the corpus say about the Pacific plate?"},
-                {poolWorkspace,
-                        "Since Mid-Atlantic Ridge is a divergent boundary, what takes place along it?"},
+                {poolWorkspace, caseOf("E-P01").get("question").asText()},
                 {seedWorkspace,
                         "Since divergent boundaries are where new crust is generated, what happens where Mid-Atlantic Ridge runs?"},
         };

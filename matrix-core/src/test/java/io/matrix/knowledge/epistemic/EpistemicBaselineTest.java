@@ -59,6 +59,20 @@ class EpistemicBaselineTest {
     /** The frozen set this measurement reads. */
     private static final String DATASET = "docs-v2/engineering/EPISTEMIC-HELDOUT-SET.json";
 
+    /**
+     * The adversarial probe files, which may NAME the artefact.
+     *
+     * <p><b>The exemption is narrow on purpose.</b> A probe that measures the production
+     * path against the set has to say which artefact it reads, and it may read it AT RUN
+     * TIME. So the probe files are exempt from the SET-REFERENCE check only. They are
+     * NOT exempt from the question check or the gold check: a probe that QUOTES a
+     * question of the set puts that question into the development code, and the set
+     * stops being held out for it. That check applies to every file in the tree,
+     * probes included, and a probe that legitimately needs a question must read it
+     * from the artefact at run time instead of writing it down.</p>
+     */
+    private static final String PROBE_FILE_MARKER = "AdversarialProbe";
+
     /** The corpus the set was built from and the measurement is run against. */
     private static final String CORPUS = AcquisitionCycle.SEED_CORPUS;
 
@@ -159,10 +173,15 @@ class EpistemicBaselineTest {
         int falseRefusals = 0;
         int falseContradictions = 0;
         int unsupportedAnswering = 0;
-        int ambiguityReadingsNamed = 0;
-        int ambiguityReadingsSurfaced = 0;
+        // The three numbers are kept apart ON PURPOSE (adversarial review, round 1):
+        // named = what the set names, shown = what the response showed, matched = how
+        // many of the named spans the response actually carried.
+        int ambiguitySpansNamed = 0;
+        int ambiguityReadingsShown = 0;
+        int ambiguitySpansMatched = 0;
         int conflictSidesNamed = 0;
-        int conflictSidesSurfaced = 0;
+        int conflictSidesShown = 0;
+        int conflictSidesMatched = 0;
 
         for (JsonNode entry : cases) {
             String id = entry.path("id").asText();
@@ -219,19 +238,94 @@ class EpistemicBaselineTest {
             latencyTotal.merge(caseClass, millis, Long::sum);
             latencyMax.merge(caseClass, millis, Math::max);
 
-            // The coverage of the readings and of the conflicting sides the set names.
-            int named = 0;
-            for (JsonNode reading : entry.path("readings")) {
-                named += reading.path("spans").size();
+            // ── the coverage of the readings and of the conflicting sides ───────
+            //
+            // THE MEASUREMENT IS A MATCH, NOT A COUNT (adversarial review, round 1).
+            //
+            // The first version of this metric added up the readings the response
+            // SHOWED and called the result "coverage". A count cannot see a wrong
+            // reading: the response can show seven readings of which only five are
+            // the corpus's, and the metric then reports 7/7 while the truth is 5/7.
+            // The two numbers are now kept apart and both are printed:
+            //   named   — what the set names (the gold spans, the gold sides)
+            //   shown   — what the response showed (its own count)
+            //   matched — how many of the NAMED spans the response actually carried
+            // A reader cannot mistake one for the other, and the coverage is
+            // matched/named.
+            int namedSpans = 0;
+            Set<String> reportedReadingKeys = new LinkedHashSet<>();
+            if (answer.premise() != null) {
+                // EVERY evidence item the response carries, not only the ones that hang
+                // under a reading: the question is whether the response carried the
+                // corpus's span at all.
+                for (io.matrix.knowledge.PremiseAssessment.EvidenceRef carried
+                        : answer.premise().evidence()) {
+                    reportedReadingKeys.add(carried.proposition());
+                    reportedReadingKeys.add(carried.claimId());
+                }
+                for (io.matrix.knowledge.PremiseSemantics.Reading reading
+                        : answer.premise().readings()) {
+                    for (io.matrix.knowledge.PremiseAssessment.EvidenceRef ref
+                            : reading.evidence()) {
+                        reportedReadingKeys.add(ref.proposition());
+                        reportedReadingKeys.add(ref.claimId());
+                    }
+                }
             }
-            int conflictNamed = entry.path("goldClaims").size();
+            int matchedSpans = 0;
+            List<String> goldSpanKeys = new ArrayList<>();
+            for (JsonNode reading : entry.path("readings")) {
+                for (JsonNode span : reading.path("spans")) {
+                    namedSpans++;
+                    goldSpanKeys.add(span.path("claimId").asText() + " :: "
+                            + abbreviate(span.path("proposition").asText()));
+                    if (reportedReadingKeys.contains(span.path("proposition").asText())
+                            || reportedReadingKeys.contains(span.path("claimId").asText())) {
+                        matchedSpans++;
+                    }
+                }
+            }
+
+            int namedSides = 0;
+            Set<String> reportedSideKeys = new LinkedHashSet<>();
+            int reportedSideCount = 0;
+            if (answer.premise() != null) {
+                for (io.matrix.knowledge.ClaimConflictDetector.Conflict conflict
+                        : answer.premise().conflicts()) {
+                    for (io.matrix.knowledge.ClaimConflictDetector.Side side : conflict.sides()) {
+                        reportedSideCount++;
+                        reportedSideKeys.add(side.proposition());
+                        reportedSideKeys.add(side.claimId());
+                    }
+                }
+            }
+            int matchedSides = 0;
+            for (JsonNode claim : entry.path("goldClaims")) {
+                namedSides++;
+                if (reportedSideKeys.contains(claim.path("proposition").asText())
+                        || reportedSideKeys.contains(claim.path("claimId").asText())) {
+                    matchedSides++;
+                }
+            }
+
             if (caseClass.equals("AMBIGUOUS_READINGS")) {
-                ambiguityReadingsNamed += named;
-                ambiguityReadingsSurfaced += readings;
+                ambiguitySpansNamed += namedSpans;
+                ambiguityReadingsShown += readings;
+                ambiguitySpansMatched += matchedSpans;
+                System.out.println("[P0.3-baseline] " + id
+                        + " | ambiguity: named " + namedSpans + " spans, shown " + readings
+                        + " readings, matched " + matchedSpans + " spans");
+                System.out.println("[P0.3-baseline] " + id + " | gold spans: " + goldSpanKeys);
+                System.out.println("[P0.3-baseline] " + id + " | reported: "
+                        + reportedReadingKeys);
             }
             if (caseClass.equals("CONFLICTING_EVIDENCE")) {
-                conflictSidesNamed += conflictNamed;
-                conflictSidesSurfaced += conflicts;
+                conflictSidesNamed += namedSides;
+                conflictSidesShown += reportedSideCount;
+                conflictSidesMatched += matchedSides;
+                System.out.println("[P0.3-baseline] " + id
+                        + " | conflict: named " + namedSides + " sides, shown "
+                        + reportedSideCount + " sides, matched " + matchedSides);
             }
 
             System.out.println("[P0.3-baseline] " + id + " | " + caseClass
@@ -255,6 +349,12 @@ class EpistemicBaselineTest {
                 .isLessThanOrEqualTo(observations.size());
         assertThat(unsupportedAnswering).as("more unsupported answers than cases")
                 .isLessThanOrEqualTo(observations.size());
+        assertThat(ambiguitySpansMatched).as("more matched spans than named spans")
+                .isLessThanOrEqualTo(ambiguitySpansNamed);
+        assertThat(conflictSidesMatched).as("more matched sides than named sides")
+                .isLessThanOrEqualTo(conflictSidesNamed);
+        assertThat(ambiguitySpansNamed).as("the ambiguous cases name no span").isPositive();
+        assertThat(conflictSidesNamed).as("the conflicting case names no side").isPositive();
 
         System.out.println("[P0.3-baseline] class | cases | answered | refused | status not as expected");
         for (Map.Entry<String, int[]> entry : perClass.entrySet()) {
@@ -267,10 +367,13 @@ class EpistemicBaselineTest {
         System.out.println("[P0.3-baseline] false refusals " + falseRefusals);
         System.out.println("[P0.3-baseline] false contradictions " + falseContradictions);
         System.out.println("[P0.3-baseline] unsupported answering " + unsupportedAnswering);
-        System.out.println("[P0.3-baseline] ambiguity readings named " + ambiguityReadingsNamed
-                + ", surfaced " + ambiguityReadingsSurfaced);
-        System.out.println("[P0.3-baseline] conflict sides named " + conflictSidesNamed
-                + ", surfaced " + conflictSidesSurfaced);
+        System.out.println("[P0.3-baseline] ambiguity: named " + ambiguitySpansNamed
+                + " spans, shown " + ambiguityReadingsShown + " readings, matched "
+                + ambiguitySpansMatched + " spans (coverage "
+                + coverage(ambiguitySpansMatched, ambiguitySpansNamed) + ")");
+        System.out.println("[P0.3-baseline] conflict: named " + conflictSidesNamed
+                + " sides, shown " + conflictSidesShown + ", matched " + conflictSidesMatched
+                + " (coverage " + coverage(conflictSidesMatched, conflictSidesNamed) + ")");
 
         // ── the state of the production path the measurement read ────────────
         for (String file : PRODUCTION_PATH) {
@@ -317,6 +420,25 @@ class EpistemicBaselineTest {
                     + "/" + answer.answered());
         }
         return verdicts;
+    }
+
+    /**
+     * A coverage ratio, printed as a fraction of the named gold.
+     *
+     * @param matched how many of the named spans the response carried
+     * @param named   how many spans the set names
+     * @return the ratio, or "n/a" when the set names none
+     */
+    private static String coverage(int matched, int named) {
+        if (named <= 0) return "n/a";
+        return matched + "/" + named;
+    }
+
+    /** A short form of a proposition, for a report line. */
+    private static String abbreviate(String text) {
+        if (text == null) return "";
+        String flat = text.replaceAll("\\s+", " ").trim();
+        return flat.length() <= 70 ? flat : flat.substring(0, 67) + "...";
     }
 
     /** The classes the frozen set holds. */
@@ -375,7 +497,7 @@ class EpistemicBaselineTest {
                     // What no file may do is carry a gold proposition or a question
                     // of the set — that check below applies to every file, including
                     // the probes.
-                    boolean isSetInstrument = relative.contains("AdversarialProbe");
+                    boolean isSetInstrument = relative.contains(PROBE_FILE_MARKER);
                     if (!isSetInstrument && text.contains("EPISTEMIC-HELDOUT-SET")) {
                         offenders.add(relative);
                     }

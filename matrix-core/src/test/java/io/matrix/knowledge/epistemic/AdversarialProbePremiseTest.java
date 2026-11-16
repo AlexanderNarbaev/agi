@@ -275,10 +275,13 @@ class AdversarialProbePremiseTest {
     @DisplayName("probe 6: the same premise in different words is treated the same")
     void aParaphraseIsTreatedLikeTheOriginal() {
         System.out.println("### PROBE 6 - a paraphrase against its original");
+        // The originals are READ from the frozen regression set at run time; a probe may
+        // name the artefact, but it may not carry the set's content. The paraphrases are
+        // the reviewer's own negative controls, written by hand.
         String[][] pairs = {
-                {"Do the reversals of the geomagnetic field occur at regular intervals through the history of the Earth?",
+                {questionOf("H-U06"),
                         "Do the reversals of the geomagnetic field happen at regular intervals through the history of the Earth?"},
-                {"Are the lavas of intraplate volcanoes chemically identical to mid-ocean ridge basalts?",
+                {questionOf("H-U04"),
                         "Are the lavas of intraplate volcanoes chemically the same as mid-ocean ridge basalts?"},
         };
         for (String[] pair : pairs) {
@@ -430,6 +433,16 @@ class AdversarialProbePremiseTest {
             }
         }
         return !propositions.isEmpty();
+    }
+
+    /** The question of a case of the frozen regression set, read at run time. */
+    private static String questionOf(String caseId) {
+        for (JsonNode heldOut : heldOutCases) {
+            if (caseId.equals(heldOut.get("id").asText())) {
+                return heldOut.get("question").asText();
+            }
+        }
+        throw new IllegalStateException("the frozen set holds no case " + caseId);
     }
 
     /** The gold claims of the case that asks this question. */
