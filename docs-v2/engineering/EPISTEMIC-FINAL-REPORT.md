@@ -80,14 +80,23 @@ R-04, R-05`); the unanswerable abstention **6/6**, accuracy 1.0000, no case lost
 **retriever's index** (the coverage is computed over already-tokenised terms, and only the candidates
 are tokenised), so the scan dropped from **1.59 ms average / 2.40 max** over **every** claim (348 seed,
 888 pool) to **0.15–1.2 ms** over the candidates, and the lexicon is asked **once per term** instead of
-once per (claim, term) pair. **The reviewer's three-point A/B — the same method, the same machine,
-three commits — does not confirm it**: round 2 (`8fac168a`) seed **33.8 ms** / pool **37.3 ms** → round 3
-(`391a0a0a`) 43.3 / 40.8 → round 4 (`d7cc12a5`) **53.0 / 48.5** — the latest round is the **slowest**,
-**+19 ms on the seed corpus and +11 ms on the pool** against round 2. The implementer's numbers were
-taken against an uncommitted intermediate state and were therefore not comparable; the honest reading
-is that the same-assertion rule **costs** time and the scan optimisation did not offset it. The rule
-must reuse the index instead of re-walking the claims — that is the open item. A cache was
-deliberately **not** used: the verdict must stay a function of the workspace's content.
+once per (claim, term) pair. **Two measurements disagree, and both are reported.** The reviewer's three-point A/B on one machine
+(round 2 `8fac168a` seed 33.8 ms / pool 37.3 → round 3 `391a0a0a` 43.3 / 40.8 → round 4 `d7cc12a5`
+**53.0 / 48.5**) says the same-assertion rule **costs** +19 ms on the seed corpus and +11 ms on the
+pool. The implementer's four-point A/B on another machine (the same harness, the same 36 questions per
+corpus, the historical points measured in temporary worktrees: 24.9 / 22.4 → 25.6 / 21.9 → 28.7 / 25.8
+→ **29.0 / 25.4** on the seed; 32.7 / 31.1 → 32.8 / 30.9 → 35.4 / 33.8 → **35.8 / 34.4** on the pool)
+says the points sit within **1–2 ms** of each other and the run-to-run noise on that machine is of the
+same order. **The honest reading: the regression is real in magnitude on a loaded machine and is not
+reproducible on an idle one** — the absolute numbers are not comparable across machines, and the
+project has no shared benchmark for this path. What *is* measured and agreed: the refutation scan
+itself costs **≤1.3 ms**, and the per-question **index build costs 9.4 ms** and the workspace read
+6.2 ms — the rule is not the hot spot. The attempt to make the comparison read the index was
+implemented and **measured to be worse** (the index build grew 8.8 → 11.0 ms and the ask 26.0 → 30.7 ms,
+because the index is built for every question while the re-tokenisation is paid only for the few claims
+that can bear on the premise), so it was reverted and the finding left in the code's comment. **No
+speed-up is claimed.** A cache was deliberately **not** used: the verdict must stay a function of the
+workspace's content.
 
 **The third round, and what it closed.** The second adversarial review found that the correction
 itself had defects: different variables were treated as the same statement, and the same statement
