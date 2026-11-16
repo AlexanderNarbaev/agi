@@ -419,3 +419,19 @@ refusal (the unanswerable abstention 6/6 → 5/6). The detail, the rule and its 
 corpus's own account of a concept, with its span — and they are **not** worth putting into the
 retriever's searchable text. The tree is in that state: the definitions live in the
 `concept_definition` table and the `concept.definition` column stays empty.
+
+
+### 10b. THE CORRECTION OF THE DEFINITION HALF (2026-11-16)
+
+The hard review of the definition half withdrew its headline numbers. The corrected rule —
+the concept's name must **be the subject** of the qualifying sentence, a denial is not a
+definition, and a name that is not a referent is rejected — finds **27** definitions of the
+326 concepts (**8.28 %**), not 120 (36.8 %), and the corrected metric — "is a definition",
+not "about the concept" — gives **18/27 = 66.7 %**, not 24/25 = 96 %. The nine failures of
+the census are named in §10.3 of `docs-v2/engineering/EPISTEMIC-CONCEPT-DEFINITIONS.md`.
+
+The benefit measurement is unchanged in its verdict and stronger in its evidence: with 27
+precise definitions the four arms are **identical** on the official ask cases and on the
+frozen held-out set, so the definitions have **no measurable benefit** in the retriever.
+The definitions remain worth keeping as knowledge — the corpus's own account of a concept,
+with its span — and remain out of the searchable text.
