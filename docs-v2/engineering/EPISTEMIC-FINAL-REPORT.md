@@ -420,10 +420,107 @@ establish the definitions' truth (they are the corpus's own sentences) and it do
 retrieval (they are deliberately not in the searchable text). It does not generalise beyond nine
 documents, one domain, one language and one register.
 
-**The migration is sketched, not executed** (the concept id is referenced by ten tables; the claim id
-does not change, so claims, evidence and the proposition-based golds survive; SQLite declares no
-foreign keys, so a partial migration would be invisible to the database — an explicit orphan audit is
-required).
+**The referent key and the migration — measured, rehearsed, and the owner's decisions taken.**
+
+The **research** recommended the *shape* (a normalised lemma + the source document + the anchor span,
+with a display name and aliases) and said that the **resolution and alias policy is the unsolved
+part**. That part is now designed and measured. The key is a **reject-only** policy (a name is never
+truncated): a nested clause, an appositive, an adverbial modifier, a caption, a generic head and an
+artefact are rejected **by form**, not by a word list — **37 of the first policy's 40 false positives
+were structural**, and a closed lexicon cannot fix them.
+
+| the policy on the frozen 150-span draw | accepted | precision | 95 % Wilson | false positives | lost true referents |
+|---|---|---|---|---|---|
+| the current splitter | 150 | **23.33 %** | [17.28; 30.72] | — | — |
+| the structural rules alone | 55 | **61.82 %** | [48.61; 73.48] | 21 | 1 |
+| **LENIENT** | 36 | **94.44 %** | [81.86; 98.46] | 2 | 1 |
+| **STRICT** (the owner's operating point, OD-062) | 29 | **100 %** | [88.30; 100] | 0 | 6 |
+
+The intervals do not overlap at any level. **The honest caveat travels with the number**: the
+residual lexicon was written from this draw's own false positives, so **94.44 % is in-sample**; the
+structural rules' floor is **61.82 %**; and **out-of-sample is not measurable** on this corpus — a
+second sealed held-out sample would be needed to quote A1 externally. The four properties of the
+policy hold at every level: *the same word in different contexts* 4/4, *synonym* 4/4, *paraphrase* 3/3,
+*homonym* 3/3, over 14 hand-marked cases. The promotion rule is satisfied — A1 and A2 improve, and A4
+and A5 do not regress (the retrieval arms are byte-identical: 12/20, recall@1 0.2024, MRR 0.5078, the
+abstention 6/6) — but the **cost is named**: **68.4 %** of the seed corpus's claims (238 of 348; 526 of
+888 on the wider corpus) would have no concept, because a fragment's own text is not a referent.
+
+**The owner's decisions**: the schema fork is the **claim-scoped record** (OD-061, additive — the ten
+referencing tables are not touched and the concept id stays `NOT NULL`); the operating point is
+**STRICT** (OD-062); the migration is applied **first to the working corpora**, the owner's live store
+only by a later separate decision (OD-063); the alias layer is a **declared** table, explicitly
+temporary (OD-064).
+
+**The migration is now rehearsed — on copies, with the evidence.** The plan under STRICT gives **90
+referents, 255 claim-scoped records and 345 new concept rows**; the copy-forward is **one
+transaction** (54–60 ms) and re-points all 348 claims and **93** representations; the lineage holds
+**696** rows and **348 of 348** claims point at a concept from it. **The ids that change and those
+that do not:** the claim ids do **not** change (the digest of the workspace, the content hash and the
+proposition — so the claims, the evidence and the proposition-based golds survive); the referent ids,
+the claim-scoped ids and 93 representation ids are recomputed; the old concept rows are marked
+superseded and **not deleted**. **The orphan audit is proven, not asserted**: on the correct copy
+**13 tables, 0 orphans, 0 stale pointers**; on a deliberately broken copy **6 orphans and 1 stale
+pointer** — without the broken copy the audit would have been an unverified claim (SQLite declares no
+foreign keys, so `validate` cannot see a partial migration). **The rollback is proven**: the snapshot
+(179–226 ms, +1.86 MB) restores the concepts **671 → 326** in 89–127 ms. **The re-measurement after the
+migration**: the official ask cases **12/20** with the identical eight failures, the abstention **6/6**,
+the frozen set **8/16** — no regression; and the definitions' share rises **27/326 = 8.3 % → 27/90 =
+30.0 %** with no definition lost. **What the rehearsal does not establish**: the prerequisites'
+acyclicity and the `refines` chain were **vacuous** on the seed corpus (0 and 0), the C2A
+`BASELINE-PATH` was not re-measured (its judge is private and its workspace is prepared by the
+harness), and the owner's store was never exercised.
+
+---
+
+## H-bis. P3 — the meaning of the learning label: a negative result
+
+**The directive's question** (§3 P3): *"confidence computed from retrieval overlap is not independent
+task correctness"*. Today's label is `confidence >= 0.7 AND accepted` — a measure of the pipeline, not
+of whether the task was right.
+
+**The signal was built**: `StoreGroundingVerifier` asks whether an answer is confirmed by what the
+machine itself knows — a cross-check against the machine's **own** store (2 015 facts, in text), never
+against the evaluation's gold. The verdicts are `GROUNDED` (a fact covers ≥ 0.6 of the answer's
+terms), `NOT_GROUNDED` (the store is silent — **not** "false"), `REFUSED` and `UNKNOWN` (outside the
+denominator). The check costs **0.23–0.61 ms** per observation against **8.06 ms** for the retrieval
+itself (7.5 %). The four provenances are separated on the record itself, and the record's constructor
+**refuses** a verdict that was built from an expectation.
+
+**The comparison, with the leakage-controlled partitions.** On the machine's own 226 observations
+(the goal = the production label, split by input: 141 train / 60 test): the raw 256-bit feature 0.200,
+the fold **0.750**, the informative and the discriminative projections 0.183, a random projection 0.000,
+the majority class 0.000, and the **shuffled-label null control 0.033**; a 1-NN over the raw bits
+0.767. On 59 fresh observations from the production path (the goal = the verified outcome, split
+stratified: 33 / 13): the raw 0.713, the fold 0.838, the projections 0.938, the random projection
+0.500, the majority 0.500, the 1-NN 0.962, and the null control **0.475**. The cost: 7–9 ms to train,
+0.7–1.6 µs to infer, **2 bytes per episode**.
+
+**The controls.** The **positive** control passes: the fold reaches 0.750 and the 1-NN 0.767 against a
+null of 0.033. The **null** control passes: the fold on shuffled labels reaches 0.500 — chance. The
+**contamination** harness passes: the same observations in both halves give 1.000 against a clean 0.500,
+so the harness sees a leak when there is one. The leakage counters are 0 for the by-family, the
+by-input and the stratified splits (and 46 for the deliberately contaminated control).
+
+**The negative results, published as they are.** (1) **No representation beats chance on the verified
+outcome**: on the machine's own observations the signal is degenerate (199 `GROUNDED`, 2 `NOT_GROUNDED`,
+25 `UNKNOWN`), and on the fresh ones the **null control's spread overlaps every real representation**
+across the seeds 42/43/44 (the null: 0.438 / 0.748 / 1.000). (2) The independently verifiable signal
+on this corpus is a property of the **question family**, not of the observation — under
+leave-one-family-out every fold is single-class — so **it cannot be a per-episode learning label under
+any representation**. (3) The production label is **recoverable from the production feature** (0.750 /
+0.767 against a null of 0.033): the feature contains the retriever's answer, the answer is the
+retriever's product and the label is its score — so a fidelity measured against it measures the
+pipeline's agreement with itself. (4) Cross-task generalisation is **not measurable at all** on the
+machine's data. (5) `GROUNDED` is **not** "correct": the repository holds no licensed corpus for the
+store's domain and **no external truth for this machine's answers**. (6) The production trainer is
+**not validated as a trainer** on this data — the null control reaches a balanced 1.000 on a half of
+14 records.
+
+**What this does not establish:** that a signal is impossible — only that this corpus, this feature
+and this split cannot produce a per-episode label of independent correctness. A different signal, a
+different partition or an external truth would be a different experiment. **`K_MAX = 20`, the trainer
+width and the production fold are retained** — the owner has not approved a change, and none was made.
 
 ---
 
