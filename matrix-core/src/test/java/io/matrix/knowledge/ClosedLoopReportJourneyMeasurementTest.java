@@ -39,6 +39,15 @@ import org.junit.jupiter.api.io.TempDir;
  * output root held fixed. They are the cost of the journey, not a benchmark of the
  * machine: what they are for is the comparison between the journey that consults the
  * trace and the journey that does not.</p>
+ *
+ * <p><b>Whether the arms share a store.</b> Two runs are reported. The first is the
+ * laboratory: both arms run against ONE workbench, one cognitive store and one output
+ * root, so the arm that consults the trace can find the journey the other arm wrote. The
+ * second is the field: each arm gets its OWN workbench, its OWN cognitive store and its
+ * OWN output root, so that no state crosses between the arms and each arm pays for its
+ * own first journey. The two runs are reported separately because they answer different
+ * questions: the laboratory asks what the replay saves inside one process, and the field
+ * asks whether the saving survives when the arms cannot see each other at all.</p>
  */
 class ClosedLoopReportJourneyMeasurementTest {
 
@@ -222,6 +231,43 @@ class ClosedLoopReportJourneyMeasurementTest {
         assertThat(diff.differences()).extracting(
                         io.matrix.cognitive.report.ReportJourneyDiff.Aspect::aspect)
                 .contains("the method that ran", "the reason the method was chosen");
+    }
+
+    @Test
+    @DisplayName("the measured win with the arms' stores separated")
+    void theMeasuredWinWithSeparateStores() throws Exception {
+        // THE FIELD RUN: each arm has its own workbench, its own store and its own root.
+        double replayMean = armMean("field-replay", true);
+        double baselineMean = armMean("field-baseline", false);
+        System.out.println("### the field run (the arms' stores separated): the replay "
+                + replayMean + " ms, the baseline " + baselineMean + " ms, the replay costs "
+                + (baselineMean - replayMean) + " ms less");
+        assertThat(replayMean)
+                .as("the replay asks the workspace no second time, in a store of its own")
+                .isLessThan(baselineMean);
+    }
+
+    /**
+     * One arm of the field run: its own workbench, its own store, its own root.
+     *
+     * @param name      the arm's name
+     * @param consulting whether the arm consults the trace it left behind
+     * @return the mean cost of the arm's journeys, in milliseconds
+     */
+    private double armMean(String name, boolean consulting) throws Exception {
+        Path root = root(name);
+        ArtifactActionService actions = new ArtifactActionService(true, root.toString());
+        ArtifactReportResource route = route(workbench(name), actions, new ReportJourneyPlanner(),
+                new CognitiveService());
+        route.consultRetainedTrace = consulting;
+        route.journey(WORKSPACE, request(), null);
+        long nanos = 0L;
+        for (int repetition = 0; repetition < REPETITIONS; repetition++) {
+            long started = System.nanoTime();
+            route.journey(WORKSPACE, request(), null);
+            nanos += System.nanoTime() - started;
+        }
+        return nanos / 1_000_000.0 / REPETITIONS;
     }
 
     // ── the fixtures ────────────────────────────────────────────────────────

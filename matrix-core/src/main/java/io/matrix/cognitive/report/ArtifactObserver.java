@@ -81,6 +81,13 @@ public final class ArtifactObserver {
      */
     public static Observation observe(ArtifactWriter writer, String actionId, String fileName,
             String expectedSha256) throws IOException {
+        if (!isPlainFileName(fileName)) {
+            // THE OBSERVER DOES NOT TRUST THE CALLER'S VALIDATION. It is the independent
+            // verifier: a name that could leave the root is not resolved at all, and the
+            // effect is reported as not verified rather than as read.
+            return new Observation(false, 0L, null, 0, 0, false,
+                    "the artifact's name is not a plain file name, and nothing was read");
+        }
         Path root = writer.root();
         Path artifact = root.resolve(fileName);
         boolean exists = Files.isRegularFile(artifact, LinkOption.NOFOLLOW_LINKS);
@@ -111,6 +118,27 @@ public final class ArtifactObserver {
                                 + "that was reported")
                 : "the artifact is not there";
         return new Observation(exists, bytes, digest, staged, committed, matches, detail);
+    }
+
+    /**
+     * Whether a name is a plain file name.
+     *
+     * <p>A plain file name has no directory part, no parent reference and no reserved
+     * prefix: it names one file in the root and nothing else. The observer applies this
+     * rule to every name it is given, because it is the independent verifier and cannot
+     * take the route's word for it.</p>
+     *
+     * @param name the name
+     * @return true when the name is a plain file name
+     */
+    public static boolean isPlainFileName(String name) {
+        if (name == null || name.isBlank()) {
+            return false;
+        }
+        if (name.contains("/") || name.contains("\\") || name.contains("..")) {
+            return false;
+        }
+        return !name.startsWith(".");
     }
 
     /**

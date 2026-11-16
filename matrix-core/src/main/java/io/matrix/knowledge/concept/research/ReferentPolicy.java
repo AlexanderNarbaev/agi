@@ -1,5 +1,6 @@
 package io.matrix.knowledge.concept.research;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -57,21 +58,23 @@ public final class ReferentPolicy {
      * <p>A surface form whose last word is one of these denotes nothing that can be
      * a concept: "It", "There", "The", "To".</p>
      */
-    public static final Set<String> FUNCTION_WORDS = Set.of(
-            "it", "its", "they", "them", "their", "these", "those", "this", "that", "he",
-            "she", "his", "her", "we", "us", "our", "you", "your", "there", "here",
-            "the", "a", "an", "one", "ones", "other", "others", "another", "such",
-            "and", "or", "but", "nor", "yet", "so", "because", "although", "while",
-            "whereas", "if", "when", "since", "unless", "until", "than", "as",
-            "which", "who", "whom", "whose", "what", "how", "why", "to", "of", "in",
-            "on", "at", "by", "for", "from", "with", "without", "into", "onto", "over",
-            "under", "above", "below", "after", "before", "during", "between", "among",
-            "through", "across", "along", "around", "behind", "beyond", "near",
-            "toward", "towards", "upon", "within", "per", "via", "is", "are", "was",
-            "were", "be", "been", "being", "am", "has", "have", "had", "do", "does",
-            "did", "can", "could", "will", "would", "shall", "should", "may", "might",
-            "must", "ought", "not", "no", "also", "even", "just", "rather", "quite",
-            "very", "too", "only", "still", "already", "again", "further", "indeed", "perhaps");
+    public static final Set<String> FUNCTION_WORDS = Set.of(            "it", "its", "they", "them", "their", "these", "those", "this", "that", "he",
+            "she", "his", "her", "we", "us", "our", "you", "your", "there", "here", "the", "a",
+            "an", "one", "ones", "other", "others", "another", "such", "and", "or", "but",
+            "nor", "yet", "so", "because", "although", "while", "whereas", "if", "when",
+            "since", "unless", "until", "than", "as", "which", "who", "whom", "whose", "what",
+            "how", "why", "to", "of", "in", "on", "at", "by", "for", "from", "with", "without",
+            "into", "onto", "over", "under", "above", "below", "after", "before", "during",
+            "between", "among", "through", "across", "along", "around", "behind", "beyond",
+            "near", "toward", "towards", "upon", "within", "per", "via", "is", "are", "was",
+            "were", "be", "been", "being", "am", "has", "have", "had", "do", "does", "did",
+            "can", "could", "will", "would", "shall", "should", "may", "might", "must",
+            "ought", "not", "no", "also", "even", "just", "rather", "quite", "very", "too",
+            "only", "still", "already", "again", "further", "indeed", "perhaps", "though",
+            "few", "most", "many", "much", "commonly", "therefore", "thus", "hence",
+            "furthermore", "moreover", "otherwise", "instead", "almost", "nearly", "several",
+            "various", "certain");
+
 
     /**
      * The words the production subject extractor stops at, so that a surface form
@@ -101,10 +104,10 @@ public final class ReferentPolicy {
      * definition attached to a class states nothing about any member of it, and the
      * hand-labelling protocol of the A1 instrument says the same.</p>
      */
-    public static final Set<String> CLASS_OPENERS = Set.of(
-            "many", "most", "some", "several", "various", "different", "other", "others",
-            "such", "these", "those", "both", "all", "each", "every", "few", "more",
-            "less", "numerous", "certain", "example", "examples", "another");
+    public static final Set<String> CLASS_OPENERS = Set.of(            "many", "most", "some", "several", "various", "different", "others", "such",
+            "these", "those", "both", "all", "each", "every", "few", "more", "less",
+            "numerous", "certain", "example", "examples", "another");
+
 
     /**
      * The heads that denote a class of persons or of unnamed things.
@@ -113,20 +116,28 @@ public final class ReferentPolicy {
      * "Geologists" as <b>not</b> concepts: they name people in general, not a person
      * or a class of entity that a claim is about.</p>
      */
-    public static final Set<String> GENERIC_HEADS = Set.of(
-            "scientist", "scientists", "geologist", "geologists", "author", "authors",
-            "researcher", "researchers", "student", "students", "people", "person",
-            "persons", "man", "woman", "workers", "worker", "reader", "readers",
-            "belief", "beliefs", "evidence", "idea", "ideas", "question", "questions",
-            "answer", "answers", "problem", "problems", "conclusion", "conclusions",
-            "finding", "findings", "result", "results", "example", "examples",
+    public static final Set<String> GENERIC_HEADS = Set.of(            "scientist", "scientists", "geologist", "geologists", "author", "authors",
+            "proposal", "proposals", "discussion", "discussions", "displacement",
+            "displacements", "outcome", "outcomes", "explanation", "explanations",
+            "instrument", "instruments", "dataset", "datasets", "data", "point", "points",
+            "square", "squares", "research", "latter", "former", "division", "divisions",
+            "importance", "interaction", "researcher", "researchers", "student", "students",
+            "people", "person", "persons", "man", "woman", "workers", "worker", "reader",
+            "readers", "belief", "beliefs", "evidence", "idea", "ideas", "question",
+            "questions", "answer", "answers", "problem", "problems", "conclusion",
+            "conclusions", "finding", "findings", "result", "results", "example", "examples",
             "difference", "differences", "similarity", "relationship", "relationships",
-            "importance", "significance", "understanding", "view", "views", "argument",
-            "arguments", "issue", "issues", "factor", "factors", "effect", "effects",
-            "process", "processes", "mechanism", "mechanisms", "system", "systems",
-            "event", "events", "phenomenon", "phenomena", "period", "periods",
-            "region", "regions", "area", "areas", "series", "group", "groups",
-            "range", "ranges", "era", "eras", "episode", "episodes");
+            "significance", "understanding", "view", "views", "argument", "arguments", "issue",
+            "issues", "factor", "factors", "effect", "effects", "process", "processes",
+            "mechanism", "mechanisms", "system", "systems", "event", "events", "phenomenon",
+            "phenomena", "period", "periods", "region", "regions", "area", "areas", "series",
+            "group", "groups", "range", "ranges", "era", "eras", "episode", "episodes",
+            "seismologist", "seismologists", "force", "forces", "method", "methods",
+            "approach", "approaches", "way", "ways");
+
+
+
+
 
     /**
      * The heads that denote the DISCUSSION rather than a thing in it.
@@ -152,11 +163,86 @@ public final class ReferentPolicy {
      * judged"</i>. The policy strips the same words, so that it judges the same thing
      * the labels judge.</p>
      */
-    public static final Set<String> DISCOURSE_ADVERBIALS = Set.of(
-            "initially", "finally", "then", "later", "originally", "typically",
-            "generally", "commonly", "usually", "however", "moreover", "furthermore",
-            "nevertheless", "nonetheless", "thus", "therefore", "hence", "now", "today",
-            "recently", "currently", "earlier", "subsequently", "previously");
+    public static final Set<String> DISCOURSE_ADVERBIALS = Set.of(            "initially", "finally", "then", "later", "originally", "typically", "generally",
+            "commonly", "usually", "however", "moreover", "furthermore", "nevertheless",
+            "nonetheless", "thus", "therefore", "hence", "now", "today", "recently",
+            "currently", "earlier", "subsequently", "previously", "often");
+
+
+    /**
+     * The subordinating conjunctions that open a clause.
+     *
+     * <p>A span that begins with one of them is a clause, whatever its head says. The
+     * list is a closed class of the language, not a list of this corpus's words.</p>
+     */
+    public static final Set<String> SUBORDINATORS = Set.of(            "because", "when", "while", "although", "though", "if", "unless", "before",
+            "after", "despite", "whereas", "whenever", "whether", "until", "lest", "provided",
+            "supposing", "once");
+
+
+    /**
+     * The relative pronouns and adverbs that open an embedded clause.
+     *
+     * <p>The list is a closed class of the language. A span that contains one of them
+     * followed by more words contains an embedded clause, and its head belongs to that
+     * clause rather than to the span.</p>
+     */
+    public static final Set<String> RELATIVISERS = Set.of(
+            "that", "which", "who", "whom", "whose", "where", "when");
+
+    /**
+     * The suffixes that mark a participle.
+     *
+     * <p>A span that carries a participle carries a clause: the participle modifies the
+     * head and the span is not a noun phrase.</p>
+     */
+    public static final Set<String> PARTICIPLE_SUFFIXES = Set.of("ing", "ed");
+
+    /**
+     * The prepositions that open a sentence modifier.
+     *
+     * <p>A closed class of the language. A span that opens with one of them and
+     * carries a comma is an adverbial plus a subject, not a noun phrase.</p>
+     */
+    public static final Set<String> PREPOSITIONS = Set.of(            "at", "on", "in", "by", "for", "from", "with", "without", "under", "over",
+            "through", "between", "among", "across", "along", "around", "behind", "beyond",
+            "near", "toward", "towards", "upon", "within", "into", "onto", "during", "before",
+            "after", "despite", "throughout", "following", "as");
+
+
+    /**
+     * The proper nouns of the corpus, for the bare-plural rule.
+     *
+     * <p>A plural that is a proper noun ("Wegener's") is not a class. The list is
+     * small and closed, and it is this corpus's.</p>
+     */
+    public static final Set<String> PROPER_NOUNS = Set.of(
+            "himalayas", "andes", "alps", "nazca", "pacific", "american", "atlantic",
+            "african", "eurasian", "incan", "juan", "de", "fuji", "vesuvius", "etna",
+            "yellowstone", "hawaiian", "mid", "moresby", "reykjavik");
+
+    /**
+     * The determiners: a capitalised word right after one of them is a proper
+     * adjective, not the start of a new sentence.
+     */
+    public static final Set<String> DETERMINERS = Set.of(
+            "the", "a", "an", "this", "that", "these", "those", "its", "their", "his",
+            "her", "our", "your", "my", "any", "each", "every", "no", "some");
+
+    /**
+     * The function words that a caption may capitalise at the start of its second
+     * unit.
+     */
+    public static final Set<String> CAPITALISED_FUNCTION_WORDS = Set.of(
+            "the", "on", "in", "at", "a", "an", "this", "these", "those", "it", "its",
+            "their", "his", "her", "as", "by", "for", "with", "from", "to", "and", "but",
+            "or", "if", "when", "while", "after", "before", "during", "since");
+
+    /**
+     * The prepositions that introduce a complement: the noun before them is the head.
+     */
+    public static final Set<String> COMPLEMENT_PREPOSITIONS = Set.of(
+            "of", "for", "from", "about");
 
     /** The most words a surface form may have and still be a phrase. */
     public static final int MAX_SURFACE_WORDS = 12;
@@ -230,6 +316,28 @@ public final class ReferentPolicy {
     // ── the rules ─────────────────────────────────────────────────────────────
 
     /**
+     * The strictness of the policy: where it stands on the precision/recall trade.
+     *
+     * <p>The structural rules do not come free. Each one removes false positives and
+     * also removes true referents, and which error matters more is an OWNER's
+     * question, not a researcher's. The two levels are therefore measured, not
+     * chosen silently:</p>
+     * <ul>
+     *   <li>{@link #LENIENT} — only the rules that, on the frozen A1 set, remove no
+     *       referent the hand labelling marks true;</li>
+     *   <li>{@link #STRICT} — additionally the concatenation rule and the "-ing"
+     *       participle rule, which remove more false positives and more true
+     *       referents.</li>
+     * </ul>
+     */
+    public enum Strictness {
+        /** The rules that keep every referent the hand labelling marks true. */
+        LENIENT,
+        /** The rules that remove the concatenations and the "-ing" participles too. */
+        STRICT
+    }
+
+    /**
      * Why a surface form is not a referent.
      */
     public enum Rejection {
@@ -248,7 +356,19 @@ public final class ReferentPolicy {
         /** The surface form is too long to be a phrase. */
         TOO_LONG,
         /** The surface form carries a caption marker or a dash artefact. */
-        ARTEFACT
+        ARTEFACT,
+        /** The span contains an embedded relative or complement clause. */
+        CLAUSE_RELATIVE,
+        /** The span contains a participial modifier: it is a clause, not a phrase. */
+        CLAUSE_PARTICIPLE,
+        /** The span begins with a subordinating conjunction: it is a clause. */
+        CLAUSE_SUBORDINATOR,
+        /** The span concatenates two units: a heading and a sentence. */
+        CONCATENATION,
+        /** The span repeats a phrase: it is a caption. */
+        CAPTION_REPEAT,
+        /** The head is a bare plural with no modifier: it denotes a class. */
+        BARE_PLURAL
     }
 
     /**
@@ -262,6 +382,17 @@ public final class ReferentPolicy {
      * @return the reason for the rejection, or {@link Rejection#NONE}
      */
     public static Rejection rejection(String surface) {
+        return rejection(surface, Strictness.LENIENT);
+    }
+
+    /**
+     * The rejection reason of a surface form at a given strictness.
+     *
+     * @param surface the surface form
+     * @param strictness the strictness of the policy
+     * @return the reason, or NONE when the surface form is a referent
+     */
+    public static Rejection rejection(String surface, Strictness strictness) {
         if (surface == null || surface.isBlank()) {
             return Rejection.FUNCTION_HEAD;
         }
@@ -274,18 +405,43 @@ public final class ReferentPolicy {
             return Rejection.TOO_LONG;
         }
         if (trimmed.contains("[") || trimmed.contains("]") || trimmed.contains(" -- ")
-                || trimmed.contains(": ")) {
+                || trimmed.contains(": ") || trimmed.startsWith("\"")
+                || trimmed.endsWith("\"")) {
             return Rejection.ARTEFACT;
         }
-        // The A1 labelling protocol strips a leading discourse adverbial before the
-        // head is judged, and the policy judges the same thing.
-        List<String> core = coreOf(words);
-        String head = bare(core.get(core.size() - 1));
-        if (CLAUSE_CUT_WORDS.contains(head)) {
-            return Rejection.CLAUSE_CUT;
+        // ── the structural pre-pass ───────────────────────────────────────────
+        // These four tests look at the SHAPE of the span, not at the words it holds.
+        if (isConcatenation(trimmed)) {
+            return Rejection.CONCATENATION;
         }
-        if (FUNCTION_WORDS.contains(head)) {
-            return Rejection.FUNCTION_HEAD;
+        if (repeatsAPhrase(words)) {
+            return Rejection.CAPTION_REPEAT;
+        }
+        if (beginsWithASubordinator(words)) {
+            return Rejection.CLAUSE_SUBORDINATOR;
+        }
+        // The head phrase: when the span opens with a sentence modifier and carries a
+        // comma, the part before the comma modifies the whole sentence and the head
+        // phrase is what follows.
+        List<String> core = coreOf(headPhraseWords(words));
+        if (containsAnEmbeddedClause(core)) {
+            return Rejection.CLAUSE_RELATIVE;
+        }
+        if (carriesAParticiple(words, trimmed, strictness)) {
+            return Rejection.CLAUSE_PARTICIPLE;
+        }
+        String head = phraseHead(core);
+        String last = bare(core.get(core.size() - 1));
+        // The last word and the phrase head are both tested: the span can be cut at a
+        // verb ("the closure of ocean basins <b>can</b>") while its head phrase is a
+        // noun, and the cut is what makes it a fragment.
+        for (String candidate : List.of(last, head)) {
+            if (CLAUSE_CUT_WORDS.contains(candidate)) {
+                return Rejection.CLAUSE_CUT;
+            }
+            if (FUNCTION_WORDS.contains(candidate)) {
+                return Rejection.FUNCTION_HEAD;
+            }
         }
         String first = bare(core.get(0));
         if (CLASS_OPENERS.contains(first)) {
@@ -297,6 +453,12 @@ public final class ReferentPolicy {
         if (DISCOURSE_HEADS.contains(head) && !hasSpecifier(core)) {
             return Rejection.DISCOURSE_HEAD;
         }
+        if (isABarePlural(core)) {
+            return Rejection.BARE_PLURAL;
+        }
+        if (isAPossessiveWithoutANoun(trimmed)) {
+            return Rejection.FUNCTION_HEAD;
+        }
         return Rejection.NONE;
     }
 
@@ -307,7 +469,18 @@ public final class ReferentPolicy {
      * @return whether it denotes something
      */
     public static boolean accepted(String surface) {
-        return rejection(surface) == Rejection.NONE;
+        return accepted(surface, Strictness.LENIENT);
+    }
+
+    /**
+     * Whether a surface form is a referent at a given strictness.
+     *
+     * @param surface the surface form
+     * @param strictness the strictness of the policy
+     * @return whether it is accepted
+     */
+    public static boolean accepted(String surface, Strictness strictness) {
+        return rejection(surface, strictness) == Rejection.NONE;
     }
 
     /**
@@ -335,7 +508,7 @@ public final class ReferentPolicy {
             if (word.isEmpty()) {
                 continue;
             }
-            words.add(singular(possessive(word)));
+            words.add(bare(singular(possessive(word))));
         }
         return String.join(" ", words);
     }
@@ -465,6 +638,241 @@ public final class ReferentPolicy {
     // ── the helpers ───────────────────────────────────────────────────────────
 
     /**
+     * The head phrase of a span: the words after the sentence modifier.
+     *
+     * <p>A span that opens with a preposition, a subordinating conjunction or a
+     * discourse adverbial AND carries a comma is an adverbial followed by a subject.
+     * The part before the comma modifies the whole sentence; the head phrase is what
+     * follows it.</p>
+     *
+     * @param words the words of the span
+     * @return the words of the head phrase
+     */
+    private static List<String> headPhraseWords(List<String> words) {
+        if (words.size() < 2) {
+            return words;
+        }
+        String first = bare(words.get(0));
+        boolean opensWithAModifier = PREPOSITIONS.contains(first)
+                || SUBORDINATORS.contains(first) || DISCOURSE_ADVERBIALS.contains(first);
+        for (int index = 0; index < words.size() - 1; index++) {
+            if (!words.get(index).endsWith(",")) {
+                continue;
+            }
+            if (opensWithAModifier) {
+                // An adverbial before the comma modifies the whole sentence: the
+                // head phrase is what follows it.
+                return words.subList(index + 1, words.size());
+            }
+            // Otherwise the comma opens an appositive: the head phrase is what
+            // precedes it, the comma included.
+            return words.subList(0, index + 1);
+        }
+        return words;
+    }
+
+    /**
+     * Whether a span concatenates two units: a heading and a sentence.
+     *
+     * <p>The structural signal is a capitalised CONTENT word in the middle of the span,
+     * in a span whose content words are not all capitalised. A proper noun
+     * ("Geological Survey", "Jason Morgan") has every content word capitalised and is
+     * not a concatenation.</p>
+     *
+     * @param surface the span
+     * @return whether the span concatenates two units
+     */
+    private static boolean isConcatenation(String surface) {
+        List<String> words = words(surface);
+        List<String> content = new ArrayList<>();
+        for (String word : words) {
+            String bare = bare(word);
+            if (bare.isEmpty() || FUNCTION_WORDS.contains(bare)) {
+                continue;
+            }
+            content.add(bare);
+        }
+        if (content.size() < 2) {
+            return false;
+        }
+        boolean allCapitalised = true;
+        for (String word : content) {
+            if (!isCapitalised(surface, word)) {
+                allCapitalised = false;
+                break;
+            }
+        }
+        if (allCapitalised) {
+            return false;
+        }
+        // A capitalised word in the MIDDLE of the span, between two lower-case
+        // words: the span concatenates a heading and a sentence.
+        //
+        // Three refinements keep the rule off the proper nouns, which are legitimate
+        // concepts: a capitalised word right after a determiner is a proper adjective
+        // ("the African plate"), a capitalised word that ends in "'s" is a name's
+        // possessive ("Earth's interior"), and a capitalised word followed by another
+        // capitalised word is a name ("Alfred Wegener").
+        List<String> all = words(surface);
+        List<Boolean> flags = capitalisation(surface);
+        for (int index = 1; index < all.size() - 1; index++) {
+            if (!flags.get(index) || flags.get(index - 1)) {
+                continue;
+            }
+            String word = all.get(index);
+            if (word.endsWith("'s") || word.endsWith("\u2019s")) {
+                continue;
+            }
+            String previous = bare(all.get(index - 1));
+            if (DETERMINERS.contains(previous)) {
+                continue;
+            }
+            if (flags.get(index + 1) && !CAPITALISED_FUNCTION_WORDS.contains(bare(all.get(index + 1)))) {
+                continue;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Whether a word occurs in the surface with its first letter capitalised.
+     *
+     * @param surface the span
+     * @param word the word, lower-cased
+     * @return whether the word is capitalised in the span
+     */
+    private static boolean isCapitalised(String surface, String word) {
+        String lower = surface.toLowerCase(Locale.ROOT);
+        int at = lower.indexOf(word);
+        while (at >= 0) {
+            char first = surface.charAt(at);
+            if (Character.isUpperCase(first)) {
+                return true;
+            }
+            at = lower.indexOf(word, at + 1);
+        }
+        return false;
+    }
+
+    /**
+     * The capitalisation of every word of a span, position by position.
+     *
+     * @param surface the span
+     * @return one flag per word
+     */
+    private static List<Boolean> capitalisation(String surface) {
+        List<Boolean> flags = new ArrayList<>();
+        int index = 0;
+        while (index < surface.length()) {
+            if (Character.isLetter(surface.charAt(index))) {
+                int end = index;
+                while (end < surface.length() && Character.isLetter(surface.charAt(end))) {
+                    end++;
+                }
+                flags.add(Character.isUpperCase(surface.charAt(index)));
+                index = end;
+            } else {
+                index++;
+            }
+        }
+        return flags;
+    }
+
+    /**
+     * Whether a span repeats a phrase: it is a caption.
+     *
+     * @param words the words of the span
+     * @return whether a phrase of two or more words occurs twice
+     */
+    private static boolean repeatsAPhrase(List<String> words) {
+        for (int size = 2; size <= 3; size++) {
+            for (int start = 0; start + size <= words.size(); start++) {
+                String phrase = String.join(" ", bare(words.subList(start, start + size)));
+                String rest = String.join(" ", bare(words.subList(start + size, words.size())));
+                if (!rest.isEmpty() && rest.contains(phrase)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Whether a span begins with a subordinating conjunction.
+     *
+     * @param words the words of the span
+     * @return whether it does
+     */
+    private static boolean beginsWithASubordinator(List<String> words) {
+        return !words.isEmpty() && SUBORDINATORS.contains(bare(words.get(0)));
+    }
+
+    /**
+     * Whether the head phrase contains an embedded relative or complement clause.
+     *
+     * @param core the words of the head phrase
+     * @return whether it does
+     */
+    private static boolean containsAnEmbeddedClause(List<String> core) {
+        for (int index = 0; index < core.size() - 1; index++) {
+            if (RELATIVISERS.contains(bare(core.get(index)))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Whether the head phrase carries a participial modifier.
+     *
+     * @param core the words of the head phrase
+     * @return whether it does
+     */
+    private static boolean carriesAParticiple(List<String> all, String surface,
+                                              Strictness strictness) {
+        List<Boolean> flags = capitalisation(surface);
+        for (int index = 0; index < all.size(); index++) {
+            String word = bare(all.get(index));
+            if (flags.get(index)) {
+                // A capitalised word is a name, not a participle ("Alfred Wegener").
+                continue;
+            }
+            if (word.length() > 5 && word.endsWith("ed")) {
+                // A past participle is almost never a noun in this corpus.
+                return true;
+            }
+            if (strictness == Strictness.STRICT && word.length() > 5
+                    && word.endsWith("ing")) {
+                // A present participle is often a technical noun ("seafloor
+                // spreading"), so this rule belongs to the strict level only.
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Whether the head phrase is a bare plural with no modifier and no determiner.
+     *
+     * <p>"plates" names the plates as a class; "subduction zones" names a kind. The
+     * difference is structural: the bare plural has no modifier and no determiner.</p>
+     *
+     * @param core the words of the head phrase
+     * @return whether it is a bare plural
+     */
+    private static boolean isABarePlural(List<String> core) {
+        if (core.size() != 1) {
+            return false;
+        }
+        String word = bare(core.get(0));
+        if (word.length() < 4 || !word.endsWith("s") || word.endsWith("ss")) {
+            return false;
+        }
+        return !PROPER_NOUNS.contains(word);
+    }
+
+    /**
      * The core of a surface form: the words after the leading discourse adverbials.
      *
      * @param words the words of the surface form
@@ -480,6 +888,45 @@ public final class ReferentPolicy {
     }
 
     /**
+     * Whether a span is a possessive without a noun ("Wegener's").
+     *
+     * <p>It denotes nothing: the possessor is named, but not what is possessed.</p>
+     *
+     * @param words the words of the span
+     * @return whether it is a bare possessive
+     */
+    private static boolean isAPossessiveWithoutANoun(String surface) {
+        return surface.matches("(?i)\\p{Lu}\\p{Ll}+['\u2019]s");
+    }
+
+    /**
+     * The head of a head phrase.
+     *
+     * <p>When the phrase carries a prepositional complement ("the theory <b>of</b>
+     * plate tectonics"), the head is the noun BEFORE the preposition: the complement
+     * modifies the head, it does not become it. When there is no complement, the head
+     * is the last word.</p>
+     *
+     * @param core the words of the head phrase
+     * @return the normalised head
+     */
+    private static String phraseHead(List<String> core) {
+        for (int index = 1; index < core.size(); index++) {
+            if (!COMPLEMENT_PREPOSITIONS.contains(bare(core.get(index)))) {
+                continue;
+            }
+            for (int back = index - 1; back >= 0; back--) {
+                String word = bare(core.get(back));
+                if (word.isEmpty() || FUNCTION_WORDS.contains(word)) {
+                    continue;
+                }
+                return singular(word);
+            }
+        }
+        return singular(bare(core.get(core.size() - 1)));
+    }
+
+    /**
      * Whether a surface form carries something that SPECIFIES its head.
      *
      * <p>"The theory of plate tectonics" specifies "theory"; "This theory" does not.
@@ -487,8 +934,19 @@ public final class ReferentPolicy {
      */
     private static boolean hasSpecifier(List<String> words) {
         int content = 0;
+        boolean insideAnAppositive = false;
         for (String word : words) {
             String bare = bare(word);
+            if (word.endsWith(",")) {
+                insideAnAppositive = true;
+                continue;
+            }
+            if (insideAnAppositive) {
+                // An appositive is part of the phrase, but it does not SPECIFY the
+                // head: "this theory, called 'surge tectonics'" names a discourse
+                // nominal, not a referent.
+                continue;
+            }
             if (FUNCTION_WORDS.contains(bare) || CLAUSE_CUT_WORDS.contains(bare)) {
                 continue;
             }
@@ -504,11 +962,19 @@ public final class ReferentPolicy {
         while (index < text.length()) {
             if (Character.isLetter(text.charAt(index))) {
                 int end = index;
-                while (end < text.length() && Character.isLetter(text.charAt(end))) {
+                while (end < text.length() && (Character.isLetter(text.charAt(end))
+                        || (text.charAt(end) == '\'' && end > index))) {
                     end++;
                 }
-                words.add(text.substring(index, end).toLowerCase(Locale.ROOT));
-                index = end;
+                // The trailing punctuation travels with the word: the comma and the
+                // parenthesis are the structural signals of the policy and they must
+                // survive the tokenisation.
+                int after = end;
+                while (after < text.length() && ",.;:()[]\"".indexOf(text.charAt(after)) >= 0) {
+                    after++;
+                }
+                words.add(text.substring(index, after).toLowerCase(Locale.ROOT));
+                index = after;
             } else {
                 index++;
             }
@@ -519,6 +985,15 @@ public final class ReferentPolicy {
     /** The word with its surrounding punctuation removed. */
     private static String bare(String word) {
         return word.toLowerCase(Locale.ROOT).replaceAll("[,.;:()\"'\\[\\]]", "");
+    }
+
+    /** The words with their surrounding punctuation removed. */
+    private static List<String> bare(List<String> words) {
+        List<String> bare = new ArrayList<>(words.size());
+        for (String word : words) {
+            bare.add(bare(word));
+        }
+        return bare;
     }
 
     /**

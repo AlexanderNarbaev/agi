@@ -289,6 +289,32 @@ class ClosedLoopReportJourneyTest {
         assertThat(tampered.verified()).isFalse();
     }
 
+    @Test
+    @DisplayName("the observer refuses a name it cannot trust")
+    void theObserverRefusesANameItCannotTrust() throws Exception {
+        Path root = root("observe-names");
+        ArtifactActionService actions = new ArtifactActionService(true, root.toString());
+        ArtifactWriter writer = actions.writer();
+
+        for (String name : new String[] {"../outside.md", "sub/dir.md", "..", ".hidden.md", "",
+                "  "}) {
+            ArtifactObserver.Observation observation = ArtifactObserver.observe(writer,
+                    "identity", name, "a-digest");
+            assertThat(observation.exists())
+                    .as("the observer does not resolve a name that could leave the root")
+                    .isFalse();
+            assertThat(observation.verified()).isFalse();
+            assertThat(observation.detail()).contains("not a plain file name");
+        }
+
+        // and a plain name IS read
+        Files.writeString(root.resolve("plain.md"), "the report");
+        ArtifactObserver.Observation plain = ArtifactObserver.observe(writer, "identity",
+                "plain.md", null);
+        assertThat(plain.exists()).isTrue();
+        assertThat(plain.bytes()).isEqualTo("the report".length());
+    }
+
     // ── the fixtures ────────────────────────────────────────────────────────
 
     /** A workbench over its own database, with the bundled package loaded. */

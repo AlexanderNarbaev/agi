@@ -158,6 +158,19 @@ class ReferentKeyInstrumentTest {
                         + "referents=%d (the current splitter: %d concepts)%n",
                 wide.claims(), wide.accepted(), wide.rejected(), wide.clusters(),
                 wideSnapshot.concepts().size());
+        for (ReferentPolicy.Strictness level : ReferentPolicy.Strictness.values()) {
+            ReferentResolver.Result strictSeed = ReferentResolver.resolve(seedSnapshot.claims(),
+                    seedSnapshot.concepts(), true, level);
+            ReferentResolver.Result strictWide = ReferentResolver.resolve(wideSnapshot.claims(),
+                    wideSnapshot.concepts(), true, level);
+            System.out.printf("[referent-key] the strictness %s: the seed accepted=%d "
+                            + "rejected=%d referents=%d; the wider accepted=%d rejected=%d "
+                            + "referents=%d%n",
+                    level, strictSeed.accepted(), strictSeed.rejected(), strictSeed.clusters(),
+                    strictWide.accepted(), strictWide.rejected(), strictWide.clusters());
+            System.out.println("[referent-key] the rejections (the seed, " + level + "): "
+                    + strictSeed.rejections());
+        }
         // The CONTROL: the fragmentation the source-anchoring alone produces, without
         // the reject-only rule. The two causes are told apart here.
         ReferentResolver.Result seedAll = ReferentResolver.resolve(seedSnapshot.claims(),
@@ -198,38 +211,53 @@ class ReferentKeyInstrumentTest {
         assertThat(labelledTrue).as("the frozen set's share of genuine referents")
                 .isEqualTo(35L);
 
-        int acceptedByPolicy = 0;
-        int acceptedAndTrue = 0;
-        int acceptedAndFalse = 0;
-        List<String> falsePositives = new ArrayList<>();
-        for (HandLabel label : labels) {
-            if (!ReferentPolicy.accepted(label.span())) {
-                continue;
-            }
-            acceptedByPolicy++;
-            if (label.concept()) {
-                acceptedAndTrue++;
-            } else {
-                acceptedAndFalse++;
-                if (falsePositives.size() < 12) {
-                    falsePositives.add(label.span() + "  [" + ReferentPolicy.rejection(label.span())
-                            + "]");
+        double splitterPrecision = (double) labelledTrue / labels.size();
+        for (ReferentPolicy.Strictness level : ReferentPolicy.Strictness.values()) {
+            int acceptedByPolicy = 0;
+            int acceptedAndTrue = 0;
+            int acceptedAndFalse = 0;
+            int rejectedTrue = 0;
+            List<String> falsePositives = new ArrayList<>();
+            List<String> wronglyRejected = new ArrayList<>();
+            for (HandLabel label : labels) {
+                if (!ReferentPolicy.accepted(label.span(), level)) {
+                    if (label.concept()) {
+                        rejectedTrue++;
+                        wronglyRejected.add(label.span() + "  ["
+                                + ReferentPolicy.rejection(label.span(), level) + "]");
+                    }
+                    continue;
+                }
+                acceptedByPolicy++;
+                if (label.concept()) {
+                    acceptedAndTrue++;
+                } else {
+                    acceptedAndFalse++;
+                    falsePositives.add(label.span() + "  ["
+                            + ReferentPolicy.rejection(label.span(), level) + "]");
                 }
             }
+            double policyPrecision = acceptedByPolicy == 0 ? 0
+                    : (double) acceptedAndTrue / acceptedByPolicy;
+            double[] interval = wilson(acceptedAndTrue, acceptedByPolicy);
+            System.out.printf("[referent-key] the frozen 150 (%s): the splitter accepts all of "
+                            + "them, precision %.4f (%d/%d); the policy accepts %d, precision "
+                            + "%.4f (%d/%d) [%.4f, %.4f], %d false positives, %d true referents "
+                            + "rejected%n",
+                    level, splitterPrecision, labelledTrue, labels.size(), acceptedByPolicy,
+                    policyPrecision, acceptedAndTrue, acceptedByPolicy, interval[1], interval[2],
+                    acceptedAndFalse, rejectedTrue);
+            System.out.println("[referent-key] the false positives (" + level + "): "
+                    + falsePositives);
+            System.out.println("[referent-key] the wrongly rejected (" + level + "): "
+                    + wronglyRejected);
+            assertThat(acceptedByPolicy).as("the policy must reject something")
+                    .isLessThan(labels.size());
+            assertThat(policyPrecision).as("the policy's precision over what it accepts")
+                    .isGreaterThan(splitterPrecision);
+            assertThat(interval[1]).as("the policy's interval must lie above the splitter's")
+                    .isGreaterThan(wilson((int) labelledTrue, labels.size())[2]);
         }
-        double policyPrecision = acceptedByPolicy == 0 ? 0
-                : (double) acceptedAndTrue / acceptedByPolicy;
-        double splitterPrecision = (double) labelledTrue / labels.size();
-        System.out.printf("[referent-key] the frozen 150: the splitter accepts all of them, "
-                        + "precision %.4f (%d/%d); the policy accepts %d, precision %.4f "
-                        + "(%d/%d), %d false positives%n",
-                splitterPrecision, labelledTrue, labels.size(), acceptedByPolicy,
-                policyPrecision, acceptedAndTrue, acceptedByPolicy, acceptedAndFalse);
-        System.out.println("[referent-key] the policy's false positives: " + falsePositives);
-        assertThat(acceptedByPolicy).as("the policy must reject something")
-                .isLessThan(labels.size());
-        assertThat(policyPrecision).as("the policy's precision over what it accepts")
-                .isGreaterThan(splitterPrecision);
     }
 
     // ── 4. the four properties ────────────────────────────────────────────────
@@ -303,6 +331,24 @@ class ReferentKeyInstrumentTest {
         System.out.printf("[referent-key] the definitions: %d concepts carry one now; under the "
                         + "key %d of the %d referents carry one%n",
                 definitions, referentsWithADefinition, seed.clusters());
+        for (ReferentPolicy.Strictness level : ReferentPolicy.Strictness.values()) {
+            ReferentResolver.Result strict = ReferentResolver.resolve(seedSnapshot.claims(),
+                    seedSnapshot.concepts(), true, level);
+            int withOne = 0;
+            for (ReferentResolver.Cluster cluster : strict.clustersDetail()) {
+                for (String claimId : cluster.claimIds()) {
+                    String conceptId = conceptIdOf(claimId);
+                    if (conceptId != null && conceptsWithADefinition.contains(conceptId)) {
+                        withOne++;
+                        break;
+                    }
+                }
+            }
+            System.out.printf("[referent-key] the definitions (%s): %d of the %d referents carry "
+                            + "one (%.4f)%n",
+                    level, withOne, strict.clusters(),
+                    strict.clusters() == 0 ? 0 : (double) withOne / strict.clusters());
+        }
         assertThat(definitions).as("the production import writes the definitions").isEqualTo(120);
     }
 
@@ -330,6 +376,19 @@ class ReferentKeyInstrumentTest {
         System.out.printf("[referent-key] the relations: %d candidates of the frozen rule, %d of "
                         + "them have both endpoints accepted by the policy; the rejected: %s%n",
                 extraction.relations().size(), surviving, rejected);
+        for (ReferentPolicy.Strictness level : ReferentPolicy.Strictness.values()) {
+            int strictSurviving = 0;
+            for (io.matrix.knowledge.concept.SourceGroundedEnrichment.RelationCandidate candidate
+                    : extraction.relations()) {
+                if (ReferentPolicy.accepted(candidate.fromConceptName(), level)
+                        && ReferentPolicy.accepted(candidate.toConceptName(), level)) {
+                    strictSurviving++;
+                }
+            }
+            System.out.printf("[referent-key] the relations (%s): %d of %d candidates have both "
+                            + "endpoints accepted%n",
+                    level, strictSurviving, extraction.relations().size());
+        }
         assertThat(extraction.relations()).as("the frozen relation rule's candidates").isNotEmpty();
     }
 

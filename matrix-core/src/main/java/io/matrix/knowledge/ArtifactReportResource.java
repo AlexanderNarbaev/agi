@@ -14,6 +14,7 @@ import io.matrix.cognitive.algorithms.ProblemRequest;
 import io.matrix.cognitive.report.ArtifactObserver;
 import io.matrix.cognitive.report.ReportJourney;
 import io.matrix.cognitive.report.ReportJourneyOutcome;
+import io.matrix.cognitive.report.WorkspaceFingerprint;
 import io.matrix.cognitive.report.ReportJourneyMethod;
 import io.matrix.cognitive.report.ReportJourneyPlanner;
 import io.matrix.cognitive.report.ReportJourneyTrace;
@@ -110,6 +111,7 @@ public class ArtifactReportResource {
 
     /** The JSON the response is written in, and the retained response is kept in. */
     private static final ObjectMapper JSON = new ObjectMapper();
+
 
     /** The longest report name the route accepts. */
     private static final int MAX_REPORT_NAME_LENGTH = 128;
@@ -617,19 +619,20 @@ public class ArtifactReportResource {
     /**
      * The fingerprint of the workspace as it is now.
      *
-     * <p>It covers the claims the workspace holds — their identifiers, their propositions
-     * and their statuses — so that a workspace whose content changed cannot be answered
-     * from a journey that read the older one.</p>
+     * <p>It covers the fields of every claim the workspace holds that can change WHAT the
+     * workspace would answer: the claim's identifier, the concept it belongs to, its
+     * proposition, its scope, its context, its status and its version. A workspace whose
+     * scope or context moved has moved the answer even when the proposition did not, so
+     * a journey that read the older one must not be replayed over it.</p>
+     *
+     * <p>The fields are read one by one rather than through reflection, so that a field
+     * added to the claim later cannot silently widen or narrow the fingerprint.</p>
      *
      * @param workspaceId the workspace
      * @return the fingerprint
      */
     private String workspaceFingerprint(String workspaceId) {
-        StringBuilder material = new StringBuilder();
-        workbench.workspace(workspaceId).claims().forEach(claim -> material.append(claim.id())
-                .append('|').append(claim.proposition()).append('|').append(claim.status())
-                .append('\n'));
-        return ArtifactObserver.sha256(material.toString());
+        return WorkspaceFingerprint.of(workbench.workspace(workspaceId));
     }
 
     /**
