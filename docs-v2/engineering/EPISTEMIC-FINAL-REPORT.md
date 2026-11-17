@@ -842,6 +842,30 @@ python3 scripts/docs-link-check.py --root . --strict
 > writing the corpus's lemmas into this store would put a `DECLARED_BY`/`DECLARED_ON` provenance on
 > declarations this store never made. The alias layer of the live store stays empty until its own
 > aliases are declared.
+> **The live store has TWO workspaces, so the plan/apply pair must be sequenced — and the sequence is
+> per workspace.** `plan(snapshot, workspace, strictness, createdAt, aliases)`
+> (`ReferentKeyMigration.java:252`) resolves **one workspace's** claims and concepts, and
+> `apply(database, plan, workspace)` (`:353`) applies **one workspace's** plan. The two workspaces of the
+> live store are `logic` (11 concepts) and `photosynthesis` (13 concepts) — the corpora each had **one**,
+> so nothing about this was visible there. ⇒ The dry run must therefore **plan and apply one workspace at
+> a time**: plan `logic` → apply `logic` → **re-export** → plan `photosynthesis` → apply `photosynthesis`.
+> Planning both from a single pre-migration snapshot would leave the second plan computed against a state
+> the first application had already changed.
+>
+> **The rewrite is workspace-scoped, so one workspace cannot bleed into the other.** The "other tables"
+> pass (`rewriteTheOtherTables`, `:634`) issues
+> `UPDATE <table> SET concept_id = ? WHERE concept_id = ? AND workspace_id = ?` — the workspace predicate
+> is present ✓ — and every table it can touch carries a `workspace_id` column in the live store
+> (checked with `pragma table_info`: `dialogue_turn`, `learning_state`, `learning_goal`,
+> `assessment_item`, `revision`, `derivation`, `contradiction`, `hebbian_binding`, `learning_transition`,
+> `learning_error`, `assessment_outcome` — all of them ✓).
+>
+> **And that is why the audit's orphan count is the number that decides the whole run.** The rewrite is
+> keyed on `plan.oldToNew()`, so a plan that failed to carry the 19 ids the current scheme cannot
+> reproduce would leave those claims pointing at concept ids that no longer exist — a **half-migrated
+> store** that looks migrated. ⇒ The acceptance number for tomorrow's dry run is therefore:
+> `ReferentKeyMigration.audit(copy, workspace)` must report **zero orphans in each of the thirteen
+> tables, for each of the two workspaces**, after the second application.
 > claims re-pointed, the representations re-pointed, the audit's orphan count, the elapsed time, and the
 > **re-measurement** by the same judge (the C2A baseline is BASELINE-PATH 17/25 with the same eight
 > failures, recall@1 0.5351, MRR 0.8600).
