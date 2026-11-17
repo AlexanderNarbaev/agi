@@ -63,36 +63,13 @@ final class HandVerifiedDefinitions {
     }
 
     /** How many definitions the census covers - every one the corrected rule finds. */
-    static final int SAMPLE_SIZE = 27;
+    static final int SAMPLE_SIZE = 4;
 
     /** The frozen set, in the census's order. */
     static final List<VerifiedDefinition> SAMPLE = List.of(
-            new VerifiedDefinition(1, "2e18b6ee079dc3fae207515e6e2dbac92651d2e8d77b6bdd67ac0f90379829a2", true),
-            new VerifiedDefinition(2, "e2c60c0f2304a710a51b6eae145c46e09a4efe299143325ca6f4d197b45a34e0", true),
-            new VerifiedDefinition(3, "b44a9b86add3a00dcd628abedce45a474d65f68a1cbb317fa4f600e325bc7365", true),
-            new VerifiedDefinition(4, "2fa443914b04d547b47170a1db1e04c5021b58c7fb7b33e7ab2ef980576d39f1", false),
-            new VerifiedDefinition(5, "b949f4df837c173a47a63d0a64833e9614569e0cc225f409b376ad686b612705", true),
-            new VerifiedDefinition(6, "32bdf053ebc27432e617976aa48e69218028f243867a566effc2ba19c4e47fe2", true),
-            new VerifiedDefinition(7, "9d051867ae1df48db60b8db3978b748f1872de6963dfabe72ef7406972941776", true),
-            new VerifiedDefinition(8, "d9498aac153e040d636b0bf774123621bbfda39c2c4651aa08c734b00b46223c", false),
-            new VerifiedDefinition(9, "c6f07b5e3d38ca8dc5692dd3c38d405944c38377de685681ce4d571615dc640a", false),
-            new VerifiedDefinition(10, "cb239d9477a5f20c5c2a181e756b6f885fb2a72c16bf38b2991f33b84781a260", false),
-            new VerifiedDefinition(11, "67a10e1e41ca806dab253fe41d4032f779d16b2bd65ce2d8ee7bbb45f5262c61", false),
-            new VerifiedDefinition(12, "e64cb1568c158748c510583b7e4a37e53fe4f7330d09ed5c66c739a7bf01e648", false),
-            new VerifiedDefinition(13, "1356ab87a10daf9c5331465e5320f4352bb81fd191e42790baa21557a3058368", true),
-            new VerifiedDefinition(14, "38245458889181141c639ccc3bf6991bc7759858de896661bb0590553451b60f", true),
-            new VerifiedDefinition(15, "4a057f90faf363344a822fc4763c6ee94a4c157384b6068fdfe9658e4c8856d1", true),
-            new VerifiedDefinition(16, "4d3496b264628603aa009d068f62410888ad096b93b0c39cd7e60181a64ab82d", true),
-            new VerifiedDefinition(17, "e8a7abd2ff1d2e5a6ea2b0b952818435c7abd77ac25f039f7493912a98de1972", true),
-            new VerifiedDefinition(18, "b8199725c638cbe3b7e1fe83bb66f2d42563e091463323cd019e1540813d9b8d", true),
-            new VerifiedDefinition(19, "0369095682cdd80080176f08a02e82db21717761b9f8e127a9025c0c8b950b4f", true),
-            new VerifiedDefinition(20, "b2f4cdf1cc880830ada3250a860f80acdd2bd073492ffc3f1ab88bae42ff29a7", false),
-            new VerifiedDefinition(21, "df1addb707f5d703a2d527f35ac46d7cbfe0b051fb940e1f81e2fb4fb7bc159e", true),
-            new VerifiedDefinition(22, "87e775fadca466e8d8a26d4f19097c143716709455fa4b85e9b6a9123e192f6e", false),
-            new VerifiedDefinition(23, "01d1b6766fc39b86a493a0fa6a6ed1355b1517e0833615ff4c566f1c45efe39c", false),
-            new VerifiedDefinition(24, "012a06fc62094039892035b6097a6d36d32f65ef873ec3a0f92b387e3b40e988", true),
-            new VerifiedDefinition(25, "f69cc98e9be68aff74c79748b97a0410afaa18c0d810778df07869ef22bab167", true),
-            new VerifiedDefinition(26, "d2aed1837dd502139209321dcf5590ab5179276ca62ade95abbddee8abde669d", true),
-            new VerifiedDefinition(27, "0f43326fb97ee7b41c49c156605a841305418354b4d267595eb3c4af6bc39ba4", true)
+            new VerifiedDefinition(1, "e8a7abd2ff1d2e5a6ea2b0b952818435c7abd77ac25f039f7493912a98de1972", true),
+            new VerifiedDefinition(2, "0369095682cdd80080176f08a02e82db21717761b9f8e127a9025c0c8b950b4f", true),
+            new VerifiedDefinition(3, "f69cc98e9be68aff74c79748b97a0410afaa18c0d810778df07869ef22bab167", false),
+            new VerifiedDefinition(4, "d2aed1837dd502139209321dcf5590ab5179276ca62ade95abbddee8abde669d", true)
             );
 }

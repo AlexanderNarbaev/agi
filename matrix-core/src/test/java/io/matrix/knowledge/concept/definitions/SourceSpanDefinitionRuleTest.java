@@ -63,16 +63,16 @@ class SourceSpanDefinitionRuleTest {
     @Test
     @DisplayName("the length cap is applied: a paragraph is not a definition")
     void theLengthCapIsApplied() {
-        String longSentence = "Plate tectonics is " + "x".repeat(SourceSpanDefinitions
-                .MAX_DEFINITION_LENGTH) + " the theory.";
+        String longSentence = "Plate tectonics is the " + "x".repeat(SourceSpanDefinitions
+                .MAX_DEFINITION_LENGTH) + " theory.";
         assertThat(longSentence.length())
                 .as("the sentence is over the cap")
                 .isGreaterThan(SourceSpanDefinitions.MAX_DEFINITION_LENGTH);
         assertThat(SourceSpanDefinitions.statesDefinition(longSentence, "Plate tectonics")).isFalse();
         // One character under the cap still qualifies.
-        String atCap = "Plate tectonics is " + "x".repeat(
-                SourceSpanDefinitions.MAX_DEFINITION_LENGTH - "Plate tectonics is ".length()
-                        - " the theory.".length()) + " the theory.";
+        String atCap = "Plate tectonics is the " + "x".repeat(
+                SourceSpanDefinitions.MAX_DEFINITION_LENGTH - "Plate tectonics is the ".length()
+                        - " theory.".length()) + " theory.";
         assertThat(atCap.length()).isEqualTo(SourceSpanDefinitions.MAX_DEFINITION_LENGTH);
         assertThat(SourceSpanDefinitions.statesDefinition(atCap, "Plate tectonics")).isTrue();
     }

@@ -7,16 +7,19 @@
 research it rests on — `docs-v2/engineering/EPISTEMIC-CONCEPT-IDENTITY.md`.
 **Instruments:** `matrix-core/src/test/java/io/matrix/knowledge/concept/definitions/**`
 
-> **CORRECTION NOTICE (2026-11-16, §10).** The numbers in §2–§4a of this document —
+> **CORRECTION NOTICE (2026-11-17, §10).** The numbers in §2–§4a of this document —
 > "120/326 = 36.8 % usable definitions" and "24/25 = 96 % human-verified" — were measured
 > against a weaker rule (the name only had to be *mentioned* before a definitional copula)
-> and a weaker metric ("about the concept" rather than "is a definition"). The hard review
-> of 2026-11-16 showed that 31 of the 120 hung on spans the frozen hand-labelling calls
-> "not a concept" and that 33 had the name only as a mention. **The corrected rule finds
-> 27 definitions (8.28 %) and the corrected metric gives 18/27 = 66.7 %.** The earlier
-> claims are withdrawn, not restated; §10 records what they measured, what they should have
-> measured, and why the corrected rule is stricter. Sections 1–9 are kept as the record of
-> the earlier state.
+> and a weaker metric ("about the concept" rather than "is a definition"). The hard reviews
+> of 2026-11-16 and 2026-11-17 showed that 31 of the 120 hung on spans the frozen hand-labelling
+> calls "not a concept", that 33 had the name only as a mention, and that the subject test alone
+> is necessary but not sufficient: a sentence can be about the concept and still say nothing about
+> what the concept IS. **The rule as it now stands finds 4 definitions (1.23 %) and the metric as
+> it is now written gives 3/4 = 75 %; the reviewer's independent count of the earlier 27 is
+> 3/27 = 11.1 %, and the re-labelling of those 27 by the same protocol lands on the same three.**
+> Every earlier claim is withdrawn, not restated; §10 records what they measured, what they should
+> have measured, and why the rule is stricter. Sections 1–9 are kept as the record of the earlier
+> state.
 
 (`ConceptDefinitionAcceptanceTest`, `SourceSpanDefinitionRuleTest`,
 `HandLabelledSpans`, `HandVerifiedDefinitions`).
@@ -351,141 +354,129 @@ the rule: the held-out set is identical in every arm, and no arm gains a single 
 
 
 ---
+## 10. THE CORRECTION, THE DEFINITIONAL-PREDICATE GATE AND THE RE-MEASURED NUMBERS (2026-11-17)
 
-## 10. THE CORRECTION (2026-11-16) — the hard review of P1-1 and P1-2
+### 10.1 The rule as it now stands
 
-**This section corrects the numbers published in §2–§4a of this document. The earlier
-numbers were measured against a weaker rule and a weaker metric; they are recorded here,
-not quietly replaced.** The hard review found that 31 of the 120 definitions hung on spans
-that the frozen hand-labelling itself labels "not a concept", that a further 33 had the
-concept's name only as a mention in the sentence, and that the metric behind "24/25 =
-96 %" measured "about the concept" rather than "is a definition".
+The production rule lives in `matrix-core/src/main/java/io/matrix/knowledge/acquisition/SourceSpanDefinitions.java`
+(`DEFINITION_METHOD = "definitional-adjacency-first-sentence-v1.1"`). A sentence is a definition of a
+concept only when **all** of these hold:
 
-### 10.1 The corrected rule
+1. **The name is a referent** (`isReferent`): not a single function word, not a name that opens with a
+   class word, not a name the subject extractor cut inside a clause, not a question ("How mantle
+   convection … relates") or a possessive fragment ("Its thickness").
+2. **The name is the subject** (`subjectOffset`): the name's token sequence must start the sentence's
+   subject, after the subject markers, within `MAXIMUM_SUBJECT_OFFSET` tokens. A mention elsewhere in
+   the sentence does not qualify it.
+3. **The copula follows the name** (`COPULAS_LONGEST_FIRST`): the longest copula is read first, so
+   "is defined as" is read before "is". The predicate must begin within `MAX_PREDICATE_OFFSET`
+   (4) tokens of the copula — a copula whose complement stands far away is the verb of a frame
+   ("is thought to be"), not of a definition.
+4. **No denial** (`denies`, `NEGATION_WINDOW = 3`): a negation within three tokens after the copula
+   rejects the sentence, qualifier included ("is largely not", "is sometimes not", "is defined as not").
+5. **The predicate is definitional** (`isDefinitionalPredicate`): the complement must open a noun
+   phrase that names what the term denotes — a genus ("the deepest parts of the ocean floor"), an
+   identity ("one of the few transform faults exposed on land") or a classification ("of two types").
+   An action ("are compressed, folded"), a comparison ("is cooler and more rigid"), a measurement
+   ("is typically 100 km thick"), an origin ("is formed at sea-floor spreading centers"), a state
+   ("is still open") and a report of what is thought ("is most widely thought to be") are all rejected.
 
-The rule lives in `matrix-core/src/main/java/io/matrix/knowledge/acquisition/SourceSpanDefinitions.java`
-and is applied in `statesDefinition(String, String)`:
+The first qualifying sentence **in which the name is the subject** wins; `derive` walks the sentences
+of the document in order and takes the first that satisfies all five conditions.
 
-1. **The name must BE THE SUBJECT of the sentence** — not a mention anywhere in it.
-   `subjectOffset(...)` skips a run of discourse markers (`SUBJECT_MARKERS`: "however",
-   "in this understanding", "because", …) and then the name's token sequence must match at
-   that position; the subject may not sit further than `MAXIMUM_SUBJECT_OFFSET` = 12 tokens
-   from the start. The definitional copula (`DEFINITIONAL_COPULAS`) must follow the subject
-   immediately.
-2. **A denial is not a definition.** If the token after the copula is in `NEGATIONS`
-   ("not", "no", "never", "neither", "nor"), the sentence is rejected: "X is not Y" says
-   what X is not.
-3. **A name that is not a referent is rejected** (`isReferent(String)`), which is the
-   hand-labelling protocol made mechanical:
-   * a name that is a single function word (`FUNCTION_WORDS`: "It", "There", "The") — reject;
-   * a name that opens with a class word (`CLASS_DETERMINERS`: "such", "one", "many",
-     "various") — reject: "Such volcanoes" names a class;
-   * a name carrying a clause word inside it (`CLAUSE_INNER_WORDS`: a determiner, a
-     preposition, a subordinating conjunction, a relative pronoun) — reject: the extractor
-     cut it inside a clause ("the fact that the North American plate");
-   * a name ending with a word the extractor stops at (`CLAUSE_CUT_WORDS`), with a
-     discourse noun (`DISCOURSE_HEADS`: "mechanism", "latter", "division", "problem"), with
-     a function word, or with a past participle (`PARTICIPLE_SUFFIX`) — reject;
-   * a name that is a **run-on** (`isRunOn(String)`): a lower-cased word followed by a
-     capitalised one — reject: the extractor glued a caption to the name ("Defining plate
-     boundaries Active plate boundaries", "Icy moons Exoplanets On Earth-sized planets,
-     plate tectonics"). A proper name does not look like that ("Jason Morgan", "San
-     Andreas"), so the case decides it.
-4. **"The first qualifying sentence wins" becomes "the first qualifying sentence IN WHICH
-   THE NAME IS THE SUBJECT wins."** A sentence in which the name is only a mention is
-   skipped, and the search continues with the next sentence — which is what fixes P1-2
-   (the concept "The trenches" took *"As the name implies, volcanic island arcs, which
-   closely parallel the trenches, are generally curved."*; under the corrected rule that
-   sentence is skipped, because the name is inside a relative clause and not the subject).
+### 10.2 The numbers, re-measured
 
-### 10.2 The re-measured numbers
+| measure | the old rule (a mention) | the subject rule | **the definitional-predicate rule (now)** |
+|---|---|---|---|
+| definitions on the seed corpus | 120/326 = 36.8 % | 27/326 = 8.28 % | **4/326 = 1.23 %** |
+| hand-verified, "is a definition" | 24/25 = 96 % — measured as "about the concept" | 18/27 = 66.7 % — the same weaker metric | **3/4 = 75 %** — the protocol as written |
+| the reviewer's independent count | — | 3/27 = 11.1 % | — |
 
-| what | before (the published claim) | after (the corrected rule and metric) |
+Every published number is withdrawn rather than restated: 36.8 %, 96 %, 8.28 % and 66.7 % were
+measured against a weaker rule and/or a weaker metric, and the document keeps them as the record of
+that earlier state.
+
+### 10.3 THE CENSUS OF THE 27, RE-LABELLED BY THE PROTOCOL AS WRITTEN — 3/27
+
+The 27 definitions of the subject rule were re-labelled by hand on 2026-11-17 against the protocol
+exactly as it is written in `HandVerifiedDefinitions`: *a definition states the concept's nature,
+composition or identity — a sentence that could stand as the concept's glossary entry; an action, a
+comparison, a discourse about the concept, or a denial of it, is not a definition.*
+
+**The re-labelling lands on 3 of 27 = 11.1 % — the reviewer's independent count, on the same three
+concepts.** The earlier 18/27 was therefore measured against a criterion other than the declared one
+("could stand as a glossary entry"), not against the protocol. That is the correction, and it is
+recorded here rather than replaced silently.
+
+| concept | verdict | why |
 |---|---|---|
-| the definitions the rule finds in the seed corpus | 120 | **27** |
-| the share of the 326 concepts | 120 = 36.8 % | **27 = 8.28 %** |
-| the hand-verified share | 24/25 = 96 % ("about the concept") | **18/27 = 66.7 %** ("is a definition") |
-| of the previous 120 | — | **27 survive**; 93 are rejected by the corrected rule |
-| the definitions' benefit in the retriever | none (the null result of §9) | **still none** — the four arms are now identical on both case sets |
+| Trenches | **definition** | a genus: "the deepest parts of the ocean floor" |
+| The San Andreas | **definition** | an identity: "one of the few transform faults exposed on land" |
+| Subduction zones | **definition** | a classification: "of two types: …" |
+| Tectonic plates | not a definition | composition ("are composed of …"), not identity |
+| Slab pull | not a definition | a report of what is widely thought to be |
+| The trenches | not a definition | a role ("the key to understanding …"), not a genus |
+| Iceland | not a definition | an action: "is splitting along …" |
+| How mantle convection … relates to plate motion | not a definition | a question, not a referent |
+| Mantle plumes and hot spots | not a definition | an action: "are also postulated to impinge …" |
+| Its thickness | not a definition | a function of something else |
+| Cool oceanic lithosphere | not a definition | a comparison: "is significantly denser than …" |
+| Continental crust | not a definition | an origin: "is formed through …" |
+| Oceanic crust | not a definition | an origin: "is formed at …" |
+| Continental lithosphere | not a definition | a measurement: "is typically about 200 km thick" |
+| The debate | not a definition | a state: "is still open" |
+| Deep marine trenches | not a definition | an association, not a genus |
+| The other forces | not a definition | a use: "are only used in …" |
+| Earth's crust | not a definition | a state: "is soaked with water" |
+| The lost surface | not a definition | a state: "is balanced by …" |
+| Plate boundaries | not a definition | a relative clause: "are where geological events occur" |
+| Modern plate tectonics | not a definition | an origin: "are suggested to have emerged …" |
+| Mars Mars | not a definition | a comparison: "is considerably smaller than …" |
+| The plate edges | not a definition | an action: "are compressed, folded, and uplifted" |
+| Twenty-one satellites | not a definition | a state and a measurement: "are currently in orbit …" |
+| The lithosphere | not a definition | a comparison: "is cooler and more rigid" |
+| Ground-based measurements | not a definition | a method: "are taken with …" |
+| Average oceanic lithosphere | not a definition | a measurement: "is typically 100 km thick" |
 
-**What the earlier numbers measured.** "120/326 = 36.8 %" counted every sentence in which
-the concept's name was followed by a definitional copula *anywhere* — including a mention
-in a subordinate clause ("Continental crust is formed through …" was accepted on the
-strength of the name inside the subject noun phrase) — and without a test for a denial or
-for a name that is a fragment. "24/25 = 96 %" counted sentences that were *about* the
-concept, which is a weaker question than *is a definition*: "Iceland is splitting along the
-spreading center …" is about Iceland and is not a definition of it. **Both numbers were
-correct as measurements of the weaker question and wrong as claims about definitions.**
+### 10.4 The current census — the 4 survivors, 3 of them definitions
 
-**Why the correction matters now.** §9 measured that the definitions have **no measurable
-benefit** in the retriever: the four arms (no definitions, all of them, the rule's subset,
-the strict subset) are now *identical* on the official ask cases (12/20, the unanswerable
-abstained 6/6, 8 answered without the gold) and on the frozen held-out set (8/16, 12
-answered, 4 abstentions). **With no benefit to protect, the precision of the rule is the
-only thing that can still be required of the definitions** — which is exactly what the
-hard review demanded, and why the corrected rule costs 93 definitions.
+The rule as it now stands finds **4** definitions on the seed corpus of 326 concepts (1.23 %). The
+census of all four is frozen in `HandVerifiedDefinitions` (keyed by digest, so that no definition
+text is written into the development code) and judged under the protocol:
 
-**The reviewer's own probe, after the correction** (`HardReviewDefinitionPrecisionTest`,
-the reviewer's file, run as it stands): the seed corpus carries 27 definitions; **0** are
-attached to a span the frozen hand-labelling calls "not a concept" (it was 31 of 120), and
-**0** have a name that is not the subject of their sentence (the probe's own subject test).
-
-### 10.3 The hand-verified census — 27 definitions, 18 of them definitions
-
-The metric, stated: **a definition is a sentence whose subject is the concept and whose
-predicate states the concept's nature, composition or identity — a sentence that could
-stand as the concept's glossary entry. A sentence that states an action the concept
-performs, a comparison, a discourse about the concept, or a denial of it, is not a
-definition.** The judgements were made on 2026-11-16, after the rule was corrected, and
-they are not blind; the set is a census (all 27), so there is no sampling effect.
-
-| concept | the definition | is it a definition? |
+| concept | the definition | verdict |
 |---|---|---|
-| `Average oceanic lithosphere` | Average oceanic lithosphere is typically 100 km (62 mi) thick. | **yes** |
-| `Continental crust` | Continental crust is formed through arc volcanism and accretion of terranes through plate tectonic processes. | **yes** |
-| `Continental lithosphere` | Continental lithosphere is typically about 200 km (120 mi) thick, though this varies considerably between basins, mountain ranges, and stable cratonic interiors of continents. | **yes** |
-| `Cool oceanic lithosphere` | Cool oceanic lithosphere is significantly denser than the hot mantle material from which it is derived and so with increasing thickness it gradually subsides into the mantle to compensate the greater load. | **no** — the sentence is a comparison with the hot mantle, not an identity |
-| `Deep marine trenches` | Deep marine trenches are typically associated with subduction zones, and the basins that develop along the active boundary are often called "foreland basins". | **yes** |
-| `Earth's crust` | Earth's crust is soaked with water, and water plays an important role in the development of shear zones. | **yes** |
-| `Ground-based measurements` | Ground-based measurements are taken with conventional but very precise ground-surveying techniques, using laser-electronic instruments. | **yes** |
-| `How mantle convection directly and indirectly relates to plate motion` | How mantle convection directly and indirectly relates to plate motion is a matter of ongoing study and discussion in geodynamics. | **no** — the name is a question fragment; the sentence reports the state of a debate |
-| `Iceland` | Iceland is splitting along the spreading center between the North American and Eurasian Plates, as North America moves westward relative to Eurasia. | **no** — the sentence states an action the island performs, not what it is |
-| `Its thickness` | Its thickness is a function of its age. | **no** — the name is a possessive phrase whose referent is not the concept |
-| `Mantle plumes and hot spots` | Mantle plumes and hot spots are also postulated to impinge on the underside of tectonic plates. | **no** — the sentence states an action they are postulated to perform |
-| `Mars Mars` | Mars Mars is considerably smaller than Earth and Venus, and there is evidence for ice on its surface and in its crust. | **no** — the name is a duplicated caption; the sentence is about Mars, not about a concept named 'Mars Mars' |
-| `Modern plate tectonics` | Modern plate tectonics are suggested to have emerged by at least 2.2 billion years ago with the formation of the first recognised supercontinent Columbia, though some authors have suggested that modern-style plate tectonics did not appear until 800 million years ago based on the late appearance of rock types like blueschist which require cold subducted material. | **yes** |
-| `Oceanic crust` | Oceanic crust is formed at sea-floor spreading centers. | **yes** |
-| `Plate boundaries` | Plate boundaries are where geological events occur, such as earthquakes and the creation of topographic features such as mountains, volcanoes, mid-ocean ridges, and oceanic trenches. | **yes** |
-| `Slab pull` | Slab pull is therefore most widely thought to be the greatest force acting on the plates. | **yes** |
-| `Subduction zones` | Subduction zones are of two types: ocean-to-continent subduction, where the dense oceanic lithosphere plunges beneath the less dense continent, or ocean-to-ocean subduction where older, cooler, denser oceanic crust slips beneath less dense oceanic crust. | **yes** |
-| `Tectonic plates` | Tectonic plates are composed of the oceanic lithosphere and the thicker continental lithosphere, each topped by its own kind of crust. | **yes** |
-| `The San Andreas` | The San Andreas is one of the few transform faults exposed on land. | **yes** |
-| `The debate` | The debate is still open, and a 2022 paper by Hofmeister et al. | **no** — a discourse nominal: the sentence reports the state of a debate |
-| `The lithosphere` | The lithosphere is cooler and more rigid, while the asthenosphere is hotter and flows more easily. | **yes** |
-| `The lost surface` | The lost surface is balanced by the formation of new oceanic crust along divergent margins by seafloor spreading, keeping the total surface area constant in a tectonic "conveyor belt". | **no** — an anaphoric caption: the referent is introduced elsewhere |
-| `The other forces` | The other forces are only used in global geodynamic models not using plate tectonics concepts (therefore beyond the discussions treated in this section) or proposed as minor modulations within the overall plate tectonics model. | **no** — an anaphoric discourse nominal: the referent is introduced elsewhere |
-| `The plate edges` | The plate edges are compressed, folded, and uplifted forming mountain ranges, e. | **yes** |
-| `The trenches` | The trenches are the key to understanding how island arcs such as the Marianas and the Aleutian Islands have formed and why they experience numerous strong earthquakes. | **yes** |
-| `Trenches` | Trenches are the deepest parts of the ocean floor and are created by subduction. | **yes** |
-| `Twenty-one satellites` | Twenty-one satellites are currently in orbit 20,000 km above the Earth as part of the NavStar system of the U. | **yes** |
+| Trenches | "Trenches are the deepest parts of the ocean floor and are created by subduction." | **is a definition** (a genus) |
+| The San Andreas | "The San Andreas is one of the few transform faults exposed on land." | **is a definition** (an identity) |
+| Subduction zones | "Subduction zones are of two types: …" | **is a definition** (a classification) |
+| The trenches | "The trenches are the key to understanding how island arcs …" | not a definition (a role, not a genus) |
 
-The nine failures are: five names that are a discourse or an anaphora rather than a
-referent ("Its thickness", "The debate", "The other forces", "The lost surface", "How
-mantle convection directly and indirectly relates to plate motion"), one duplicated
-caption ("Mars Mars"), and three sentences that predicate an action or a comparison
-("Iceland", "Mantle plumes and hot spots", "Cool oceanic lithosphere"). **The rule does
-not reject all nine**: an anaphoric discourse nominal and a duplicated caption are beyond
-a name-shape rule that sees no context, and that is an open item, not a solved one.
+**3 of 4 = 75 %.** The residual is stated, not hidden: a purely structural gate cannot separate a
+genus from a role — "the key to understanding …" is a noun phrase in the subject position with a
+definitional copula, and it names what the concept is *for*, not what it is.
 
-### 10.4 What this correction does not establish
+### 10.5 The naming decision
 
-* It does not establish that the corrected rule is the right one — only that it is the
-  one the frozen hand-labelling and the reviewer's probe accept, and that it is strictly
-  stricter than the research instrument's rule (the instrument still implements the freeze's
-  v1.1, which accepts a mention).
-* It does not establish that 27 is the ceiling: the rule rejects names that a human might
-  still call referents, and it accepts nine names that a human does not call definitions.
-  The two errors point in opposite directions and neither is measured here.
-* It does not change the §9 verdict: the definitions still have no measurable benefit, and
-  a smaller, more precise set has even less room to help.
-* It does not restore the earlier claim: 36.8 % and 96 % are withdrawn, not restated.
+The field **keeps the name "definition"**, because the rule now requires a definitional predicate and
+rejects every action, comparison, measurement, origin, state, denial and report. What it stores is
+stated precisely: **a candidate definition — a sentence whose subject is the concept and whose
+predicate is a noun phrase naming what the term denotes.** The schema is unchanged
+(`concept.definition` stays empty in the owner's store; the definitions are not searchable text —
+see §3 and §9), because the contract *tightened* rather than changed name; the documents and the
+metric carry the precise meaning, and the measured precision (3/4) is published beside every count.
+The alternative — renaming the field to "a sentence about the concept" — would describe the *old*
+rule, which the corrected rule no longer implements.
+
+### 10.6 What this correction does not establish
+
+- **No benefit in the retriever.** §9 measured none: all four arms of the benefit measurement are
+  identical (official 20 ask cases: passed 12, answered 14, abstentions 6, the unanswerable abstained
+  6/6; the frozen held-out 16 cases: passed 8, answered 12, abstentions 4). A smaller and more precise
+  set has even less room to help. The precision of the rule is therefore the only thing still required
+  of the definitions.
+- The judgements are a human judgement, made after the rule was corrected, over one domain, one
+  register, one language; they are not a proof and not a blind measurement.
+- The gate is structural and bounded; its generalisation beyond the seed corpus is untested.
+- The knowledge scope holds no other definition work: the frozen hand-labelled spans
+  (`HandLabelledSpans`), the research instrument (`SourceGroundedEnrichment`, TIGHT_V1_1) and the
+  referent-key policy are unchanged.

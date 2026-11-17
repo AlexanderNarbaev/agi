@@ -421,17 +421,27 @@ retriever's searchable text. The tree is in that state: the definitions live in 
 `concept_definition` table and the `concept.definition` column stays empty.
 
 
-### 10b. THE CORRECTION OF THE DEFINITION HALF (2026-11-16)
+### 10b. THE CORRECTION OF THE DEFINITION HALF (2026-11-16, re-measured 2026-11-17)
 
-The hard review of the definition half withdrew its headline numbers. The corrected rule —
-the concept's name must **be the subject** of the qualifying sentence, a denial is not a
-definition, and a name that is not a referent is rejected — finds **27** definitions of the
-326 concepts (**8.28 %**), not 120 (36.8 %), and the corrected metric — "is a definition",
-not "about the concept" — gives **18/27 = 66.7 %**, not 24/25 = 96 %. The nine failures of
-the census are named in §10.3 of `docs-v2/engineering/EPISTEMIC-CONCEPT-DEFINITIONS.md`.
+The hard reviews of the definition half withdrew its headline numbers, twice. The rule now
+requires that the concept's name **be the subject** of the qualifying sentence, that the name be a
+referent, that a denial is not a definition, and that the **predicate be definitional** — a genus,
+an identity or a classification, not an action, a comparison, a measurement, an origin, a state or a
+report of what is thought. It finds **4** definitions of the 326 concepts (**1.23 %**), not 120
+(36.8 %) and not 27 (8.28 %). The metric — "is a definition", not "about the concept" — gives
+**3/4 = 75 %** on the four, not 24/25 = 96 % and not 18/27 = 66.7 %.
 
-The benefit measurement is unchanged in its verdict and stronger in its evidence: with 27
-precise definitions the four arms are **identical** on the official ask cases and on the
-frozen held-out set, so the definitions have **no measurable benefit** in the retriever.
-The definitions remain worth keeping as knowledge — the corpus's own account of a concept,
-with its span — and remain out of the searchable text.
+The correction that matters for the record: the 27 definitions of the subject rule were
+**re-labelled by the protocol as written** and land on **3 of 27 = 11.1 %** — the reviewer's
+independent count, on the same three concepts (Trenches, The San Andreas, Subduction zones). The
+earlier 18/27 was measured against a criterion other than the declared one. §10 of
+`docs-v2/engineering/EPISTEMIC-CONCEPT-DEFINITIONS.md` records the re-labelling, the reason for each
+verdict, the four survivors, and the naming decision: the field keeps the name "definition" and
+stores a **candidate definition** — a definitional predicate, verified by a human at 75 %.
+
+The benefit measurement is unchanged in its verdict and stronger in its evidence: with a smaller and
+more precise set the four arms are **identical** on the official ask cases and on the frozen
+held-out set, so the definitions have **no measurable benefit** in the retriever. The precision of
+the rule is therefore the only thing still required of them. The definitions remain worth keeping as
+knowledge — the corpus's own account of a concept, with its span — and remain out of the searchable
+text.

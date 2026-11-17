@@ -84,11 +84,11 @@ class ConceptDefinitionAcceptanceTest {
      * took a sentence in which the concept's name appeared ANYWHERE and was
      * followed by a definitional copula; the corrected rule requires the name
      * to BE THE SUBJECT of the sentence, rejects a denial, and rejects a name
-     * that is not a referent. The count falls to 27 - see
+     * that is not a referent. The count falls to 4 - see
      * {@code docs-v2/engineering/EPISTEMIC-CONCEPT-DEFINITIONS.md} §10 for the
      * correction of the earlier 120/326 = 36.8 % claim.</p>
      */
-    private static final int PRODUCTION_DEFINITIONS = 27;
+    private static final int PRODUCTION_DEFINITIONS = 4;
 
     /** The retriever's floor: the production value of the official evaluation. */
     private static final double RETRIEVER_FLOOR = 0.25;
@@ -287,7 +287,7 @@ class ConceptDefinitionAcceptanceTest {
                 .isEqualTo(PRODUCTION_DEFINITIONS);
         assertThat(about)
                 .as("the hand-verified share under the corrected metric")
-                .isEqualTo(18);
+                .isEqualTo(3);
     }
 
     // ── A8 — the identity stability ───────────────────────────────────────────

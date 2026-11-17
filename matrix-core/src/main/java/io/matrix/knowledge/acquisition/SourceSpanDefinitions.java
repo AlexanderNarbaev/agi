@@ -95,6 +95,99 @@ public final class SourceSpanDefinitions {
             "is defined as", "is called");
 
     /**
+     * The copulas, the LONGEST first.
+     *
+     * <p>The order matters: "A trench is defined as not a canyon" must be read
+     * through "is defined as", not through "is" — with the short copula first
+     * the denial hides behind the next word and the sentence looks like a
+     * definition.</p>
+     */
+    private static final List<String> COPULAS_LONGEST_FIRST = List.of(
+            "is defined as", "is called", "consists of", "refers to",
+            "describes", "is", "are", "means");
+
+    /**
+     * The words that open a predicate naming what the term denotes.
+     *
+     * <p>A genus ("the deepest parts of the ocean floor"), an identity ("one of
+     * the few transform faults exposed on land") and a classification ("of two
+     * types") are what a definition says. An action, a comparison, a
+     * measurement, an origin and a state are not: "are compressed", "is denser
+     * than", "is 100 km thick", "is formed at", "is still open".</p>
+     */
+    public static final Set<String> DEFINING_DETERMINERS = Set.of(
+            "the", "a", "an", "this", "that", "these", "those", "one", "two",
+            "three", "four", "five", "six", "seven", "eight", "nine", "ten",
+            "eleven", "twelve", "twenty", "all", "some", "each", "every",
+            "both", "another", "such", "several", "many", "numerous", "certain",
+            "part", "parts", "kind", "kinds", "type", "types", "piece", "pieces");
+
+    /**
+     * The words that number a set, so that "of two types" reads as a
+     * classification.
+     */
+    public static final Set<String> NUMBER_WORDS = Set.of(
+            "one", "two", "three", "four", "five", "six", "seven", "eight",
+            "nine", "ten", "eleven", "twelve", "twenty", "thirty", "forty",
+            "fifty", "hundred", "thousand", "several", "many", "few", "dozen");
+
+    /**
+     * The adverbs and hedges that may stand between the copula and the
+     * predicate: "is therefore most widely thought to be ...".
+     */
+    public static final Set<String> PREDICATE_HEDGES = Set.of(
+            "therefore", "thus", "hence", "generally", "typically", "usually",
+            "often", "commonly", "mostly", "largely", "chiefly", "principally",
+            "mainly", "also", "still", "simply", "merely", "now", "then",
+            "currently", "only", "even", "already", "indeed", "perhaps",
+            "probably", "virtually", "practically");
+
+    /**
+     * How many tokens after the copula the predicate's head may stand.
+     *
+     * <p>A copula's complement follows it: "X is the deepest parts ...". When
+     * the noun phrase stands far from the copula the copula is not the verb of
+     * the definition but the verb of the frame ("X is thought to be ...",
+     * "X is therefore most widely thought to be ..."), and the sentence reports
+     * a belief rather than denoting a kind. The window is bounded so that the
+     * gate stays a structural test.</p>
+     */
+    public static final int MAX_PREDICATE_OFFSET = 4;
+
+    /**
+     * The verbs that report what is thought, said or estimated.
+     *
+     * <p>"is thought to be", "is believed to be", "is said to be": the
+     * sentence reports a belief about the referent instead of denoting it.</p>
+     */
+    public static final Set<String> REPORTING_VERBS = Set.of(
+            "thought", "believed", "considered", "claimed", "said", "reputed",
+            "alleged", "reported", "argued", "estimated", "assumed",
+            "supposed", "suggested", "held", "viewed");
+
+    /**
+     * How many tokens after the copula may hide a negation.
+     *
+     * <p>A qualifier may stand between the copula and the negation: "A trench
+     * is largely not a long narrow depression ...", "A trench is sometimes not
+     * a deep-ocean trench." The window is bounded so that a denial near the
+     * copula is caught and a denial far away is not invented.</p>
+     */
+    public static final int NEGATION_WINDOW = 3;
+
+    /**
+     * The words that open a name which is a question, not a referent.
+     */
+    public static final Set<String> QUESTION_OPENERS = Set.of(
+            "how", "what", "why", "when", "where", "whether", "which", "who");
+
+    /**
+     * The possessives that open a name whose referent is not the name itself.
+     */
+    public static final Set<String> POSSESSIVE_OPENERS = Set.of(
+            "its", "their", "his", "her", "our", "your", "my");
+
+    /**
      * The words that may stand between the start of a sentence and its subject.
      *
      * <p>A sentence may open with a discourse marker or a subordinate clause
@@ -402,23 +495,87 @@ public final class SourceSpanDefinitions {
             return false;
         }
         List<String> sentenceWords = words(sentence);
-        int subject = subjectOffset(sentenceWords, words(name));
+        List<String> nameWords = words(name);
+        int subject = subjectOffset(sentenceWords, nameWords);
         if (subject < 0) {
             // The name is not the subject: the sentence is about something else,
             // and a mention of the name in it does not define it.
             return false;
         }
-        int after = subject + words(name).size();
-        for (String copula : DEFINITIONAL_COPULAS) {
+        int after = subject + nameWords.size();
+        for (String copula : COPULAS_LONGEST_FIRST) {
             List<String> copulaWords = words(copula);
             if (!matches(sentenceWords, after, copulaWords)) {
                 continue;
             }
-            // A DENIAL IS NOT A DEFINITION: "X is not Y" says what X is not.
+            // The copula matched: its reading decides the sentence, and a
+            // shorter copula must not rescue a sentence the longer one rejects.
             int next = after + copulaWords.size();
-            if (next < sentenceWords.size() && NEGATIONS.contains(sentenceWords.get(next))) {
+            // A DENIAL IS NOT A DEFINITION: "X is not Y" says what X is not —
+            // and a qualifier may stand between the copula and the denial.
+            if (denies(sentenceWords, next)) {
                 return false;
             }
+            // THE DEFINITIONAL PREDICATE: what follows the copula must say
+            // what the term denotes, not what it does or how it compares.
+            return isDefinitionalPredicate(sentenceWords, next);
+        }
+        return false;
+    }
+
+    /**
+     * Whether a denial stands within the window after the copula.
+     *
+     * @param sentenceWords the words of the sentence
+     * @param from where the copula ended
+     * @return whether the sentence denies
+     */
+    private static boolean denies(List<String> sentenceWords, int from) {
+        int limit = Math.min(sentenceWords.size(), from + NEGATION_WINDOW);
+        for (int index = from; index < limit; index++) {
+            if (NEGATIONS.contains(sentenceWords.get(index))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Whether the predicate names what the term denotes.
+     *
+     * <p>A definition says what a thing IS: a genus ("the deepest parts of the
+     * ocean floor"), an identity ("one of the few transform faults exposed on
+     * land") or a classification ("of two types"). It does not say what the
+     * thing does ("are compressed, folded, and uplifted"), how it compares
+     * ("is cooler and more rigid"), how big it is ("is 100 km thick"), where it
+     * comes from ("is formed at sea-floor spreading centers") or what state it
+     * is in ("is still open").</p>
+     *
+     * @param sentenceWords the words of the sentence
+     * @param from where the copula ended
+     * @return whether the predicate is definitional
+     */
+    private static boolean isDefinitionalPredicate(List<String> sentenceWords, int from) {
+        int limit = Math.min(sentenceWords.size(), from + MAX_PREDICATE_OFFSET);
+        for (int index = from; index < limit; index++) {
+            if (REPORTING_VERBS.contains(sentenceWords.get(index))) {
+                return false;
+            }
+        }
+        int index = from;
+        while (index < limit && PREDICATE_HEDGES.contains(sentenceWords.get(index))) {
+            index++;
+        }
+        if (index >= limit) {
+            return false;
+        }
+        String head = sentenceWords.get(index);
+        if (DEFINING_DETERMINERS.contains(head)) {
+            return true;
+        }
+        if ("of".equals(head) && index + 1 < sentenceWords.size()
+                && (DEFINING_DETERMINERS.contains(sentenceWords.get(index + 1))
+                        || NUMBER_WORDS.contains(sentenceWords.get(index + 1)))) {
             return true;
         }
         return false;
@@ -476,6 +633,10 @@ public final class SourceSpanDefinitions {
             return false;
         }
         if (CLASS_DETERMINERS.contains(nameWords.get(0))) {
+            return false;
+        }
+        if (QUESTION_OPENERS.contains(nameWords.get(0))
+                || POSSESSIVE_OPENERS.contains(nameWords.get(0))) {
             return false;
         }
         for (int index = 1; index < nameWords.size(); index++) {
