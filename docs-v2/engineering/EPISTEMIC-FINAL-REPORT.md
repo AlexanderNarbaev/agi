@@ -368,7 +368,7 @@ claim id moves.
 | | the baseline | after |
 |---|---|---|
 | **A1** the concept names' precision | 30 % (12 of 40) | **35/150 = 23.3 %** on the frozen 150-span set; the first 40 of the draw give **12/40 = 30 %** — the same share, from an independent sample |
-| **A2(i)** the usable definitions | **0** | **27/326 = 8.3 %** — **corrected downward** (see the correction note below): the rule now requires the concept's name to **be the subject** of the qualifying sentence, and the earlier, looser rule reported 120/326 = 36.8 % |
+| **A2(i)** the usable definitions | **0** | **4/326 = 1.2 %** — **corrected twice downward** (see the correction notes below): the rule now requires the name to **be the subject** *and* the predicate to be **definitional** (genus, identity, classification — not an action, a comparison, a measurement, an origin or a state); the earlier, looser rules reported 120/326 = 36.8 % and then 27/326 = 8.3 % |
 | **A2(ii)** the human-verified share | not measured | **18/27 = 66.7 %** — **corrected downward once and then disputed**: the metric now asks *"is this a definition of its concept"*, but the **independent re-review counts 3/27 = 11 %** under the metric's own written protocol, because at least two of the 18 labels contradict it (an action and a comparison are labelled *yes* although the protocol excludes both). Both numbers are published here; the rule still lacks the gate the reviewer requires — the **predicate must be definitional** (genus, identity, classification), not an action, a comparison, a measurement, an origin or a state — so the honest figure is not yet settled. The earlier, weaker metric reported 24/25 = 96 % |
 | **A3** the relation precision | not measured | **0/7 = 0 %** (five fragmentary endpoints, one with its direction reversed) — the change does not touch the relations |
 | **A4/A5** the retrieval | 18/29, 6/6, 0.3000 | **unchanged, every content column identical** — deliberately: see below |
@@ -426,6 +426,21 @@ concepts (8.3 %)**, of which the hand-verified census finds **18 to be definitio
 kept here only as the record of what they measured. `[speculative]` the sample behind the 18/27 is
 small, and the reviewer's own probes (`HardReviewDefinitionPrecisionTest`) have not been re-run
 against the corrected rule by an independent party.
+
+**The third correction — the rule now demands a definitional predicate.** The independent re-review
+established that the subject test is **necessary but not sufficient**: it accepts sentences that state
+an **action** (*"The plate edges are compressed, folded, and uplifted forming mountain ranges"*), a
+**comparison** (*"The lithosphere is cooler and more rigid, while the asthenosphere is hotter…"*), a
+measurement or an origin. A third gate was added: the predicate must be **definitional** — the genus,
+the identity or the classification, the thing that says **what the term denotes**. The two holes in the
+negation gate were closed as well (a qualifier between the copula and the negation — *"is largely
+not…"*, *"is sometimes not…"* — no longer passes, and the **longest copula is matched first**, so *"is
+defined as not a canyon"* no longer passes). **The result is four definitions of 326 concepts (1.2 %)**,
+and the hand-verified census now finds **3 of the 4** to be definitions of their concept — **the three
+are the very three the independent review named** (*Trenches*, *The San Andreas*, *Subduction zones*).
+The fourth (*"The trenches are the key to understanding how island arcs … have formed"*) is a discourse
+about the concept, not a definition — the reviewer's borderline case. The retrieval's cost is
+unchanged (**729/734 µs with the definitions against 734/744 µs without** — inside the noise).
 
 **The second correction, also recorded rather than swapped.** The independent re-review of the
 corrected rule confirmed two of the three conditions (*the name is the subject*: the reviewer's own
