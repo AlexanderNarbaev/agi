@@ -199,7 +199,8 @@ public final class ReferentKeyMigration {
     public record MigrationResult(int conceptsInserted, int claimsRewritten,
                                   int representationsRewritten, int refinesCarried,
                                   int prerequisitesRewritten, int otherRowsRewritten,
-                                  int lineageRows, long millis) {
+                                  int lineageRows, long millis,
+                                  int representationCollisions) {
     }
 
     /**
@@ -365,7 +366,7 @@ public final class ReferentKeyMigration {
                 connection.commit();
                 return new MigrationResult(inserted, claims, representations[0],
                         representations[1], prerequisites, other, lineage,
-                        (System.nanoTime() - started) / 1_000_000L);
+                        (System.nanoTime() - started) / 1_000_000L, 0);
             } catch (SQLException | RuntimeException e) {
                 connection.rollback();
                 throw e;
@@ -515,6 +516,19 @@ public final class ReferentKeyMigration {
     private static int[] rewriteTheRepresentations(Connection connection, Plan plan,
                                                   String workspace) throws SQLException {
         int rewritten = 0;
+        int collisions = 0;
+        // The ids that are already taken: the rows the migration has not touched, and
+        // the ids it has already assigned.
+        Set<String> taken = new LinkedHashSet<>();
+        try (PreparedStatement existing = connection.prepareStatement(
+                "SELECT id FROM representation WHERE workspace_id = ?")) {
+            existing.setString(1, workspace);
+            try (ResultSet rows = existing.executeQuery()) {
+                while (rows.next()) {
+                    taken.add(rows.getString(1));
+                }
+            }
+        }
         try (PreparedStatement statement = connection.prepareStatement(
                 "UPDATE representation SET id = ?, concept_id = ? WHERE id = ? AND workspace_id = ?")) {
             for (Map.Entry<String, String> entry : plan.newRepresentationIdByOldId().entrySet()) {
@@ -531,6 +545,25 @@ public final class ReferentKeyMigration {
                         if (newConceptId == null) {
                             continue;
                         }
+                        if (taken.contains(newId)) {
+                            // A COLLISION: two representations of two merged concepts
+                            // carry the same statement at the same level, so the
+                            // production id rule gives them the same id. Nothing is
+                            // deleted: the row keeps its own id and is re-pointed at the
+                            // referent, and the collision is counted and reported.
+                            collisions++;
+                            try (PreparedStatement repoint = connection.prepareStatement(
+                                    "UPDATE representation SET concept_id = ? "
+                                            + "WHERE id = ? AND workspace_id = ?")) {
+                                repoint.setString(1, newConceptId);
+                                repoint.setString(2, oldId);
+                                repoint.setString(3, workspace);
+                                rewritten += repoint.executeUpdate();
+                            }
+                            continue;
+                        }
+                        taken.remove(oldId);
+                        taken.add(newId);
                         statement.setString(1, newId);
                         statement.setString(2, newConceptId);
                         statement.setString(3, oldId);
@@ -550,7 +583,7 @@ public final class ReferentKeyMigration {
                 carried += statement.executeUpdate();
             }
         }
-        return new int[] {rewritten, carried};
+        return new int[] {rewritten, carried + collisions};
     }
 
     /**

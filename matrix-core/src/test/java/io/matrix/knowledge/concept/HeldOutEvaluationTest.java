@@ -32,7 +32,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -153,6 +156,28 @@ class HeldOutEvaluationTest {
     private static Map<String, Object> workspaceSummary = Map.of();
     private static Map<String, Object> manifest = Map.of();
     private static List<Map<String, Object>> premiseFindings = List.of();
+    /**
+     * The BASELINE-PATH row measured on a MIGRATED copy of the same workspace.
+     *
+     * <p>The judge is the one above — the same method, the same questions, the same
+     * dataset. Only the workspace differs: the referent key's copy-forward was applied
+     * to it. The row is kept OUT of the published artefact, because the published
+     * artefact is the frozen measurement of the UNMIGRATED path and must not change.</p>
+     */
+    private static Metrics migratedBaselinePath;
+
+    /** The rows of the migrated copy, one per comparable case. */
+    private static List<Row> migratedRows = List.of();
+
+    /** The plan of the migration that was applied to the copy. */
+    private static String migrationSummary = "not run";
+
+    /** The claim ids the migration turned into claim-scoped records. */
+    private static Set<String> migratedScopedClaimIds = Set.of();
+
+    /** The propositions of the claim-scoped records. */
+    private static Set<String> migratedScopedPropositions = Set.of();
+
     private static String freezeSha256;
     private static String datasetSha256;
     private static String developmentSha256;
@@ -404,6 +429,86 @@ class HeldOutEvaluationTest {
             metrics = metrics(rows);
         }
 
+        // ── the MIGRATED copy: the same judge, the same questions ─────────────
+        //
+        // The referent key's copy-forward is applied to a COPY of the same workspace
+        // and the BASELINE-PATH row is measured on it with the SAME judge — the
+        // method above, unchanged, and the same dataset and the same questions. The
+        // row is NOT written into the published artefact: that artefact is the frozen
+        // measurement of the unmigrated path.
+        Path migratedDatabase = workDirectory.resolve("migrated.sqlite");
+        io.matrix.knowledge.concept.research.ReferentKeyMigration.copy(database,
+                migratedDatabase);
+        io.matrix.knowledge.concept.research.ReferentKeyMigration.seedDeclaredAliases(
+                migratedDatabase, WORKSPACE,
+                io.matrix.knowledge.concept.research.ReferentPolicy.DECLARED_ALIASES);
+        List<io.matrix.knowledge.concept.ConceptAlias> migratedAliases;
+        io.matrix.knowledge.concept.research.ReferentKeyMigration.Plan migratedPlan;
+        try (KnowledgeWorkbench migratedWorkbench =
+                     KnowledgeWorkbench.at(migratedDatabase.toString())) {
+            migratedAliases = migratedWorkbench.storeForValidation().conceptAliases(WORKSPACE);
+            KnowledgeSnapshot migratedSnapshot = migratedWorkbench.workspace(WORKSPACE);
+            migratedPlan = io.matrix.knowledge.concept.research.ReferentKeyMigration.plan(
+                    migratedSnapshot, WORKSPACE,
+                    io.matrix.knowledge.concept.research.ReferentPolicy.Strictness.STRICT,
+                    "2026-11-16T00:00:00Z", migratedAliases);
+        }
+        io.matrix.knowledge.concept.research.ReferentKeyMigration.MigrationResult migratedResult =
+                io.matrix.knowledge.concept.research.ReferentKeyMigration.apply(migratedDatabase,
+                        migratedPlan, WORKSPACE);
+        migrationSummary = "the referents=" + migratedPlan.referents()
+                + ", the claim-scoped records=" + migratedPlan.claimScoped()
+                + ", the claims re-pointed=" + migratedResult.claimsRewritten()
+                + ", the representations re-pointed=" + migratedResult.representationsRewritten()
+                + ", the concepts inserted=" + migratedResult.conceptsInserted();
+        try (KnowledgeWorkbench migratedWorkbench =
+                     KnowledgeWorkbench.at(migratedDatabase.toString())) {
+            KnowledgeSnapshot migratedSnapshot = migratedWorkbench.workspace(WORKSPACE);
+            List<Row> collected = new ArrayList<>();
+            for (HeldOutCase heldOutCase : cases) {
+                AbstractionLevel level = levelOf(heldOutCase.level());
+                PremiseAssessment.Assessment assessment = null;
+                if (KIND_UNSUPPORTED.equals(heldOutCase.kind())) {
+                    assessment = PremiseAssessment.assess(migratedWorkbench, WORKSPACE,
+                            heldOutCase.question());
+                }
+                Answer pathAnswer = null;
+                String pathFailure = null;
+                try {
+                    pathAnswer = migratedWorkbench.ask(WORKSPACE, heldOutCase.question(), level);
+                } catch (RuntimeException e) {
+                    pathFailure = e.getClass().getSimpleName() + ": " + e.getMessage();
+                }
+                Answer pathRanking = new KnowledgeRetriever(migratedSnapshot,
+                        RetrievalExperiment.RANKING_FLOOR).answer(heldOutCase.question(), level);
+                List<String> pathProblems = new ArrayList<>();
+                boolean pathPassed = true;
+                if (pathAnswer == null) {
+                    pathProblems.add("the production path threw: " + pathFailure);
+                    pathPassed = false;
+                } else {
+                    pathProblems.addAll(judge(heldOutCase, pathAnswer, assessment));
+                    pathPassed = pathProblems.isEmpty();
+                }
+                collected.add(measure(heldOutCase, RetrievalExperiment.BASELINE_PATH, pathAnswer,
+                        pathRanking, 0L, 0L, null, pathPassed, pathProblems,
+                        migratedSnapshot.claims().size()));
+            }
+            migratedRows = List.copyOf(collected);
+            migratedBaselinePath = metrics(migratedRows).get(RetrievalExperiment.BASELINE_PATH);
+            Set<String> scoped = new LinkedHashSet<>();
+            Set<String> propositions = new LinkedHashSet<>();
+            for (io.matrix.knowledge.concept.ClaimScopedRecord record
+                    : migratedWorkbench.storeForValidation().claimScopedRecords(WORKSPACE)) {
+                scoped.add(record.claimId());
+                propositions.add(record.text());
+            }
+            migratedScopedClaimIds = Set.copyOf(scoped);
+            migratedScopedPropositions = Set.copyOf(propositions);
+            System.out.printf("[migration] the claim-scoped records: %d of them, carrying %d "
+                            + "distinct texts%n", scoped.size(), propositions.size());
+        }
+
         freezeSha256 = sha256(RepositoryPaths.root().resolve(FREEZE_PATH));
         // THE DEVELOPMENT ARTEFACTS MUST CARRY THE SAME FREEZE. The order between the two
         // test classes inside one suite is not guaranteed, so they are regenerated when they
@@ -428,6 +533,119 @@ class HeldOutEvaluationTest {
                 });
             }
         }
+    }
+
+    // ── the migrated copy: the calibration and the comparison ────────────────
+
+    @Test
+    @DisplayName("the calibration: the judge is unchanged and the migrated row is measured with it")
+    void theMigratedCopyIsJudgedByTheSameJudge() {
+        Metrics baseline = metrics.get(RetrievalExperiment.BASELINE_PATH);
+        assertNotNull(baseline, "the unmigrated row must exist");
+        assertNotNull(migratedBaselinePath, "the migrated row must exist");
+        // THE CALIBRATION: the unmigrated row is the published one, and the migrated
+        // row was produced by the SAME judge, the SAME questions and the SAME dataset.
+        assertEquals(metrics.size(), metricsOfMigrated().size(),
+                "the migrated copy must be measured by the same candidates");
+        // THE JUDGE IS UNCHANGED: the migrated row was produced by the SAME judge
+        // method, on the SAME questions, with the SAME dataset, and it agrees with the
+        // unmigrated row on every content metric.
+        assertEquals(baseline.passed(), migratedBaselinePath.passed(),
+                "the migrated copy must pass the same number of cases");
+        assertEquals(baseline.failedCases(), migratedBaselinePath.failedCases(),
+                "the migrated copy must fail the same cases");
+        assertEquals(baseline.recallAt1(), migratedBaselinePath.recallAt1(), 1e-9,
+                "the migrated copy must have the same recall@1");
+        assertEquals(baseline.mrr(), migratedBaselinePath.mrr(), 1e-9,
+                "the migrated copy must have the same MRR");
+        assertEquals(baseline.abstentionAccuracy(), migratedBaselinePath.abstentionAccuracy(),
+                1e-9, "the migrated copy must refuse the same cases");
+        System.out.printf("[migration] the held-out set: the unmigrated row — passed %d/%d, the "
+                        + "failures %s, the recall@1 %.4f, the MRR %.4f, the abstention %.4f, "
+                        + "the unsupported %.4f%n",
+                baseline.passed(), baseline.comparableCases(), baseline.failedCases(),
+                baseline.recallAt1(), baseline.mrr(), baseline.abstentionAccuracy(),
+                baseline.unsupportedOverAllAsk());
+        System.out.printf("[migration] the held-out set: the MIGRATED row — passed %d/%d, the "
+                        + "failures %s, the recall@1 %.4f, the MRR %.4f, the abstention %.4f, "
+                        + "the unsupported %.4f%n",
+                migratedBaselinePath.passed(), migratedBaselinePath.comparableCases(),
+                migratedBaselinePath.failedCases(), migratedBaselinePath.recallAt1(),
+                migratedBaselinePath.mrr(), migratedBaselinePath.abstentionAccuracy(),
+                migratedBaselinePath.unsupportedOverAllAsk());
+        System.out.println("[migration] the held-out set: the migration: " + migrationSummary);
+        System.out.printf("[migration] the held-out set: the gold availability %.4f, the mean "
+                        + "non-gold cited %.4f (the unmigrated), %.4f (the migrated)%n",
+                baseline.goldAvailability(), baseline.meanNonGoldCited(),
+                migratedBaselinePath.meanNonGoldCited());
+    }
+
+    @Test
+    @DisplayName("the claim-scoped records stay retrievable: the cases whose gold lives in one")
+    void theClaimScopedRecordsStayRetrievable() {
+        // The gold claims that the migration turned into claim-scoped records, and the
+        // cases that depend on them. A claim-scoped record carries the claim's own
+        // text, so the case must still answer.
+        Set<String> scopedClaimIds = migratedScopedClaimIds;
+        assertFalse(scopedClaimIds.isEmpty(),
+                "the migration must have produced claim-scoped records");
+        int affected = 0;
+        int stillAnswered = 0;
+        for (Row row : migratedRows) {
+            boolean goldIsScoped = row.goldPropositions().stream()
+                    .anyMatch(proposition -> migratedScopedPropositions.contains(proposition));
+            if (!goldIsScoped) {
+                continue;
+            }
+            affected++;
+            if (row.answered()) {
+                stillAnswered++;
+            }
+        }
+        List<String> silent = new ArrayList<>();
+        for (Row row : migratedRows) {
+            boolean goldIsScoped = row.goldPropositions().stream()
+                    .anyMatch(proposition -> migratedScopedPropositions.contains(proposition));
+            if (goldIsScoped && !row.answered()) {
+                silent.add(row.caseId() + " (" + row.kind() + ")");
+            }
+        }
+        System.out.printf("[migration] the claim-scoped records: %d of them, %d of the %d "
+                        + "affected cases still answer, the silent ones: %s%n",
+                scopedClaimIds.size(), stillAnswered, affected, silent);
+        // The case-by-case comparison of the two rows, for the cases the migration
+        // touches: the same cases, and whether each of them answered before and after.
+        for (Row migrated : migratedRows) {
+            boolean goldIsScoped = migrated.goldPropositions().stream()
+                    .anyMatch(proposition -> migratedScopedPropositions.contains(proposition));
+            if (!goldIsScoped) {
+                continue;
+            }
+            Row unmigrated = rows.stream()
+                    .filter(row -> row.caseId().equals(migrated.caseId())
+                            && RetrievalExperiment.BASELINE_PATH.equals(row.candidate()))
+                    .findFirst().orElse(null);
+            if (unmigrated == null) {
+                continue;
+            }
+            if (unmigrated.answered() != migrated.answered()) {
+                System.out.printf("[migration] the case %s answers before: %b, after: %b "
+                                + "(the passed flag before: %b, after: %b)%n",
+                        migrated.caseId(), unmigrated.answered(), migrated.answered(),
+                        unmigrated.passed(), migrated.passed());
+            }
+        }
+        assertThat(affected).as("at least one case must depend on a claim-scoped record")
+                .isPositive();
+        // The state is pinned, not smoothed: the cases that a claim-scoped record
+        // silences are named, so that a change in the number is visible.
+        assertEquals(1, silent.size(),
+                "exactly one case whose gold lives in a claim-scoped record does not answer");
+    }
+
+    /** The metrics of the migrated rows, by candidate. */
+    private static Map<String, Metrics> metricsOfMigrated() {
+        return metrics(migratedRows);
     }
 
     // ── the invariants ───────────────────────────────────────────────────────

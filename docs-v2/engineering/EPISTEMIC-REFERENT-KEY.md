@@ -691,7 +691,121 @@ retrieval and does NOT regress the refusal.** Every scope of the official datase
 prepared, migrated and asked on its own migrated workspace — the same method the A4/A5
 instrument uses — and the row is byte-identical.
 
-## 9. The migration rehearsal plan — a plan, not a migration
+## 9. The migrated copy: the C2A re-measurement
+
+**The change to the harness.** `HeldOutEvaluationTest` gained a second phase: the
+workspace is copied, the referent key's copy-forward is applied to the copy, and the
+**BASELINE-PATH** row is measured on it with **the same `judge` method, the same
+questions, the same dataset and the same level** — the judge code is untouched, and the
+migrated row is kept **out** of the published artefact (that artefact is the frozen
+measurement of the unmigrated path). The file: `matrix-core/src/test/java/io/matrix/knowledge/concept/HeldOutEvaluationTest.java`
+(the migrated phase after the main measurement; the calibration and the retrievability
+tests).
+
+### 9.1 The calibration — the judge is unchanged, BY COMPARISON
+
+| the row | the published artefact (the committed `C2A-HELDOUT-EVALUATION.json`) | the harness's own row after the change | the same? |
+|---|---|---|---|
+| `BASELINE-PATH` passed | 17 | 17 | ✓ |
+| the comparable cases | 25 | 25 | ✓ |
+| the judged cases | 38 | 38 | ✓ |
+| the failed cases | H-P02, H-P05, H-P06, H-P08, H-P10, H-P11, H-P13, H-P17 | the identical eight | ✓ |
+| the recall@1 | 0.5351 | 0.5351 | ✓ |
+| the recall@5 / @10 / @20 | 0.7719 / 0.8158 / 0.8596 | the same | ✓ |
+| the MRR | 0.8600 | 0.8600 | ✓ |
+| the abstention | 1.0000 | 1.0000 | ✓ |
+| the unsupported-answer rate | 0.2800 | 0.2800 | ✓ |
+| the gold availability | 0.7368 | 0.7368 | ✓ |
+| the supported-answer accuracy | 0.5789 | 0.5789 | ✓ |
+
+**The comparison is against the COMMITTED artefact** (`git show
+HEAD:docs-v2/engineering/C2A-HELDOUT-EVALUATION.json`), which is an independent
+artefact — the harness rewrites its own copy on every run, so the committed one is the
+only independent reference. The judge is unchanged: the row the harness computes after
+the change is **identical** to the row the committed artefact carries.
+
+### 9.2 The side-by-side: the migrated copy against the unmigrated one
+
+| the measure | the unmigrated path | the migrated copy | the difference |
+|---|---|---|---|
+| the C2A `BASELINE-PATH` | **17 / 25** | **17 / 25** | **none** |
+| the failed cases | the eight above | **the identical eight** | none |
+| the recall@1 | 0.5351 | 0.5351 | none |
+| the MRR | 0.8600 | 0.8600 | none |
+| the abstention | 1.0000 (6/6) | 1.0000 | none |
+| the unsupported-answer rate | 0.2800 | 0.2800 | none |
+| the gold availability | 0.7368 | 0.7368 | none |
+| **the mean non-gold cited** | **5.2105** | **4.6842** | **−0.53 claims per case** — the migrated copy cites fewer irrelevant claims |
+| the official evaluation | 18/29, the identical eleven failures | not re-measured on the migrated copy (the official harness prepares its own six workspaces; §9.5) | — |
+| the unanswerable abstention | 6/6 | 6/6 on the migrated seed copy (§8.6) | none |
+| the W42 abstention floor | 0.861 | 0.861 (the asking path is not touched) | none |
+
+**The one difference is a difference, not an improvement:** the migrated copy cites
+**fewer** claims that are not the gold (4.68 against 5.21 per case). The retrieved
+material is narrower. The harness's own numbers say the same thing and the artefact
+records it.
+
+### 9.3 The claim-scoped records stay retrievable
+
+The migration of the pool workspace produced **314 claim-scoped records**, each carrying
+the claim's own text as the retrievable unit. **17 of the 25 comparable cases depend on
+a claim whose gold lives in a claim-scoped record** (their gold claim was one the
+policy rejected as a surface form).
+
+| the measure | the value |
+|---|---|
+| the cases that depend on a claim-scoped record | **17** |
+| of those, the cases that still answer after the migration | **16** |
+| the one that does not | **H-P02 (POSITIVE)** — and it did **not** answer before the migration either: the same case, the same failure mode, before and after |
+| the cases whose answered flag changed | **0** — the migration silenced nothing |
+
+**The claim-scoped records are retrievable: a claim whose surface form the policy
+rejected still answers, because the record carries the claim's own text.** The one case
+that does not answer is a case that did not answer before the migration either.
+
+### 9.4 The prerequisites and the `refines` chain — what is real and what is not
+
+| the check | the seed corpus | the research pool | the bundled package |
+|---|---|---|---|
+| the prerequisite rows | **0** | **0** | **5** |
+| the graph after the copy-forward | 0 nodes, 0 edges | 0 nodes, 0 edges | **4 nodes, 5 edges, no cycle** |
+| the `refines` links before → after | 0 → 0 | **1 → 1, 0 dangling** | 0 → 0 |
+
+**Stated plainly: the C2A corpora have NO prerequisites at all.** The prerequisite rows
+come from the **knowledge packages**, not from the corpus import, and the workspace that
+has a prerequisite graph in this repository is the **bundled package** (photosynthesis: 5
+edges; logic: 6). The acyclicity check therefore runs where there is something to
+check: the package was migrated (8 concepts, 17 claims, 17 concept rows inserted, the
+prerequisites re-pointed) and the graph came out with **the same 5 edges, no cycle** ✓.
+
+**The `refines` chain is real on the pool** (the revise flow leaves one link) and the
+migration **carries it: 1 before, 1 after, 0 dangling** ✓.
+
+### 9.5 What the migration does NOT establish
+
+1. **The official 18/29 was not re-measured on a migrated copy.** The official harness
+   (`ConceptEnrichmentExperimentTest`) prepares six workspaces of its own, and its
+   measurement of a migrated copy would need the same treatment the held-out harness
+   got. What is measured is the **same A4/A5 row by the instrument that produced it**
+   (the official ask cases: 12/20 before and after, the identical eight failures, the
+   abstention 6/6) and the **C2A `BASELINE-PATH` by the C2A harness itself** (17/25
+   before and after) ✓.
+2. **The out-of-sample A1 is still unknown** (§4.1): the frozen 150 is the set the
+   policy was tuned on, and the strict level's 29/29 is an in-sample figure.
+3. **The migrated copy was measured on the pool and the package, not on the owner's
+   live store** (OD-063). The cost on the live store is still unknown.
+4. **The migration's effect on the learning tables** (the assessment items, the learning
+   state) was not measured — the rows are re-pointed (2 089 of them on the pool) and the
+   audit finds no orphan, but nothing asks whether the learning still works.
+5. **The seed's claim-scoped records were measured on the C2A pool's migration** (314
+   records); the seed corpus's own 255 records were not asked a question directly.
+6. **The representation id rule breaks on a collision** — and the pool has **one** such
+   collision (two representations of two merged concepts carry the same statement at
+   the same level). Nothing is deleted: the row keeps its own id, is re-pointed at the
+   referent, and the collision is counted — but the recomputed id is not unique, and the
+   migration needs a decision about the duplicates.
+
+## 10. The migration rehearsal plan — a plan, not a migration
 
 **Nothing in this section was executed.** The identity half is owner-gated: the concept id
 is referenced by ten tables (`claim.concept_id`, `representation.concept_id` — and through
@@ -701,7 +815,7 @@ the representation id every representation row —, `prerequisite.concept_id`,
 `dialogue_turn.concept_ids`), and **SQLite declares no FOREIGN KEY** for any of them, so a
 partial migration is **invisible** to the database.
 
-### 9.1 The steps
+### 10.1 The steps
 
 | # | the step | the detail |
 |---|---|---|
@@ -715,7 +829,7 @@ partial migration is **invisible** to the database.
 | 8 | **the re-measurement** | the **18/29** official row (with the identical eleven failures), the **6/6** abstention, the **C2A `BASELINE-PATH`**, the frozen held-out set, the A1 precision on the frozen 150, the definitions' coverage, and the four published artefacts — because the retriever's searchable text is `proposition + concept name + definition` and **both the name and the definition change**. |
 | 9 | **the rollback** | `restoreWorkspaceSnapshot` of the pre-migration snapshot; the lineage table is left in place (append-only) so the rollback itself is auditable. |
 
-### 9.2 The rehearsal the owner would need before deciding
+### 10.2 The rehearsal the owner would need before deciding
 
 1. a **rehearsal on a copy** of the seed workspace: the copy-forward of 326 concepts and 348
    claims, the recomputation of the representation ids, the lineage table, the orphan audit
@@ -729,7 +843,7 @@ partial migration is **invisible** to the database.
 
 ---
 
-## 10. What this corpus cannot support
+## 11. What this corpus cannot support
 
 * **Nine documents, one domain (plate tectonics), one language (English), two licence
   families**, one register (encyclopaedic prose plus one USGS explainer), no dialogue, no
@@ -755,7 +869,7 @@ partial migration is **invisible** to the database.
 
 ---
 
-## 11. Every rule chosen here, marked
+## 12. Every rule chosen here, marked
 
 | the rule | where it comes from | its status |
 |---|---|---|
@@ -776,7 +890,7 @@ partial migration is **invisible** to the database.
 
 ---
 
-## 12. The evidence
+## 13. The evidence
 
 ```
 export JAVA_HOME=$HOME/jdk25
@@ -808,7 +922,7 @@ store was never touched.**
 
 ---
 
-## 13. Related documents
+## 14. Related documents
 
 * `docs-v2/engineering/EPISTEMIC-CONCEPT-IDENTITY.md` — the baseline and the four
   alternatives; the source of the shape this document completes.

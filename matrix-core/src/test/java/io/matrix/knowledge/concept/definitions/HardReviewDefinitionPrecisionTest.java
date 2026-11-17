@@ -80,6 +80,55 @@ class HardReviewDefinitionPrecisionTest {
     }
 
     @Test
+    @DisplayName("the true referents that lost their definition")
+    void theLostTrueReferents() throws Exception {
+        Path database = directory.resolve("knowledge.sqlite");
+        KnowledgeWorkbench bench = KnowledgeWorkbench.at(database.toString());
+        ClasspathCorpus seed = ClasspathCorpus.extract(AcquisitionCycle.SEED_CORPUS);
+        for (ClasspathCorpus.Entry entry : seed.entries()) {
+            bench.importDocument(WORKSPACE, entry.path(), entry.file(), entry.language());
+        }
+        KnowledgeStore store = new KnowledgeStore(database);
+        Map<String, String> names = new HashMap<>();
+        for (Concept concept : store.concepts(WORKSPACE)) {
+            names.put(concept.id(), concept.name());
+        }
+        Map<String, Boolean> labels = new HashMap<>();
+        for (HandLabelledSpans.HandLabel label : HandLabelledSpans.LABELS) {
+            labels.put(label.span(), label.concept());
+        }
+        Map<String, String> defined = new HashMap<>();
+        for (ConceptDefinition definition : store.conceptDefinitions(WORKSPACE)) {
+            defined.put(definition.conceptId(), definition.definition());
+        }
+        int lostTrue = 0;
+        int keptTrue = 0;
+        List<String> examples = new ArrayList<>();
+        for (Concept concept : store.concepts(WORKSPACE)) {
+            Boolean isConcept = labels.get(concept.name());
+            if (isConcept == null || !isConcept) {
+                continue;
+            }
+            if (defined.containsKey(concept.id())) {
+                keptTrue++;
+                continue;
+            }
+            lostTrue++;
+            if (examples.size() < 10) {
+                examples.add("  LOST: " + concept.name());
+            }
+        }
+        System.out.println("### the true referents and their definitions");
+        System.out.println("  the concepts the hand-labelling calls referents AND that got a"
+                + " definition: " + keptTrue);
+        System.out.println("  the concepts the hand-labelling calls referents AND that LOST"
+                + " theirs: " + lostTrue);
+        for (String example : examples) {
+            System.out.println(example);
+        }
+    }
+
+    @Test
     @DisplayName("a first qualifying sentence that is not about the concept")
     void aFirstQualifyingSentenceThatIsNotAboutTheConcept() throws Exception {
         Path database = directory.resolve("knowledge.sqlite");

@@ -294,6 +294,69 @@ class ReferentKeyCorpusMigrationTest {
         }
     }
 
+    @Test
+    @DisplayName("the corpus that HAS prerequisites: the bundled package, migrated")
+    void theCorpusWithPrerequisitesIsMigrated() throws Exception {
+        // The C2A corpora hold NO prerequisite rows at all — the prerequisite graph
+        // comes from the KNOWLEDGE PACKAGES. This is the corpus that has one, so that
+        // the acyclicity check is a check of something.
+        Path work = Files.createTempDirectory("p1-package-migration-");
+        Path original = work.resolve("package.sqlite");
+        Path migrated = work.resolve("package-migrated.sqlite");
+        String workspace = "photosynthesis";
+        KnowledgeSnapshot before;
+        try (KnowledgeWorkbench workbench = KnowledgeWorkbench.at(original.toString())) {
+            workbench.loadBundledPackage(workspace);
+            before = workbench.workspace(workspace);
+        }
+        int edges = before.prerequisites().size();
+        System.out.printf("[migration] the package: the concepts %d, the claims %d, the "
+                        + "prerequisite rows %d%n",
+                before.concepts().size(), before.claims().size(), edges);
+        assertThat(edges).as("the bundled package must carry prerequisites").isPositive();
+
+        ReferentKeyMigration.copy(original, migrated);
+        List<ConceptAlias> aliases;
+        try (KnowledgeWorkbench workbench = KnowledgeWorkbench.at(migrated.toString())) {
+            aliases = workbench.storeForValidation().conceptAliases(workspace);
+        }
+        ReferentKeyMigration.Plan plan = ReferentKeyMigration.plan(before, workspace,
+                ReferentPolicy.Strictness.STRICT, CREATED_AT, aliases);
+        ReferentKeyMigration.MigrationResult migration =
+                ReferentKeyMigration.apply(migrated, plan, workspace);
+        System.out.printf("[migration] the package: the concepts inserted %d, the claims "
+                        + "re-pointed %d, the prerequisites re-pointed %d, the cost %d ms%n",
+                migration.conceptsInserted(), migration.claimsRewritten(),
+                migration.prerequisitesRewritten(), migration.millis());
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + migrated)) {
+            Map<String, Set<String>> graph = new LinkedHashMap<>();
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "SELECT concept_id, requires_concept_id FROM prerequisite "
+                            + "WHERE workspace_id = ?")) {
+                statement.setString(1, workspace);
+                try (ResultSet rows = statement.executeQuery()) {
+                    while (rows.next()) {
+                        graph.computeIfAbsent(rows.getString(1), key -> new LinkedHashSet<>())
+                                .add(rows.getString(2));
+                    }
+                }
+            }
+            List<String> cycle = findACycle(graph);
+            System.out.printf("[migration] the package: the prerequisite graph after the "
+                            + "copy-forward — %d nodes, %d edges, a cycle: %s%n",
+                    graph.size(), graph.values().stream().mapToInt(Set::size).sum(), cycle);
+            assertThat(cycle).as("the prerequisite graph must stay acyclic").isEmpty();
+            assertThat(graph.values().stream().mapToInt(Set::size).sum())
+                    .as("the graph must still hold its edges").isEqualTo(edges);
+        }
+        ReferentKeyMigration.OrphanAudit audit = ReferentKeyMigration.audit(migrated, workspace);
+        System.out.printf("[migration] the package: the audit — the tables %d, the orphans %d, "
+                        + "the stale pointers %d%n",
+                audit.tablesChecked().size(), audit.totalOrphans(), audit.totalStale());
+        assertThat(audit.totalOrphans()).isZero();
+        assertThat(audit.totalStale()).isZero();
+    }
+
     /**
      * Reads a workspace's snapshot from a database.
      *
