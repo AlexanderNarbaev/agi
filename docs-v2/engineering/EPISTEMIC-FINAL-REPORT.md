@@ -484,6 +484,37 @@ acyclicity and the `refines` chain were **vacuous** on the seed corpus (0 and 0)
 `BASELINE-PATH` was not re-measured (its judge is private and its workspace is prepared by the
 harness), and the owner's store was never exercised.
 
+**The migrated copy, re-measured by the same judge.** The harness gained a second phase (a copy of
+the workspace → the copy-forward → **the same** `judge` method, the same questions, the same
+dataset) and its **calibration** is a comparison against the committed artefact, not an assertion of
+a number it also computes: the published row `BASELINE-PATH` **17/25**, judged 38, the eight failures
+(H-P02, H-P05, H-P06, H-P08, H-P10, H-P11, H-P13, H-P17), recall@1 **0.5351**, MRR **0.8600**,
+abstention **1.0000**, unsupported **0.2800** — all identical before and after the harness change.
+**On the migrated copy**: `BASELINE-PATH` **17/25** with the **same eight** failures, recall@1
+**0.5351**, MRR **0.8600**, abstention **1.0000**, unsupported **0.2800** — **no regression**. The one
+difference is a difference and not an improvement: the mean number of **non-gold** claims cited fell
+from **5.2105 to 4.6842**. **The claim-scoped records stay retrievable**: 314 of them on the pool, and
+**17 of the 25** comparable cases depend on a claim whose gold lives in a claim-scoped record; after
+the migration 16 still answer, the one that does not (**H-P02**) did not answer before the migration
+either — **the changed answered-flags: 0**. The migration silenced nothing.
+
+**The two vacuous checks, now non-vacuous.** The C2A corpora hold **no prerequisite rows at all**
+(0 and 0) — those rows come from the bundled **knowledge packages**, so the acyclicity was checked
+where there is something to check: the migrated bundled package (8 concepts, 17 claims, 17 inserted
+concepts, the prerequisites re-pointed) gives a graph of **4 nodes and 5 edges with no cycle** ✓ and a
+clean audit ✓. The `refines` chain is real on the pool (the revise flow leaves one link) and it was
+**carried: 1 before, 1 after, 0 dangling** ✓.
+
+**The defect the migration found, left visible.** On the pool there is **one collision of a
+representation's id**: two representations of two merged concepts carry the same statement at the
+same level, the derived rule `Ids.representation(workspace, conceptId, level, statement)` gives them
+one id, and the table's primary key refuses it. Nothing is deleted — the row keeps its id, is
+re-pointed at the referent, and the collision is counted and published — but the recalculated id is
+not unique, so the migration needs an owner's decision about the duplicates. The documented 60-minute
+provisional policy applied the recommended option (keep the row's own id on a collision, OD-065,
+marked **NAIVE_PROVISIONAL** — the owner's confirmation is outstanding, and the implementation already
+behaves that way).
+
 ---
 
 ## H-bis. P3 — the meaning of the learning label: a negative result
