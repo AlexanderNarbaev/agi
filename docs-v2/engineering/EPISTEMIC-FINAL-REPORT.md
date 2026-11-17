@@ -802,6 +802,20 @@ python3 scripts/docs-link-check.py --root . --strict
 > (it changes names, therefore ids), the definition-merge collision rule (0 collisions on this corpus
 > ⇒ unverified), the HTTP status for a failed effect, the latency plateau of the premise path, and the
 > effect of the referent-key migration on the learning tables (not measured).
+> **Tomorrow's first step, with the API it uses (nothing new has to be written):** variant A of OD-067 —
+> the live store on a **copy**. `ReferentKeyMigration.copy(source, target)`
+> (`matrix-core/src/main/java/io/matrix/knowledge/concept/research/ReferentKeyMigration.java:1036`) makes
+> the SQLite-aware copy; `new KnowledgeStore(copy)` (`KnowledgeStore.java:330`) brings the schema forward
+> from **v15** — **verify and record the version it lands on**; `store.exportWorkspace(workspaceId)`
+> (`KnowledgeStore.java:5115`) returns the snapshot for each of the two workspaces (`logic`,
+> `photosynthesis`); `ReferentKeyMigration.plan(snapshot, workspace, …)` (`:232`) builds the plan;
+> `seedDeclaredAliases(copy, workspace, aliases)` (`:394`) seeds the declared aliases;
+> `ReferentKeyMigration.apply(copy, plan, workspace)` (`:353`) applies it; `ReferentKeyMigration.audit(copy,
+> workspace)` (`:822`) reports the orphan audit over the thirteen tables. The **rollback is the copy
+> itself** — the live file is never opened for writing. Measure and publish: the concepts inserted, the
+> claims re-pointed, the representations re-pointed, the audit's orphan count, the elapsed time, and the
+> **re-measurement** by the same judge (the C2A baseline is BASELINE-PATH 17/25 with the same eight
+> failures, recall@1 0.5351, MRR 0.8600).
 > The gates of the repository must stay
 > green: `./scripts/quality-gate.sh` (PASS, 271 literals, 0 violations), `validate-current-state.py
 > --strict`, `validate-test-catalogue.py --strict`, `docs-link-check.py --strict`. Every build runs
