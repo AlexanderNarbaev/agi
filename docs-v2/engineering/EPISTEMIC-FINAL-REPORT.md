@@ -369,7 +369,7 @@ claim id moves.
 |---|---|---|
 | **A1** the concept names' precision | 30 % (12 of 40) | **35/150 = 23.3 %** on the frozen 150-span set; the first 40 of the draw give **12/40 = 30 %** — the same share, from an independent sample |
 | **A2(i)** the usable definitions | **0** | **27/326 = 8.3 %** — **corrected downward** (see the correction note below): the rule now requires the concept's name to **be the subject** of the qualifying sentence, and the earlier, looser rule reported 120/326 = 36.8 % |
-| **A2(ii)** the human-verified share | not measured | **18/27 = 66.7 %** — **corrected downward**: the metric now asks *"is this a definition of its concept"*, not *"is this sentence about the concept"*; the earlier, weaker metric reported 24/25 = 96 % |
+| **A2(ii)** the human-verified share | not measured | **18/27 = 66.7 %** — **corrected downward once and then disputed**: the metric now asks *"is this a definition of its concept"*, but the **independent re-review counts 3/27 = 11 %** under the metric's own written protocol, because at least two of the 18 labels contradict it (an action and a comparison are labelled *yes* although the protocol excludes both). Both numbers are published here; the rule still lacks the gate the reviewer requires — the **predicate must be definitional** (genus, identity, classification), not an action, a comparison, a measurement, an origin or a state — so the honest figure is not yet settled. The earlier, weaker metric reported 24/25 = 96 % |
 | **A3** the relation precision | not measured | **0/7 = 0 %** (five fragmentary endpoints, one with its direction reversed) — the change does not touch the relations |
 | **A4/A5** the retrieval | 18/29, 6/6, 0.3000 | **unchanged, every content column identical** — deliberately: see below |
 | **A7** the cost | — | the retriever is **within the noise** (702–1080 µs against 692–794 µs); the baseline path's own timing drifts 59 → 68 → 76 ms across runs of the **same** code |
@@ -426,6 +426,20 @@ concepts (8.3 %)**, of which the hand-verified census finds **18 to be definitio
 kept here only as the record of what they measured. `[speculative]` the sample behind the 18/27 is
 small, and the reviewer's own probes (`HardReviewDefinitionPrecisionTest`) have not been re-run
 against the corrected rule by an independent party.
+
+**The second correction, also recorded rather than swapped.** The independent re-review of the
+corrected rule confirmed two of the three conditions (*the name is the subject*: the reviewer's own
+counter says **0** of the 27 fail it; *the first qualifying sentence*: `derive` walks the sentences in
+document order and takes the first that passes) and rejected the third: **the acceptance metric's
+labels contradict its own written protocol**, so **18/27 is not reproduced by the declared criterion**
+— the reviewer's independent count under that criterion is **3 of 27 = 11 %**. The substantive finding
+is that **the subject test is necessary but not sufficient**: the rule has no test for a *definitional
+predicate*, so it accepts sentences that state an action, a comparison, a measurement or an origin.
+Two holes in the negation gate were also found: a qualifier between the copula and the negation
+(`is largely not …`, `is sometimes not …`) passes, and the copula list's order lets `is defined as not
+…` through. Both are being fixed, and the numbers will be re-measured again — **the 18/27 and the 3/27
+both stand in this report until that measurement exists**, and the field's name (*a definition* vs *a
+sentence about the concept*) is part of the question.
 
 **What this does not establish.** It does not make a concept name right — a definition attached to a
 fragment is a definition of a fragment, and 30 % of the names denote no genuine referent. It does not
