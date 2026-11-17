@@ -312,6 +312,39 @@ carries its matrix value, so the lane publishes the matrix's outcome a second ti
 name **"Compile + targeted tests"**; without it the required check could never be satisfied. Six
 check names are now the **required status checks of `develop`**.
 
+**The lane has been running — and it was red.** The earlier belief in this programme that the FAST PR
+lane "has never been exercised" was **wrong**, and it is corrected here rather than quietly dropped:
+the lane triggers on every push to `develop` as well as on every pull request, so it has been running
+on every push of this programme — and it was **failing on every single run**. The two causes were
+defects in the lane's own checks, not in the code under test:
+
+1. **The documentation check could not see the line it had to compare.** `scripts/validate-current-state.py`
+   looked for the main line at `origin/main` and then at `main`. A CI checkout is a **depth-1** checkout
+   of the pushed branch, so it carries **neither** ref; the script therefore reported
+   *"no main line is readable (git cannot answer)"* as a **contradiction** and the check was red on
+   every run. The script now reads the first ref the checkout actually carries
+   (`origin/main`, `main`, `origin/develop`, `develop`, and `GITHUB_SHA` for a pull-request merge
+   commit) and **names the line it compared** in every message. The fix was proved against a
+   **reproduced** CI checkout — a `--depth 1` clone of `develop` — where the committed script reported
+   **1 contradiction** and the fixed script reports **0**; and a **negative control** (a false release
+   claim planted in that checkout) is still caught with exit code **1**, so the check was not weakened
+   to pass.
+2. **The aggregator turned "nothing to compile" into a failure.** The stable required check
+   *"Compile + targeted tests"* re-publishes the matrix's outcome, and it required
+   `result == "success"`. A change that touches **no module** leaves the matrix empty, the matrix job
+   is **skipped**, and the aggregator failed — so every documentation-only or script-only commit was
+   unmergeable. The owner's answer to **D1-CI-AGGREGATOR-017** (option **A**, recorded as **OD-066**)
+   sanctions the repair: an empty matrix now passes, while a matrix skipped because a **dependency
+   failed** still fails the gate (the two are told apart by the scope job's `build-matrix` output).
+   The `.github/` frozen-zone exception was raised from 2350 to **2361** diff lines with the owner's
+   sanction recorded in `docs-v2/quality/frozen-zone-baseline.txt`, not waved through.
+
+**The measured after.** The lane is **green**: the run **44169314944** (`gh run view 44169314944`) ends
+with the conclusion `success`, and every job in it is `success` — the scope, the constitution and
+frozen-boundary gate, the documentation consistency, the secret scan and the compile-and-targeted-tests
+gate. The lane's own discipline is unchanged: the known flake in `CognitiveKernelRemoteTest` is
+neither skipped nor retried.
+
 **The branch hygiene.** All 27 refs were inventoried: 20 KEEP, 5 PRUNE-ELIGIBLE, 2 OWNER-QUESTION.
 The 7 owner-approved branches were deleted after each received an annotated archive tag pushed to
 `origin` **before** the deletion and an entry in a bundle (sha256 `9a2b54bf…`); the restoration was
@@ -751,14 +784,25 @@ python3 scripts/docs-link-check.py --root . --strict
 > `/home/alexandr-narbaev/.dsh/attachments/v1/files/fa/fad9aeb5d7f1dae77e7070e73c9d9e4e6cfde6cf7537ad95b9a4cc098ec78584/MATRIX_AUTONOMOUS_DEVELOPMENT_MANDATE_2026-11-15.md`.
 > Read first: `docs-v2/engineering/EPISTEMIC-FINAL-REPORT.md` (sections A–J, the state of every
 > workstream and the open items), `docs-v2/engineering/EPISTEMIC-EXECUTION-PLAN.md` (the task graph
-> and the append-only evidence ledger), `docs-v2/governance/DECISION-REGISTER.md` (OD-053 … OD-060).
-> The P0 gates are closed; P1 (the definition half) and P2 (the closed loop) are implemented and
-> measured. The next highest-value work is, in order: the **hard independent review** of P1/P2; the
-> **counterfactual/replay** arm of the closed loop (the directive's own acceptance criterion, still
-> open); **P3** (the learning label's meaning — a research-only independently verified signal); and
-> the **referent key** (the identity half's instrument — the research says the alias and resolution
-> policy is the unsolved part). The identity **migration** is owner-gated: the concept id is
-> referenced by ten tables and SQLite declares no foreign keys. The gates of the repository must stay
+> and the append-only evidence ledger), `docs-v2/governance/DECISION-REGISTER.md` (OD-053 … OD-067).
+> The P0 gates are closed. **P1** (the concept model: the definitions and the identity half) is
+> implemented, measured and independently reviewed — the third review round's verdict is MERGEABLE with
+> five published limits (the coverage 4/326 = 1.2 %, the rule's own precision 3 of 4, the
+> under-acceptance, the **null** retrieval benefit, and the count of lost referents). **P2** (the closed
+> loop) is implemented and measured: the kernel chooses the method, the observer is independent, the
+> trace is append-only, the counterfactual diff shows 19 aspects of which **4 differ** and 15 are
+> identical, and the restart re-selects the replay. **P3** (the learning label) is closed with a
+> **published null result**. The FAST PR lane is **green** (run 44169314944) after two defects in its
+> own checks were found and repaired (OD-066).
+> **The next step, in this order:** (1) **variant A of the owner's live-store decision (OD-067)** — copy
+> `matrix-core/data/knowledge/workbench.sqlite` (schema **v15**, 24 concepts, 52 claims, 27
+> representations, 2 workspaces) to a temporary directory, run the identity migration on the **copy**,
+> and measure the audit, the rollback and the re-measurement; the live store itself is not touched
+> until the owner decides again on the measured result. (2) Then the open items: the verb-list fix
+> (it changes names, therefore ids), the definition-merge collision rule (0 collisions on this corpus
+> ⇒ unverified), the HTTP status for a failed effect, the latency plateau of the premise path, and the
+> effect of the referent-key migration on the learning tables (not measured).
+> The gates of the repository must stay
 > green: `./scripts/quality-gate.sh` (PASS, 271 literals, 0 violations), `validate-current-state.py
 > --strict`, `validate-test-catalogue.py --strict`, `docs-link-check.py --strict`. Every build runs
 > under `flock /tmp/gradle-matrix.lock` with the `--tests` filter immediately after the task name and

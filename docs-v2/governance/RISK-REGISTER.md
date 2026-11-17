@@ -500,6 +500,32 @@ implemented, tested and never called has no exposure, and saying so is part of t
 
 ---
 
+### R-EPIS-01 — The FAST PR lane's required check failed on every commit that touches no module
+
+- **category**: delivery-integrity
+- **severity**: high
+- **probability**: high (it was certain)
+- **impact**: high
+- **evidence**: The lane has been running on every push to `develop` (the trigger `push: [develop]` is in `.github/workflows/fast-pr.yml`), and the runs of this programme were **all red**: the runs 44029577415, 44030467272 and 44169093884. The failing job was the aggregator `build-and-test-gate` (the stable required check "Compile + targeted tests"): it required `needs.build-and-test.result == "success"`, while the matrix job's own condition is `needs.scope.outputs.build-matrix != '[]'` — so a change touching no module leaves the matrix empty, the matrix job **skipped**, and the aggregator failed. `gh run view 44029577415 --log-failed` shows the literal `the compile or the targeted tests did not succeed: skipped`.
+- **exposure**: Real: every documentation-only or script-only commit was unmergeable through the owner's ruleset, because the required context could not be satisfied.
+- **mitigation**: The aggregator distinguishes an **empty** matrix (nothing to compile → pass) from a matrix skipped because a **dependency failed** (→ fail), by reading the scope job's `build-matrix` output.
+- **owner**: owner (the frozen-zone edit), agent (the implementation)
+- **status**: CLOSED — the owner's answer to D1-CI-AGGREGATOR-017 (option A) is recorded as **OD-066**; the workflow change is one shell block in `.github/workflows/fast-pr.yml`; the frozen-zone exception was raised from 2350 to 2361 diff lines with the sanction recorded in `docs-v2/quality/frozen-zone-baseline.txt`; the logic was simulated in all five cases (empty matrix → pass, dependency failure → fail, success → pass, failure → fail); and the lane is **green**: run **44169314944** concludes `success` with every job `success`.
+- **the residual**: the lane's **compile-and-targeted-tests path with a non-empty matrix has still not run** — every run of the programme touched no module, so the matrix job was skipped each time. The known flake in `CognitiveKernelRemoteTest` is still neither skipped nor retried, so the first matrix run may be red for that reason, and that would be the lane measuring rather than hiding.
+
+### R-EPIS-02 — The documentation check reported "cannot see the line" as a contradiction, so it was red on every run
+
+- **category**: measurement-integrity
+- **severity**: high
+- **probability**: high (it was certain)
+- **impact**: medium
+- **evidence**: `scripts/validate-current-state.py` resolved the line it had to compare as `origin/main` and then `main`. The CI checkout of the documentation job (`actions/checkout@v4` with no `fetch-depth`) is a depth-1 checkout of the pushed branch and carries **neither** ref, so the check reported `UNREADABLE in docs-v2/governance/PROJECT-STATE.md / repository: no main line is readable (git cannot answer)` and exited 1 — the run 44029577415 log. The condition was reproduced exactly in a `--depth 1 --branch develop` clone, where the committed script reported **1 contradiction**.
+- **exposure**: Real: a required check was red for a reason that was not a contradiction in the documents, and a check that is always red stops being read.
+- **mitigation**: The script reads the first ref the checkout actually carries (`origin/main`, `main`, `origin/develop`, `develop`, and `GITHUB_SHA` for a pull-request merge commit) and names the compared line in every message. **The check was not weakened**: in the reproduced checkout the fixed script reports **0** contradictions, and a planted false release claim is still caught with exit code **1**.
+- **owner**: agent (Level 1 — `scripts/` is not a frozen zone)
+- **status**: CLOSED — the fix is committed (`WAL: the documentation check reads the line the checkout actually carries`), the reproduction and the negative control are recorded above, and the run 44169314944 shows the job `Documentation consistency` as `success`.
+- **the residual**: the check still compares against **one** line — the first ref it finds — and on a pull-request checkout that is the merge commit's history rather than `main`; a claim about a release merged only into `main` would not be seen. The comparison therefore names the line it used, and the line is the evidence.
+
 ## How a risk is closed
 
 1. The **mitigation** is implemented and **verified** by an executed check — the evidence
