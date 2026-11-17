@@ -813,6 +813,15 @@ python3 scripts/docs-link-check.py --root . --strict
 > `ReferentKeyMigration.apply(copy, plan, workspace)` (`:353`) applies it; `ReferentKeyMigration.audit(copy,
 > workspace)` (`:822`) reports the orphan audit over the thirteen tables. The **rollback is the copy
 > itself** — the live file is never opened for writing. Measure and publish: the concepts inserted, the
+> **The order is not optional, and it was checked read-only on 2026-11-17.** The migration's SQL
+> writes into `concept_alias` and `concept_definition`, and **neither table exists in the v15 live
+> store** — the v18→v19 step creates `concept_definition` (`KnowledgeStore.java:1020`) and the
+> v20→v21 step creates `concept_alias` (`:988`), and the chain that carries v15 to v21 runs six
+> steps (`migrateFrom`, `KnowledgeStore.java:938`, with the steps at 1108, 1060, 1032, 998 and 939).
+> So the **schema step comes first**: opening the copy with `new KnowledgeStore(copy)` must precede
+> `plan`, `seedDeclaredAliases` and `apply`. The dry run must record **which version the schema
+> lands on** and the **time the chain took** — both are new numbers for a v15 store, whereas the
+> corpora's rehearsal began at v20.
 > claims re-pointed, the representations re-pointed, the audit's orphan count, the elapsed time, and the
 > **re-measurement** by the same judge (the C2A baseline is BASELINE-PATH 17/25 with the same eight
 > failures, recall@1 0.5351, MRR 0.8600).
