@@ -456,6 +456,37 @@ Two holes in the negation gate were also found: a qualifier between the copula a
 both stand in this report until that measurement exists**, and the field's name (*a definition* vs *a
 sentence about the concept*) is part of the question.
 
+**The verdict of the independent review: P1 is MERGEABLE, with measured limits.** The third review
+round checked the three conditions of the previous verdict one by one — *(1) the name must be the
+subject* ✓ (the reviewer's own counter says **0** of the 27 fail it), *(2) the metric must measure
+*"is this a definition"* ✓ (the census of the 27 was re-labelled by the protocol as written and gives
+**3/27**, exactly the reviewer's own recomputation; the labels no longer contradict the protocol), and
+*(3) "the first qualifying sentence" must be the first with the name as the subject* ✓ — and then
+attacked the new gate with its **own** sentences: an action (*"is carved by subducting plates"*), a
+comparison (*"is deeper than a canyon"*), a measurement (*"is 100 km long"*), an origin (*"is formed at
+a subduction zone"*), a state (*"is still open"*) and a reported opinion (*"is thought to be a long
+narrow depression"*) are all **rejected**, while a genus (*"is a long narrow depression…"*), an
+identity (*"is one of the few transform faults…"*), a classification (*"is of two types…"*), a naming
+(*"is called a deep-ocean trench"*) and a composition (*"consists of two plates…"*) are all
+**accepted**. The negation gate was re-probed and **all the earlier holes are closed** (the plain
+negation, a qualifier between the copula and the negation, a multi-word copula, an adverbial between
+them, a double negation). Two residual holes are named: a **discourse** passes (*"is the key to
+understanding island arcs"* — the corpus's own fourth definition, a role and not a genus) and a
+legitimate definition with a determiner outside the closed list is rejected (*"is any long narrow
+depression…"*).
+
+**The measured limits, published verbatim.** **L1** the coverage is **4 of 326 = 1.2 %**, of which
+**3** are true definitions; the other **322** concepts have none — an honest state, not a defect.
+**L2** the rule's own precision is **3 of 4**: the fourth is a discourse that the gate passes, so the
+honest claim is *"three of the four are definitions"*, not *"the rule produces definitions"*. **L3** the
+rule **under-accepts** (the closed determiner list loses legitimate definitions). **L4** there is **no
+measurable benefit** in the retriever (the H1 null result) — the definitions are the concept layer's
+infrastructure, not a retrieval win; that is a fact about the corpus, not a defect of the rule. **L5**
+the number of true referents that lose their definition **grows as the rule tightens** (in the
+previous round: 6 of 35 under the 27-definition rule); the count under the third gate was not
+recomputed. The scope at the verdict: **144 classes / 848 tests / 0 failures** ✓, the quality gate
+**PASS 271/271** ✓.
+
 **What this does not establish.** It does not make a concept name right — a definition attached to a
 fragment is a definition of a fragment, and 30 % of the names denote no genuine referent. It does not
 establish the definitions' truth (they are the corpus's own sentences) and it does not improve the
