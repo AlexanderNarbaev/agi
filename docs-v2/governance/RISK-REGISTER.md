@@ -526,6 +526,19 @@ implemented, tested and never called has no exposure, and saying so is part of t
 - **status**: CLOSED — the fix is committed (`WAL: the documentation check reads the line the checkout actually carries`), the reproduction and the negative control are recorded above, and the run 44169314944 shows the job `Documentation consistency` as `success`.
 - **the residual**: the check still compares against **one** line — the first ref it finds — and on a pull-request checkout that is the merge commit's history rather than `main`; a claim about a release merged only into `main` would not be seen. The comparison therefore names the line it used, and the line is the evidence.
 
+### R-EPIS-03 — The owner's live store's concept ids are not reproducible by the current id function, so an identity migration that recomputes ids from names would mint new identities for 19 of 24 concepts
+
+- **category**: identity-integrity
+- **severity**: high
+- **probability**: certain (it is a measured fact, not a forecast)
+- **impact**: high
+- **evidence**: `Ids.digest` is an FNV-1a hash returned as a bare hex string (`matrix-core/src/main/java/io/matrix/knowledge/Ids.java:117-124`), and the importer mints `digest(workspaceId + "|concept|" + name.strip().toLowerCase())`. Recomputing that over the live store (`matrix-core/data/knowledge/workbench.sqlite`, read-only) **reproduces 5 of its 24 concept ids**; 17 of the 24 are shaped `c-<slug>-<hash>` (for example `c-validity-58964155`), 5 are bare hashes and 2 have a long-slug variant — three shapes, one of which the current function never mints. The same store also holds **two concepts with the same name and two different ids** (`Cellular respiration` in `photosynthesis`: `c-cellular-respiration-70762885` and `dbe3c115`), which under the current scheme would collapse onto one id.
+- **exposure**: Real, for the migration only: a plan that recomputes ids from names would treat 19 concepts as having no identity and would mint new ones — the exact failure the identity work exists to prevent. The **inverse** case (two ids for one name) is a **concept-id collision**, and OD-065 decides only the **representation**-id collision.
+- **mitigation**: The plan must map **the store's rows** (the old id → the new id) and never recompute an id from a name; the dry run must publish how many of the 24 concepts the plan mapped one-to-one; a concept-id collision is an owner decision.
+- **owner**: owner (the collision rule), agent (the mapping and the dry run)
+- **status**: OPEN — the finding was made read-only on 2026-11-17, before anything was written; the owner's decision **D1-LIVE-STORE-MIGRATION-018** chose variant A (a copy first) and the copy-first order is what makes this finding safe to investigate. The dry run itself has **not** run.
+- **the residual**: the numbers above describe the live store **today**; the dry run may show a different picture, and its numbers — not these — are the evidence for the second decision.
+
 ## How a risk is closed
 
 1. The **mitigation** is implemented and **verified** by an executed check — the evidence

@@ -822,6 +822,26 @@ python3 scripts/docs-link-check.py --root . --strict
 > `plan`, `seedDeclaredAliases` and `apply`. The dry run must record **which version the schema
 > lands on** and the **time the chain took** — both are new numbers for a v15 store, whereas the
 > corpora's rehearsal began at v20.
+> **Three read-only findings about the live store (2026-11-17), each of which changes what the dry run must
+> measure.** (1) **The store's concept ids do not come from one scheme.** The current id function is
+> `Ids.digest` — an FNV-1a hash returned as a **bare** hex string (`Ids.java:117-124`) — and the
+> importer mints `digest(workspaceId + "|concept|" + name.strip().toLowerCase())`. Recomputing that
+> over the live store's 24 concepts **reproduces only 5 of the 24 ids**; the other 19 are shaped
+> `c-<slug>-<hash>` (for example `c-validity-58964155`), a shape the current function never produces.
+> ⇒ The migration's premise that a concept id is a pure function of the workspace and the name **does
+> not hold for 19 of the 24 live concepts**, so the plan must map **the store's actual rows** and must
+> never recompute an id from a name. The dry run must report how many of the 24 the plan mapped
+> one-to-one. (2) **Two concepts share a name with two different ids** — `Cellular respiration` in the
+> `photosynthesis` workspace, stored as `c-cellular-respiration-70762885` and `dbe3c115`. Under the
+> current scheme those two would collapse onto one id, so this is a **concept-id collision**; OD-065
+> covers the **representation** ids and says nothing about this case ⇒ if the plan materialises the
+> collision, it is an **owner decision**, not a coordinator's. (3) **The declared aliases do not apply.**
+> `ReferentPolicy.DECLARED_ALIASES` is 12 **geology** pairs (22 lemmas: seafloor spreading, slab pull,
+> the lithosphere, …); the live store holds **biology and logic** concepts (glycolysis, RuBisCO, modus
+> ponens, the truth table, …) and the lemma overlap is **zero**. ⇒ The dry run must **seed nothing**:
+> writing the corpus's lemmas into this store would put a `DECLARED_BY`/`DECLARED_ON` provenance on
+> declarations this store never made. The alias layer of the live store stays empty until its own
+> aliases are declared.
 > claims re-pointed, the representations re-pointed, the audit's orphan count, the elapsed time, and the
 > **re-measurement** by the same judge (the C2A baseline is BASELINE-PATH 17/25 with the same eight
 > failures, recall@1 0.5351, MRR 0.8600).
