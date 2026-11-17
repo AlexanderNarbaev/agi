@@ -42,7 +42,7 @@ class WorkspaceSnapshotMigrationTest {
         Path database = directory.resolve("fresh.sqlite");
         try (KnowledgeStore store = new KnowledgeStore(database)) {
             assertThat(store.schemaVersion()).isEqualTo(KnowledgeStore.SCHEMA_VERSION);
-            assertThat(store.schemaVersion()).isEqualTo(20);
+            assertThat(store.schemaVersion()).isEqualTo(KnowledgeStore.SCHEMA_VERSION);
         }
         assertThat(tableNames(database)).contains("workspace_snapshot");
     }
@@ -54,7 +54,7 @@ class WorkspaceSnapshotMigrationTest {
         writeV18Database(database);
 
         try (KnowledgeStore store = new KnowledgeStore(database)) {
-            assertThat(store.schemaVersion()).isEqualTo(20);
+            assertThat(store.schemaVersion()).isEqualTo(KnowledgeStore.SCHEMA_VERSION);
             assertThat(store.exportWorkspace(WORKSPACE).concepts()).hasSize(1);
             assertThat(store.contradictions(WORKSPACE)).hasSize(1);
             assertThat(store.workspaceSnapshots(WORKSPACE))
@@ -72,7 +72,7 @@ class WorkspaceSnapshotMigrationTest {
         List<String> before = tableShapes(database);
 
         try (KnowledgeStore store = new KnowledgeStore(database)) {
-            assertThat(store.schemaVersion()).isEqualTo(20);
+            assertThat(store.schemaVersion()).isEqualTo(KnowledgeStore.SCHEMA_VERSION);
         }
 
         List<String> after = tableShapes(database);
@@ -90,7 +90,7 @@ class WorkspaceSnapshotMigrationTest {
 
         // The first run of the migration.
         try (KnowledgeStore store = new KnowledgeStore(database)) {
-            assertThat(store.schemaVersion()).isEqualTo(20);
+            assertThat(store.schemaVersion()).isEqualTo(KnowledgeStore.SCHEMA_VERSION);
             // A snapshot is taken, so that the second run has something to be idempotent
             // about.
             store.takeWorkspaceSnapshot(WORKSPACE, WorkspaceSnapshot.Kind.MANUAL, INSTANT);
@@ -105,7 +105,7 @@ class WorkspaceSnapshotMigrationTest {
 
         // The migration runs again, over a database that already has everything.
         try (KnowledgeStore store = new KnowledgeStore(database)) {
-            assertThat(store.schemaVersion()).isEqualTo(20);
+            assertThat(store.schemaVersion()).isEqualTo(KnowledgeStore.SCHEMA_VERSION);
             assertThat(store.workspaceSnapshots(WORKSPACE))
                     .withFailMessage("the migration must not touch the snapshots")
                     .hasSize(1);

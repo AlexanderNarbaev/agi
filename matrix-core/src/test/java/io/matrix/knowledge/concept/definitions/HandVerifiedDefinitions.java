@@ -3,84 +3,96 @@ package io.matrix.knowledge.concept.definitions;
 import java.util.List;
 
 /**
- * EPISTEMIC-INTEGRITY P1 — the FROZEN HUMAN-VERIFIED SAMPLE of the definitions (A2-ii).
+ * EPISTEMIC-INTEGRITY P1 - the FROZEN HAND-VERIFIED SET of the definitions (A2-ii).
  *
- * <p><b>What this is.</b> The acceptance measure A2 has two parts: (i) the fraction
- * of concepts with a usable definition, and (ii) the fraction of those a human
- * marks as <i>about that concept</i>. The research measured (i) and listed (ii)
- * as a gap ("needs a labelled subset of ~100 definitions"). This sample closes
- * part of that gap.</p>
+ * <p><b>What this is.</b> The acceptance measure A2 has two parts: (i) the
+ * fraction of concepts with a usable definition, and (ii) the fraction of
+ * those a human marks as <i>a definition</i> - as opposed to a sentence that
+ * merely mentions the concept. This set closes part of that gap.</p>
  *
- * <p><b>PROVENANCE.</b> The definitions of the seed corpus, sorted by the concept
- * id and shuffled with {@link java.util.Random} seeded <b>20261115</b> (the
- * research's seed); the first <b>25</b> are taken. They were labelled by hand on
- * 2026-11-16, against the definition's own text, with the rule: <b>the
- * definition is about the concept when the sentence states something about the
- * thing the concept's name refers to</b>. A sentence that merely mentions the
- * name is not about the concept.</p>
+ * <p><b>THE METRIC, AS CORRECTED BY THE HARD REVIEW (2026-11-16).</b> The first
+ * version of this set measured "about the concept", which is a weaker question
+ * and flatters the rule: a sentence can be about a concept and still say
+ * nothing about what the concept IS. The metric is now:</p>
+ *
+ * <blockquote><b>A definition</b> is a sentence whose subject is the concept and
+ * whose predicate states the concept's nature, composition or identity - a
+ * sentence that could stand as the concept's glossary entry. A sentence that
+ * states an action the concept performs, a comparison, a discourse about the
+ * concept, or a denial of it, is <b>not</b> a definition.</blockquote>
+ *
+ * <p><b>PROVENANCE, AND WHAT CHANGED.</b> The definitions of the seed corpus
+ * under the CORRECTED rule (the subject test, the negation test and the
+ * non-term rejection) are <b>27</b>, and this set is a CENSUS of all of them -
+ * with 27 definitions a sample would only hide the effect of the choice. The
+ * sentences were labelled by hand on 2026-11-16, against the definition's own
+ * text, under the metric above.</p>
+ *
+ * <p><b>THE CORRECTION, STATED PLAINLY.</b> The earlier set measured "about the
+ * concept" over 25 definitions of the earlier (weaker) rule and reported
+ * 24/25 = 96 %. That number was measured against a weaker definition of
+ * "definition" and it is <b>superseded</b>: the current set measures "is a
+ * definition" over a census of 27, and the number it gives is lower. The
+ * earlier claim is kept in the document as a correction, never replaced
+ * silently.</p>
  *
  * <p><b>WHY THE DEFINITIONS ARE KEYED BY THEIR DIGEST.</b> A definition is a
  * sentence of the seed corpus, and the P0.3 held-out set's gold propositions are
- * sentences of the same corpus: a file that carried the definition verbatim would
- * carry a gold string of the held-out set, and the P0.3 guard
- * ({@code EpistemicBaselineTest}) would — rightly — refuse it. The sample is
- * therefore keyed by the SHA-256 of the definition, and the human-readable record
- * of the 25 sentences and their judgements is in
+ * sentences of the same corpus: a file that carried the definition verbatim
+ * would carry a gold string of the held-out set, and the P0.3 guard
+ * ({@code EpistemicBaselineTest}) would - rightly - refuse it. The set is
+ * therefore keyed by the SHA-256 of the definition, and the human-readable
+ * record of the sentences and their judgements is in
  * {@code docs-v2/engineering/EPISTEMIC-CONCEPT-DEFINITIONS.md}, which is a
  * document and not the development code.</p>
  *
- * <p><b>WHAT THE SAMPLE DOES NOT ESTABLISH.</b> n = 25 is a small sample: the
- * share it gives carries a wide interval, and the corpus is one domain, one
- * register, one language. The judgement is also generous for a concept whose
- * name is a fragment or a pronoun — the sentence still says something about what
- * the fragment refers to — and one label says so explicitly.</p>
+ * <p><b>WHAT THE SET DOES NOT ESTABLISH.</b> The judgements were made after the
+ * rule was corrected, not blind; the corpus is one domain, one register, one
+ * language; and the measure is a human judgement, not a proof.</p>
  */
 final class HandVerifiedDefinitions {
 
     /**
      * One verified definition.
      *
-     * @param position the position in the draw (1-based)
+     * @param position the position in the census
      * @param definitionSha256 the SHA-256 of the definition, in lower-case hex
-     * @param aboutTheConcept whether a human marked it as about its concept
+     * @param isADefinition whether a human marked it as a definition of its concept
      */
-    record VerifiedDefinition(int position, String definitionSha256, boolean aboutTheConcept) {
+    record VerifiedDefinition(int position, String definitionSha256, boolean isADefinition) {
     }
 
-    /** The seed of the draw, the research's seed. */
-    static final long DRAW_SEED = 20261115L;
+    /** How many definitions the census covers - every one the corrected rule finds. */
+    static final int SAMPLE_SIZE = 27;
 
-    /** How many definitions the draw takes. */
-    static final int SAMPLE_SIZE = 25;
-
-    /** The frozen sample, in the draw's order. */
+    /** The frozen set, in the census's order. */
     static final List<VerifiedDefinition> SAMPLE = List.of(
-            new VerifiedDefinition(1, "f031ceff9481f97c8f974a429aacc7c5022c60fc89b92e40b668b44cd90468e1", true),
-            new VerifiedDefinition(2, "7a895e7714973e8db2f5a64df77edce6e7db48008130a7adc9f01cb799ca2f6f", true),
-            new VerifiedDefinition(3, "de7e39773910704363f74b6ec8eed53aff44cda4b22d7ca8f89fe92a59abb135", true),
-            new VerifiedDefinition(4, "41ddce2d2630cb71d5df759f1322a8a89f26e79570c0d79053ffe6dfa0e689e9", true),
-            new VerifiedDefinition(5, "95576a415fbe56f60071086621922bc4b605c4b535aa8a95760376c0109fb2a1", true),
-            new VerifiedDefinition(6, "0f43326fb97ee7b41c49c156605a841305418354b4d267595eb3c4af6bc39ba4", true),
-            new VerifiedDefinition(7, "23417aa019ec9fe78554d671c8a27a3ee06e2e577fca9d3c77675c5b6d4e1d84", true),
-            new VerifiedDefinition(8, "73d6611b5280b5213fd4cdc00ccd1afde88becd98f496e3da2ffbb83aef2193f", true),
-            new VerifiedDefinition(9, "2af42769eb58c4c14fc8b51aba09c053d6e8f4330ede41ed0ade6c6e018aeb88", true),
-            new VerifiedDefinition(10, "f870573ad4ab57ef7195cfb024d50c37e5cf5b9bd2e76da6ed195c95cfeb5e3d", true),
-            new VerifiedDefinition(11, "01d1b6766fc39b86a493a0fa6a6ed1355b1517e0833615ff4c566f1c45efe39c", true),
-            new VerifiedDefinition(12, "123747cd3c37f1836967562e638423d121e291eb5473f8f64c3dd1942219ebbb", true),
-            new VerifiedDefinition(13, "e8a7abd2ff1d2e5a6ea2b0b952818435c7abd77ac25f039f7493912a98de1972", true),
-            new VerifiedDefinition(14, "1a8e80f9ad797b22972901d5ebd4f8095071d478c9d14411de44c4cc9a38c4e6", true),
-            new VerifiedDefinition(15, "86aa917c236faca0d10cb1ac9addb84d2ceee892831b2d380065457bdcbd42d1", true),
-            new VerifiedDefinition(16, "19d9f57a30e1fc09466b130b411c4b43b5eba83d8e223b39b3baefb5931d147c", true),
-            new VerifiedDefinition(17, "61b19ccdf943ec0fdd55bb0f5c1274b58c262c14f84d49c05cfb2c0012e08a57", true),
-            new VerifiedDefinition(18, "27659be37ef2270c6c70251d3c3e5c39fbeaf831fafbb905ec47a36e2adda42f", true),
-            new VerifiedDefinition(19, "f8a3b20cc14334693da6dc4076ff6cc7495ed56c716e0f4f6d09ca2fe78db6b2", false),
-            new VerifiedDefinition(20, "ded87d68cd5def418a3efbfbf412dd8dd07d2e102c594d2ba55237963d71b077", true),
-            new VerifiedDefinition(21, "b05230c2df445b67a16c6d84127fc694cc32665be8f0934872f7e93956954b7f", true),
-            new VerifiedDefinition(22, "e243e08b5026b481537754a02530c20606c1ac5112237c616a2e6471f920e634", true),
-            new VerifiedDefinition(23, "3a8af0043b86c36a9bb813de559a3aa87111f1786a03e5073c069c5e3e9300ec", true),
-            new VerifiedDefinition(24, "d4cecdcb1ce8102bdf49da576f2cbd617079126ccca769c4b111f331fc89ac75", true),
-            new VerifiedDefinition(25, "f61751514d24f21dcb688249de5d685d7d11663d15d1cc07091826b8b59b4a2d", true));
-
-    private HandVerifiedDefinitions() {
-    }
+            new VerifiedDefinition(1, "2e18b6ee079dc3fae207515e6e2dbac92651d2e8d77b6bdd67ac0f90379829a2", true),
+            new VerifiedDefinition(2, "e2c60c0f2304a710a51b6eae145c46e09a4efe299143325ca6f4d197b45a34e0", true),
+            new VerifiedDefinition(3, "b44a9b86add3a00dcd628abedce45a474d65f68a1cbb317fa4f600e325bc7365", true),
+            new VerifiedDefinition(4, "2fa443914b04d547b47170a1db1e04c5021b58c7fb7b33e7ab2ef980576d39f1", false),
+            new VerifiedDefinition(5, "b949f4df837c173a47a63d0a64833e9614569e0cc225f409b376ad686b612705", true),
+            new VerifiedDefinition(6, "32bdf053ebc27432e617976aa48e69218028f243867a566effc2ba19c4e47fe2", true),
+            new VerifiedDefinition(7, "9d051867ae1df48db60b8db3978b748f1872de6963dfabe72ef7406972941776", true),
+            new VerifiedDefinition(8, "d9498aac153e040d636b0bf774123621bbfda39c2c4651aa08c734b00b46223c", false),
+            new VerifiedDefinition(9, "c6f07b5e3d38ca8dc5692dd3c38d405944c38377de685681ce4d571615dc640a", false),
+            new VerifiedDefinition(10, "cb239d9477a5f20c5c2a181e756b6f885fb2a72c16bf38b2991f33b84781a260", false),
+            new VerifiedDefinition(11, "67a10e1e41ca806dab253fe41d4032f779d16b2bd65ce2d8ee7bbb45f5262c61", false),
+            new VerifiedDefinition(12, "e64cb1568c158748c510583b7e4a37e53fe4f7330d09ed5c66c739a7bf01e648", false),
+            new VerifiedDefinition(13, "1356ab87a10daf9c5331465e5320f4352bb81fd191e42790baa21557a3058368", true),
+            new VerifiedDefinition(14, "38245458889181141c639ccc3bf6991bc7759858de896661bb0590553451b60f", true),
+            new VerifiedDefinition(15, "4a057f90faf363344a822fc4763c6ee94a4c157384b6068fdfe9658e4c8856d1", true),
+            new VerifiedDefinition(16, "4d3496b264628603aa009d068f62410888ad096b93b0c39cd7e60181a64ab82d", true),
+            new VerifiedDefinition(17, "e8a7abd2ff1d2e5a6ea2b0b952818435c7abd77ac25f039f7493912a98de1972", true),
+            new VerifiedDefinition(18, "b8199725c638cbe3b7e1fe83bb66f2d42563e091463323cd019e1540813d9b8d", true),
+            new VerifiedDefinition(19, "0369095682cdd80080176f08a02e82db21717761b9f8e127a9025c0c8b950b4f", true),
+            new VerifiedDefinition(20, "b2f4cdf1cc880830ada3250a860f80acdd2bd073492ffc3f1ab88bae42ff29a7", false),
+            new VerifiedDefinition(21, "df1addb707f5d703a2d527f35ac46d7cbfe0b051fb940e1f81e2fb4fb7bc159e", true),
+            new VerifiedDefinition(22, "87e775fadca466e8d8a26d4f19097c143716709455fa4b85e9b6a9123e192f6e", false),
+            new VerifiedDefinition(23, "01d1b6766fc39b86a493a0fa6a6ed1355b1517e0833615ff4c566f1c45efe39c", false),
+            new VerifiedDefinition(24, "012a06fc62094039892035b6097a6d36d32f65ef873ec3a0f92b387e3b40e988", true),
+            new VerifiedDefinition(25, "f69cc98e9be68aff74c79748b97a0410afaa18c0d810778df07869ef22bab167", true),
+            new VerifiedDefinition(26, "d2aed1837dd502139209321dcf5590ab5179276ca62ade95abbddee8abde669d", true),
+            new VerifiedDefinition(27, "0f43326fb97ee7b41c49c156605a841305418354b4d267595eb3c4af6bc39ba4", true)
+            );
 }

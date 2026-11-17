@@ -578,8 +578,9 @@ class ReferentKeyInstrumentTest {
         if (first.equals(second)) {
             return !ReferentPolicy.declaredDistinct(first, second);
         }
-        ReferentPolicy.AliasKind declared = ReferentPolicy.declaredAs(first, second);
-        if (declared == ReferentPolicy.AliasKind.DISTINCT) {
+        io.matrix.knowledge.concept.ConceptAlias.AliasKind declared =
+                ReferentPolicy.declaredAs(first, second);
+        if (declared == io.matrix.knowledge.concept.ConceptAlias.AliasKind.DISTINCT) {
             return false;
         }
         if (declared != null) {

@@ -95,6 +95,136 @@ public final class SourceSpanDefinitions {
             "is defined as", "is called");
 
     /**
+     * The words that may stand between the start of a sentence and its subject.
+     *
+     * <p>A sentence may open with a discourse marker or a subordinate clause
+     * ("However, ...", "In this understanding, ..."), and the subject follows
+     * it. A name that is only a MENTION further along the sentence is not the
+     * subject, and a sentence about something else is not its definition.</p>
+     */
+    public static final Set<String> SUBJECT_MARKERS = Set.of(
+            "furthermore", "moreover", "however", "as", "in", "because", "since",
+            "when", "while", "whenever", "if", "thus", "therefore", "so", "and",
+            "but", "yet", "also", "this", "that", "these", "those", "it", "they",
+            "he", "she", "we", "you", "i");
+
+    /**
+     * How far the subject may sit from the start of the sentence, in tokens.
+     *
+     * <p>A subject further away than this is behind a clause, and a name
+     * behind a clause is not what the sentence is about.</p>
+     */
+    public static final int MAXIMUM_SUBJECT_OFFSET = 12;
+
+    /**
+     * The words that denote nothing that can be a concept: a pronoun, an
+     * article, a quantifier, a preposition, a conjunction, an auxiliary.
+     *
+     * <p>A name that is one of these is a reference or a connective, never a
+     * referent: "It", "There", "The", "To".</p>
+     */
+    public static final Set<String> FUNCTION_WORDS = Set.of(
+            "it", "its", "they", "them", "their", "these", "those", "this", "that",
+            "he", "she", "his", "her", "we", "us", "our", "you", "your", "there",
+            "here", "the", "a", "an", "one", "ones", "other", "others", "another",
+            "such", "and", "or", "but", "nor", "yet", "so", "because", "although",
+            "while", "whereas", "if", "when", "since", "unless", "until", "than",
+            "as", "which", "who", "whom", "whose", "what", "how", "why", "to",
+            "of", "in", "on", "at", "by", "for", "from", "with", "without", "into",
+            "onto", "over", "under", "above", "below", "after", "before", "during",
+            "between", "among", "through", "across", "along", "around", "behind",
+            "beyond", "near", "toward", "towards", "upon", "within", "per", "via",
+            "is", "are", "was", "were", "be", "been", "being", "am", "has", "have",
+            "had", "do", "does", "did", "can", "could", "will", "would", "shall",
+            "should", "may", "might", "must", "ought", "not", "no", "also",
+            "though", "thus", "therefore", "hence", "furthermore", "moreover",
+            "otherwise", "instead", "nearly", "several");
+
+    /**
+     * The words that cannot sit INSIDE a concept's name.
+     *
+     * <p>A determiner, a preposition, a subordinating conjunction or a
+     * relative pronoun inside a name means the name was cut inside a clause:
+     * "the fact that the North American plate", "Plate boundary zones -- broad
+     * belts in which boundaries". The coordinating conjunction "and" is NOT in
+     * this list, because a proper name carries it: "San Andreas".</p>
+     */
+    public static final Set<String> CLAUSE_INNER_WORDS = Set.of(
+            "the", "a", "an", "this", "that", "these", "those", "its", "their", "his",
+            "her", "our", "your", "my", "any", "each", "every", "no", "some", "of",
+            "in", "on", "at", "by", "for", "from", "with", "without", "into", "onto",
+            "over", "under", "above", "below", "after", "before", "during", "between",
+            "among", "through", "across", "along", "around", "behind", "beyond",
+            "near", "toward", "towards", "upon", "within", "per", "via", "because",
+            "although", "while", "whereas", "where", "when", "since", "unless",
+            "until", "than", "as", "if", "which", "who", "whom", "whose", "what",
+            "how", "why", "though", "however", "thus", "therefore", "hence");
+
+    /**
+     * The words that open a name which denotes a CLASS of things rather than a
+     * thing.
+     *
+     * <p>"Such volcanoes are typically strung out in chains" and "One method of
+     * dealing with this problem is ..." name classes and manners, and a
+     * definition attached to a class states nothing about any member of it.</p>
+     */
+    public static final Set<String> CLASS_DETERMINERS = Set.of(
+            "such", "one", "some", "many", "several", "various", "different",
+            "other", "others", "another", "both", "all", "each", "every", "few",
+            "numerous", "certain", "example", "examples");
+
+    /**
+     * The nouns that name a discourse rather than a thing.
+     *
+     * <p>The discourse nominals of the hand-labelling protocol: "the question",
+     * "An important conclusion", "The mechanism", "The latter", "The division".
+     * The sentence that follows them is about something else.</p>
+     */
+    public static final Set<String> DISCOURSE_HEADS = Set.of(
+            "mechanism", "latter", "former", "division", "question", "answer",
+            "result", "conclusion", "idea", "issue", "problem", "way", "case",
+            "fact", "point", "sense", "process", "evidence", "reason",
+            "implication", "difference", "role", "effect", "impact", "pattern",
+            "concept", "definition", "thing", "something", "anything",
+            "everything", "nothing", "someone", "everyone", "people", "authors",
+            "scientists", "others", "kind", "sort", "type", "types", "amount",
+            "number", "part", "parts", "lot", "lots");
+
+    /**
+     * The words the subject extractor stops at, so a name that ENDS with one
+     * of them was cut inside a clause.
+     *
+     * <p>"This division should not", "Convergence can", "Plate tectonics came
+     * to" are the fragments the extractor produced.</p>
+     */
+    public static final Set<String> CLAUSE_CUT_WORDS = Set.of(
+            "is", "are", "was", "were", "be", "been", "being", "has", "have", "had",
+            "means", "refer", "consist", "include", "require", "need", "produce",
+            "generate", "release", "absorb", "convert", "transform", "use", "build",
+            "happen", "occur", "form", "create", "make", "contain", "provide",
+            "depend", "result", "lead", "cause", "enable", "allow", "determine",
+            "control", "represent", "describe", "define", "equal", "become",
+            "remain", "stay", "work", "function", "act", "react", "respond",
+            "grow", "move", "split", "come", "go", "get", "give", "take", "show",
+            "seem", "appear", "may", "might", "must", "can", "could", "would",
+            "should", "shall", "will");
+
+    /**
+     * The words that deny the sentence: a definition is not a denial.
+     *
+     * <p>"Plate tectonics is not a theory of expanding Earth" states that the
+     * concept is something it is not, and that is not what the concept is.</p>
+     */
+    public static final Set<String> NEGATIONS = Set.of("not", "no", "never",
+            "neither", "nor");
+
+    /**
+     * The suffix of a past participle, which marks a name that was cut inside
+     * a clause: "Dates derived", "The results obtained".
+     */
+    public static final String PARTICIPLE_SUFFIX = "ed";
+
+    /**
      * One definition, with the span it was read from.
      *
      * @param conceptId the concept the definition belongs to
@@ -268,7 +398,108 @@ public final class SourceSpanDefinitions {
         if (sentence.length() > MAX_DEFINITION_LENGTH) {
             return false;
         }
-        return holdsCopulaAfterName(sentence, name);
+        if (!isReferent(name)) {
+            return false;
+        }
+        List<String> sentenceWords = words(sentence);
+        int subject = subjectOffset(sentenceWords, words(name));
+        if (subject < 0) {
+            // The name is not the subject: the sentence is about something else,
+            // and a mention of the name in it does not define it.
+            return false;
+        }
+        int after = subject + words(name).size();
+        for (String copula : DEFINITIONAL_COPULAS) {
+            List<String> copulaWords = words(copula);
+            if (!matches(sentenceWords, after, copulaWords)) {
+                continue;
+            }
+            // A DENIAL IS NOT A DEFINITION: "X is not Y" says what X is not.
+            int next = after + copulaWords.size();
+            if (next < sentenceWords.size() && NEGATIONS.contains(sentenceWords.get(next))) {
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Where the subject of a sentence sits, when the name is the subject.
+     *
+     * <p>The subject is the name's token sequence at the position the discourse
+     * markers end: a sentence may open with "However," or "In this
+     * understanding," and the subject follows. A name that appears only later
+     * in the sentence is a mention, not the subject.</p>
+     *
+     * @param sentenceWords the words of the sentence
+     * @param nameWords the words of the name
+     * @return the index of the subject, or -1 when the name is not the subject
+     */
+    private static int subjectOffset(List<String> sentenceWords, List<String> nameWords) {
+        if (nameWords.isEmpty() || nameWords.size() > sentenceWords.size()) {
+            return -1;
+        }
+        int offset = 0;
+        while (offset < sentenceWords.size() && offset <= MAXIMUM_SUBJECT_OFFSET
+                && SUBJECT_MARKERS.contains(sentenceWords.get(offset))) {
+            offset++;
+        }
+        if (offset > MAXIMUM_SUBJECT_OFFSET) {
+            return -1;
+        }
+        return matches(sentenceWords, offset, nameWords) ? offset : -1;
+    }
+
+    /**
+     * Whether a concept's name denotes a referent rather than a fragment.
+     *
+     * <p>This is the hand-labelling protocol's test, made mechanical: a
+     * definition attached to a fragment is a definition of a fragment. A name
+     * is a referent when it is not a single function word, does not open with a
+     * class word, does not carry a function word inside it (the extractor cut
+     * it inside a clause), does not end with a word the extractor stops at or
+     * with a past participle, and does not end with a discourse noun.</p>
+     *
+     * @param name the concept's name
+     * @return whether the name can denote a concept
+     */
+    public static boolean isReferent(String name) {
+        if (name == null || name.isBlank()) {
+            return false;
+        }
+        List<String> nameWords = words(name);
+        if (nameWords.isEmpty()) {
+            return false;
+        }
+        if (nameWords.size() == 1 && FUNCTION_WORDS.contains(nameWords.get(0))) {
+            return false;
+        }
+        if (CLASS_DETERMINERS.contains(nameWords.get(0))) {
+            return false;
+        }
+        for (int index = 1; index < nameWords.size(); index++) {
+            if (CLAUSE_INNER_WORDS.contains(nameWords.get(index))) {
+                return false;
+            }
+        }
+        if (isRunOn(name)) {
+            return false;
+        }
+        String last = nameWords.get(nameWords.size() - 1);
+        if (CLAUSE_CUT_WORDS.contains(last) || DISCOURSE_HEADS.contains(last)) {
+            return false;
+        }
+        // A name that ENDS with a function word was cut inside the clause: "At
+        // continental collision zones, there".
+        if (FUNCTION_WORDS.contains(last) || CLAUSE_INNER_WORDS.contains(last)) {
+            return false;
+        }
+        if (nameWords.size() > 1 && last.length() > PARTICIPLE_SUFFIX.length()
+                && last.endsWith(PARTICIPLE_SUFFIX)) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -365,6 +596,51 @@ public final class SourceSpanDefinitions {
     }
 
     /**
+     * Whether a name is a RUN-ON: a lower-cased word followed by a capitalised
+     * one.
+     *
+     * <p>The extractor cut the name inside a caption and the caption's second
+     * unit was glued to it: "Defining plate boundaries Active plate boundaries",
+     * "Key principles The outer layers of Earth", "Icy moons Exoplanets On
+     * Earth-sized planets, plate tectonics". A proper name does not look like
+     * that — "Jason Morgan", "San Andreas" — so the case decides it.</p>
+     *
+     * @param name the concept's name, in its original case
+     * @return whether the name is a run-on
+     */
+    public static boolean isRunOn(String name) {
+        List<String> raw = rawWords(name);
+        for (int index = 1; index < raw.size(); index++) {
+            String previous = raw.get(index - 1);
+            String current = raw.get(index);
+            if (!previous.isEmpty() && !current.isEmpty()
+                    && Character.isLowerCase(previous.charAt(0))
+                    && Character.isUpperCase(current.charAt(0))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * The words of a text, in their original case.
+     *
+     * @param text the text
+     * @return the words, with their case
+     */
+    private static List<String> rawWords(String text) {
+        List<String> words = new ArrayList<>();
+        if (text == null) {
+            return words;
+        }
+        java.util.regex.Matcher matcher = TOKEN.matcher(text);
+        while (matcher.find()) {
+            words.add(matcher.group());
+        }
+        return words;
+    }
+
+    /**
      * The words of a text: maximal runs of letters or digits, lower-cased.
      *
      * <p>The unit is the token, not the character: a name that is a word of the
@@ -378,22 +654,22 @@ public final class SourceSpanDefinitions {
         if (text == null) {
             return words;
         }
-        int index = 0;
-        int length = text.length();
-        while (index < length) {
-            if (Character.isLetterOrDigit(text.charAt(index))) {
-                int end = index;
-                while (end < length && Character.isLetterOrDigit(text.charAt(end))) {
-                    end++;
-                }
-                words.add(text.substring(index, end).toLowerCase(Locale.ROOT));
-                index = end;
-            } else {
-                index++;
-            }
+        java.util.regex.Matcher matcher = TOKEN.matcher(text);
+        while (matcher.find()) {
+            words.add(matcher.group().toLowerCase(Locale.ROOT));
         }
         return words;
     }
+
+    /**
+     * The unit of a word: a run of Latin letters and digits.
+     *
+     * <p>The token is the word the rule matches, and it is the same unit the
+     * reviewer's probe uses, so that the rule and the probe judge a sentence
+     * the same way.</p>
+     */
+    private static final java.util.regex.Pattern TOKEN =
+            java.util.regex.Pattern.compile("[A-Za-z0-9]+");
 
     /**
      * The concepts of a workspace that carry claims, by id — the lookup the

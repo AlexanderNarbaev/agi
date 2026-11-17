@@ -1,6 +1,7 @@
 package io.matrix.knowledge.concept.research;
 
 import io.matrix.knowledge.Claim;
+import io.matrix.knowledge.concept.ConceptAlias;
 import io.matrix.knowledge.ClaimSpan;
 import io.matrix.knowledge.Concept;
 
@@ -139,7 +140,30 @@ public final class ReferentResolver {
      */
     public static Result resolve(List<Claim> claims, List<Concept> concepts,
                                  boolean applyRejection, ReferentPolicy.Strictness strictness) {
-        List<Occurrence> occurrences = new ArrayList<>();        Map<ReferentPolicy.Rejection, Integer> rejections = new TreeMap<>();
+        return resolve(claims, concepts, applyRejection, strictness,
+                ReferentPolicy.DECLARED_ALIASES);
+    }
+
+    /**
+     * Resolves a workspace's claims into referents, under an ALIAS TABLE.
+     *
+     * <p>The alias layer is DATA in the committed schema (the owner's decision
+     * OD-064), so the resolver takes the table as an argument: the declared list is
+     * the seed, and the store's rows are what a migrated workspace actually holds.</p>
+     *
+     * @param claims the claims of the workspace
+     * @param concepts the concepts of the workspace
+     * @param applyRejection whether a surface form that is not a referent is rejected
+     * @param strictness the strictness of the policy
+     * @param aliases the alias table
+     * @return the outcome of the resolution
+     */
+    public static Result resolve(List<Claim> claims, List<Concept> concepts,
+                                 boolean applyRejection, ReferentPolicy.Strictness strictness,
+                                 List<ConceptAlias> aliases) {
+        List<Occurrence> occurrences = new ArrayList<>();
+        List<ConceptAlias> aliasTable = aliases;
+        Map<ReferentPolicy.Rejection, Integer> rejections = new TreeMap<>();
         int accepted = 0;
         for (Claim claim : claims) {
             String surface = claim.scope() == null ? "" : claim.scope().strip();
@@ -172,7 +196,7 @@ public final class ReferentResolver {
             if (!occurrence.accepted()) {
                 continue;
             }
-            String key = ReferentPolicy.canonicalLemma(occurrence.lemma()) + "\u0000"
+            String key = ReferentPolicy.canonicalLemma(aliases, occurrence.lemma()) + "\u0000"
                     + occurrence.sourceId();
             byLemmaAndSource.computeIfAbsent(key, ignored -> new ArrayList<>()).add(occurrence);
         }
@@ -187,7 +211,7 @@ public final class ReferentResolver {
             merged = false;
             for (int i = 0; i < groups.size(); i++) {
                 for (int j = i + 1; j < groups.size(); j++) {
-                    if (mergeable(groups.get(i), groups.get(j))) {
+                    if (mergeable(groups.get(i), groups.get(j), aliasTable)) {
                         groups.get(i).addAll(groups.get(j));
                         groups.remove(j);
                         merged = true;
@@ -218,23 +242,23 @@ public final class ReferentResolver {
                 claimIds.add(occurrence.claimId());
             }
             String displayName = displayNameOf(frequencies);
-            List<String> aliases = new ArrayList<>();
+            List<String> surfaceForms = new ArrayList<>();
             for (String surface : frequencies.keySet()) {
                 if (!surface.equals(displayName)) {
-                    aliases.add(surface);
+                    surfaceForms.add(surface);
                 }
             }
-            for (ReferentPolicy.Alias alias : ReferentPolicy.DECLARED_ALIASES) {
-                if (alias.kind() == ReferentPolicy.AliasKind.DISTINCT) {
+            for (ConceptAlias alias : aliasTable) {
+                if (alias.kind() == ConceptAlias.AliasKind.DISTINCT) {
                     continue;
                 }
-                if (alias.canonical().equals(earliest.lemma())
-                        && !aliases.contains(alias.variant())
-                        && !alias.variant().equals(displayName)) {
-                    aliases.add(alias.variant());
+                if (alias.canonicalLemma().equals(earliest.lemma())
+                        && !surfaceForms.contains(alias.variantLemma())
+                        && !alias.variantLemma().equals(displayName)) {
+                    surfaceForms.add(alias.variantLemma());
                 }
             }
-            clusters.add(new Cluster(key, displayName, aliases, new ArrayList<>(claimIds),
+            clusters.add(new Cluster(key, displayName, surfaceForms, new ArrayList<>(claimIds),
                     new ArrayList<>(sourceIds), earliest.signature()));
         }
         clusters.sort(Comparator.comparing(cluster -> cluster.key().identity()));
@@ -249,13 +273,14 @@ public final class ReferentResolver {
      * @param second the second cluster
      * @return whether they are one referent
      */
-    private static boolean mergeable(List<Occurrence> first, List<Occurrence> second) {
+    private static boolean mergeable(List<Occurrence> first, List<Occurrence> second,
+                                     List<ConceptAlias> aliasTable) {
         Occurrence a = first.get(0);
         Occurrence b = second.get(0);
         String lemmaA = a.lemma();
         String lemmaB = b.lemma();
         if (lemmaA.equals(lemmaB)) {
-            if (ReferentPolicy.declaredDistinct(lemmaA, lemmaB)) {
+            if (ReferentPolicy.declaredDistinct(aliasTable, lemmaA, lemmaB)) {
                 return false;
             }
             if (a.sourceId().equals(b.sourceId())) {
@@ -268,15 +293,16 @@ public final class ReferentResolver {
             }
             return overlaps(a.signature(), b.signature());
         }
-        ReferentPolicy.AliasKind declared = ReferentPolicy.declaredAs(lemmaA, lemmaB);
-        if (declared == ReferentPolicy.AliasKind.DISTINCT) {
+        ConceptAlias.AliasKind declared = ReferentPolicy.declaredAs(aliasTable, lemmaA, lemmaB);
+        if (declared == ConceptAlias.AliasKind.DISTINCT) {
             return false;
         }
         if (declared != null) {
             return true;
         }
         // An alias entry may link the two clusters through their canonical lemmas.
-        return ReferentPolicy.canonicalLemma(lemmaA).equals(ReferentPolicy.canonicalLemma(lemmaB));
+        return ReferentPolicy.canonicalLemma(aliasTable, lemmaA)
+                .equals(ReferentPolicy.canonicalLemma(aliasTable, lemmaB));
     }
 
     /**

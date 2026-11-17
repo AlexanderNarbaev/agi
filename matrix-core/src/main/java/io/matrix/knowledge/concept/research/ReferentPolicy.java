@@ -1,5 +1,7 @@
 package io.matrix.knowledge.concept.research;
 
+import io.matrix.knowledge.concept.ConceptAlias;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -249,28 +251,28 @@ public final class ReferentPolicy {
 
     // ── the alias table ───────────────────────────────────────────────────────
 
-    /** Why two lemmas are declared to be the same referent, or not. */
-    public enum AliasKind {
-        /** The same referent written differently: a hyphenation or a spelling variant. */
-        SPELLING,
-        /** The same referent under a different word: "slab pull" and "the slab pull force". */
-        SYNONYM,
-        /** The same referent under a different wording: "hotspot tracks" and "the tracks of hotspots". */
-        PARAPHRASE,
-        /** NOT the same referent, whatever the text suggests: a homonym. */
-        DISTINCT
-    }
-
     /**
-     * One declared entry of the alias table.
+     * Why two lemmas are declared to be the same referent, or not.
      *
-     * @param canonical the lemma the variant resolves TO
-     * @param variant the lemma that resolves INTO the canonical one
-     * @param kind why the two are (or are not) the same referent
-     * @param reason the reason, in the words of the corpus
+     * <p>The vocabulary is the production record's own
+     * ({@link io.matrix.knowledge.concept.ConceptAlias.AliasKind}): the alias layer is
+     * DATA in the committed schema (the owner's decision OD-064), and the research
+     * package reads the same vocabulary the table holds.</p>
      */
-    public record Alias(String canonical, String variant, AliasKind kind, String reason) {
-    }
+    public static final io.matrix.knowledge.concept.ConceptAlias.AliasKind SPELLING =
+            io.matrix.knowledge.concept.ConceptAlias.AliasKind.SPELLING;
+
+    /** The same referent under a different word. */
+    public static final io.matrix.knowledge.concept.ConceptAlias.AliasKind SYNONYM =
+            io.matrix.knowledge.concept.ConceptAlias.AliasKind.SYNONYM;
+
+    /** The same referent under a different wording. */
+    public static final io.matrix.knowledge.concept.ConceptAlias.AliasKind PARAPHRASE =
+            io.matrix.knowledge.concept.ConceptAlias.AliasKind.PARAPHRASE;
+
+    /** NOT the same referent, whatever the text suggests: a homonym. */
+    public static final io.matrix.knowledge.concept.ConceptAlias.AliasKind DISTINCT =
+            io.matrix.knowledge.concept.ConceptAlias.AliasKind.DISTINCT;
 
     /**
      * The DECLARED alias table: the hand-written equivalences and distinctions.
@@ -284,33 +286,33 @@ public final class ReferentPolicy {
      * <p>The entries are stated over <b>lemmas</b>, never over a claim id, a case id
      * or a corpus phrase that happens to occur once.</p>
      */
-    public static final List<Alias> DECLARED_ALIASES = List.of(
-            new Alias("seafloor spreading", "sea-floor spreading", AliasKind.SPELLING,
+    public static final List<io.matrix.knowledge.concept.ConceptAlias> DECLARED_ALIASES = List.of(
+            ConceptAlias.declared("seafloor spreading", "sea-floor spreading", ConceptAlias.AliasKind.SPELLING,
                     "the corpus writes the term with and without the hyphen"),
-            new Alias("slab pull", "slab pull force", AliasKind.SYNONYM,
+            ConceptAlias.declared("slab pull", "slab pull force", ConceptAlias.AliasKind.SYNONYM,
                     "the corpus writes 'the slab pull force' and 'slab pull' for the same force"),
-            new Alias("lithosphere", "earth lithosphere", AliasKind.SYNONYM,
+            ConceptAlias.declared("lithosphere", "earth lithosphere", ConceptAlias.AliasKind.SYNONYM,
                     "the corpus's 'Earth's lithosphere' and 'the lithosphere' name the same layer"),
-            new Alias("plate motion", "motion of the tectonic plate", AliasKind.PARAPHRASE,
+            ConceptAlias.declared("plate motion", "motion of the tectonic plate", ConceptAlias.AliasKind.PARAPHRASE,
                     "the corpus's 'the motion of the tectonic plates' and 'plate motion' name "
                             + "the same referent"),
-            new Alias("hotspot track", "track of hotspot", AliasKind.PARAPHRASE,
+            ConceptAlias.declared("hotspot track", "track of hotspot", ConceptAlias.AliasKind.PARAPHRASE,
                     "the corpus's 'the tracks of hotspots' and 'hotspot tracks' name the same "
                             + "feature"),
-            new Alias("divergent boundary", "divergent plate boundary", AliasKind.SYNONYM,
+            ConceptAlias.declared("divergent boundary", "divergent plate boundary", ConceptAlias.AliasKind.SYNONYM,
                     "the corpus writes both 'divergent boundary' and 'divergent plate boundary'"),
-            new Alias("continental drift", "wegener theory of continental drift", AliasKind.SYNONYM,
+            ConceptAlias.declared("continental drift", "wegener theory of continental drift", ConceptAlias.AliasKind.SYNONYM,
                     "the corpus's 'Wegener's theory of continental drift' and 'continental drift' "
                             + "name the same theory"),
-            new Alias("crust", "oceanic crust", AliasKind.DISTINCT,
+            ConceptAlias.declared("crust", "oceanic crust", ConceptAlias.AliasKind.DISTINCT,
                     "the generic crust and the oceanic crust are not one referent"),
-            new Alias("crust", "continental crust", AliasKind.DISTINCT,
+            ConceptAlias.declared("crust", "continental crust", ConceptAlias.AliasKind.DISTINCT,
                     "the generic crust and the continental crust are not one referent"),
-            new Alias("plate", "nazca plate", AliasKind.DISTINCT,
+            ConceptAlias.declared("plate", "nazca plate", ConceptAlias.AliasKind.DISTINCT,
                     "the generic plate and one named plate are not one referent"),
-            new Alias("plate", "pacific plate", AliasKind.DISTINCT,
+            ConceptAlias.declared("plate", "pacific plate", ConceptAlias.AliasKind.DISTINCT,
                     "the generic plate and one named plate are not one referent"),
-            new Alias("trench", "middle america trench", AliasKind.DISTINCT,
+            ConceptAlias.declared("trench", "middle america trench", ConceptAlias.AliasKind.DISTINCT,
                     "the generic trench and one named trench are not one referent"));
 
     // ── the rules ─────────────────────────────────────────────────────────────
@@ -593,10 +595,24 @@ public final class ReferentPolicy {
      * @param second the second lemma
      * @return the kind of the declaration, or null when there is none
      */
-    public static AliasKind declaredAs(String first, String second) {
-        for (Alias alias : DECLARED_ALIASES) {
-            if ((alias.canonical().equals(first) && alias.variant().equals(second))
-                    || (alias.canonical().equals(second) && alias.variant().equals(first))) {
+    public static ConceptAlias.AliasKind declaredAs(String first, String second) {
+        return declaredAs(DECLARED_ALIASES, first, second);
+    }
+
+    /**
+     * Whether an alias table declares two lemmas to be the same referent.
+     *
+     * @param aliases the alias table — the store's rows, or the declared list
+     * @param first the first lemma
+     * @param second the second lemma
+     * @return the kind of the declaration, or null when there is none
+     */
+    public static ConceptAlias.AliasKind declaredAs(List<ConceptAlias> aliases, String first,
+                                                    String second) {
+        for (ConceptAlias alias : aliases) {
+            if ((alias.canonicalLemma().equals(first) && alias.variantLemma().equals(second))
+                    || (alias.canonicalLemma().equals(second)
+                            && alias.variantLemma().equals(first))) {
                 return alias.kind();
             }
         }
@@ -611,7 +627,20 @@ public final class ReferentPolicy {
      * @return whether they are declared distinct
      */
     public static boolean declaredDistinct(String first, String second) {
-        return declaredAs(first, second) == AliasKind.DISTINCT;
+        return declaredDistinct(DECLARED_ALIASES, first, second);
+    }
+
+    /**
+     * Whether an alias table declares two lemmas to be DIFFERENT referents.
+     *
+     * @param aliases the alias table
+     * @param first the first lemma
+     * @param second the second lemma
+     * @return whether they are declared distinct
+     */
+    public static boolean declaredDistinct(List<ConceptAlias> aliases, String first,
+                                           String second) {
+        return declaredAs(aliases, first, second) == ConceptAlias.AliasKind.DISTINCT;
     }
 
     /**
@@ -621,15 +650,26 @@ public final class ReferentPolicy {
      * @return the canonical lemma
      */
     public static String canonicalLemma(String lemma) {
-        for (Alias alias : DECLARED_ALIASES) {
-            if (alias.kind() == AliasKind.DISTINCT) {
+        return canonicalLemma(DECLARED_ALIASES, lemma);
+    }
+
+    /**
+     * The lemma a variant resolves INTO, under an alias table.
+     *
+     * @param aliases the alias table
+     * @param lemma the lemma
+     * @return the canonical lemma
+     */
+    public static String canonicalLemma(List<ConceptAlias> aliases, String lemma) {
+        for (ConceptAlias alias : aliases) {
+            if (alias.kind() == ConceptAlias.AliasKind.DISTINCT) {
                 continue;
             }
-            if (alias.variant().equals(lemma)) {
-                return alias.canonical();
+            if (alias.variantLemma().equals(lemma)) {
+                return alias.canonicalLemma();
             }
-            if (alias.canonical().equals(lemma)) {
-                return alias.canonical();
+            if (alias.canonicalLemma().equals(lemma)) {
+                return alias.canonicalLemma();
             }
         }
         return lemma;

@@ -77,7 +77,18 @@ class ConceptDefinitionAcceptanceTest {
      * repository finds 120 on the same corpus. The number this implementation
      * must reproduce is the INSTRUMENT's, and the difference is reported.</p>
      */
-    private static final int INSTRUMENT_DEFINITIONS = 120;
+    /**
+     * The definitions the CORRECTED rule finds in the seed corpus.
+     *
+     * <p>This was 120 before the hard review of 2026-11-16. The earlier rule
+     * took a sentence in which the concept's name appeared ANYWHERE and was
+     * followed by a definitional copula; the corrected rule requires the name
+     * to BE THE SUBJECT of the sentence, rejects a denial, and rejects a name
+     * that is not a referent. The count falls to 27 - see
+     * {@code docs-v2/engineering/EPISTEMIC-CONCEPT-DEFINITIONS.md} §10 for the
+     * correction of the earlier 120/326 = 36.8 % claim.</p>
+     */
+    private static final int PRODUCTION_DEFINITIONS = 27;
 
     /** The retriever's floor: the production value of the official evaluation. */
     private static final double RETRIEVER_FLOOR = 0.25;
@@ -159,16 +170,24 @@ class ConceptDefinitionAcceptanceTest {
                 workbench.storeForValidation().conceptDefinitions(WORKSPACE);
         System.out.println("[A2] concepts=" + concepts.size() + " with a definition="
                 + definitions.size());
+        java.util.Map<String, String> names = new java.util.LinkedHashMap<>();
+        for (Concept concept : concepts) {
+            names.put(concept.id(), concept.name());
+        }
+        for (io.matrix.knowledge.ConceptDefinition definition : definitions) {
+            System.out.println("[A2] DEFINITION :: " + names.get(definition.conceptId())
+                    + " :: " + definition.definition());
+        }
         assertThat(definitions.size())
                 .as("the production import must write the definitions the rule finds")
-                .isEqualTo(INSTRUMENT_DEFINITIONS);
+                .isEqualTo(PRODUCTION_DEFINITIONS);
         assertThat(definitions.size())
                 .as("the baseline was 0 usable definitions")
                 .isGreaterThan(0);
     }
 
     @Test
-    @DisplayName("A2 — the production definitions are the research instrument's, set by set")
+    @DisplayName("A2 — the production rule refines the research instrument's rule")
     void theProductionDefinitionsAreTheInstruments() {
         io.matrix.knowledge.concept.SourceGroundedEnrichment.Extraction extraction =
                 io.matrix.knowledge.concept.SourceGroundedEnrichment.extract(snapshot,
@@ -183,9 +202,35 @@ class ConceptDefinitionAcceptanceTest {
                 : workbench.storeForValidation().conceptDefinitions(WORKSPACE)) {
             production.add(definition.conceptId() + "|" + definition.definition());
         }
-        assertThat(production)
-                .as("the production rule and the research instrument must agree exactly")
-                .isEqualTo(instrument);
+        // The research instrument still implements the freeze's v1.1 rule, which
+        // accepts a sentence in which the name is only a MENTION. The corrected
+        // production rule is a refinement of it: every definition the production
+        // rule finds is one the instrument found, and never the other way round.
+        Set<String> instrumentConcepts = new LinkedHashSet<>();
+        for (String entry : instrument) {
+            instrumentConcepts.add(entry.substring(0, entry.indexOf('|')));
+        }
+        Set<String> productionConcepts = new LinkedHashSet<>();
+        for (String entry : production) {
+            productionConcepts.add(entry.substring(0, entry.indexOf('|')));
+        }
+        assertThat(productionConcepts)
+                .as("every concept the corrected rule defines, the research instrument defines too")
+                .isSubsetOf(instrumentConcepts);
+        assertThat(productionConcepts.size())
+                .as("the corrected rule must be strictly stricter than the instrument's")
+                .isLessThan(instrumentConcepts.size());
+        java.util.Map<String, String> names = new java.util.LinkedHashMap<>();
+        for (Concept concept : snapshot.concepts()) {
+            names.put(concept.id(), concept.name());
+        }
+        for (io.matrix.knowledge.ConceptDefinition definition
+                : workbench.storeForValidation().conceptDefinitions(WORKSPACE)) {
+            assertThat(SourceSpanDefinitions.statesDefinition(definition.definition(),
+                    names.get(definition.conceptId())))
+                    .as("every production definition must satisfy the corrected rule")
+                    .isTrue();
+        }
     }
 
     @Test
@@ -194,7 +239,7 @@ class ConceptDefinitionAcceptanceTest {
         List<SourceSpanDefinitions.Definition> derived = SourceSpanDefinitions.derive(
                 snapshot.concepts(), snapshot.sources(),
                 SourceSpanDefinitions.sentencesOf(snapshot.claims(), null));
-        assertThat(derived).hasSize(INSTRUMENT_DEFINITIONS);
+        assertThat(derived).hasSize(PRODUCTION_DEFINITIONS);
         Set<String> propositions = new LinkedHashSet<>();
         for (Claim claim : snapshot.claims()) {
             propositions.add(claim.proposition());
@@ -216,7 +261,7 @@ class ConceptDefinitionAcceptanceTest {
     // ── A2 (ii) — the human-verified share of the definitions ─────────────────
 
     @Test
-    @DisplayName("A2 (ii) — the frozen human-verified sample of the definitions")
+    @DisplayName("A2 (ii) — the frozen hand-verified census: is a definition")
     void theHumanVerifiedShareOfTheDefinitions() {
         List<io.matrix.knowledge.ConceptDefinition> definitions =
                 workbench.storeForValidation().conceptDefinitions(WORKSPACE);
@@ -230,15 +275,19 @@ class ConceptDefinitionAcceptanceTest {
             assertThat(byDigest)
                     .as("the frozen sample must still be part of the workspace's definitions")
                     .containsKey(verified.definitionSha256());
-            if (verified.aboutTheConcept()) {
+            if (verified.isADefinition()) {
                 about++;
             }
         }
-        System.out.println("[A2] the human-verified sample: " + about + "/"
-                + HandVerifiedDefinitions.SAMPLE.size() + " definitions are about their concept");
+        System.out.println("[A2] the hand-verified census: " + about + "/"
+                + HandVerifiedDefinitions.SAMPLE.size()
+                + " definitions ARE a definition of their concept");
+        assertThat(HandVerifiedDefinitions.SAMPLE.size())
+                .as("the census must cover every definition the corrected rule finds")
+                .isEqualTo(PRODUCTION_DEFINITIONS);
         assertThat(about)
-                .as("the human-verified share of the frozen sample")
-                .isEqualTo(24);
+                .as("the hand-verified share under the corrected metric")
+                .isEqualTo(18);
     }
 
     // ── A8 — the identity stability ───────────────────────────────────────────

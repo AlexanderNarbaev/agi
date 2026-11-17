@@ -89,7 +89,7 @@ public final class KnowledgeStore implements AutoCloseable {
      * decision is that the reload fails closed and that the contradiction history is never
      * silently erased.</p>
      */
-    public static final int SCHEMA_VERSION = 20;
+    public static final int SCHEMA_VERSION = 21;
 
     /**
      * The disposition a prediction error carries when no hypothesis of the model explained the
@@ -936,6 +936,65 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     private int migrateFrom(int version) throws SQLException {
+        if (version == 20) {
+            // v21 adds the MIGRATION LINEAGE of the concept layer.
+            //
+            // The reason is the EPISTEMIC-INTEGRITY P1 wave and the owner's decisions
+            // OD-061 and OD-064. The referent key changes the id of a concept, and a
+            // concept id is referenced by ten tables while SQLite declares no foreign
+            // key for any of them: a partial migration would be invisible. The
+            // lineage is therefore part of the schema and not part of a script - the
+            // migration records what it superseded, what a claim moved to, and what a
+            // claim without a referent became.
+            //
+            // The four tables are ADDITIVE and there is nothing to backfill: they are
+            // new, so they hold no legacy rows. The claim id does NOT change - it is
+            // a digest of the workspace, the content hash and the proposition, and
+            // none of the three moves - so the claims, the evidence and the
+            // proposition-based golds survive the migration. What the claim's
+            // concept_id points at changes, and the lineage says which concept it was
+            // and which it is now.
+            //
+            // The ALIAS table is the declared alias layer of the referent key, and it
+            // carries its own status in the data: the declaration_status column says
+            // that the entry is a hand-written, corpus-fitted and temporary claim, so
+            // that a later reader cannot mistake it for a derived fact.
+            //
+            // The migration is safe to run again after an interruption: the tables are
+            // created IF NOT EXISTS, nothing is copied, and the version is written
+            // last.
+            try (Statement st = connection.createStatement()) {
+                st.execute("CREATE TABLE IF NOT EXISTS concept_lineage ("
+                        + "old_id TEXT NOT NULL, new_id TEXT NOT NULL, reason TEXT NOT NULL, "
+                        + "created_at TEXT NOT NULL, PRIMARY KEY (old_id, new_id))");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_concept_lineage_old "
+                        + "ON concept_lineage(old_id)");
+                st.execute("CREATE TABLE IF NOT EXISTS claim_lineage ("
+                        + "claim_id TEXT PRIMARY KEY, old_concept_id TEXT NOT NULL, "
+                        + "new_concept_id TEXT NOT NULL, reason TEXT NOT NULL, "
+                        + "created_at TEXT NOT NULL)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_claim_lineage_workspace "
+                        + "ON claim_lineage(new_concept_id)");
+                st.execute("CREATE TABLE IF NOT EXISTS claim_scoped_record ("
+                        + "concept_id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
+                        + "claim_id TEXT NOT NULL, text TEXT NOT NULL, reason TEXT NOT NULL, "
+                        + "created_at TEXT NOT NULL)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_claim_scoped_workspace "
+                        + "ON claim_scoped_record(workspace_id)");
+                st.execute("CREATE TABLE IF NOT EXISTS concept_definition_merge ("
+                        + "new_concept_id TEXT NOT NULL, old_concept_id TEXT NOT NULL, "
+                        + "definition TEXT NOT NULL, reason TEXT NOT NULL, "
+                        + "created_at TEXT NOT NULL, PRIMARY KEY (new_concept_id, old_concept_id))");
+                st.execute("CREATE TABLE IF NOT EXISTS concept_alias ("
+                        + "workspace_id TEXT NOT NULL, canonical_lemma TEXT NOT NULL, "
+                        + "variant_lemma TEXT NOT NULL, kind TEXT NOT NULL, reason TEXT NOT NULL, "
+                        + "declared_by TEXT NOT NULL, declaration_status TEXT NOT NULL, "
+                        + "recorded_at TEXT NOT NULL, "
+                        + "PRIMARY KEY (workspace_id, canonical_lemma, variant_lemma))");
+            }
+            writeSchemaVersion(21);
+            return 21;
+        }
         if (version == 19) {
             // v20 adds the CONCEPT DEFINATION: the qualifying sentence of a concept's
             // own source document, with the span it was read from.
@@ -4902,6 +4961,96 @@ public final class KnowledgeStore implements AutoCloseable {
                         rs.getInt("start_offset"), rs.getInt("end_offset"),
                         rs.getString("claim_id"), rs.getString("extraction_method"),
                         rs.getString("recorded_at")));
+    }
+
+    /**
+     * The DECLARED aliases of a workspace.
+     *
+     * <p>Each entry carries its own declaration status, so that a reader of the data
+     * alone can tell a hand-written, corpus-fitted and temporary declaration from a
+     * derived one (the owner's decision OD-064).</p>
+     *
+     * @param workspaceId the workspace
+     * @return the declared aliases
+     */
+    public List<io.matrix.knowledge.concept.ConceptAlias> conceptAliases(String workspaceId) {
+        return query("SELECT workspace_id, canonical_lemma, variant_lemma, kind, reason, "
+                        + "declared_by, declaration_status, recorded_at FROM concept_alias "
+                        + "WHERE workspace_id = ? ORDER BY canonical_lemma, variant_lemma",
+                workspaceId, rs -> new io.matrix.knowledge.concept.ConceptAlias(
+                        rs.getString("canonical_lemma"), rs.getString("variant_lemma"),
+                        io.matrix.knowledge.concept.ConceptAlias.AliasKind
+                                .valueOf(rs.getString("kind")),
+                        rs.getString("reason"), rs.getString("declared_by"),
+                        io.matrix.knowledge.concept.ConceptAlias.DeclarationStatus
+                                .valueOf(rs.getString("declaration_status")),
+                        rs.getString("recorded_at")));
+    }
+
+    /**
+     * The concept lineage of a workspace: what superseded what.
+     *
+     * @param workspaceId the workspace
+     * @return the lineage rows
+     */
+    public List<io.matrix.knowledge.concept.ConceptLineage> conceptLineage(String workspaceId) {
+        return query("SELECT l.old_id, l.new_id, l.reason, l.created_at FROM concept_lineage l "
+                        + "JOIN concept c ON c.id = l.new_id WHERE c.workspace_id = ? "
+                        + "ORDER BY l.old_id",
+                workspaceId, rs -> new io.matrix.knowledge.concept.ConceptLineage(
+                        rs.getString("old_id"), rs.getString("new_id"), rs.getString("reason"),
+                        rs.getString("created_at")));
+    }
+
+    /**
+     * The claim lineage of a workspace: what each claim moved to.
+     *
+     * @param workspaceId the workspace
+     * @return the lineage rows
+     */
+    public List<io.matrix.knowledge.concept.ClaimLineage> claimLineage(String workspaceId) {
+        return query("SELECT l.claim_id, l.old_concept_id, l.new_concept_id, l.reason, "
+                        + "l.created_at FROM claim_lineage l JOIN claim c ON c.id = l.claim_id "
+                        + "WHERE c.workspace_id = ? ORDER BY l.claim_id",
+                workspaceId, rs -> new io.matrix.knowledge.concept.ClaimLineage(
+                        rs.getString("claim_id"), rs.getString("old_concept_id"),
+                        rs.getString("new_concept_id"), rs.getString("reason"),
+                        rs.getString("created_at")));
+    }
+
+    /**
+     * The claim-scoped records of a workspace: the claims that have no referent.
+     *
+     * @param workspaceId the workspace
+     * @return the records
+     */
+    public List<io.matrix.knowledge.concept.ClaimScopedRecord> claimScopedRecords(
+            String workspaceId) {
+        return query("SELECT concept_id, workspace_id, claim_id, text, reason, created_at "
+                        + "FROM claim_scoped_record WHERE workspace_id = ? ORDER BY claim_id",
+                workspaceId, rs -> new io.matrix.knowledge.concept.ClaimScopedRecord(
+                        rs.getString("concept_id"), rs.getString("workspace_id"),
+                        rs.getString("claim_id"), rs.getString("text"), rs.getString("reason"),
+                        rs.getString("created_at")));
+    }
+
+    /**
+     * The merged definitions of a workspace: the definitions whose concept was
+     * collapsed into a referent that already carried one.
+     *
+     * @param workspaceId the workspace
+     * @return the merged definitions
+     */
+    public List<io.matrix.knowledge.concept.ConceptDefinitionMerge> conceptDefinitionMerges(
+            String workspaceId) {
+        return query("SELECT m.new_concept_id, m.old_concept_id, m.definition, m.reason, "
+                        + "m.created_at FROM concept_definition_merge m JOIN concept c "
+                        + "ON c.id = m.new_concept_id WHERE c.workspace_id = ? "
+                        + "ORDER BY m.new_concept_id",
+                workspaceId, rs -> new io.matrix.knowledge.concept.ConceptDefinitionMerge(
+                        rs.getString("new_concept_id"), rs.getString("old_concept_id"),
+                        rs.getString("definition"), rs.getString("reason"),
+                        rs.getString("created_at")));
     }
 
     /** The recorded conflicts of a workspace. */

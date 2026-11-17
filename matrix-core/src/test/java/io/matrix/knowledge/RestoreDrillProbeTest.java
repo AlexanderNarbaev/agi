@@ -106,7 +106,7 @@ class RestoreDrillProbeTest {
         Map<String, Object> report = RestoreDrillProbe.openUnderCurrentCode(image);
 
         assertThat(report.get("schema_version_before")).isEqualTo(16);
-        assertThat(report.get("schema_version_after")).isEqualTo(20);
+        assertThat(report.get("schema_version_after")).isEqualTo(KnowledgeStore.SCHEMA_VERSION);
         assertThat(report.get("migration_applied")).isEqualTo(true);
         assertThat(report.get("integrity_check")).isEqualTo("ok");
         assertThat(report.get("dangling_reference_count")).isEqualTo(0);

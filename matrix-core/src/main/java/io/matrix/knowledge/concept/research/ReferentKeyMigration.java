@@ -162,7 +162,8 @@ public final class ReferentKeyMigration {
                        int referents,
                        int claimScoped,
                        int rejected,
-                       Map<String, String> oldConceptIdByClaimId) {
+                       Map<String, String> oldConceptIdByClaimId,
+                       List<io.matrix.knowledge.concept.ConceptAlias> aliases) {
 
         /**
          * The concept id → the concept id that superseded it.
@@ -229,8 +230,29 @@ public final class ReferentKeyMigration {
      */
     public static Plan plan(KnowledgeSnapshot snapshot, String workspace,
                             ReferentPolicy.Strictness strictness, String createdAt) {
+        return plan(snapshot, workspace, strictness, createdAt,
+                ReferentPolicy.DECLARED_ALIASES);
+    }
+
+    /**
+     * Builds the copy-forward plan of a workspace, under an ALIAS TABLE.
+     *
+     * <p>The alias layer is DATA (the owner's decision OD-064), so the plan resolves
+     * under the table the store holds and not under the research package's static
+     * list.</p>
+     *
+     * @param snapshot the workspace's snapshot
+     * @param workspace the workspace id
+     * @param strictness the operating point of the policy
+     * @param createdAt when the lineage is written
+     * @param aliases the alias table
+     * @return the plan
+     */
+    public static Plan plan(KnowledgeSnapshot snapshot, String workspace,
+                            ReferentPolicy.Strictness strictness, String createdAt,
+                            List<io.matrix.knowledge.concept.ConceptAlias> aliases) {
         ReferentResolver.Result resolved = ReferentResolver.resolve(snapshot.claims(),
-                snapshot.concepts(), true, strictness);
+                snapshot.concepts(), true, strictness, aliases);
         Map<String, String> oldConceptIdByClaimId = new LinkedHashMap<>();
         for (Claim claim : snapshot.claims()) {
             oldConceptIdByClaimId.put(claim.id(), claim.conceptId());
@@ -299,7 +321,7 @@ public final class ReferentKeyMigration {
         return new Plan(new ArrayList<>(concepts.values()), newConceptIdByClaimId,
                 conceptLineage, claimLineage, newRepresentationIdByOldId,
                 resolved.clusters(), claimScoped, resolved.rejected(),
-                oldConceptIdByClaimId);
+                oldConceptIdByClaimId, aliases);
     }
 
     /**
@@ -333,7 +355,7 @@ public final class ReferentKeyMigration {
         try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + database)) {
             connection.setAutoCommit(false);
             try {
-                createTheAdditiveTables(connection);
+                seedTheDeclaredAliases(connection, workspace, plan.aliases());
                 int inserted = insertTheConcepts(connection, plan, workspace);
                 int claims = rewriteTheClaims(connection, plan, workspace);
                 int[] representations = rewriteTheRepresentations(connection, plan, workspace);
@@ -354,34 +376,75 @@ public final class ReferentKeyMigration {
     }
 
     /**
-     * Creates the additive tables in the copy.
+     * Writes the DECLARED alias table into a workspace's own table, BEFORE the plan.
      *
-     * <p>They are the migration's own bookkeeping. The store's committed schema is not
-     * touched: the tables exist only in the copy, and the owner's schema change is the
-     * owner's decision after the rehearsal's evidence.</p>
+     * <p>The alias layer is DATA (the owner's decision OD-064), so the plan must resolve
+     * under the table the store holds. The seeding therefore has to happen first: the plan
+     * reads the store's rows, and the copy-forward writes them. This method is the
+     * seeding step, idempotent ({@code INSERT OR IGNORE}), and it is what makes the order
+     * of the migration explicit rather than accidental.</p>
      *
-     * @param connection the connection
+     * @param database the workspace's database file
+     * @param workspace the workspace id
+     * @param aliases the declared entries
+     * @return how many rows were written
      * @throws SQLException when the database refuses the write
      */
-    private static void createTheAdditiveTables(Connection connection) throws SQLException {
-        try (Statement statement = connection.createStatement()) {
-            statement.execute("CREATE TABLE IF NOT EXISTS " + TABLE_CONCEPT_LINEAGE + " ("
-                    + "old_id TEXT NOT NULL, new_id TEXT NOT NULL, reason TEXT NOT NULL, "
-                    + "created_at TEXT NOT NULL, PRIMARY KEY (old_id, new_id))");
-            statement.execute("CREATE TABLE IF NOT EXISTS " + TABLE_CLAIM_LINEAGE + " ("
-                    + "claim_id TEXT PRIMARY KEY, old_concept_id TEXT NOT NULL, "
-                    + "new_concept_id TEXT NOT NULL, reason TEXT NOT NULL, created_at TEXT NOT NULL)");
-            statement.execute("CREATE TABLE IF NOT EXISTS " + TABLE_CLAIM_SCOPED_RECORD + " ("
-                    + "concept_id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
-                    + "claim_id TEXT NOT NULL, text TEXT NOT NULL, reason TEXT NOT NULL, "
-                    + "created_at TEXT NOT NULL)");
-            statement.execute("CREATE TABLE IF NOT EXISTS " + TABLE_DEFINITION_MERGE + " ("
-                    + "new_concept_id TEXT NOT NULL, old_concept_id TEXT NOT NULL, "
-                    + "definition TEXT NOT NULL, reason TEXT NOT NULL, created_at TEXT NOT NULL, "
-                    + "PRIMARY KEY (new_concept_id, old_concept_id))");
-            statement.execute("CREATE INDEX IF NOT EXISTS idx_lineage_old ON "
-                    + TABLE_CONCEPT_LINEAGE + "(old_id)");
+    public static int seedDeclaredAliases(Path database, String workspace,
+                                           List<io.matrix.knowledge.concept.ConceptAlias> aliases)
+            throws SQLException {
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + database)) {
+            connection.setAutoCommit(false);
+            try {
+                int written = seedTheDeclaredAliases(connection, workspace, aliases);
+                connection.commit();
+                return written;
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
         }
+    }
+
+    /**
+     * Writes the DECLARED alias table into the store's own table.
+     *
+     * <p>The alias layer is DATA in the committed schema (the owner's decision
+     * OD-064), and the status travels with every row: the
+     * {@code declaration_status} column says that the entry is a hand-written,
+     * corpus-fitted and temporary claim, so that a later reader of the DATA alone
+     * cannot mistake it for a derived fact.</p>
+     *
+     * @param connection the connection
+     * @param workspace the workspace id
+     * @param aliases the declared entries
+     * @return how many rows were written
+     * @throws SQLException when the database refuses the write
+     */
+    public static int seedTheDeclaredAliases(Connection connection, String workspace,
+                                             List<io.matrix.knowledge.concept.ConceptAlias> aliases)
+            throws SQLException {
+        int written = 0;
+        try (PreparedStatement statement = connection.prepareStatement(
+                "INSERT OR IGNORE INTO concept_alias(workspace_id, canonical_lemma, "
+                        + "variant_lemma, kind, reason, declared_by, declaration_status, "
+                        + "recorded_at) VALUES (?,?,?,?,?,?,?,?)")) {
+            for (io.matrix.knowledge.concept.ConceptAlias alias : aliases) {
+                statement.setString(1, workspace);
+                statement.setString(2, alias.canonicalLemma());
+                statement.setString(3, alias.variantLemma());
+                statement.setString(4, alias.kind().name());
+                statement.setString(5, alias.reason());
+                statement.setString(6, alias.declaredBy());
+                statement.setString(7, alias.declarationStatus().name());
+                statement.setString(8, alias.recordedAt());
+                statement.executeUpdate();
+                written++;
+            }
+        }
+        return written;
     }
 
     /**

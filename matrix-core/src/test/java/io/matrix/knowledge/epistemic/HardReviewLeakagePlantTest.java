@@ -31,26 +31,32 @@ class HardReviewLeakagePlantTest {
     @TempDir
     Path directory;
 
-    /** The question of the first case of the copied frozen set, read at run time. */
-    private static String questionOfTheFirstCase(Path copy) throws Exception {
-        Path artefact = null;
+    /**
+     * The frozen set of the COPY, found by its FORM at run time: the document whose
+     * cases carry a class and a premise. The file carries no name of the artefact.
+     */
+    private static Path findTheFrozenSet(Path copy) throws Exception {
         try (var documents = Files.list(copy.resolve(ENGINEERING))) {
             for (Path document : documents.toList()) {
-                // the frozen set is the document that holds the cases
                 try {
                     JsonNode parsed = new ObjectMapper().readTree(Files.readAllBytes(document));
                     // the frozen set of the guard: its cases carry a class and a premise
                     if (parsed.path("cases").isArray() && parsed.path("cases").size() > 0
                             && parsed.path("cases").get(0).has("class")
                             && parsed.path("cases").get(0).has("premise")) {
-                        artefact = document;
-                        break;
+                        return document;
                     }
                 } catch (Exception notTheSet) {
                     // not the frozen set
                 }
             }
         }
+        return null;
+    }
+
+    /** The question of the first case of the copied frozen set, read at run time. */
+    private static String questionOfTheFirstCase(Path copy) throws Exception {
+        Path artefact = findTheFrozenSet(copy);
         if (artefact == null) {
             throw new IllegalStateException("the copied engineering documents hold no frozen set");
         }
@@ -110,11 +116,10 @@ class HardReviewLeakagePlantTest {
             System.out.println("  the file carries it: "
                     + Files.readString(instrument).contains(question));
             // what the guard's own scan would see
-            Path guardRoot = io.matrix.testsupport.RepositoryPaths.root();
-            Path guardArtefact = guardRoot.resolve("docs-v2/engineering/EPISTEMIC-HELDOUT-SET.json");
+            Path guardArtefact = findTheFrozenSet(copy);
             System.out.println("  the guard's artefact: " + guardArtefact + " exists="
-                    + Files.exists(guardArtefact));
-            if (Files.exists(guardArtefact)) {
+                    + (guardArtefact != null && Files.exists(guardArtefact)));
+            if (guardArtefact != null && Files.exists(guardArtefact)) {
                 JsonNode guardSet = new ObjectMapper().readTree(Files.readAllBytes(guardArtefact));
                 boolean carries = false;
                 int cases = 0;
