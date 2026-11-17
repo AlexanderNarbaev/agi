@@ -202,7 +202,25 @@
 # own content. The exception is recorded here rather than waved through, so
 # that the amount of the change stays visible and the expiry stays real.
 
-.github/ | 2350 | repo-owner | 2026-12-31
+#
+# 2026-11-17, the .github/ exception was raised from 2350 to 2361 diff lines.
+#
+# The change is SANCTIONED by the owner: the answer to question
+# D1-CI-AGGREGATOR-017 (2026-11-17, option A) authorizes one change to
+# .github/workflows/fast-pr.yml — the aggregator that re-publishes the compile's
+# outcome under the stable required-check name must treat an EMPTY matrix as
+# "there is nothing to compile" instead of as a failure. The decision is
+# recorded as OD-066 in docs-v2/governance/DECISION-REGISTER.md.
+#
+# What changed: the aggregator's shell block gained the empty-matrix branch and
+# now reads the scope job's build-matrix output, so it can tell an empty matrix
+# (nothing to compile) from a matrix skipped because a dependency failed (a
+# real failure, which still fails the gate). The triggers, the permissions, the
+# secrets, the concurrency settings and every other check are untouched. The
+# exception is recorded here rather than waved through, so that the amount of the
+# change stays visible and the expiry stays real.
+
+.github/ | 2361 | repo-owner | 2026-12-31
 AGENTS.md | 63 | repo-owner | 2026-12-31
 #
 # 2026-11-15, the EvalBattery.java exception was created with 79 diff lines.
