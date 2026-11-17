@@ -368,8 +368,8 @@ claim id moves.
 | | the baseline | after |
 |---|---|---|
 | **A1** the concept names' precision | 30 % (12 of 40) | **35/150 = 23.3 %** on the frozen 150-span set; the first 40 of the draw give **12/40 = 30 %** — the same share, from an independent sample |
-| **A2(i)** the usable definitions | **0** | **120/326 = 36.8 %** — **under hard review**: the independent review measured that **31 of the 120 hang on spans the wave's own frozen hand-labelling calls "not a concept"**, and a further **33 of the 120** have the name **not in the subject position**. The rule is being corrected to require the name to **be** the subject, and the number will be re-measured; the earlier figure is recorded here, not quietly replaced |
-| **A2(ii)** the human-verified share | not measured | **24/25 = 96 %** as first published — **and the metric itself was under review**: it measured *"about the concept"*, not *"is a definition"*, so it is being re-measured under the corrected rule |
+| **A2(i)** the usable definitions | **0** | **27/326 = 8.3 %** — **corrected downward** (see the correction note below): the rule now requires the concept's name to **be the subject** of the qualifying sentence, and the earlier, looser rule reported 120/326 = 36.8 % |
+| **A2(ii)** the human-verified share | not measured | **18/27 = 66.7 %** — **corrected downward**: the metric now asks *"is this a definition of its concept"*, not *"is this sentence about the concept"*; the earlier, weaker metric reported 24/25 = 96 % |
 | **A3** the relation precision | not measured | **0/7 = 0 %** (five fragmentary endpoints, one with its direction reversed) — the change does not touch the relations |
 | **A4/A5** the retrieval | 18/29, 6/6, 0.3000 | **unchanged, every content column identical** — deliberately: see below |
 | **A7** the cost | — | the retriever is **within the noise** (702–1080 µs against 692–794 µs); the baseline path's own timing drifts 59 → 68 → 76 ms across runs of the **same** code |
@@ -413,6 +413,19 @@ that moves; the verdict does not depend on them — the held-out set is identica
 gains a single case. What the null result does **not** establish: that the definitions are useless (a
 different floor, a query expansion or a semantic match over the definition was not measured), anything
 about the nine non-ask cases, and anything beyond this corpus.
+
+**The correction, recorded rather than quietly swapped.** The hard review (Gate 6) measured that
+**31 of the 120** definitions hung on spans the wave's **own frozen hand-labelling** calls "not a
+concept", and that **33 of the 120** had the concept's name **not in the subject position**; and it
+showed that the acceptance metric measured *"about the concept"* rather than *"is a definition"*. The
+rule was therefore changed — the name must **be** the subject, a denial ("X is not Y") no longer
+passes, and the non-referent names are rejected — and the numbers were **re-measured under the
+corrected rule and the corrected metric**. The honest result is much smaller: **27 definitions of 326
+concepts (8.3 %)**, of which the hand-verified census finds **18 to be definitions of their concept
+(66.7 %)**. The earlier figures (36.8 % and 96 %) measured a weaker notion of "definition" and are
+kept here only as the record of what they measured. `[speculative]` the sample behind the 18/27 is
+small, and the reviewer's own probes (`HardReviewDefinitionPrecisionTest`) have not been re-run
+against the corrected rule by an independent party.
 
 **What this does not establish.** It does not make a concept name right — a definition attached to a
 fragment is a definition of a fragment, and 30 % of the names denote no genuine referent. It does not

@@ -74,9 +74,18 @@ public record ConceptAlias(String canonicalLemma, String variantLemma, AliasKind
     public static ConceptAlias declared(String canonicalLemma, String variantLemma,
                                          AliasKind kind, String reason) {
         return new ConceptAlias(canonicalLemma, variantLemma, kind, reason,
-                "the owner's decision OD-064", DeclarationStatus.DECLARED_TEMPORARY,
-                "2026-11-16T00:00:00Z");
+                DECLARED_BY, DeclarationStatus.DECLARED_TEMPORARY, DECLARED_ON);
     }
+
+    /** Who declared the entries: the owner's decision OD-064. */
+    private static final String DECLARED_BY = "the owner's decision OD-064";
+
+    /**
+     * When the declared entries were declared. It is a fixed stamp and not a clock
+     * read: the declaration is a fact of the record, and a wall-clock read in a
+     * runtime path would make the store's content depend on when it was written.
+     */
+    private static final String DECLARED_ON = "2026-11-16T00:00:00Z";
 
     /**
      * The identity of the entry: the two lemmas.
