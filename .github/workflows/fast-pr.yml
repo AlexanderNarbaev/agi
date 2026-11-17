@@ -233,7 +233,18 @@ jobs:
       - name: "The compile and the targeted tests must have succeeded"
         run: |
           result="${{ needs.build-and-test.result }}"
+          matrix="${{ needs.scope.outputs.build-matrix }}"
           echo "the compile and the targeted tests: ${result}"
+          echo "the touched modules: ${matrix}"
+          # A change that touches no module has nothing to compile and nothing
+          # to test. The matrix job is SKIPPED in that case, and a skipped
+          # matrix is not a failed matrix. A matrix skipped because a DEPENDENCY
+          # failed is a different thing: then the scope job did not succeed and
+          # its output is empty, not "[]" — so that case still fails below.
+          if [ "${result}" = "skipped" ] && [ "${matrix}" = "[]" ]; then
+            echo "the change touches no module: there is nothing to compile and nothing to test"
+            exit 0
+          fi
           if [ "${result}" != "success" ]; then
             echo "the compile or the targeted tests did not succeed: ${result}"
             exit 1
