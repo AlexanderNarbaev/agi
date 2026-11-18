@@ -800,6 +800,55 @@ sanction recorded in `docs-v2/quality/frozen-zone-baseline.txt`.
 repository, and the lane's **PR-event** path has never run at all (no pull request carries this
 work). Both are measured by the next CI run, not assumed here.
 
+**§J-quater — the owner's live store: migrated, verified, serving.**
+
+The owner's answer to **D1-LIVE-STORE-MIGRATION-019** (2026-11-18, option A — *"migrate the live
+store now"*) authorised the migration that OD-067 had held back until the measured result existed.
+The dry run of §J-bis was that result, so the migration was executed through a **launcher** that
+enforces the order the decision requires (`scripts/migrate-live-store.sh` →
+`:matrix-core:liveStoreMigration` → `LiveStoreMigration`):
+
+1. the live file is **copied to a timestamped backup** — sha256 `6d963dff9d5c07982faf4b81f0b927f9c9b7f2992b5ac0a77af2954d4b7f94c9`,
+   the exact bytes of the pre-migration file;
+2. the live file is copied to a **work file**, and the work file is migrated: the schema chain
+   (v15 → v21, **104 ms**), then one workspace at a time with a re-export between, because a
+   workspace's plan is built from that workspace's own rows;
+3. every workspace is **audited** — the audit must report zero orphans and zero stale pointers, or
+   the launcher **aborts before the live file is touched**;
+4. the **rollback is rehearsed** on a second copy — the store's own snapshot restores each
+   workspace (`logic` 11 → 22 → 11, `photosynthesis` 13 → 37 → 13), or the launcher aborts;
+5. only then is the live file **replaced atomically**;
+6. the live file is **re-verified** afterwards.
+
+**The executed numbers** (identical to the dry run, as they must be): `logic` — the concepts 11 → 22,
+the claims 28 of 28 re-pointed, the representations 8, the representation collisions 0, the
+prerequisites 6, **the prerequisite collapses 1**, **the prerequisite self-loops 1**, the other rows
+88, the lineage 56, the referents 8, the rejected 3, 5 ms; `photosynthesis` — the concepts 13 → 37, the
+claims 24 of 24, the representations 14, the collisions 0, the prerequisites 5, **0 and 0**, the other
+rows 272, the lineage 48, the referents 14, the rejected 10, 5 ms. Both audits: **13 tables, 0 orphans,
+0 stale**.
+
+**The live store after the migration, verified independently of the launcher's own report:** the
+schema version **21**; the concepts **59** (the 24 old rows are **kept** and superseded by the
+lineage — nothing is deleted); the claims **52** (none lost) with **52** claim-lineage rows; the
+prerequisites **9** (the two measured losses); the representations 27; the sources 7; the
+concept-lineage 28; the claim-scoped records 13; the alias table **0** (nothing was seeded, as
+decided); **no self-requires**; **no claim without a concept**; no concept without a name.
+
+**And the store still serves.** The production asking path (`KnowledgeWorkbench.ask`) answers from
+the migrated store in both workspaces: *logic* → "Propositional logic evaluates formulas by assigning
+truth values to their atomic variables. A formula is valid when it is true on every assignment,
+satisfiable when it is true on at least one, and a consequence of another when it is true wherever the
+other is."; *photosynthesis* → "Photosynthesis has two linked stages. The light-dependent reactions, in
+the thylakoid membranes, harvest light, split water and build a proton gradient that drives ATP and
+NADPH production. The light-independent reactions, in the chloroplast stroma, use that ATP and NADPH
+to fix carbon dioxide into carbohydrate through the Calvin-Benson cycle." ⇒ ⇒ ⇒ the migration is not
+merely internally consistent; the served answers are correct.
+
+**The way back.** The backup `matrix-core/data/knowledge/workbench.pre-migration-2026-11-18T16-04-34-729638675Z.sqlite`
+is kept beside the store (the directory is gitignored, so it is not in the repository) and holds the
+original bytes.
+
 **Open and owned:** the measured limitations of §B — the partial paraphrase equivalence, the two
 frozen-set cases whose disposition differs from the set's expectation, and the corpus-in-conflict
 precedence (which keeps "unsupported answering" at 2); the **latency plateau** of the premise path

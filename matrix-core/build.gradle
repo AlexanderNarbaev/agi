@@ -723,3 +723,21 @@ tasks.register('w51Demonstration', JavaExec) {
     ]
     jvmArgs '--add-modules=jdk.incubator.vector'
 }
+
+// The owner's live store: the identity migration, executed.
+//
+//   ./gradlew :matrix-core:liveStoreMigration -PliveStore=<path>
+//
+// The approval basis is the owner's OD-067 and the owner's answer to
+// D1-LIVE-STORE-MIGRATION-019 (2026-11-18, option A). The launcher backs the live
+// file up, migrates a copy, audits it, rehearses the rollback and only then replaces
+// the live file; it aborts before the live file is touched if the audit is not clean.
+tasks.register('liveStoreMigration', JavaExec) {
+    group = 'verification'
+    description = "Migrates the owner's live store to the identity model, on a copy first"
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'io.matrix.knowledge.concept.research.LiveStoreMigration'
+    workingDir = rootProject.projectDir
+    args = [(project.findProperty('liveStore') ?: 'matrix-core/data/knowledge/workbench.sqlite').toString()]
+    jvmArgs '--add-modules=jdk.incubator.vector'
+}

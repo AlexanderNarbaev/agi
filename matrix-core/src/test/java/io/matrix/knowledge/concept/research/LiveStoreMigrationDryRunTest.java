@@ -22,9 +22,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * P1 — the owner's LIVE store: the identity migration, on a COPY.
  *
- * <p><b>What this is.</b> The owner's decision OD-067 chose <b>variant A</b>: the live store
- * is copied, the copy is migrated, and the numbers are measured — the live store itself is
- * never opened for writing. This test executes that dry run and publishes the numbers:
+ * <p><b>What this is.</b> The owner's decision OD-067 chose <b>variant A</b>: the store
+ * is copied, the copy is migrated, and the numbers are measured — the source itself is
+ * never opened for writing. After the owner's live store was migrated (OD-070), the source
+ * is the <b>preserved pre-migration backup</b>, so the dry run stays a measurement of the
+ * original store rather than of an already migrated one. This test executes that dry run
+ * and publishes the numbers:
  * the schema version the copy lands on, the time the schema chain took, the copy-forward's
  * own counts (including the representation collisions of OD-065), the orphan audit over the
  * thirteen referencing tables, and the logical rollback.
@@ -52,15 +55,16 @@ class LiveStoreMigrationDryRunTest {
     @Test
     @DisplayName("the live store on a copy: the schema, the two workspaces, the audit and the rollback")
     void theLiveStoreOnACopy() throws Exception {
-        Path live = liveStore();
-        Assumptions.assumeTrue(live != null,
-                "the owner's live store is not in this checkout — the dry run is skipped, not failed");
+        Path source = liveStore();
+        Assumptions.assumeTrue(source != null,
+                "neither the owner's live store nor its pre-migration backup is in this checkout — "
+                        + "the dry run is skipped, not failed");
 
         Path work = Files.createTempDirectory("live-migration-dry-run-");
         Path migrated = work.resolve("live-migrated.sqlite");
         Path rollbackCopy = work.resolve("live-rollback.sqlite");
-        ReferentKeyMigration.copy(live, migrated);
-        ReferentKeyMigration.copy(live, rollbackCopy);
+        ReferentKeyMigration.copy(source, migrated);
+        ReferentKeyMigration.copy(source, rollbackCopy);
 
         // ── the schema chain, on the copy ─────────────────────────────────────
         int versionBefore = schemaVersion(migrated);
@@ -72,7 +76,10 @@ class LiveStoreMigrationDryRunTest {
         int versionAfter = schemaVersion(migrated);
         System.out.printf("[live-migration] the schema: the copy's version %d -> %d, the chain took "
                 + "%d ms%n", versionBefore, versionAfter, schemaMillis);
-        assertThat(versionAfter).isEqualTo(KnowledgeStore.SCHEMA_VERSION);
+        assertThat(versionAfter).as("the copy's schema version")
+                .isEqualTo(KnowledgeStore.SCHEMA_VERSION);
+        assertThat(versionAfter).as("the copy's schema version did not move")
+                .isGreaterThanOrEqualTo(versionBefore);
 
         // ── the copy-forward, one workspace at a time ─────────────────────────
         for (String workspace : WORKSPACES) {
@@ -135,20 +142,46 @@ class LiveStoreMigrationDryRunTest {
             }
         }
 
-        // ── the live store is untouched ───────────────────────────────────────
-        assertThat(schemaVersion(live)).as("the live store's schema version").isEqualTo(versionBefore);
-        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + live);
+        // ── the source store is untouched ─────────────────────────────────────
+        assertThat(schemaVersion(source)).as("the source store's schema version")
+                .isEqualTo(versionBefore);
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + source);
              Statement statement = connection.createStatement();
              ResultSet rows = statement.executeQuery(
                      "SELECT COUNT(*) FROM concept WHERE workspace_id = 'photosynthesis'")) {
             assertThat(rows.next()).isTrue();
-            System.out.printf("[live-migration] the live store: the schema version %d, the "
+            System.out.printf("[live-migration] the source store: the schema version %d, the "
                     + "photosynthesis concepts %d — untouched%n", versionBefore, rows.getInt(1));
         }
     }
 
-    /** The owner's live store, or {@code null} when this checkout does not hold it. */
+    /**
+     * The store the dry run migrates.
+     *
+     * <p>After the owner's live store has been migrated (OD-070), the live file is already
+     * at the current schema version and re-migrating it would mean migrating an already
+     * migrated store. The dry run therefore migrates the <b>preserved original</b> — the
+     * timestamped backup the migration launcher kept, which still holds the pre-migration
+     * bytes — and falls back to the live store when no backup is there (a checkout that
+     * holds the store but not its backup).</p>
+     *
+     * @return the store to migrate, or {@code null} when this checkout holds neither
+     */
     private static Path liveStore() {
+        Path newest = null;
+        try (java.util.stream.Stream<Path> backups = java.nio.file.Files.list(
+                Path.of("data/knowledge"))) {
+            newest = backups.filter(path -> path.getFileName().toString()
+                            .startsWith("workbench.pre-migration-")
+                            && path.getFileName().toString().endsWith(".sqlite"))
+                    .max(java.util.Comparator.comparing(path -> path.getFileName().toString()))
+                    .orElse(null);
+        } catch (java.io.IOException | RuntimeException e) {
+            newest = null;
+        }
+        if (newest != null) {
+            return newest.toAbsolutePath().normalize();
+        }
         for (String candidate : List.of("data/knowledge/workbench.sqlite",
                 "../matrix-core/data/knowledge/workbench.sqlite")) {
             Path path = Path.of(candidate);
