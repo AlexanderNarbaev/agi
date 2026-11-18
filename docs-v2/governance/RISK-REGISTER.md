@@ -573,6 +573,33 @@ implemented, tested and never called has no exposure, and saying so is part of t
   dropped edges in `logic`) is **not** erased by the closure — it is the measured cost of the merge
   and it is the owner's to accept with the second decision
 
+### R-EPIS-05 — The FAST PR lane's aggregator interpolated a JSON matrix into the shell, so the required check died with exit 127
+
+- **category**: delivery-integrity
+- **severity**: high — the aggregator IS the required status check of `develop`
+- **probability**: certain (it is a measured fact: the CI run of 2026-11-18)
+- **impact**: high — every change that touches a module makes the lane red, so nothing can be merged
+- **evidence**: the CI run **44244456922** of the commit `89731948`: the matrix job `Compile + targeted
+  tests (matrix-core)` **succeeded**, while the aggregator job failed with
+  `Process completed with exit code 127` and the log line
+  `line 2: io.matrix.knowledge.concept.research.*}]: command not found`. The scope job's
+  `build-matrix` output is `[{"module": "matrix-core", "filter": "--tests io.matrix.knowledge.concept.research.*"}]`
+  and the aggregator substituted it into a double-quoted shell string, so the inner quotes closed the
+  shell's own quoting. Reproduced locally under the runner's shell (`bash -e`): the old form exits
+  **127**, the new form exits **0**
+- **exposure**: real and total for module-touching changes. It did not show before because the lane
+  had only ever run on documentation changes, where the matrix is empty and the step exits early —
+  the first commit that touched `matrix-core` found it
+- **mitigation**: the values are passed through the environment (`BUILD_RESULT`, `BUILD_MATRIX`) and
+  read as data; the empty-matrix semantics of OD-066 are unchanged; the repair is reproduced locally
+  in all three cases (success, empty matrix, failed compile) before it is pushed
+- **owner**: owner (the frozen-zone sanction, D1-CI-AGGREGATOR-QUOTING-020 → OD-069), agent (the repair)
+- **status**: CLOSED — the owner's sanction is recorded (OD-069), the frozen exception is raised to
+  **2370** diff lines with the sanction in `docs-v2/quality/frozen-zone-baseline.txt`, and the quality
+  gate reports **PASS** (271 candidates, 0 violations) with the change in the tree. **The residual:**
+  the lane's own matrix path and its PR-event path have still never run green end to end on this
+  repository — that is measured by the next CI run, not assumed here
+
 ## How a risk is closed
 
 1. The **mitigation** is implemented and **verified** by an executed check — the evidence

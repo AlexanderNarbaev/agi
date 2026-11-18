@@ -231,9 +231,18 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: "The compile and the targeted tests must have succeeded"
+        env:
+          # The matrix is JSON, so it must NOT be interpolated into the shell text:
+          # its double quotes would close the shell's own quoting and the rest of
+          # the line would be parsed as commands (exit 127). The runner passes
+          # both values as environment values instead, so the shell reads them
+          # as data. The empty matrix is still the literal `[]`.
+          BUILD_RESULT: ${{ needs.build-and-test.result }}
+          BUILD_MATRIX: ${{ needs.scope.outputs.build-matrix }}
         run: |
-          result="${{ needs.build-and-test.result }}"
-          matrix="${{ needs.scope.outputs.build-matrix }}"
+          set -euo pipefail
+          result="$BUILD_RESULT"
+          matrix="$BUILD_MATRIX"
           echo "the compile and the targeted tests: ${result}"
           echo "the touched modules: ${matrix}"
           # A change that touches no module has nothing to compile and nothing

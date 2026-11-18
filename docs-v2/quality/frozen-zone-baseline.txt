@@ -220,7 +220,32 @@
 # exception is recorded here rather than waved through, so that the amount of the
 # change stays visible and the expiry stays real.
 
-.github/ | 2361 | repo-owner | 2026-12-31
+#
+# 2026-11-18, the .github/ exception was raised from 2361 to 2370 diff lines.
+#
+# The change is SANCTIONED by the owner: the answer to question
+# D1-CI-AGGREGATOR-QUOTING-020 (2026-11-18, option A) authorizes one change to
+# .github/workflows/fast-pr.yml — the aggregator that re-publishes the compile's
+# outcome under the stable required-check name must read the scope job's
+# build-matrix output as DATA, not interpolate it into the shell text. The
+# decision is recorded as OD-069 in docs-v2/governance/DECISION-REGISTER.md.
+#
+# What changed: the aggregator's shell block gained an `env:` block and reads
+# the two values from the environment (BUILD_RESULT, BUILD_MATRIX) instead of
+# substituting them into the script text. The scope job's matrix is JSON, so its
+# double quotes closed the shell's own quoting and the rest of the line was
+# parsed as commands: the CI run 44244456922 failed with
+# `line 2: io.matrix.knowledge.concept.research.*}]: command not found` and exit
+# 127, while the matrix job itself had PASSED. Reproduced locally: the old
+# form under `bash -e` exits 127, the new form exits 0, still fails a failed
+# compile (exit 1) and still passes a docs-only change (exit 0).
+#
+# The triggers, the permissions, the secrets, the concurrency settings, the
+# empty-matrix semantics of OD-066 and every other check are untouched. The
+# exception is recorded here rather than waved through, so that the amount of
+# the change stays visible and the expiry stays real.
+
+.github/ | 2370 | repo-owner | 2026-12-31
 AGENTS.md | 63 | repo-owner | 2026-12-31
 #
 # 2026-11-15, the EvalBattery.java exception was created with 79 diff lines.

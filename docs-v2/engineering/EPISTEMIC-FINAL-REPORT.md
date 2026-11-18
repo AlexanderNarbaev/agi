@@ -770,6 +770,36 @@ The two losses are the honest cost of the merge and they are **not** free: the `
 the two concepts, so it was dropped, and one pair of edges collapsed onto one triple. The history of
 both survives in `concept_lineage`.
 
+**§J-ter — the FAST PR lane's aggregator died on the first module-touching commit, and why.**
+
+The commit that carries the prerequisite fix (`89731948`) touched `matrix-core` ⇒ ⇒ ⇒ **the lane's
+matrix path ran for the first time** ⇒ ⇒ ⇒ and the lane went **red**: the matrix job
+`Compile + targeted tests (matrix-core)` **succeeded**, while the aggregator failed with
+`Process completed with exit code 127` and the log line
+
+```
+line 2: io.matrix.knowledge.concept.research.*}]: command not found
+```
+
+The scope job publishes its build matrix as JSON
+(`[{"module": "matrix-core", "filter": "--tests io.matrix.knowledge.concept.research.*"}]`), and the
+aggregator substituted that value into a **double-quoted shell string** ⇒ ⇒ ⇒ the inner quotes
+closed the shell's own quoting ⇒ ⇒ ⇒ the rest of the line was parsed as commands ⇒ ⇒ ⇒ exit 127.
+The lane had never shown it, because it had only ever run on documentation changes — where the matrix
+is empty and the step exits early ⇒ ⇒ ⇒ the first commit that touched a module found it.
+
+**The repair** (the owner's D1-CI-AGGREGATOR-QUOTING-020 → OD-069): the values are passed through
+the **environment** (`BUILD_RESULT`, `BUILD_MATRIX`) and read as data. Reproduced locally before the
+push, under the runner's own shell (`bash -e`): the old form exits **127**; the new form exits **0**
+on success, still exits **1** when the compile failed, and still exits **0** on a docs-only change
+with an empty matrix — so the empty-matrix semantics of OD-066 are untouched. The `.github/` frozen
+exception is raised **2361 → 2370** diff lines, owner `repo-owner`, expiry 2026-12-31, with the
+sanction recorded in `docs-v2/quality/frozen-zone-baseline.txt`.
+
+**What this wave did NOT measure:** the lane's matrix path has never run green end to end on this
+repository, and the lane's **PR-event** path has never run at all (no pull request carries this
+work). Both are measured by the next CI run, not assumed here.
+
 **Open and owned:** the measured limitations of §B — the partial paraphrase equivalence, the two
 frozen-set cases whose disposition differs from the set's expectation, and the corpus-in-conflict
 precedence (which keeps "unsupported answering" at 2); the **latency plateau** of the premise path
