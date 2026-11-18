@@ -959,6 +959,38 @@ idempotency key must be **unique per run** in a test that runs against a persist
 every run appends to the same episode. Neither is a product defect; both are recorded here because
 they are the kind of reading that turns a green test into a false claim.
 
+**§J-sept — the identity repair judged by the sealed held-out set: the same answers, and one silent loss.**
+
+The held-out evaluation does not only measure the unmigrated path: it **migrates a copy of the
+workspace and judges it with the same judge**, the same questions and the same dataset
+(`HeldOutEvaluationTest.theMigratedCopyIsJudgedByTheSameJudge`). That is the measurement Gate 4
+asks for — *"test whether improvements actually change supported answers on fresh data without false
+promotions"* — and it was run on 2026-11-18.
+
+**The result, in the two rows the same judge produced:**
+
+| | the unmigrated row | the migrated row |
+|---|---|---|
+| the cases passed | **17/25** | **17/25** |
+| the failures | H-P02, H-P05, H-P06, H-P08, H-P10, H-P11, H-P13, H-P17 | **the same eight** |
+| recall@1 | 0.5351 | **0.5351** |
+| MRR | 0.8600 | **0.8600** |
+| the abstention accuracy | 1.0000 | **1.0000** |
+| the unsupported-answer rate | 0.2800 | **0.2800** |
+| the mean non-gold claims cited | 5.2105 | **4.6842** |
+
+⇒ ⇒ ⇒ **the identity repair changes no served answer on the sealed set** — no case is gained, none is
+lost, no ranking moves ⇒ ⇒ ⇒ and the **citation precision improves**: the answers cite **fewer
+non-gold claims** (5.2105 → 4.6842) ⇒ ⇒ ⇒ the referents are the things the answers actually use ⇒ ⇒ ⇒
+
+**The one honest limit.** The migration produced **322** claim-scoped records, each carrying its own
+text. Of the **17** cases whose gold claim lives in one of them, **16 still answer** and **one does
+not**: **H-P02**, a POSITIVE case ⇒ ⇒ ⇒ a claim whose gold became a claim-scoped record can be
+**silently lost** — the answer comes back without it, and nothing in the response says so ⇒ ⇒ ⇒ that
+is a real defect, and it is the next one worth a probe (it is **not** the H-P02 that was already
+failing before the migration: H-P02 is in **both** rows' failure list, and the **silent** loss is a
+different observation — the case's own gold is not cited any more).
+
 **Open and owned:** the measured limitations of §B — the partial paraphrase equivalence, the two
 frozen-set cases whose disposition differs from the set's expectation, and the corpus-in-conflict
 precedence (which keeps "unsupported answering" at 2); the **latency plateau** of the premise path
@@ -1057,26 +1089,30 @@ python3 scripts/docs-link-check.py --root . --strict
 >
 > **Tomorrow's first step, in this order, with the commands (nothing new has to be written):**
 >
-> 1. **Re-measure the concept identity against the migrated store with the *same* judge** — the C2A
->    baseline is BASELINE-PATH **17/25** with the same eight failures (H-P02, H-P05, H-P06, H-P08,
->    H-P10, H-P11, H-P13, H-P17), recall@1 **0.5351**, MRR **0.8600**. The identity repair was measured
->    on the store's own claims (§J-quinque), but the **held-out evaluation was not re-run against the
->    migrated store** ⇒ ⇒ ⇒ that is the gap. The command:
->    `flock /tmp/gradle-matrix.lock ./gradlew :matrix-core:test --tests "io.matrix.knowledge.concept.*" --offline`
->    ⇒ the artefacts `docs-v2/engineering/C2A-HELDOUT-EVALUATION.json` and
->    `C2A-CONCEPT-ENRICHMENT-RESULTS.json` are **rewritten by the run** ⇒ copy them out and compare
->    the quality numbers (every number but the latency must be identical; a change in recall, MRR or
->    the failed-case list is a **finding**, not a nuisance).
-> 2. **Measure the learning tables' state after the migration** — the effect of the referent-key
+> 1. **Measure the learning tables' state after the migration** — the effect of the referent-key
 >    migration on `learning_state`, `learning_goal`, `hebbian_binding` and the rest is still
 >    **not measured** (the audit covers the thirteen knowledge tables, not the learning ones). The
 >    migration rewrote `concept_id` in the "other tables" pass ⇒ ⇒ ⇒ ask the store what the learning
->    subsystem now points at, and whether its canary still holds.
-> 3. **The open items that need the owner, not the coordinator:** the HTTP status for a failed
+>    subsystem now points at, and whether its canary still holds. This is the **real** remaining
+>    gap; the held-out evaluation is **not** a gap — see the note below.
+> 2. **The open items that need the owner, not the coordinator:** the HTTP status for a failed
 >    effect; the latency plateau of the premise path; the definition-merge collision rule (0
 >    collisions on this corpus ⇒ unverified); and the inherited **ShellCheck** red over ~36 scripts
 >    that predates this programme (the last two CI runs were green because the path-sensitive
 >    check was skipped — the scripts under test were untouched).
+> 3. **Optional, if the owner wants the live store judged by the sealed set** — the held-out set
+>    judges a **migrated copy** of the **corpus** workspace (the plate-tectonics pool), not the
+>    owner's live store, and it already does so: `HeldOutEvaluationTest.theMigratedCopyIsJudgedByTheSameJudge`
+>    measures the BASELINE-PATH row on the migrated copy with the **same judge**, the same questions
+>    and the same dataset, and asserts that every content metric agrees. The measured result (2026-11-18):
+>    the unmigrated row — passed **17/25**, the failures **[H-P02, H-P05, H-P06, H-P08, H-P10, H-P11,
+>    H-P13, H-P17]**, recall@1 **0.5351**, MRR **0.8600**, the abstention **1.0000**, the unsupported
+>    **0.2800**; the **migrated** row — **identical on every one of them** ⇒ ⇒ ⇒ the identity repair
+>    changes **nothing** in the served answers on the sealed set ⇒ ⇒ ⇒ and the **mean non-gold claims
+>    cited fell from 5.2105 to 4.6842** ⇒ ⇒ ⇒ a measurable gain in citation precision. The honest
+>    limit: of the **17** cases whose gold lives in a claim-scoped record, **16 still answer** and
+>    **one does not** — **H-P02**, a POSITIVE case ⇒ ⇒ ⇒ a claim whose gold became a claim-scoped
+>    record can be **silently** lost, and that is the next defect worth a probe.
 >
 > **The commands that reproduce what was measured tonight, in order:**
 > ```
