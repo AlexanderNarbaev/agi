@@ -370,7 +370,9 @@ public final class ReferentPolicy {
         /** The span repeats a phrase: it is a caption. */
         CAPTION_REPEAT,
         /** The head is a bare plural with no modifier: it denotes a class. */
-        BARE_PLURAL
+        BARE_PLURAL,
+        /** The span opens with a preposition and a determiner: it is a modifier. */
+        PREPOSITIONAL_MODIFIER
     }
 
     /**
@@ -421,6 +423,9 @@ public final class ReferentPolicy {
         }
         if (beginsWithASubordinator(words)) {
             return Rejection.CLAUSE_SUBORDINATOR;
+        }
+        if (beginsWithAPrepositionalModifier(words, trimmed)) {
+            return Rejection.PREPOSITIONAL_MODIFIER;
         }
         // The head phrase: when the span opens with a sentence modifier and carries a
         // comma, the part before the comma modifies the whole sentence and the head
@@ -846,6 +851,35 @@ public final class ReferentPolicy {
      */
     private static boolean beginsWithASubordinator(List<String> words) {
         return !words.isEmpty() && SUBORDINATORS.contains(bare(words.get(0)));
+    }
+
+    /**
+     * Whether a span opens with a prepositional modifier.
+     *
+     * <p>A span that opens with a preposition and a determiner — "In <b>the</b> assignment
+     * under consideration", "For <b>the</b> organism" — modifies something outside itself:
+     * it says <i>where</i> or <i>for what</i>, not <i>what</i>. A concept names a thing, so
+     * such a span cannot be one.
+     *
+     * <p>Two conditions keep the rule narrow. The span must carry <b>no comma</b>: a span
+     * that opens with a modifier AND carries a comma is an adverbial plus a subject, and
+     * the head phrase is what follows the comma — that case is already cut elsewhere. And
+     * the preposition must be followed by a <b>determiner</b>: "In vitro photosynthesis"
+     * opens with a preposition too, but it names a thing (the qualifier is a noun, not a
+     * determiner), so it stays a referent.</p>
+     *
+     * @param words the words of the span
+     * @param surface the span itself
+     * @return whether the span is a prepositional modifier
+     */
+    private static boolean beginsWithAPrepositionalModifier(List<String> words, String surface) {
+        if (words.size() < 2 || surface.contains(",")) {
+            return false;
+        }
+        if (!PREPOSITIONS.contains(bare(words.get(0)))) {
+            return false;
+        }
+        return DETERMINERS.contains(bare(words.get(1)));
     }
 
     /**

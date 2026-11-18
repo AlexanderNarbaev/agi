@@ -614,3 +614,28 @@ implemented, tested and never called has no exposure, and saying so is part of t
 Any agent may add a record. A record must state the **evidence** (a path, a command or a
 measurement) and the **actual exposure** — not the implementation status. A record with no
 evidence is a suspicion, and it is marked as such.
+
+### R-EPIS-06 — the identity repair promotes a phrase where a thing should be
+
+- **the finding**: the referent policy accepted a span that opens with a **preposition followed by a
+  determiner** and carries no comma ("In the assignment under consideration"). Such a span modifies
+  something outside itself: it says *where* or *for what*, not *what*. The owner's migrated live store
+  carried **two** such referents with **10 claims** on them — the false promotion that Gate 4 names.
+- **why it happened**: the policy tested a preposition-led span only when the span carried a **comma**
+  (an adverbial plus a subject, cut at the comma). A preposition-led span **without** a comma was never
+  tested; a subordinator-led span was rejected (`CLAUSE_SUBORDINATOR`).
+- **the fix**: `Rejection.PREPOSITIONAL_MODIFIER` (OD-071). The rule is narrowed by two conditions so it
+  creates no false rejections: the preposition must be followed by a **determiner**, and the span must
+  carry **no comma**. The controls that must stay accepted are in the test.
+- **the evidence**: the test was **red before the fix** and green after
+  (`TEST-io.matrix.knowledge.concept.research.PrepositionalPhraseProbeTest.xml`); the corpora's measured
+  baseline is unchanged (the seed 348/326, the referents 107, the frozen-150 precision 0.9444 LENIENT and
+  1.0000 STRICT); the live store was re-migrated from the preserved original and now holds **0**
+  preposition-led referents, and its served answers are unchanged.
+- **status**: CLOSED — the rule is in the policy, the store is corrected, and the false promotion is
+  measured at zero.
+- **the residual**: the rule is a **structural** test, not a parser. A span that opens with a
+  preposition and a determiner but genuinely names a thing ("In vitro photosynthesis" is safe because
+  "vitro" is not a determiner; a hypothetical "In the presence of chlorophyll" is not) would be rejected
+  and its claims would become claim-scoped records — retrievable, but not concept-addressable. That is
+  the conservative direction: the claim is never lost and never answered as a different thing.

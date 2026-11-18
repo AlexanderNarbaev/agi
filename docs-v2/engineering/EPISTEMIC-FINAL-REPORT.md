@@ -849,6 +849,64 @@ merely internally consistent; the served answers are correct.
 is kept beside the store (the directory is gitignored, so it is not in the repository) and holds the
 original bytes.
 
+**§J-quinque — Gate 4 on the fresh data: what the identity repair does, and the false promotion it had.**
+
+The migrated live store is the **fresh data** Gate 4 asks for ("test whether improvements actually change
+supported answers on fresh data **without false promotions**"), and the measurement is honest in both
+directions.
+
+**What the repair does.** Of the 52 claims, **20** now resolve to a **referent** — a concept that names
+a thing — and **32** become **claim-scoped records** that keep their own text as the retrievable unit.
+The referents are *merges*: "Propositional logic" + "Modus ponens" + "Material conditional" become one
+referent, "The classical interpretation" absorbs six claims, "The classical propositional calculus"
+four, "The distinction between validity and soundness" two. The referent's identity is **anchored** to
+its lemma, its source and its span ("the classical propositional calculu@s-authoritative-reference-ada12fbb#-1--1"),
+so it is grounded, not recomputed from a name. The rejections are principled and named:
+`CLAUSE_PARTICIPLE` (6), `FUNCTION_HEAD` (3), `CONCATENATION` (2), `GENERIC_HEAD` (1), `BARE_PLURAL` (1).
+
+**The false promotion the first migration carried.** Two of the 22 referents the first migration
+produced were **"In the assignment under consideration"** (8 claims) and **"In the other assignment
+under consideration"** (2 claims) — a **prepositional phrase promoted to a concept**, with **10 claims**
+pointing at it. The old concept behind them was a genuine one ("Propositional variable"), but the
+importer had cut the **wrong phrase** as the claim's subject: the sentence is *"The propositional
+variable p is true in the assignment under consideration"*, and the subject is the propositional
+variable, not the prepositional modifier. The policy had no rule for it: a span that opens with a
+**subordinator** is rejected (`CLAUSE_SUBORDINATOR`) and a span that opens with a **preposition** was
+tested only when it carried a **comma** (an adverbial plus a subject) — a prepositional opener without
+a comma was never tested.
+
+**The rule** (OD-071): a span that opens with a **preposition followed by a determiner** and carries
+**no comma** is a **modifier** — it says *where* or *for what*, not *what* — so it cannot be a concept.
+The rule is deliberately narrow, and its controls are in the test: a preposition **inside** a noun
+phrase stays a referent ("The theory of plate tectonics", "The Calvin-Benson cycle in oxygenic
+phototrophs"), and a preposition followed by a **noun** stays a referent too ("In vitro photosynthesis"),
+so the rule creates no false rejections.
+
+**The corpora's baseline is unchanged** (the rule fires on none of their spans): the seed 348 claims,
+accepted 110, referents 107; STRICT 93/90; the frozen 150: LENIENT precision 0.9444, STRICT 1.0000; the
+definitions 3 of the 107 referents.
+
+**The re-migration.** The live store was restored from the preserved original (sha256 `6d963dff…`, the
+exact pre-migration bytes) and migrated again with the corrected rule, through the same launcher and the
+same order (backup → work file → audit → rehearsed rollback → atomic replacement → re-verification):
+`logic` — the referents **8 → 6**, the rejected **3 → 13**, the concepts 11 → 30, the claims 28 of 28,
+the prerequisite collapses 1, the self-loops 1, the audit **0 orphans / 0 stale**, the rollback 11 → 30 → 11;
+`photosynthesis` — **unchanged** (14 referents, 10 rejected, 13 → 37 concepts, the audit **0 / 0**, the
+rollback 13 → 37 → 13). The store after: the version **21**, 67 concepts, 52 claims with 52 claim-lineage
+rows, 23 claim-scoped records (10 of them the `PREPOSITIONAL_MODIFIER` rejections), 26 concept-lineage
+rows, 9 prerequisites, **0 self-requires**, **0 claims without a concept**, **0 concepts named "In the …
+assignment …"**.
+
+**And the answers did not change.** The production asking path answers the same in both workspaces —
+*logic*: "Propositional logic evaluates formulas by assigning truth values to their atomic variables. A
+formula is valid when it is true on every assignment, satisfiable when it is true on at least one, and a
+consequence of another when it is true wherever the other is."; *photosynthesis*: "Photosynthesis has two
+linked stages. The light-dependent reactions, in the thylakoid membranes, harvest light, split water and
+build a proton gradient that drives ATP and NADPH production. The light-independent reactions, in the
+chloroplast stroma, use that ATP and NADPH to fix carbon dioxide into carbohydrate through the
+Calvin-Benson cycle." ⇒ ⇒ ⇒ the false promotion cost the store **nothing** in served answers, and the
+repair took it back without touching one.
+
 **Open and owned:** the measured limitations of §B — the partial paraphrase equivalence, the two
 frozen-set cases whose disposition differs from the set's expectation, and the corpus-in-conflict
 precedence (which keeps "unsupported answering" at 2); the **latency plateau** of the premise path
