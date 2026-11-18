@@ -991,6 +991,39 @@ is a real defect, and it is the next one worth a probe (it is **not** the H-P02 
 failing before the migration: H-P02 is in **both** rows' failure list, and the **silent** loss is a
 different observation — the case's own gold is not cited any more).
 
+**§J-novem — the learning tables after the migration: the pointers resolve, and they still mean the same thing.**
+
+The referent-key migration rewrites `concept_id` in **every** table that carries one, and the
+learning tables are among them — `learning_state`, `learning_transition`, `learning_error`,
+`hebbian_binding`, `assessment_item`, `assessment_outcome`. The migration's own audit covers the
+thirteen **knowledge** tables; the learning tables were never measured ⇒ ⇒ ⇒ they were measured now,
+and the measurement is pinned by a test (`LearningTablesAfterMigrationTest`).
+
+**No dangling pointer.** Every row in every table with a `concept_id` points at a concept that
+exists: `assessment_item` **64/64**, `assessment_outcome` **3/3**, `hebbian_binding` **1/1**,
+`learning_error` **1/1**, `learning_state` **3/3**, `learning_transition` **3/3**, and, for the
+knowledge core, `claim` **52/52**, `claim_scoped_record` **23/23**, `prerequisite` **9/9**,
+`representation` **27/27** ⇒ ⇒ ⇒ **0** dangling pointers anywhere.
+
+**No semantic drift — the part that matters.** A learning row must still point at the concept it
+pointed at before the migration. The referent key **renames** a concept ("Photosynthesis" becomes
+"Photosynthetic organisms"), and the learning rows must follow the rename rather than land on an
+unrelated concept. Measured against the preserved pre-migration backup:
+
+| the table | the rows | the target before | the target after |
+|---|---|---|---|
+| `learning_state` | 3 | Photosynthesis | **Photosynthetic organisms** |
+| `learning_transition` | 3 | Photosynthesis | **Photosynthetic organisms** |
+| `learning_error` | 1 | Photosynthesis | **Photosynthetic organisms** |
+| `hebbian_binding` | 1 | Photosynthesis | **Photosynthetic organisms** |
+| `assessment_outcome` | 3 | Photosynthesis | **Photosynthetic organisms** |
+| `assessment_item` | 64 | 8 concepts, 8 items each | **the same 8 concepts, 8 items each** |
+
+⇒ ⇒ ⇒ the learning subsystem was **not** silently redirected: its state, its transitions, its error
+and its Hebbian binding all follow the renamed referent, and the 64 assessment items still point at
+their own eight concepts — including the one whose concept is named **"It"**, which the referent
+key keeps as it is ⇒ ⇒ ⇒ ⇒ ⇒ ⇒ ⇒ ⇒ ⇒
+
 **Open and owned:** the measured limitations of §B — the partial paraphrase equivalence, the two
 frozen-set cases whose disposition differs from the set's expectation, and the corpus-in-conflict
 precedence (which keeps "unsupported answering" at 2); the **latency plateau** of the premise path
@@ -1089,12 +1122,14 @@ python3 scripts/docs-link-check.py --root . --strict
 >
 > **Tomorrow's first step, in this order, with the commands (nothing new has to be written):**
 >
-> 1. **Measure the learning tables' state after the migration** — the effect of the referent-key
->    migration on `learning_state`, `learning_goal`, `hebbian_binding` and the rest is still
->    **not measured** (the audit covers the thirteen knowledge tables, not the learning ones). The
->    migration rewrote `concept_id` in the "other tables" pass ⇒ ⇒ ⇒ ask the store what the learning
->    subsystem now points at, and whether its canary still holds. This is the **real** remaining
->    gap; the held-out evaluation is **not** a gap — see the note below.
+> 1. **Probe the silent loss the held-out set showed** (§J-sept): of the **17** cases whose gold
+>    claim became a **claim-scoped record**, **16 still answer** and **one does not** — **H-P02**, a
+>    POSITIVE case ⇒ ⇒ ⇒ a claim-scoped gold can be lost **silently**: the answer comes back
+>    without it and nothing in the response says so ⇒ ⇒ ⇒ write the probe that reproduces it,
+>    and decide whether the answer must say "this claim is not retrievable as a concept any more".
+>    The learning tables' state after the migration is **measured** (§J-novem: 0 dangling pointers,
+>    no semantic drift) ⇒ ⇒ ⇒ it is **not** a gap; the held-out evaluation is **not** a gap either
+>    (it already judges a migrated copy with the same judge — see the note below).
 > 2. **The open items that need the owner, not the coordinator:** the HTTP status for a failed
 >    effect; the latency plateau of the premise path; the definition-merge collision rule (0
 >    collisions on this corpus ⇒ unverified); and the inherited **ShellCheck** red over ~36 scripts
