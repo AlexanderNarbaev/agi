@@ -615,6 +615,11 @@ class HeldOutEvaluationTest {
                 scopedClaimIds.size(), stillAnswered, affected, silent);
         // The case-by-case comparison of the two rows, for the cases the migration
         // touches: the same cases, and whether each of them answered before and after.
+        // The comparison is printed for EVERY affected case, and a missing counterpart
+        // is a failure rather than a skip: a silent hole in the evidence chain would
+        // hide the very difference this comparison exists to detect.
+        List<String> answeredBefore = new ArrayList<>();
+        List<String> answeredAfter = new ArrayList<>();
         for (Row migrated : migratedRows) {
             boolean goldIsScoped = migrated.goldPropositions().stream()
                     .anyMatch(proposition -> migratedScopedPropositions.contains(proposition));
@@ -625,22 +630,31 @@ class HeldOutEvaluationTest {
                     .filter(row -> row.caseId().equals(migrated.caseId())
                             && RetrievalExperiment.BASELINE_PATH.equals(row.candidate()))
                     .findFirst().orElse(null);
-            if (unmigrated == null) {
-                continue;
+            assertNotNull(unmigrated,
+                    "the unmigrated row of the case " + migrated.caseId() + " must exist");
+            if (unmigrated.answered()) {
+                answeredBefore.add(migrated.caseId());
             }
-            if (unmigrated.answered() != migrated.answered()) {
-                System.out.printf("[migration] the case %s answers before: %b, after: %b "
-                                + "(the passed flag before: %b, after: %b)%n",
-                        migrated.caseId(), unmigrated.answered(), migrated.answered(),
-                        unmigrated.passed(), migrated.passed());
+            if (migrated.answered()) {
+                answeredAfter.add(migrated.caseId());
             }
+            System.out.printf("[migration] the case %s (%s): the answered flag before: %b, "
+                            + "after: %b (the passed flag before: %b, after: %b)%n",
+                    migrated.caseId(), migrated.kind(), unmigrated.answered(), migrated.answered(),
+                    unmigrated.passed(), migrated.passed());
         }
         assertThat(affected).as("at least one case must depend on a claim-scoped record")
                 .isPositive();
         // The state is pinned, not smoothed: the cases that a claim-scoped record
         // silences are named, so that a change in the number is visible.
         assertEquals(1, silent.size(),
-                "exactly one case whose gold lives in a claim-scoped record does not answer");
+                "exactly one case whose gold lives in a claim-scoped record does not answer — "
+                        + "the pre-existing failure of a POSITIVE case, not a migration loss");
+        // The migration moved no answer: the cases that answer before and after are the
+        // same set, in the same order. A silent loss would show up here as a case that
+        // answered before and does not answer now.
+        assertEquals(answeredBefore, answeredAfter,
+                "the migration must not change which of the affected cases answer");
     }
 
     /** The metrics of the migrated rows, by candidate. */

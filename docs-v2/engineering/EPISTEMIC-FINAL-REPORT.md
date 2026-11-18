@@ -959,7 +959,7 @@ idempotency key must be **unique per run** in a test that runs against a persist
 every run appends to the same episode. Neither is a product defect; both are recorded here because
 they are the kind of reading that turns a green test into a false claim.
 
-**§J-sept — the identity repair judged by the sealed held-out set: the same answers, and one silent loss.**
+**§J-sept — the identity repair judged by the sealed held-out set: the same answers, and no silent loss.**
 
 The held-out evaluation does not only measure the unmigrated path: it **migrates a copy of the
 workspace and judges it with the same judge**, the same questions and the same dataset
@@ -983,13 +983,28 @@ promotions"* — and it was run on 2026-11-18.
 lost, no ranking moves ⇒ ⇒ ⇒ and the **citation precision improves**: the answers cite **fewer
 non-gold claims** (5.2105 → 4.6842) ⇒ ⇒ ⇒ the referents are the things the answers actually use ⇒ ⇒ ⇒
 
-**The one honest limit.** The migration produced **322** claim-scoped records, each carrying its own
-text. Of the **17** cases whose gold claim lives in one of them, **16 still answer** and **one does
-not**: **H-P02**, a POSITIVE case ⇒ ⇒ ⇒ a claim whose gold became a claim-scoped record can be
-**silently lost** — the answer comes back without it, and nothing in the response says so ⇒ ⇒ ⇒ that
-is a real defect, and it is the next one worth a probe (it is **not** the H-P02 that was already
-failing before the migration: H-P02 is in **both** rows' failure list, and the **silent** loss is a
-different observation — the case's own gold is not cited any more).
+**The one honest limit — and the measurement that narrows it.** The migration produced **322** claim-scoped
+records, each carrying its own text. Of the **17** cases whose gold claim lives in one of them,
+**16 still answer** and **one does not**: **H-P02**, a POSITIVE case ⇒ ⇒ ⇒ the count alone cannot say
+whether the migration silenced it ⇒ ⇒ ⇒ the **case-by-case comparison** of the two rows can: it shows
+**H-P02's answered flag was `false` before the migration as well** ⇒ ⇒ ⇒ **the changed answered-flags:
+0** ⇒ ⇒ ⇒ **the migration silenced nothing**.
+
+⇒ ⇒ ⇒ The honest reading is therefore **narrower** than "a claim-scoped gold can be silently lost":
+**H-P02 is a pre-existing failure** — it sits in **both** rows' failure list — and what it shows is
+that a POSITIVE case whose gold lives in a claim-scoped record does not answer **at all**, before or
+after ⇒ ⇒ ⇒ that is a real defect and it is the next one worth a probe, but it is **not** a regression
+of the identity repair ⇒ ⇒ ⇒ this corrects the first wording of this section, which read the count as
+a migration loss; the per-case comparison refutes it.
+
+**The comparison is now pinned, so it cannot hide again.** The loop prints the answered flag **before
+and after** for **every** affected case, a missing counterpart is a **failure** and not a skip
+(`assertNotNull`), and the two sets of answering cases must be equal
+(`assertEquals(answeredBefore, answeredAfter)`) ⇒ ⇒ ⇒ a silent loss in the evidence chain would now
+break the test rather than pass unnoticed ⇒ ⇒ ⇒ the measured table (2026-11-18, 17 of 17 affected
+cases): **H-P02** `false → false`; **H-P03, H-P05, H-P06, H-P07, H-P10, H-P13, H-P15, H-P19, H-U01,
+H-U03, H-U04, H-U05, H-U06, H-A01, H-C01, H-C02** all `true → true` ⇒ ⇒ ⇒ **no affected case changed
+its answered flag**, and the passed flags moved nowhere either.
 
 **§J-novem — the learning tables after the migration: the pointers resolve, and they still mean the same thing.**
 
@@ -1122,14 +1137,19 @@ python3 scripts/docs-link-check.py --root . --strict
 >
 > **Tomorrow's first step, in this order, with the commands (nothing new has to be written):**
 >
-> 1. **Probe the silent loss the held-out set showed** (§J-sept): of the **17** cases whose gold
->    claim became a **claim-scoped record**, **16 still answer** and **one does not** — **H-P02**, a
->    POSITIVE case ⇒ ⇒ ⇒ a claim-scoped gold can be lost **silently**: the answer comes back
->    without it and nothing in the response says so ⇒ ⇒ ⇒ write the probe that reproduces it,
->    and decide whether the answer must say "this claim is not retrievable as a concept any more".
->    The learning tables' state after the migration is **measured** (§J-novem: 0 dangling pointers,
->    no semantic drift) ⇒ ⇒ ⇒ it is **not** a gap; the held-out evaluation is **not** a gap either
->    (it already judges a migrated copy with the same judge — see the note below).
+> 1. **Probe the pre-existing H-P02 failure** (§J-sept): of the **17** cases whose gold claim lives in
+>    a **claim-scoped record**, **16 answer before and after the migration** and **one does not** —
+>    **H-P02**, a POSITIVE case — and the case-by-case comparison shows its answered flag was
+>    **`false` before the migration too** ⇒ ⇒ ⇒ **the changed answered-flags: 0**, the migration
+>    silenced nothing ⇒ ⇒ ⇒ the defect is **pre-existing**, not a migration regression: a POSITIVE
+>    case whose gold lives in a claim-scoped record does not answer at all ⇒ ⇒ ⇒ write the probe that
+>    reproduces it, and decide whether the answer must say "this claim is not retrievable as a
+>    concept any more". The comparison is now **pinned**: a missing counterpart is a **failure**, not
+>    a skip, and the two sets of answering cases must be equal ⇒ ⇒ ⇒ a silent loss cannot hide in the
+>    evidence chain again. The learning tables' state after the migration is **measured** (§J-novem:
+>    0 dangling pointers, no semantic drift) ⇒ ⇒ ⇒ it is **not** a gap; the held-out evaluation is
+>    **not** a gap either (it already judges a migrated copy with the same judge — see the note
+>    below).
 > 2. **The open items that need the owner, not the coordinator:** the HTTP status for a failed
 >    effect; the latency plateau of the premise path; the definition-merge collision rule (0
 >    collisions on this corpus ⇒ unverified); and the inherited **ShellCheck** red over ~36 scripts
@@ -1145,9 +1165,10 @@ python3 scripts/docs-link-check.py --root . --strict
 >    **0.2800**; the **migrated** row — **identical on every one of them** ⇒ ⇒ ⇒ the identity repair
 >    changes **nothing** in the served answers on the sealed set ⇒ ⇒ ⇒ and the **mean non-gold claims
 >    cited fell from 5.2105 to 4.6842** ⇒ ⇒ ⇒ a measurable gain in citation precision. The honest
->    limit: of the **17** cases whose gold lives in a claim-scoped record, **16 still answer** and
->    **one does not** — **H-P02**, a POSITIVE case ⇒ ⇒ ⇒ a claim whose gold became a claim-scoped
->    record can be **silently** lost, and that is the next defect worth a probe.
+>    limit: of the **17** cases whose gold lives in a claim-scoped record, **16 answer before and
+>    after** and **one does not** — **H-P02**, a POSITIVE case — whose answered flag was already
+>    **`false` before the migration** ⇒ ⇒ ⇒ the migration changed **no** answered flag ⇒ ⇒ ⇒ the real
+>    defect is the **pre-existing** failure of that one case, and it is the next one worth a probe.
 >
 > **The commands that reproduce what was measured tonight, in order:**
 > ```
