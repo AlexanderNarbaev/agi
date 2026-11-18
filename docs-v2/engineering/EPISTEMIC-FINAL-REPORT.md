@@ -1048,6 +1048,44 @@ substrate's contamination history; the residual's content policy (the owner's de
 native image's build; the concept-identity repair (owner-gated: the migration touches ten tables and
 SQLite declares no foreign keys); the P2 implementation.
 
+**§J-decem — the release path re-verified: the gate on a release is the owner, not a secret.**
+
+The wave's own commits are green in the lane that gates the protected branch. The FAST PR lane's runs
+on `develop`, one per push:
+
+| the commit | the run | the conclusion |
+|---|---|---|
+| `e2cde5d5` — the prepositional-phrase rule | 44355723799 | **success** |
+| `72240eb9` — the regenerated C2A artefacts | 44355850876 | **success** |
+| `e7a6144b` — Gate 5 on the migrated store | 44358527896 | **success** |
+| `bac60413` — the cold-start prompt | 44358768382 | **success** |
+| `3384dab4` — the held-out measurement | 44359659091 | **success** |
+| `453b1a81` — the learning tables | 44360149337 | **success** |
+
+⇒ ⇒ ⇒ **every commit of the wave is green**. The one red of the wave is `44350641760` (`d8341d56`),
+and it is **not** this programme's code: the **path-sensitive ShellCheck** over ~36 inherited scripts,
+none of them touched by the wave ⇒ ⇒ ⇒ the inherited red stays open for the owner, and it is **not** a
+gate of this wave.
+
+**The release's real gate, measured.** The protected-`main` ruleset (20469548) requires **six** status
+contexts — "Scope the pull request", "Branch name", "Compile + targeted tests", "CONSTITUTION + frozen
+boundary gate", "Documentation consistency", "Secret scan" — and **all six are the FAST PR lane's
+checks** ⇒ ⇒ ⇒ the lane that is green on every commit of the wave is the lane that gates the release
+PR ⇒ ⇒ ⇒ and the rule that remains is **one code-owner review**: `require_code_owner_review: true`,
+`required_approving_review_count: 1`, `allowed_merge_methods: ["squash"]`,
+`require_last_push_approval: true` ⇒ ⇒ ⇒ **the gate on a release is the owner**, not a secret.
+
+**And the credential risk is narrower than the register said (R-W48-04, re-verified).** The record
+stated that the release path "needs credentials the repository does not have, so it is red on every
+push". The cause is **gone from the release lane**: `grep -rn "docker/login-action"
+.github/workflows/` returns **one** hit — `.github/workflows/publish.yml:92` — and **none** in
+`ci.yml`; the step was removed by `8d1a60c3` ("the CI lanes are narrowed to a fast PR gate, and the
+release lane keeps the full regression"), and `ci.yml`'s three image steps run
+`docker/build-push-action@v5` with `load: true` and **no** `push:` ⇒ ⇒ ⇒ the release lane needs no
+registry login. **What still needs the credentials is the PUBLISH lane** (`publish.yml`,
+`workflow_dispatch` only) — the publication and the two deployments — and `gh secret list` still
+returns nothing ⇒ ⇒ ⇒ the residual owner item is the publication, not the merge.
+
 **Inherited reds that this programme did not cause and did not hide:** the Docker Hub publication
 (zero repository secrets — the owner's action, never in chat), ShellCheck (43 files), the GraalVM
 native build (OOM, red since 2026-10-31), the PR-event TruffleHog findings, and the two known
