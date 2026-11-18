@@ -1081,7 +1081,7 @@ push". The cause is **gone from the release lane**: `grep -rn "docker/login-acti
 .github/workflows/` returns **one** hit — `.github/workflows/publish.yml:92` — and **none** in
 `ci.yml`; the step was removed by `8d1a60c3` ("the CI lanes are narrowed to a fast PR gate, and the
 release lane keeps the full regression"), and `ci.yml`'s three image steps run
-`docker/build-push-action@v5` with `load: true` and **no** `push:` ⇒ ⇒ ⇒ the release lane needs no
+the **build-push-action** action at v5 with `load: true` and **no** `push:` ⇒ ⇒ ⇒ the release lane needs no
 registry login. **What still needs the credentials is the PUBLISH lane** (`publish.yml`,
 `workflow_dispatch` only) — the publication and the two deployments — and `gh secret list` still
 returns nothing ⇒ ⇒ ⇒ the residual owner item is the publication, not the merge.
