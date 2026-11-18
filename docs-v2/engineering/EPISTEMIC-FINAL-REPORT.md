@@ -1289,13 +1289,24 @@ python3 scripts/docs-link-check.py --root . --strict
 **The cold-start resume prompt** (Gate 6 of the directive asks for one; copy it into a fresh session):
 
 > Continue the MATRIX EPISTEMIC-INTEGRITY programme in `/home/alexandr-narbaev/Projects/agi` (branch
-> `develop`, the last pushed commit is **`e7a6144b`**). The owner's directive is READ-ONLY at
+> `develop`, the last pushed commit is **`7610f1e0`**). The owner's directive is READ-ONLY at
 > `/home/alexandr-narbaev/.dsh/attachments/v1/files/fa/fad9aeb5d7f1dae77e7070e73c9d9e4e6cfde6cf7537ad95b9a4cc098ec78584/MATRIX_AUTONOMOUS_DEVELOPMENT_MANDATE_2026-11-15.md`.
 > Read first, in this order: `docs-v2/engineering/EPISTEMIC-FINAL-REPORT.md` (§A–J, the state of every
-> workstream, §J-bis/§J-ter/§J-quater/§J-quinque/§J-sext the last four sections, and the open items),
+> workstream, §J-bis/§J-ter/§J-quater/§J-quinque/§J-sext/§J-sept/§J-novem/§J-decem/**§J-undecem** the
+> last sections, and the open items),
 > `docs-v2/engineering/EPISTEMIC-EXECUTION-PLAN.md` (the task graph and the append-only evidence
-> ledger), `docs-v2/governance/DECISION-REGISTER.md` (**OD-053 … OD-071**), `docs-v2/governance/RISK-REGISTER.md`
-> (**R-EPIS-02 … R-EPIS-06**).
+> ledger), `docs-v2/governance/DECISION-REGISTER.md` (**OD-053 … OD-073**), `docs-v2/governance/RISK-REGISTER.md`
+> (**R-EPIS-02 … R-EPIS-08**), and `docs-v2/engineering/evidence/README.md` (the retained JUnit XML
+> and the rule that keeps it).
+>
+> **The wave was hard-reviewed and the review's findings are fixed** (§J-undecem, OD-073): an
+> independent reviewer read the programme's own **81** commits and returned **MERGEABLE WITH
+> FINDINGS**. Two published numbers were wrong and are corrected; one claim was not true as written;
+> the numbers that were only **printed** are now **asserted**; two defects in the live-store launcher
+> are fixed; and the **evidence chain is restored** — the wave's **12** JUnit XMLs are retained in
+> `docs-v2/engineering/evidence/` (**36** tests, **0** failures) and the ledger points at them. One
+> latent defect is **recorded, not fixed** (**R-EPIS-08**): the launcher copies only the main database
+> file while the store runs in WAL mode ⇒ the owner's call.
 >
 > **Where the programme stands (2026-11-18, end of the day).** P0, P1, P2 and P3 are closed with
 > published evidence. The **owner's live store is migrated** (D1-LIVE-STORE-MIGRATION-019, option A;
@@ -1340,10 +1351,19 @@ python3 scripts/docs-link-check.py --root . --strict
 >    concept any more". The comparison is now **pinned**: a missing counterpart is a **failure**, not
 >    a skip, and the two sets of answering cases must be equal ⇒ ⇒ ⇒ a silent loss cannot hide in the
 >    evidence chain again. The learning tables' state after the migration is **measured** (§J-novem:
->    0 dangling pointers, no semantic drift) ⇒ ⇒ ⇒ it is **not** a gap; the held-out evaluation is
+>    0 dangling pointers; the five single-target tables show no drift) ⇒ ⇒ ⇒ it is **not** a gap —
+>    but the assessment items' row now says what the measurement says: **8 concepts, 8 items each,
+>    and not the same eight** (two of them follow a referent with another name: "CO2-concentrating
+>    mechanisms" → "C4 plants", "Light-dependent reactions" → "Wheat, shade-to-sun transitions") ⇒ ⇒ ⇒
+>    that is the second thing worth a probe, and it is now pinned by the test. The held-out evaluation is
 >    **not** a gap either (it already judges a migrated copy with the same judge — see the note
 >    below).
-> 2. **The open items that need the owner, not the coordinator:** the HTTP status for a failed
+> 2. **The open items that need the owner, not the coordinator:** the **`main` release decision**
+>    (the protected-`main` ruleset requires the FAST PR lane's six checks — green on every commit of
+>    the wave — and **one code-owner review**, so the gate on a release is the owner, not a secret:
+>    §J-decem); the **WAL guard of the launcher** (**R-EPIS-08**: copy the sidecars, or `VACUUM INTO`,
+>    or refuse to run while the WAL holds un-checkpointed frames — the owner's call, because it
+>    changes OD-070's contract); the HTTP status for a failed
 >    effect; the latency plateau of the premise path; the definition-merge collision rule (0
 >    collisions on this corpus ⇒ unverified); and the inherited **ShellCheck** red over ~36 scripts
 >    that predates this programme (the last two CI runs were green because the path-sensitive
@@ -1394,7 +1414,13 @@ python3 scripts/docs-link-check.py --root . --strict
 > needs a **unique idempotency key per run**, or every run appends to the same episode and the
 > assertions read the first run's evidence. (5) The dry run migrates the **preserved
 > pre-migration backup** — after the live store was migrated, re-migrating the live file means
-> migrating an already migrated store.
+> migrating an already migrated store. (6) **A Gradle test run wipes the module's `build/test-results`**,
+> so an XML "retained" on the machine is retained **until the next run** — the wave's evidence was
+> gone for exactly that reason, and it now lives in `docs-v2/engineering/evidence/` (a tracked
+> directory) ⇒ ⇒ ⇒ a number whose artefact is not in the repository is a recollection. (7) The
+> **served statement is composed** by the asking path from the claims it retrieved — it is not a
+> sentence the store holds ⇒ ⇒ ⇒ do not read a quoted answer as a stored claim, and do not call a
+> paraphrase a quote.
 >
 > **The rules that stay in force.** Answer the owner in **Russian**; the code, the identifiers, the
 > comments and the commit messages stay in **English**; commits are `WAL: <description>` and one
