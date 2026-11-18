@@ -2,7 +2,7 @@
 
 **Status:** `MEASURED` — the three frozen candidates, and the frozen H1+H2 combination, were run against the held-out dataset.
 **Date:** 2026-11-15.
-**Branch / commit:** `feature/concept-to-action` / `e38a46419e5fb88b49f40c973006ee42ca1c8e49`.
+**Branch / commit:** `feature/concept-to-action` / `d8341d56aeefebf7ac04a78637ff722998718a71`.
 **Freeze:** `docs-v2/engineering/C2A-CANDIDATE-FREEZE.md` — sha256 `365655905e9e6be278f9550229958be1fa7cd31b5ca19b6f91c726e7ccfc7f7c` (version **1.1**, verified against the sha256 the freeze declares; it supersedes version 1.0, sha256 `14251fbcdf06001b670d919621b64079a35229ebabe1577081fb0b6222c08cf4`, against which the FIRST held-out run was produced).
 **Held-out dataset:** `docs-v2/engineering/C2A-HELDOUT-SET.json` — sha256 `bbb3d2ad630ec610df3dbaae3ec10978d6cbbe740e13604dfd827b56b6872d77`.
 **Produced by:** `matrix-core/src/test/java/io/matrix/knowledge/concept/HeldOutEvaluationTest.java` (research only; the production retrieval path is unchanged).
@@ -56,7 +56,7 @@ The comparable denominator is therefore **25 cases** (19 + 6), where the develop
 | relation candidates | 22 |
 | — of which SUPPORTED | 22 |
 | relation candidates rejected | 202 |
-| extraction time | 51 ms |
+| extraction time | 48 ms |
 | retained text of the extraction | 74630 bytes |
 
 The rejections of the held-out extraction, by the frozen reasons:
@@ -93,7 +93,7 @@ The candidates, and what each of them changed in the workspace:
 
 | Row | Passed | Gold avail. | Recall@1 | Recall@5 | Recall@10 | Recall@20 | MRR | micro Recall@10 | Supported answer | Unsupported answer | Answered with NO gold | Abstention | Unsupported over all 25 ask cases | Mean non-gold cited | Top-1 not gold | Mean retrieval (ms) | Overhead (ms) |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `BASELINE-PATH` | 17/25 | 0.7368 | 0.5351 | 0.7719 | 0.8158 | 0.8596 | 0.8600 | 0.7576 | 0.5789 (11/19) | 0.3684 (7/19) | 1/19 | 1.0000 | 0.2800 (25 ask cases) | 5.2105 | 4/19 | 39 | 30.0000 |
+| `BASELINE-PATH` | 17/25 | 0.7368 | 0.5351 | 0.7719 | 0.8158 | 0.8596 | 0.8600 | 0.7576 | 0.5789 (11/19) | 0.3684 (7/19) | 1/19 | 1.0000 | 0.2800 (25 ask cases) | 5.2105 | 4/19 | 66 | 57.0000 |
 | `BASELINE-RETRIEVER` | 18/25 | 0.7895 | 0.5351 | 0.7719 | 0.8158 | 0.8596 | 0.8600 | 0.7576 | 0.6316 (12/19) | 0.3684 (7/19) | 1/19 | 1.0000 | 0.2800 (25 ask cases) | 5.2632 | 4/19 | 9 | 0.0000 |
 | `H1-definition-enrichment` | 18/25 | 0.7895 | 0.5351 | 0.7895 | 0.8421 | 0.8860 | 0.8596 | 0.7879 | 0.6316 (12/19) | 0.3684 (7/19) | 1/19 | 1.0000 | 0.2800 (25 ask cases) | 5.0526 | 4/19 | 10 | 1.0000 |
 | `H2-relation-expansion` | 18/25 | 0.7895 | 0.5351 | 0.7544 | 0.8333 | 0.8596 | 0.8605 | 0.7879 | 0.6316 (12/19) | 0.3684 (7/19) | 1/19 | 1.0000 | 0.2800 (25 ask cases) | 5.2632 | 4/19 | 8 | -1.0000 |
@@ -113,14 +113,14 @@ The failure lists (the comparable cases only):
 
 | Row | Passed | Recall@1 | Recall@5 | Recall@10 | Recall@20 | MRR | Supported answer | Abstention | Unsupported answer | Mean non-gold cited | Top-1 not gold | Mean retrieval (ms) |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `BASELINE-PATH` | 18/29 | 0.2024 | 0.3214 | 0.3690 | 0.5952 | 0.5078 | 0.4286 | 1.0000 | 0.5714 | 38.2857 | 8 | 65 |
+| `BASELINE-PATH` | 18/29 | 0.2024 | 0.3214 | 0.3690 | 0.5952 | 0.5078 | 0.4286 | 1.0000 | 0.5714 | 38.2857 | 8 | 78 |
 | `BASELINE-RETRIEVER` | 8/20 | 0.2024 | 0.3214 | 0.3690 | 0.5952 | 0.5078 | 0.4286 | 0.3333 | 0.5714 | 38.2857 | 8 | 8 |
 | `H1-definition-enrichment` | 8/20 | 0.2381 | 0.3214 | 0.3690 | 0.5952 | 0.5422 | 0.4286 | 0.3333 | 0.5714 | 40.5714 | 7 | 9 |
 | `H2-relation-expansion` | 8/20 | 0.2024 | 0.3214 | 0.3690 | 0.5952 | 0.5075 | 0.4286 | 0.3333 | 0.5714 | 39.0000 | 8 | 8 |
-| `H3-query-lexical-expansion` | 5/20 | 0.1429 | 0.3214 | 0.4048 | 0.5476 | 0.4395 | 0.2143 | 0.3333 | 0.7857 | 17.6429 | 10 | 8 |
+| `H3-query-lexical-expansion` | 5/20 | 0.1429 | 0.3214 | 0.4048 | 0.5476 | 0.4395 | 0.2143 | 0.3333 | 0.7857 | 17.6429 | 10 | 9 |
 | `H1+H2-definition-and-relation-expansion` | 8/20 | 0.2024 | 0.3214 | 0.3690 | 0.5595 | 0.4938 | 0.4286 | 0.3333 | 0.5714 | 41.9286 | 8 | 9 |
 
-(The development table is read from `docs-v2/engineering/C2A-CONCEPT-ENRICHMENT-RESULTS.json`, sha256 `c65b85768b3578f23e0e4476973d521ecff5d0155ed91229cec0c2e0e6416985`; it is the 29-case measurement of the same freeze. Its comparable denominator is 20 cases, the held-out one's is 25.)
+(The development table is read from `docs-v2/engineering/C2A-CONCEPT-ENRICHMENT-RESULTS.json`, sha256 `fd0709c237450cf597b25430b6ee8308d1f1b4f0566f6c12ae05fc94886453a0`; it is the 29-case measurement of the same freeze. Its comparable denominator is 20 cases, the held-out one's is 25.)
 
 ### 3.2 The generalisation question
 
@@ -342,14 +342,14 @@ The reading of these seven cases is the same in every row: **the system answers,
 
 | Row | Mean retrieval (ms) | Total over the 38 cases (ms) | Overhead per case (ms) |
 |---|---|---|---|
-| `BASELINE-PATH` | 39 | 1608 | 30.0000 |
-| `BASELINE-RETRIEVER` | 9 | 334 | 0.0000 |
-| `H1-definition-enrichment` | 10 | 381 | 1.0000 |
-| `H2-relation-expansion` | 8 | 324 | -1.0000 |
-| `H3-query-lexical-expansion` | 9 | 345 | 0.0000 |
-| `H1+H2-definition-and-relation-expansion` | 10 | 387 | 1.0000 |
+| `BASELINE-PATH` | 66 | 2662 | 57.0000 |
+| `BASELINE-RETRIEVER` | 9 | 329 | 0.0000 |
+| `H1-definition-enrichment` | 10 | 370 | 1.0000 |
+| `H2-relation-expansion` | 8 | 322 | -1.0000 |
+| `H3-query-lexical-expansion` | 9 | 329 | 0.0000 |
+| `H1+H2-definition-and-relation-expansion` | 10 | 381 | 1.0000 |
 
-The extraction is a one-off cost of 51 ms and 74630 bytes of retained text for the held-out workspace. The candidates themselves cost no extra retrieval time: they change the snapshot the retriever reads, not the retriever.
+The extraction is a one-off cost of 48 ms and 74630 bytes of retained text for the held-out workspace. The candidates themselves cost no extra retrieval time: they change the snapshot the retriever reads, not the retriever.
 
 ## 7. The promotion decision
 
@@ -364,7 +364,7 @@ The criteria are targets, not findings. Each one is checked against the numbers 
 | no new unsupported confident answers | **yes** | the unsupported-answer rate is 0.3684 against the baseline's 0.3684; newly failing: [] |
 | no regression in the premise-refusal and revision safeguards | **yes (unchanged by construction)** | the premise path builds its own retriever from the stored workspace and cannot receive the enrichment (freeze §4.4); the premise verdicts of the six UNSUPPORTED cases are identical in every row; the held-out set holds no revision case |
 | a meaningful change in recall and ranking | **no** | the recall@10 changes by 0.0263 and the MRR by -0.0004; the threshold of meaning is 0.05 and the change must not be a degradation |
-| the latency and resource trade-off is documented | **yes** | 1.0 ms per case of retrieval overhead over the baseline; the extraction costs 51 ms once and retains 74630 bytes |
+| the latency and resource trade-off is documented | **yes** | 1.0 ms per case of retrieval overhead over the baseline; the extraction costs 48 ms once and retains 74630 bytes |
 
 ### H2-relation-expansion
 
@@ -375,7 +375,7 @@ The criteria are targets, not findings. Each one is checked against the numbers 
 | no new unsupported confident answers | **yes** | the unsupported-answer rate is 0.3684 against the baseline's 0.3684; newly failing: [] |
 | no regression in the premise-refusal and revision safeguards | **yes (unchanged by construction)** | the premise path builds its own retriever from the stored workspace and cannot receive the enrichment (freeze §4.4); the premise verdicts of the six UNSUPPORTED cases are identical in every row; the held-out set holds no revision case |
 | a meaningful change in recall and ranking | **no** | the recall@10 changes by 0.0175 and the MRR by 0.0005; the threshold of meaning is 0.05 and the change must not be a degradation |
-| the latency and resource trade-off is documented | **yes** | -1.0 ms per case of retrieval overhead over the baseline; the extraction costs 51 ms once and retains 74630 bytes |
+| the latency and resource trade-off is documented | **yes** | -1.0 ms per case of retrieval overhead over the baseline; the extraction costs 48 ms once and retains 74630 bytes |
 
 ### H3-query-lexical-expansion
 
@@ -386,7 +386,7 @@ The criteria are targets, not findings. Each one is checked against the numbers 
 | no new unsupported confident answers | **no** | the unsupported-answer rate is 0.4211 against the baseline's 0.3684; newly failing: [H-P19] |
 | no regression in the premise-refusal and revision safeguards | **yes (unchanged by construction)** | the premise path builds its own retriever from the stored workspace and cannot receive the enrichment (freeze §4.4); the premise verdicts of the six UNSUPPORTED cases are identical in every row; the held-out set holds no revision case |
 | a meaningful change in recall and ranking | **no** | the recall@10 changes by -0.0614 and the MRR by -0.0782; the threshold of meaning is 0.05 and the change must not be a degradation |
-| the latency and resource trade-off is documented | **yes** | 0.0 ms per case of retrieval overhead over the baseline; the extraction costs 51 ms once and retains 74630 bytes |
+| the latency and resource trade-off is documented | **yes** | 0.0 ms per case of retrieval overhead over the baseline; the extraction costs 48 ms once and retains 74630 bytes |
 
 ### H1+H2-definition-and-relation-expansion
 
@@ -397,7 +397,7 @@ The criteria are targets, not findings. Each one is checked against the numbers 
 | no new unsupported confident answers | **yes** | the unsupported-answer rate is 0.3684 against the baseline's 0.3684; newly failing: [] |
 | no regression in the premise-refusal and revision safeguards | **yes (unchanged by construction)** | the premise path builds its own retriever from the stored workspace and cannot receive the enrichment (freeze §4.4); the premise verdicts of the six UNSUPPORTED cases are identical in every row; the held-out set holds no revision case |
 | a meaningful change in recall and ranking | **no** | the recall@10 changes by 0.0263 and the MRR by -0.0004; the threshold of meaning is 0.05 and the change must not be a degradation |
-| the latency and resource trade-off is documented | **yes** | 1.0 ms per case of retrieval overhead over the baseline; the extraction costs 51 ms once and retains 74630 bytes |
+| the latency and resource trade-off is documented | **yes** | 1.0 ms per case of retrieval overhead over the baseline; the extraction costs 48 ms once and retains 74630 bytes |
 
 ### 7.1 The recommendation
 
