@@ -154,11 +154,14 @@ class ReferentKeyMigrationRehearsalTest {
         System.out.printf("[rehearsal] the copy-forward: concepts inserted=%d, claims "
                         + "re-pointed=%d, representations re-pointed=%d, refines carried=%d, "
                         + "prerequisites re-pointed=%d, other rows re-pointed=%d, lineage rows=%d, "
-                        + "cost=%d ms%n",
+                        + "representation collisions=%d, prerequisite collapses=%d, "
+                        + "prerequisite self-loops=%d, cost=%d ms%n",
                 migration.conceptsInserted(), migration.claimsRewritten(),
                 migration.representationsRewritten(), migration.refinesCarried(),
                 migration.prerequisitesRewritten(), migration.otherRowsRewritten(),
-                migration.lineageRows(), migration.millis());
+                migration.lineageRows(), migration.representationCollisions(),
+                migration.prerequisiteCollisions(), migration.prerequisiteSelfLoopsDropped(),
+                migration.millis());
         assertThat(migration.claimsRewritten()).isEqualTo(before.claims().size());
 
         Map<String, Integer> tablesAfter = rowCounts(migrated);

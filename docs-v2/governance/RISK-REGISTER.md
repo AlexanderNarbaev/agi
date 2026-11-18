@@ -539,6 +539,40 @@ implemented, tested and never called has no exposure, and saying so is part of t
 - **status**: OPEN — the finding was made read-only on 2026-11-17, before anything was written; the owner's decision **D1-LIVE-STORE-MIGRATION-018** chose variant A (a copy first) and the copy-first order is what makes this finding safe to investigate. The dry run itself has **not** run.
 - **the residual**: the numbers above describe the live store **today**; the dry run may show a different picture, and its numbers — not these — are the evidence for the second decision.
 
+### R-EPIS-04 — The migration's prerequisite rewrite violated the primary key whenever a merge collapsed two edges onto one triple
+
+- **category**: identity-integrity
+- **severity**: high
+- **probability**: certain (it is a measured fact: the dry run crashed on it)
+- **impact**: high — without the fix the migration cannot run at all on any store whose concepts merge
+- **evidence**: the dry run of 2026-11-18 failed with
+  `org.sqlite.SQLiteException: [SQLITE_CONSTRAINT_PRIMARYKEY] A PRIMARY KEY constraint failed
+  (UNIQUE constraint failed: prerequisite.workspace_id, prerequisite.concept_id,
+  prerequisite.requires_concept_id)` at `ReferentKeyMigration.rewriteThePrerequisites`
+  (`matrix-core/src/main/java/io/matrix/knowledge/concept/research/ReferentKeyMigration.java:610`).
+  The old rewrite issued two blind `UPDATE`s per old→new pair (one per column), so two edges that
+  landed on the same triple violated the key. The corpora never exercised it: they hold **0**
+  prerequisite edges, so the rehearsal's own print reads `the prerequisite graph: 0 nodes, 0 edges`.
+  A second consequence of the same rewrite: an edge whose two ends merge into one referent became a
+  **self-require**, which the store's own `Prerequisite` record forbids — the rollback arm failed
+  with `IllegalArgumentException: a concept cannot require itself`
+- **exposure**: real for every store whose concepts merge — the owner's live store merges (the
+  `logic` workspace: 1 collapse, 1 self-loop); the corpora do not, which is exactly why the defect
+  survived until the owner's own data was tested
+- **mitigation**: the rewrite reads the edges, maps both ends, keeps the relation as a **set** of
+  triples, drops the edges that would become self-requires, and **counts and publishes** both
+  losses (`prerequisiteCollisions`, `prerequisiteSelfLoopsDropped` in `MigrationResult`); the
+  lineage keeps the history of both ends. A **synthetic regression test**
+  (`PrerequisiteMergeTest`) reproduces both outcomes in a clean CI checkout, because the live store
+  is not in the repository and the dry run is skipped there
+- **owner**: agent (the rewrite and the counters) — the owner decides whether the live store is
+  migrated, on the measured result
+- **status**: CLOSED — the dry run of 2026-11-18 completes with **0 orphans and 0 stale pointers in
+  every one of the 13 tables of both workspaces**, the rollback restores both workspaces, and the
+  live store is unchanged (schema version 15, 13 photosynthesis concepts); the residual (the two
+  dropped edges in `logic`) is **not** erased by the closure — it is the measured cost of the merge
+  and it is the owner's to accept with the second decision
+
 ## How a risk is closed
 
 1. The **mitigation** is implemented and **verified** by an executed check — the evidence

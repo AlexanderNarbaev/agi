@@ -169,11 +169,14 @@ class ReferentKeyCorpusMigrationTest {
         System.out.printf("[migration] the pool: the concepts inserted %d, the claims re-pointed "
                         + "%d, the representations re-pointed %d, the refines carried %d, the "
                         + "prerequisites re-pointed %d, the other rows %d, the lineage rows %d, "
-                        + "the cost %d ms%n",
+                        + "the representation collisions %d, the prerequisite collapses %d, "
+                        + "the prerequisite self-loops %d, the cost %d ms%n",
                 migration.conceptsInserted(), migration.claimsRewritten(),
                 migration.representationsRewritten(), migration.refinesCarried(),
                 migration.prerequisitesRewritten(), migration.otherRowsRewritten(),
-                migration.lineageRows(), migration.millis());
+                migration.lineageRows(), migration.representationCollisions(),
+                migration.prerequisiteCollisions(), migration.prerequisiteSelfLoopsDropped(),
+                migration.millis());
 
         // The two checks that were vacuous on the seed corpus.
         try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + migrated)) {

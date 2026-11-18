@@ -723,6 +723,53 @@ targets the report journey · **OD-056** the default branch is `develop`, `main`
 question, answered **B** (leave the 17 records; extend the frozen probe corpus with an
 owner-authorized exception so the letter-less arithmetic probes are caught).
 
+**§J-bis — the live store's dry run (variant A): the defect it found, the fix and the numbers.**
+
+The owner's OD-067 chose variant A — the copy first, the live store untouched — and the dry run
+**found a defect the corpora could not**: the migration's rewrite of the prerequisite graph ran
+two blind `UPDATE`s per old→new pair, so when two old concepts become one referent their edges can
+land on the same triple and the write violates the primary key
+(`org.sqlite.SQLiteException: [SQLITE_CONSTRAINT_PRIMARYKEY] … prerequisite.workspace_id,
+prerequisite.concept_id, prerequisite.requires_concept_id`). The corpora never saw it — they carry
+**0 prerequisite edges** (the rehearsal prints `the prerequisite graph: 0 nodes, 0 edges`) — so only
+the owner's store, with 11 edges, could find it.
+
+The rewrite now reads the workspace's edges, maps **both** ends, and keeps the relation as a **set**
+of triples: an edge whose target triple is already taken **collapses** (one edge survives), and an
+edge whose two ends become the same referent would be a **self-require** — a concept may not require
+itself — so it is **dropped**. Both losses are **counted and published** in `MigrationResult`
+(`prerequisiteCollisions`, `prerequisiteSelfLoopsDropped`), so the information loss is visible
+rather than silent; the lineage keeps the history of both ends. The `representationCollisions` field,
+which the migration had always reported as `0`, now carries the real number — the representation
+collisions had been folded into `refinesCarried`.
+
+**The measured dry run** (a copy; the live store was never opened for writing):
+
+| what | the `logic` workspace | the `photosynthesis` workspace |
+|---|---|---|
+| the schema chain | v15 → v21 in **222 ms** | (the same chain, once) |
+| the concepts | 11 → 22 (11 inserted) | 13 → 37 (24 inserted) |
+| the claims re-pointed | 28 of 28 | 24 of 24 |
+| the representations re-pointed | 8 | 14 |
+| the representation collisions | 0 | 0 |
+| the prerequisites re-pointed | 6 | 5 |
+| **the prerequisite collapses** | **1** | 0 |
+| **the prerequisite self-loops dropped** | **1** | 0 |
+| the other rows re-pointed | 88 | 272 |
+| the lineage rows | 56 | 48 |
+| the plan's referents / the rejected claims | 8 / 3 | 14 / 10 |
+| the copy-forward | 6 ms | 3 ms |
+| **the orphan audit** | 13 tables, **0 orphans, 0 stale** | 13 tables, **0 orphans, 0 stale** |
+| **the rollback** | 22 → 11 concepts, 28 claims, 27 ms | 37 → 13 concepts, 24 claims, 21 ms |
+
+The live store after the dry run: the schema version **15**, the photosynthesis concepts **13** —
+**untouched**.
+
+The two losses are the honest cost of the merge and they are **not** free: the `logic` workspace's
+"Validity requires the Propositional connective" edge became a self-require when the merge joined
+the two concepts, so it was dropped, and one pair of edges collapsed onto one triple. The history of
+both survives in `concept_lineage`.
+
 **Open and owned:** the measured limitations of §B — the partial paraphrase equivalence, the two
 frozen-set cases whose disposition differs from the set's expectation, and the corpus-in-conflict
 precedence (which keeps "unsupported answering" at 2); the **latency plateau** of the premise path

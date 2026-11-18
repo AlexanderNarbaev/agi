@@ -190,17 +190,28 @@ public final class ReferentKeyMigration {
      * @param claimsRewritten how many claims were re-pointed
      * @param representationsRewritten how many representations were re-pointed
      * @param refinesCarried how many refines links were carried
-     * @param prerequisitesRewritten how many prerequisite rows were re-pointed
+     * @param prerequisitesRewritten how many prerequisite edges the mapping re-pointed,
+     *                               including the ones the merge then dropped
      * @param otherRowsRewritten how many rows of the other referencing tables were
      *                           re-pointed
      * @param lineageRows how many lineage rows were written
      * @param millis how long the copy-forward took
+     * @param representationCollisions how many representations of merged concepts
+     *                                 carried the same statement at the same level, so
+     *                                 the production id rule gave them one id
+     * @param prerequisiteCollisions how many prerequisite triples collapsed onto one
+     *                               triple when two merged concepts shared an edge
+     * @param prerequisiteSelfLoopsDropped how many prerequisite edges were dropped
+     *                                    because the merge made them require a
+     *                                    concept from itself
      */
     public record MigrationResult(int conceptsInserted, int claimsRewritten,
                                   int representationsRewritten, int refinesCarried,
                                   int prerequisitesRewritten, int otherRowsRewritten,
                                   int lineageRows, long millis,
-                                  int representationCollisions) {
+                                  int representationCollisions,
+                                  int prerequisiteCollisions,
+                                  int prerequisiteSelfLoopsDropped) {
     }
 
     /**
@@ -360,13 +371,14 @@ public final class ReferentKeyMigration {
                 int inserted = insertTheConcepts(connection, plan, workspace);
                 int claims = rewriteTheClaims(connection, plan, workspace);
                 int[] representations = rewriteTheRepresentations(connection, plan, workspace);
-                int prerequisites = rewriteThePrerequisites(connection, plan, workspace);
+                int[] prerequisites = rewriteThePrerequisites(connection, plan, workspace);
                 int other = rewriteTheOtherTables(connection, plan, workspace);
                 int lineage = writeTheLineage(connection, plan, workspace);
                 connection.commit();
                 return new MigrationResult(inserted, claims, representations[0],
-                        representations[1], prerequisites, other, lineage,
-                        (System.nanoTime() - started) / 1_000_000L, 0);
+                        representations[1], prerequisites[0], other, lineage,
+                        (System.nanoTime() - started) / 1_000_000L, representations[2],
+                        prerequisites[1], prerequisites[2]);
             } catch (SQLException | RuntimeException e) {
                 connection.rollback();
                 throw e;
@@ -583,38 +595,92 @@ public final class ReferentKeyMigration {
                 carried += statement.executeUpdate();
             }
         }
-        return new int[] {rewritten, carried + collisions};
+        return new int[] {rewritten, carried, collisions};
     }
 
     /**
      * Re-points the prerequisite graph.
      *
+     * <p>The graph is a SET of (workspace, concept, requires) triples, and a MERGE can
+     * collapse two triples into one: when two old concepts become one referent, their
+     * edges can land on the same triple. A blind UPDATE then violates the primary key
+     * — which is what the owner's live store's dry run found. The rewrite therefore
+     * reads the edges, maps both ends, keeps ONE edge per resulting triple and COUNTS
+     * the collapsed ones, so the collapse is published instead of crashing the
+     * migration. The edge that is kept is the first one in the store's own order, and
+     * the lineage keeps the history of both old concepts.</p>
+     *
      * @param connection the connection
      * @param plan the plan
      * @param workspace the workspace id
-     * @return how many rows were re-pointed
+     * @return how many rows were re-pointed, how many triples collapsed, and how
+     *         many edges the merge turned into a self-require
      * @throws SQLException when the database refuses the write
      */
-    private static int rewriteThePrerequisites(Connection connection, Plan plan, String workspace)
+    private static int[] rewriteThePrerequisites(Connection connection, Plan plan, String workspace)
             throws SQLException {
-        int rewritten = 0;
-        try (PreparedStatement statement = connection.prepareStatement(
-                "UPDATE prerequisite SET concept_id = ? WHERE concept_id = ? AND workspace_id = ?");
-                PreparedStatement requires = connection.prepareStatement(
-                        "UPDATE prerequisite SET requires_concept_id = ? "
-                                + "WHERE requires_concept_id = ? AND workspace_id = ?")) {
-            for (Map.Entry<String, String> entry : plan.oldToNew().entrySet()) {
-                statement.setString(1, entry.getValue());
-                statement.setString(2, entry.getKey());
-                statement.setString(3, workspace);
-                rewritten += statement.executeUpdate();
-                requires.setString(1, entry.getValue());
-                requires.setString(2, entry.getKey());
-                requires.setString(3, workspace);
-                rewritten += requires.executeUpdate();
+        Map<String, String> rewiring = plan.oldToNew();
+        List<Object[]> edges = new ArrayList<>();
+        try (PreparedStatement read = connection.prepareStatement(
+                "SELECT concept_id, requires_concept_id, required, note FROM prerequisite "
+                        + "WHERE workspace_id = ?")) {
+            read.setString(1, workspace);
+            try (ResultSet rows = read.executeQuery()) {
+                while (rows.next()) {
+                    edges.add(new Object[] { rows.getString(1), rows.getString(2),
+                            rows.getObject(3), rows.getString(4) });
+                }
             }
         }
-        return rewritten;
+        // The target of every edge, in the order the edges were read.
+        List<Object[]> targets = new ArrayList<>();
+        int rePointed = 0;
+        for (Object[] edge : edges) {
+            String concept = rewiring.getOrDefault((String) edge[0], (String) edge[0]);
+            String requires = rewiring.getOrDefault((String) edge[1], (String) edge[1]);
+            if (!concept.equals(edge[0]) || !requires.equals(edge[1])) {
+                rePointed++;
+            }
+            targets.add(new Object[] { concept, requires, edge[2], edge[3] });
+        }
+        // The distinct targets: the first edge of a triple keeps the triple, and an
+        // edge that the merge turned into a self-require is DROPPED — a concept may
+        // not require itself, and the lineage keeps the history of both ends.
+        Set<String> taken = new LinkedHashSet<>();
+        List<Object[]> distinct = new ArrayList<>();
+        int collapsed = 0;
+        int selfLoops = 0;
+        for (Object[] target : targets) {
+            if (target[0].equals(target[1])) {
+                selfLoops++;
+                continue;
+            }
+            if (taken.add(target[0] + "\\u0000" + target[1])) {
+                distinct.add(target);
+            } else {
+                collapsed++;
+            }
+        }
+        // The edges are written as a SET: the workspace's edges are removed and the
+        // mapped ones are written back, so no intermediate state can violate the key.
+        try (PreparedStatement delete = connection.prepareStatement(
+                "DELETE FROM prerequisite WHERE workspace_id = ?")) {
+            delete.setString(1, workspace);
+            delete.executeUpdate();
+        }
+        try (PreparedStatement insert = connection.prepareStatement(
+                "INSERT INTO prerequisite (workspace_id, concept_id, requires_concept_id, "
+                        + "required, note) VALUES (?, ?, ?, ?, ?)")) {
+            for (Object[] target : distinct) {
+                insert.setString(1, workspace);
+                insert.setString(2, (String) target[0]);
+                insert.setString(3, (String) target[1]);
+                insert.setObject(4, target[2]);
+                insert.setString(5, (String) target[3]);
+                insert.executeUpdate();
+            }
+        }
+        return new int[] { rePointed, collapsed, selfLoops };
     }
 
     /**
