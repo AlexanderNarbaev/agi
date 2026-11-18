@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="P2 — the closed loop on the owner's migrated live store" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-18T19:09:53.029Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.108">
+<testsuite name="P2 — the closed loop on the owner's migrated live store" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-18T19:27:21.668Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.029">
   <properties/>
-  <testcase name="the journey plans, acts, verifies, traces — and the next task reuses the trace" classname="io.matrix.knowledge.concept.research.LiveStoreKernelJourneyTest" time="0.108"/>
+  <testcase name="the journey plans, acts, verifies, traces — and the next task reuses the trace" classname="io.matrix.knowledge.concept.research.LiveStoreKernelJourneyTest" time="0.029"/>
   <system-out><![CDATA[[kernel-journey] the store: /home/alexandr-narbaev/Projects/agi/matrix-core/data/knowledge/workbench.sqlite — the workspaces [logic, photosynthesis]
-[kernel-journey] the first journey: the disposition WRITTEN, the artifact report-6309b0e0543a.md, the steps 7
-[kernel-journey] the identity: c2a.report.v1.ffbba39690d26309b0e0543a
-[kernel-journey] the report name: report-6309b0e0543a.md
-[kernel-journey] the retained: report-6309b0e0543a.md over the fingerprint e22c275498616ed2479a637ed8eb626860728d7dca0e181148a6003962b0d1aa
+[kernel-journey] the first journey: the disposition WRITTEN, the artifact report-402b404d54d9.md, the steps 7
+[kernel-journey] the identity: c2a.report.v1.3578726bf3cd402b404d54d9
+[kernel-journey] the report name: report-402b404d54d9.md
+[kernel-journey] the retained: report-402b404d54d9.md over the fingerprint e22c275498616ed2479a637ed8eb626860728d7dca0e181148a6003962b0d1aa
 [kernel-journey] the fingerprint now: e22c275498616ed2479a637ed8eb626860728d7dca0e181148a6003962b0d1aa
 [kernel-journey] the second plan: report.journey.replay.v1: selected report.journey.replay.v1@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 3 case(s); the cost came from DECLARED_COMPLEXITY and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — no measured reliability for this method in this stratum; the reliability evidence was no measured reliability for this method in this stratum
 [kernel-journey] the second journey: the steps 14

@@ -6,6 +6,8 @@ import io.matrix.cognitive.algorithms.AlgorithmRegistry;
 import io.matrix.cognitive.algorithms.CostLedger;
 import io.matrix.cognitive.algorithms.ProblemRequest;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,9 +30,13 @@ import java.util.function.Supplier;
  * <p><b>Why the ledger is here.</b> A method's cost has to be measured before it can be
  * preferred, and a measurement that is thrown away at the end of the request would mean
  * the selector never learns anything. The ledger therefore outlives the request: the
- * second journey for the same identity sees what the first one cost.</p>
+ * second journey for the same identity sees what the first one cost. That is also why
+ * the planner is an <b>application-scoped bean</b>: the route injects it, so the ledger
+ * must be the application's, not a request's — and a bean the container cannot resolve
+ * is a build failure, not a runtime surprise.</p>
  */
-public final class ReportJourneyPlanner {
+@ApplicationScoped
+public class ReportJourneyPlanner {
 
     /** The weight the cost of a method is given against its accuracy evidence. */
     public static final double COST_WEIGHT = 1.0;

@@ -657,7 +657,7 @@ evidence is a suspicion, and it is marked as such.
 - **the fix**: the wave's targeted suites are now run in **one** invocation and their XMLs are copied
   into the tracked directory `docs-v2/engineering/evidence/`, whose README carries the rule and the
   command; the evidence ledger's rows now name **those tracked copies** instead of the wipe-able build
-  path. Measured: **12** XMLs retained, **37** tests, **0** failures, **0** errors, **0** skipped.
+  path. Measured: **13** XMLs retained, **52** tests, **0** failures, **0** errors, **0** skipped.
 - **the evidence**: `docs-v2/engineering/evidence/` (the retained XMLs with their counts) and the
   ledger's rows, which now name the files in it.
 - **status**: CLOSED **for this wave**; the exposure is **structural** — every future run that
@@ -700,3 +700,32 @@ evidence is a suspicion, and it is marked as such.
 - **status**: CLOSED (2026-11-18) — the owner's option B is implemented and pinned by a test. The
   two leftovers are named: the launcher's own **console log** is still not a file (R-EPIS-07), and the
   backup of 2026-11-18 on disk is a byte copy made by the previous launcher.
+
+### R-EPIS-09 — the fast lane does not build the packaged application, so a wiring defect reaches the release lane
+
+- **the finding**: the FAST PR lane **compiles** the modules and runs the targeted tests; it does
+  **not** build the packaged Quarkus application. The release lane (`ci.yml`) does — and on
+  2026-11-18 it caught a defect the fast lane could not: `io.matrix.knowledge.ArtifactReportResource`
+  **injects** `io.matrix.cognitive.report.ReportJourneyPlanner`, which was a plain class and **not a
+  CDI bean**, so the build failed with
+  `UnsatisfiedResolutionException: Unsatisfied dependency for type io.matrix.cognitive.report.ReportJourneyPlanner`
+  in `:matrix-core:quarkusAppPartsBuild` ⇒ ⇒ ⇒ the packaged application **could not be built**, and the
+  defect sat in the tree through the whole wave.
+- **why it happened**: the route was added with the planner as an injected field, and the tests drive
+  the route by **constructing** it (the fields are public for that reason), so the tests never asked
+  the container to resolve it ⇒ ⇒ ⇒ the defect is invisible to every test that does not boot the
+  container — and there is **no `@QuarkusTest`** in the repository (0 of them).
+- **the fix**: the planner is now an **application-scoped bean** (`@ApplicationScoped`, and no longer
+  `final`, because a normal-scoped bean needs a client proxy) ⇒ ⇒ ⇒ the ledger the class's own
+  javadoc requires to outlive the request is the application's, and the build validates the wiring.
+  Measured: `:matrix-core:quarkusAppPartsBuild` **succeeds** where it failed, and a cheap unit test
+  pins the contract the build checks (the planner carries the scope annotation).
+- **the evidence**: the CI run `44378266172` (the release lane of the pull request) — the job "Quality
+  gates (can fail)" failed with the `UnsatisfiedResolutionException` above; the local
+  `:matrix-core:quarkusAppPartsBuild` failed the same way before the fix and succeeds after it.
+- **owner**: the coordinator — the defect is fixed; the *gap* is the lane's.
+- **status**: OPEN as a **gap**, CLOSED as a defect. The gap: the fast lane does not build the
+  packaged application, so a CDI wiring defect can only be caught by the release lane ⇒ ⇒ ⇒ the
+  release lane must be watched before a merge, and the owner's release decision (OD-074) says
+  exactly that ⇒ ⇒ ⇒ a cheaper guard (building the application in the fast lane) would cost the
+  lane its speed and is **not** decided here.

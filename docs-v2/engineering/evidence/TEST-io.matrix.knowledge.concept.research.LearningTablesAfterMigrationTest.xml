@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="P2 — the learning tables after the identity migration" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-18T19:09:53.001Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.026">
+<testsuite name="P2 — the learning tables after the identity migration" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-18T19:27:21.655Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.013">
   <properties/>
-  <testcase name="every learning row points at a concept that exists, and the row counts are the published ones" classname="io.matrix.knowledge.concept.research.LearningTablesAfterMigrationTest" time="0.006"/>
-  <testcase name="the before/after targets of the learning tables, read from the backup and the live store" classname="io.matrix.knowledge.concept.research.LearningTablesAfterMigrationTest" time="0.012"/>
-  <testcase name="the learning rows still mean the same thing: the referent's own rows" classname="io.matrix.knowledge.concept.research.LearningTablesAfterMigrationTest" time="0.002"/>
-  <testcase name="the assessment items: eight concepts, eight items each — before and after" classname="io.matrix.knowledge.concept.research.LearningTablesAfterMigrationTest" time="0.005"/>
+  <testcase name="every learning row points at a concept that exists, and the row counts are the published ones" classname="io.matrix.knowledge.concept.research.LearningTablesAfterMigrationTest" time="0.004"/>
+  <testcase name="the before/after targets of the learning tables, read from the backup and the live store" classname="io.matrix.knowledge.concept.research.LearningTablesAfterMigrationTest" time="0.004"/>
+  <testcase name="the learning rows still mean the same thing: the referent's own rows" classname="io.matrix.knowledge.concept.research.LearningTablesAfterMigrationTest" time="0.001"/>
+  <testcase name="the assessment items: eight concepts, eight items each — before and after" classname="io.matrix.knowledge.concept.research.LearningTablesAfterMigrationTest" time="0.003"/>
   <system-out><![CDATA[[learning-tables] assessment_item        the rows 64    the dangling pointers 0
 [learning-tables] assessment_outcome     the rows 3     the dangling pointers 0
 [learning-tables] hebbian_binding        the rows 1     the dangling pointers 0

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.ArtifactReportResourceTest" tests="15" skipped="0" failures="0" errors="0" timestamp="2026-11-18T19:27:02.620Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="1.674">
+  <properties/>
+  <testcase name="the planner the route injects is a CDI bean: the build validates it" classname="io.matrix.knowledge.ArtifactReportResourceTest" time="0.055"/>
+  <testcase name="a request without consent answers 403 consent_required and writes nothing" classname="io.matrix.knowledge.ArtifactReportResourceTest" time="0.449"/>
+  <testcase name="a request with consent=false answers 403 consent_required and writes nothing" classname="io.matrix.knowledge.ArtifactReportResourceTest" time="0.058"/>
+  <testcase name="two concurrent requests with the same identity write one artifact" classname="io.matrix.knowledge.ArtifactReportResourceTest" time="0.208"/>
+  <testcase name="an unsafe output root answers 503 output_root_unavailable" classname="io.matrix.knowledge.ArtifactReportResourceTest" time="0.119"/>
+  <testcase name="a missing output-root configuration answers 503 output_root_unavailable" classname="io.matrix.knowledge.ArtifactReportResourceTest" time="0.058"/>
+  <testcase name="the feature switched off answers 503 feature_disabled and writes nothing" classname="io.matrix.knowledge.ArtifactReportResourceTest" time="0.058"/>
+  <testcase name="a network-exposed process answers 403 local_only_action even with consent" classname="io.matrix.knowledge.ArtifactReportResourceTest" time="0.055"/>
+  <testcase name="the response body carries no absolute path of the output root" classname="io.matrix.knowledge.ArtifactReportResourceTest" time="0.099"/>
+  <testcase name="a root that was replaced answers 500 REFUSED_ROOT_REPLACED" classname="io.matrix.knowledge.ArtifactReportResourceTest" time="0.082"/>
+  <testcase name="a report name that leaves the root answers 400 invalid_report_name" classname="io.matrix.knowledge.ArtifactReportResourceTest" time="0.057"/>
+  <testcase name="a question for a workspace that does not exist answers 404 and writes nothing" classname="io.matrix.knowledge.ArtifactReportResourceTest" time="0.053"/>
+  <testcase name="the same request repeated answers 200 REPLAYED and writes one artifact" classname="io.matrix.knowledge.ArtifactReportResourceTest" time="0.106"/>
+  <testcase name="a successful request answers 201 and writes the report the workspace cited" classname="io.matrix.knowledge.ArtifactReportResourceTest" time="0.149"/>
+  <testcase name="a refusal carries no absolute path of the output root either" classname="io.matrix.knowledge.ArtifactReportResourceTest" time="0.053"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -8,6 +8,7 @@ import io.matrix.actions.ArtifactWriter;
 import io.matrix.cognitive.CognitiveService;
 import io.matrix.cognitive.report.ReportJourneyPlanner;
 import io.matrix.security.NetworkExposure;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.Response;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -104,6 +105,21 @@ class ArtifactReportResourceTest {
     }
 
     // ── the refusals ────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("the planner the route injects is a CDI bean: the build validates it")
+    void thePlannerIsACdiBean() {
+        // The route injects the planner, so the container has to be able to resolve it.
+        // While it was a plain class, the QUARKUS BUILD failed with an
+        // UnsatisfiedResolutionException ("ReportJourneyPlanner"), and the failure only
+        // appeared in the release lane - the fast lane compiles and runs the tests, but it
+        // does not build the packaged application. This is the cheap guard for the exact
+        // contract the build checks.
+        assertThat(ReportJourneyPlanner.class.getAnnotation(ApplicationScoped.class))
+                .as("the planner the route injects must be a CDI bean, or the Quarkus build "
+                        + "fails with an UnsatisfiedResolutionException")
+                .isNotNull();
+    }
 
     @Test
     @DisplayName("the feature switched off answers 503 feature_disabled and writes nothing")

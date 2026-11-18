@@ -1179,8 +1179,8 @@ praise, and not hidden.
 wave; **seven** of them existed **nowhere** — the build tree is gitignored and a Gradle run wipes it.
 The claims were true (the review verified the numbers against the store and the code), but the
 **artefacts** could not be opened ⇒ ⇒ ⇒ the wave's targeted suites are now run in **one** invocation
-and their XMLs are copied into the tracked directory `docs-v2/engineering/evidence/` (**12** files,
-**37** tests, **0** failures, **0** errors, **0** skipped), and the ledger's rows point at **those**
+and their XMLs are copied into the tracked directory `docs-v2/engineering/evidence/` (**13** files,
+**52** tests, **0** failures, **0** errors, **0** skipped), and the ledger's rows point at **those**
 files ⇒ ⇒ ⇒ the risk is recorded as **R-EPIS-07**, and the two holes it could not close (the P0
 close-out's packaging XML and the launcher's console log) are named there rather than hidden.
 
@@ -1198,7 +1198,7 @@ the migration touches. The same pass made the **learning tables** (the row count
 targets read from the preserved backup, the assessment items' structure), the **dry run's** per-
 workspace table, the **serving answers** (both statements, verbatim from the store's own
 representations) and the **journey's** trace (the seven phases **in order**, the replay's episode, the
-counts) **assertions** rather than prints ⇒ ⇒ ⇒ **37** tests across the wave's suites, **0** failures.
+counts) **assertions** rather than prints ⇒ ⇒ ⇒ **52** tests across the wave's suites, **0** failures.
 
 **Two findings were defects in the launcher itself, and they are fixed.** The launcher's **abort**
 paths called `System.exit(1)`, so the very path the review was about could not be exercised — it
@@ -1250,6 +1250,39 @@ reproduction (the reading above is the measurement that replaced it), the launch
 (no log file exists), the CI run ids (read from `gh` here instead), and the pre-wave parts of the
 programme (the premise semantics, the definition half, the brain runtime). Those remain as the
 programme's own claims, not as verified facts.
+
+**§J-duodecim — the release, and what the release lane caught.**
+
+The owner's decision (**OD-074**, 2026-11-18, option C): open the pull request `develop` → `main`,
+**wait for the full release lane** (`ci.yml`) to go green, then merge it as a **squash**, using the
+ruleset's **admin bypass** — which is logged. The pull request is **#63**; it carries the accumulated
+divergence of `develop` since the CONCEPT-TO-ACTION release (`26c549c4`): **559 commits, 182 files**,
++43 482/−2 531, of which the last **81** commits are this programme's wave.
+
+**Why the bypass, stated plainly.** The protected-`main` ruleset (20469548) requires the FAST PR
+lane's six status contexts — **all green** on every commit of the wave — and **one code-owner
+review**. The repository has **no CODEOWNERS file**, so the code owner is the repository owner, who
+is also the **sole collaborator** — and GitHub does not let a pull-request author approve their own
+pull request ⇒ ⇒ ⇒ the merge could not be made by the ordinary path ⇒ ⇒ ⇒ the ruleset's own bypass
+mechanism (`bypass_actors`: the admin role, `bypass_mode: always`) is the only path, and the release
+discipline allows exactly one thing of this kind: the current owner authorization (OD-074), the
+applicable gates passed, the independent critical review documented (§J-undecem), and the ruleset's
+documented bypass mechanism in existence ⇒ ⇒ ⇒ **every bypass is logged**, and this one is.
+
+**And the release lane earned its place: it caught a defect the fast lane could not.** The FAST PR
+lane compiles the modules and runs the targeted tests; it does **not** build the packaged
+application ⇒ ⇒ ⇒ a CDI wiring defect survived the whole wave and surfaced only in `ci.yml`:
+`ArtifactReportResource` **injects** `ReportJourneyPlanner`, which was a plain class and **not a
+bean**, so `:matrix-core:quarkusAppPartsBuild` failed with
+`UnsatisfiedResolutionException: Unsatisfied dependency for type io.matrix.cognitive.report.ReportJourneyPlanner`
+⇒ ⇒ ⇒ **the packaged application could not be built** ⇒ ⇒ ⇒ the fix: the planner is an
+**application-scoped bean** (`@ApplicationScoped`, and no longer `final`, because a normal-scoped
+bean needs a client proxy) ⇒ ⇒ ⇒ the ledger its own javadoc requires to outlive the request is the
+application's, and the build validates the wiring ⇒ ⇒ ⇒ measured: the task that failed now
+**succeeds**, and a cheap unit test pins the contract the build checks ⇒ ⇒ ⇒ the gap is recorded as
+**R-EPIS-09**: the fast lane does not build the packaged application, so a wiring defect can only be
+caught by the release lane ⇒ ⇒ ⇒ the owner's decision to wait for that lane is what kept this
+release from shipping a build that could not start.
 
 **Inherited reds that this programme did not cause and did not hide:** the Docker Hub publication
 (zero repository secrets — the owner's action, never in chat), ShellCheck (43 files), the GraalVM

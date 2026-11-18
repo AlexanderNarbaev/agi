@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="P1 — the referent key: the retrieval effect" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-18T19:11:21.696Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="42.707">
+<testsuite name="P1 — the referent key: the retrieval effect" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-18T19:28:50.451Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="43.787">
   <properties/>
-  <testcase name="the official ask cases: the three arms" classname="io.matrix.knowledge.concept.research.ReferentKeyRetrievalTest" time="38.855"/>
-  <testcase name="the frozen held-out set: the three arms" classname="io.matrix.knowledge.concept.research.ReferentKeyRetrievalTest" time="3.851"/>
-  <system-out><![CDATA[[referent-key] official-ask-20 CURRENT: cases=20 passed=12 answered=14 abstentions=6 theUnanswerableAbstained=6/6 answeredWithoutTheGold=8 recall@1=0.2024 recall@5=0.3214 recall@10=0.3690 recall@20=0.5952 mrr=0.5077 meanMillis=60
-[referent-key] official-ask-20 KEY: cases=20 passed=12 answered=14 abstentions=6 theUnanswerableAbstained=6/6 answeredWithoutTheGold=8 recall@1=0.2024 recall@5=0.3214 recall@10=0.3690 recall@20=0.5952 mrr=0.5077 meanMillis=60
-[referent-key] official-ask-20 KEY_WITH_DEFINITIONS: cases=20 passed=12 answered=14 abstentions=6 theUnanswerableAbstained=6/6 answeredWithoutTheGold=8 recall@1=0.2024 recall@5=0.3214 recall@10=0.3690 recall@20=0.5952 mrr=0.5077 meanMillis=58
-[referent-key] held-out-16 CURRENT: cases=16 passed=8 answered=12 abstentions=4 theUnanswerableAbstained=0/0 answeredWithoutTheGold=4 recall@1=0.0000 recall@5=0.0000 recall@10=0.0000 recall@20=0.0000 mrr=0.0000 meanMillis=30
-[referent-key] held-out-16 KEY: cases=16 passed=8 answered=12 abstentions=4 theUnanswerableAbstained=0/0 answeredWithoutTheGold=4 recall@1=0.0000 recall@5=0.0000 recall@10=0.0000 recall@20=0.0000 mrr=0.0000 meanMillis=29
+  <testcase name="the official ask cases: the three arms" classname="io.matrix.knowledge.concept.research.ReferentKeyRetrievalTest" time="39.901"/>
+  <testcase name="the frozen held-out set: the three arms" classname="io.matrix.knowledge.concept.research.ReferentKeyRetrievalTest" time="3.885"/>
+  <system-out><![CDATA[[referent-key] official-ask-20 CURRENT: cases=20 passed=12 answered=14 abstentions=6 theUnanswerableAbstained=6/6 answeredWithoutTheGold=8 recall@1=0.2024 recall@5=0.3214 recall@10=0.3690 recall@20=0.5952 mrr=0.5077 meanMillis=62
+[referent-key] official-ask-20 KEY: cases=20 passed=12 answered=14 abstentions=6 theUnanswerableAbstained=6/6 answeredWithoutTheGold=8 recall@1=0.2024 recall@5=0.3214 recall@10=0.3690 recall@20=0.5952 mrr=0.5077 meanMillis=65
+[referent-key] official-ask-20 KEY_WITH_DEFINITIONS: cases=20 passed=12 answered=14 abstentions=6 theUnanswerableAbstained=6/6 answeredWithoutTheGold=8 recall@1=0.2024 recall@5=0.3214 recall@10=0.3690 recall@20=0.5952 mrr=0.5077 meanMillis=66
+[referent-key] held-out-16 CURRENT: cases=16 passed=8 answered=12 abstentions=4 theUnanswerableAbstained=0/0 answeredWithoutTheGold=4 recall@1=0.0000 recall@5=0.0000 recall@10=0.0000 recall@20=0.0000 mrr=0.0000 meanMillis=29
+[referent-key] held-out-16 KEY: cases=16 passed=8 answered=12 abstentions=4 theUnanswerableAbstained=0/0 answeredWithoutTheGold=4 recall@1=0.0000 recall@5=0.0000 recall@10=0.0000 recall@20=0.0000 mrr=0.0000 meanMillis=30
 [referent-key] held-out-16 KEY_WITH_DEFINITIONS: cases=16 passed=8 answered=12 abstentions=4 theUnanswerableAbstained=0/0 answeredWithoutTheGold=4 recall@1=0.0000 recall@5=0.0000 recall@10=0.0000 recall@20=0.0000 mrr=0.0000 meanMillis=29
 ]]></system-out>
   <system-err><![CDATA[]]></system-err>

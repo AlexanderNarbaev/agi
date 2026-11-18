@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="C2A — the held-out evaluation of the frozen candidates (H1, H2, H3)" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-11-18T19:09:35.068Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="17.93">
+<testsuite name="C2A — the held-out evaluation of the frozen candidates (H1, H2, H3)" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-11-18T19:27:04.296Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="17.358">
   <properties/>
-  <testcase name="the MRR is the reciprocal rank of the topmost gold, and the misses count" classname="io.matrix.knowledge.concept.HeldOutEvaluationTest" time="0.004"/>
+  <testcase name="the MRR is the reciprocal rank of the topmost gold, and the misses count" classname="io.matrix.knowledge.concept.HeldOutEvaluationTest" time="0.0"/>
   <testcase name="the calibration: the judge is unchanged and the migrated row is measured with it" classname="io.matrix.knowledge.concept.HeldOutEvaluationTest" time="0.003"/>
-  <testcase name="the claim-scoped records stay retrievable: the cases whose gold lives in one" classname="io.matrix.knowledge.concept.HeldOutEvaluationTest" time="0.035"/>
-  <testcase name="the freeze is the one the candidates were frozen against" classname="io.matrix.knowledge.concept.HeldOutEvaluationTest" time="0.006"/>
-  <testcase name="the extraction is grounded in the research pool" classname="io.matrix.knowledge.concept.HeldOutEvaluationTest" time="0.0"/>
-  <testcase name="the held-out set is the one the manifest describes" classname="io.matrix.knowledge.concept.HeldOutEvaluationTest" time="0.001"/>
+  <testcase name="the claim-scoped records stay retrievable: the cases whose gold lives in one" classname="io.matrix.knowledge.concept.HeldOutEvaluationTest" time="0.004"/>
+  <testcase name="the freeze is the one the candidates were frozen against" classname="io.matrix.knowledge.concept.HeldOutEvaluationTest" time="0.004"/>
+  <testcase name="the extraction is grounded in the research pool" classname="io.matrix.knowledge.concept.HeldOutEvaluationTest" time="0.001"/>
+  <testcase name="the held-out set is the one the manifest describes" classname="io.matrix.knowledge.concept.HeldOutEvaluationTest" time="0.0"/>
   <testcase name="every row is measured, and every metric is inside its bounds" classname="io.matrix.knowledge.concept.HeldOutEvaluationTest" time="0.001"/>
   <system-out><![CDATA[[migration] the claim-scoped records: 322 of them, carrying 322 distinct texts
 [migration] the candidates measured on the MIGRATED copy: [BASELINE-PATH] (the unmigrated row carries 6 candidates; the other candidates are not measured on the migrated copy)
