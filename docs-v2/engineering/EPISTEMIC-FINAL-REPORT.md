@@ -1401,6 +1401,14 @@ python3 scripts/docs-link-check.py --root . --strict
 >    that is the second thing worth a probe, and it is now pinned by the test. The held-out evaluation is
 >    **not** a gap either (it already judges a migrated copy with the same judge — see the note
 >    below).
+> **The release lane earned its place** (§J-duodecim): the FAST PR lane compiles and runs the
+>    targeted tests but does **not** build the packaged application ⇒ ⇒ ⇒ a CDI wiring defect
+>    survived the whole wave and surfaced only in `ci.yml`: the route injects the kernel's
+>    planner, which was not a bean, so `:matrix-core:quarkusAppPartsBuild` failed and the
+>    application **could not be built** ⇒ ⇒ ⇒ the planner is now an application-scoped bean, the
+>    build succeeds, and the gap is **R-EPIS-09** ⇒ ⇒ ⇒ the owner's decision to wait for the
+>    release lane is what kept this release from shipping a build that could not start.
+>
 > 2. **The owner's decisions of 2026-11-18 (evening) are taken and recorded** — **OD-074** (the
 >    release: open the pull request `develop` → `main`, wait for the **full** release lane `ci.yml`
 >    to go green, then merge it as a **squash** with the ruleset's **admin bypass**, which is
