@@ -545,8 +545,26 @@ class HeldOutEvaluationTest {
         assertNotNull(migratedBaselinePath, "the migrated row must exist");
         // THE CALIBRATION: the unmigrated row is the published one, and the migrated
         // row was produced by the SAME judge, the SAME questions and the SAME dataset.
-        assertEquals(metrics.size(), metricsOfMigrated().size(),
-                "the migrated copy must be measured by the same candidates");
+        // The calibration is the SAME CANDIDATE and the SAME CASE COUNT: the migrated
+        // copy is judged by the baseline candidate alone, one row per case. The other
+        // five candidates are NOT measured on the migrated copy — so their migrated
+        // metrics are empty, which is the absence of a measurement and not a
+        // regression, and the comparison below must say so.
+        Set<String> migratedCandidates = new LinkedHashSet<>();
+        for (Row row : migratedRows) {
+            migratedCandidates.add(row.candidate());
+        }
+        assertEquals(Set.of(RetrievalExperiment.BASELINE_PATH), migratedCandidates,
+                "the migrated copy must be judged by the baseline candidate alone");
+        long unmigratedBaselineRows = rows.stream()
+                .filter(row -> RetrievalExperiment.BASELINE_PATH.equals(row.candidate()))
+                .count();
+        assertEquals(unmigratedBaselineRows, migratedRows.size(),
+                "the migrated copy must be judged on the same number of cases");
+        System.out.printf("[migration] the candidates measured on the MIGRATED copy: %s "
+                        + "(the unmigrated row carries %d candidates; the other candidates are "
+                        + "not measured on the migrated copy)%n",
+                migratedCandidates, metrics.size());
         // THE JUDGE IS UNCHANGED: the migrated row was produced by the SAME judge
         // method, on the SAME questions, with the SAME dataset, and it agrees with the
         // unmigrated row on every content metric.
@@ -560,6 +578,15 @@ class HeldOutEvaluationTest {
                 "the migrated copy must have the same MRR");
         assertEquals(baseline.abstentionAccuracy(), migratedBaselinePath.abstentionAccuracy(),
                 1e-9, "the migrated copy must refuse the same cases");
+        // The two numbers the report publishes as the migration's effect are now
+        // PINNED, not printed: the unsupported-answer rate must not move, and the
+        // mean number of non-gold claims cited must not get worse.
+        assertEquals(baseline.unsupportedOverAllAsk(), migratedBaselinePath.unsupportedOverAllAsk(),
+                1e-9, "the migrated copy must answer unsupported cases at the same rate");
+        assertTrue(migratedBaselinePath.meanNonGoldCited() <= baseline.meanNonGoldCited(),
+                "the migrated copy must not cite more non-gold claims than the unmigrated one "
+                        + "(the unmigrated " + baseline.meanNonGoldCited() + ", the migrated "
+                        + migratedBaselinePath.meanNonGoldCited() + ")");
         System.out.printf("[migration] the held-out set: the unmigrated row — passed %d/%d, the "
                         + "failures %s, the recall@1 %.4f, the MRR %.4f, the abstention %.4f, "
                         + "the unsupported %.4f%n",
@@ -655,11 +682,36 @@ class HeldOutEvaluationTest {
         // answered before and does not answer now.
         assertEquals(answeredBefore, answeredAfter,
                 "the migration must not change which of the affected cases answer");
-    }
-
-    /** The metrics of the migrated rows, by candidate. */
-    private static Map<String, Metrics> metricsOfMigrated() {
-        return metrics(migratedRows);
+        // THE WIDER GUARANTEE: not only the cases the migration touches, but EVERY
+        // comparable case of the baseline row — the answered flag of each must be the
+        // same before and after, so the report's "no case is gained, none is lost" is
+        // pinned over the whole set and not over the affected subset alone.
+        Map<String, Boolean> flagsBefore = new LinkedHashMap<>();
+        Map<String, Boolean> flagsAfter = new LinkedHashMap<>();
+        for (Row row : rows) {
+            if (RetrievalExperiment.BASELINE_PATH.equals(row.candidate())) {
+                flagsBefore.put(row.caseId(), row.answered());
+            }
+        }
+        for (Row row : migratedRows) {
+            if (RetrievalExperiment.BASELINE_PATH.equals(row.candidate())) {
+                flagsAfter.put(row.caseId(), row.answered());
+            }
+        }
+        assertEquals(flagsBefore.keySet(), flagsAfter.keySet(),
+                "the two rows must judge the same cases");
+        List<String> flagDifferences = new ArrayList<>();
+        for (Map.Entry<String, Boolean> entry : flagsBefore.entrySet()) {
+            Boolean after = flagsAfter.get(entry.getKey());
+            if (!entry.getValue().equals(after)) {
+                flagDifferences.add(entry.getKey() + " (" + entry.getValue() + " -> " + after + ")");
+            }
+        }
+        System.out.printf("[migration] the comparable cases: %d of them, the answered flags that "
+                        + "changed: %d (%s)%n",
+                flagsBefore.size(), flagDifferences.size(), flagDifferences);
+        assertEquals(List.of(), flagDifferences,
+                "the migration must not change the answered flag of any comparable case");
     }
 
     // ── the invariants ───────────────────────────────────────────────────────

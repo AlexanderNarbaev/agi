@@ -46,7 +46,14 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * <p><b>What this test does not claim.</b> The replayed report is a record of what the
  * workspace said earlier, not new evidence — the response says so. Nothing here claims the
- * loop makes the workspace smarter; it claims the loop closes and that its trace is kept.
+ * loop makes the workspace smarter; it claims the loop closes and that its trace is kept.</p>
+ *
+ * <p><b>What it pins.</b> The published numbers of the chain: the workspace the journey
+ * runs over (the concepts 37, the claims 24), the episode's <b>seven</b> steps after the
+ * first journey — PLAN, PERMISSION, ACTION, OBSERVE, VERIFY, RESULT, RETAINED, in that
+ * order — and the fact that the <b>second</b> journey appends to the same episode, so the
+ * episode holds fourteen steps afterwards. The step count is therefore asserted where the
+ * first journey leaves it, not after the replay.</p>
  *
  * <p>The test is <b>skipped, not failed</b>, when the store is not in the checkout (CI).</p>
  */
@@ -123,8 +130,11 @@ class LiveStoreKernelJourneyTest {
         // ── the trace: the phases the design names ──
         List<LearningTrace.Step> steps = route.cognitive.store()
                 .events(ReportJourneyTrace.episodeId(body.taskId()));
+        // The published number: the episode holds SEVEN steps after the first journey —
+        // PLAN, PERMISSION, ACTION, OBSERVE, VERIFY, RESULT, RETAINED.
+        assertThat(steps.size()).as("the steps the first journey left in the episode").isEqualTo(7);
         assertThat(steps).extracting(LearningTrace.Step::phase)
-                .contains(ReportJourneyTrace.PHASE_PLAN,
+                .containsExactly(ReportJourneyTrace.PHASE_PLAN,
                         ReportJourneyTrace.PHASE_PERMISSION,
                         ReportJourneyTrace.PHASE_ACTION,
                         ReportJourneyTrace.PHASE_OBSERVE,
@@ -171,6 +181,17 @@ class LiveStoreKernelJourneyTest {
                 .events(ReportJourneyTrace.episodeId(replayed.taskId()));
         System.out.println("[kernel-journey] the second plan: "
                 + lastDetailOf(replaySteps, ReportJourneyTrace.PHASE_PLAN));
+        System.out.printf("[kernel-journey] the second journey: the steps %d%n",
+                replaySteps.size());
+        // The second journey APPENDS to the same episode: the episode id is derived from
+        // the action identity, and the identity of a repeated request is the same one.
+        assertThat(ReportJourneyTrace.episodeId(replayed.taskId()))
+                .as("the second journey's episode")
+                .isEqualTo(ReportJourneyTrace.episodeId(body.taskId()));
+        // The episode therefore holds BOTH journeys: seven steps for the first and seven
+        // more for the replay.
+        assertThat(replaySteps.size()).as("the steps the episode holds after the second journey")
+                .isEqualTo(14);
         assertThat(lastDetailOf(replaySteps, ReportJourneyTrace.PHASE_PLAN))
                 .as("the kernel read the trace and chose the cheap path")
                 .contains(ReportJourneyMethod.REPLAY_ID);
@@ -181,6 +202,10 @@ class LiveStoreKernelJourneyTest {
         var snapshot = workbench.workspace("photosynthesis");
         assertThat(snapshot.claims()).as("the store still holds its claims")
                 .isNotEmpty();
+        // The published counts of the migrated photosynthesis workspace.
+        assertThat(snapshot.concepts().size()).as("the photosynthesis concepts")
+                .isEqualTo(37);
+        assertThat(snapshot.claims().size()).as("the photosynthesis claims").isEqualTo(24);
         System.out.printf("[kernel-journey] the store after: the concepts %d, the claims %d%n",
                 snapshot.concepts().size(), snapshot.claims().size());
     }

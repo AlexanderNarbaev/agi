@@ -640,3 +640,54 @@ evidence is a suspicion, and it is marked as such.
   "vitro" is not a determiner; a hypothetical "In the presence of chlorophyll" is not) would be rejected
   and its claims would become claim-scoped records — retrievable, but not concept-addressable. That is
   the conservative direction: the claim is never lost and never answered as a different thing.
+
+### R-EPIS-07 — the published numbers' artefacts were deleted by the next test run, so the evidence chain had a hole
+
+- **the finding**: the hard review of the wave (2026-11-18) found that **seven of the eight** JUnit
+  XMLs the evidence ledger named for this wave existed **nowhere** — not in the repository (`build/`
+  is gitignored) and not in the working tree (a Gradle run wipes `matrix-core/build/test-results/`).
+  The ledger pointed at artefacts that could not be opened. The **claims** themselves were true (the
+  review verified the numbers against the store and against the code), but the **chain of evidence**
+  had a hole in it: a number whose artefact cannot be opened is a recollection.
+- **why it happened**: the rule ("the evidence is the retained JUnit XML") was applied to the **run**,
+  not to the **repository**. The XML was retained on the machine, and the next run deleted it. The
+  repository's own `AGENTS.md` warns of exactly this ("a Gradle test run **wipes** the module's
+  `build/test-results` ⇒ copy the XML out before the next run") — the warning was written down and
+  not followed for these artefacts.
+- **the fix**: the wave's targeted suites are now run in **one** invocation and their XMLs are copied
+  into the tracked directory `docs-v2/engineering/evidence/`, whose README carries the rule and the
+  command; the evidence ledger's rows now name **those tracked copies** instead of the wipe-able build
+  path. Measured: **12** XMLs retained, **36** tests, **0** failures, **0** errors, **0** skipped.
+- **the evidence**: `docs-v2/engineering/evidence/` (the retained XMLs with their counts) and the
+  ledger's rows, which now name the files in it.
+- **status**: CLOSED **for this wave**; the exposure is **structural** — every future run that
+  publishes a number must copy its XML into the tracked directory, or the number is a recollection.
+- **the residual**: two holes are **not** closed by this wave and are recorded here rather than hidden.
+  The older rows of the ledger (the P0 close-out) still name a packaging XML that was **never**
+  retained. And the **launcher's own console log** (`scripts/migrate-live-store.sh`) is not a file:
+  the launcher's numbers are quoted from the run's output, and the launcher's **contract** — the
+  backup-before-write order, the abort before the live file is touched, the atomic replace — is now
+  pinned by a test instead.
+
+### R-EPIS-08 — the launcher's backup copies only the main database file, so a live store with an un-checkpointed WAL would lose the frames in it
+
+- **the finding**: the store runs in **WAL** mode, and the launcher copies only the **main** file
+  (`Files.copy(live, backup)`). A main-file-only copy of a WAL database that holds **un-checkpointed
+  committed frames loses them** — reproduced with a minimal case: a table created and committed in the
+  WAL was **absent** from the main-file-only copy. So the backup, the work file and the migrated result
+  would all miss that content, and the stale `-wal`/`-shm` sidecars would be left next to the replaced
+  live file.
+- **the exposure, measured today**: the live store's `-wal` holds **86** frames and **all 86** are
+  already checkpointed into the main file (measured with `PRAGMA wal_checkpoint(PASSIVE)` on a
+  **copy**), so the migration that produced the published numbers is unaffected and the backup is
+  complete ⇒ ⇒ ⇒ the defect is **latent**, not active.
+- **the fix** — **not applied**: it changes the contract the owner approved in OD-070 ("a timestamped
+  backup of the original bytes"), so the choice is the owner's. The options: copy the `-wal` and `-shm`
+  sidecars with the main file and delete the stale ones next to the replaced file; take the backup with
+  SQLite's own consistent snapshot (`VACUUM INTO`), which merges the WAL into one file; or **refuse to
+  run** while the WAL holds un-checkpointed frames — the honest guard, since a launcher that silently
+  loses committed frames is worse than one that stops.
+- **owner**: the owner — the launcher's contract is OD-070's, and the change is to it.
+- **status**: OPEN — the defect is measured, the reproduction is exact, and the published numbers are
+  unaffected. The launcher is not needed again unless the store is re-migrated, and the store's WAL is
+  checkpointed now.

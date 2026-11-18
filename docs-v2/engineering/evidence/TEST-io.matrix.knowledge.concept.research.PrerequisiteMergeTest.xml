@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="P1 — the referent key: the merge collapse of the prerequisite graph" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-18T18:31:10.592Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.067">
+  <properties/>
+  <testcase name="two merged concepts: the shared edge collapses, the self-require is dropped" classname="io.matrix.knowledge.concept.research.PrerequisiteMergeTest" time="0.067"/>
+  <system-out><![CDATA[[merge] the plan: the referents 2, the new concepts 2, the rejected 0
+[merge] the copy-forward: the concepts inserted 2, the claims re-pointed 3, the prerequisites re-pointed 3, the collapses 1, the self-loops 1
+[merge] the graph after the copy-forward: 1 edge(s) [ec445ff9 -> 9b11503c]
+[merge] the audit: the tables 13, the orphans 0, the stale 0
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -52,6 +52,52 @@ class LiveStoreMigrationDryRunTest {
     /** The epoch of the migration's writes. */
     private static final String CREATED_AT = "2026-11-18T00:00:00Z";
 
+    /**
+     * The numbers the report publishes, per workspace.
+     *
+     * <p><b>Why these and not the first migration's.</b> The report's dry-run table
+     * (§J-bis) carries the <b>first</b> migration's counts for the {@code logic} workspace
+     * — the concepts 11 → 22, the referents 8, the rejected 3 — and the report itself
+     * marks them superseded: the prepositional-phrase rule (OD-071) changed the policy,
+     * the store was re-migrated from the preserved original, and the current counts are
+     * the ones the report publishes in §J-quinque ({@code logic}: the referents 8 → 6, the
+     * rejected 3 → 13, the concepts 11 → 30). These are the §J-quinque numbers, measured
+     * against the preserved original.</p>
+     *
+     * @param concepts the concepts before the migration
+     * @param inserted the concepts the copy-forward inserted
+     * @param claims the claims the copy-forward re-pointed
+     * @param representations the representations the copy-forward re-pointed
+     * @param representationCollisions the representation collisions
+     * @param prerequisites the prerequisite edges the copy-forward re-pointed
+     * @param prerequisiteCollisions the prerequisite triples that collapsed onto one
+     * @param prerequisiteSelfLoops the prerequisite edges dropped as self-requires
+     * @param otherRows the rows of the other referencing tables that were re-pointed
+     * @param lineage the lineage rows the copy-forward wrote
+     * @param referents the referents the plan produced
+     * @param rejected the claims the policy rejected
+     */
+    private record Expected(int concepts, int inserted, int claims, int representations,
+                            int representationCollisions, int prerequisites,
+                            int prerequisiteCollisions, int prerequisiteSelfLoops,
+                            int otherRows, int lineage, int referents, int rejected) {
+    }
+
+    /** The published counts of the {@code logic} workspace. */
+    private static final Expected LOGIC = new Expected(11, 19, 28, 8, 0, 6, 1, 1, 88, 56, 6, 13);
+
+    /** The published counts of the {@code photosynthesis} workspace. */
+    private static final Expected PHOTOSYNTHESIS =
+            new Expected(13, 24, 24, 14, 0, 5, 0, 0, 272, 48, 14, 10);
+
+    /** The published counts, per workspace. */
+    private static final Map<String, Expected> PUBLISHED = Map.of(
+            "logic", LOGIC,
+            "photosynthesis", PHOTOSYNTHESIS);
+
+    /** The number of referencing tables the audit walks. */
+    private static final int AUDIT_TABLES = 13;
+
     @Test
     @DisplayName("the live store on a copy: the schema, the two workspaces, the audit and the rollback")
     void theLiveStoreOnACopy() throws Exception {
@@ -114,10 +160,54 @@ class LiveStoreMigrationDryRunTest {
 
             assertThat(audit.totalOrphans()).as("the orphans of %s", workspace).isZero();
             assertThat(audit.totalStale()).as("the stale pointers of %s", workspace).isZero();
+            assertThat(audit.tablesChecked().size()).as("the tables the audit walked of %s",
+                    workspace).isEqualTo(AUDIT_TABLES);
             for (Map.Entry<String, Integer> entry : audit.orphansByTable().entrySet()) {
                 assertThat(entry.getValue()).as("the orphans in %s of %s", entry.getKey(), workspace)
                         .isZero();
             }
+
+            // ── the published numbers, asserted ─────────────────────────────────
+            Expected expected = PUBLISHED.get(workspace);
+            assertThat(before.concepts().size()).as("the concepts of %s before the migration",
+                    workspace).isEqualTo(expected.concepts());
+            assertThat(result.conceptsInserted()).as("the concepts inserted into %s", workspace)
+                    .isEqualTo(expected.inserted());
+            assertThat(before.concepts().size() + result.conceptsInserted())
+                    .as("the concepts of %s after the migration", workspace)
+                    .isEqualTo(expected.concepts() + expected.inserted());
+            assertThat(before.claims().size()).as("the claims of %s before the migration",
+                    workspace).isEqualTo(expected.claims());
+            assertThat(result.claimsRewritten()).as("the claims re-pointed in %s", workspace)
+                    .as("every claim of %s is re-pointed", workspace)
+                    .isEqualTo(expected.claims());
+            assertThat(result.representationsRewritten())
+                    .as("the representations re-pointed in %s", workspace)
+                    .isEqualTo(expected.representations());
+            assertThat(result.representationCollisions())
+                    .as("the representation collisions in %s", workspace)
+                    .isEqualTo(expected.representationCollisions());
+            assertThat(result.prerequisitesRewritten())
+                    .as("the prerequisite edges re-pointed in %s", workspace)
+                    .isEqualTo(expected.prerequisites());
+            assertThat(result.prerequisiteCollisions())
+                    .as("the prerequisite triples that collapsed in %s", workspace)
+                    .isEqualTo(expected.prerequisiteCollisions());
+            assertThat(result.prerequisiteSelfLoopsDropped())
+                    .as("the prerequisite self-loops dropped in %s", workspace)
+                    .isEqualTo(expected.prerequisiteSelfLoops());
+            assertThat(result.otherRowsRewritten()).as("the other rows re-pointed in %s",
+                    workspace).isEqualTo(expected.otherRows());
+            assertThat(result.lineageRows()).as("the lineage rows written in %s", workspace)
+                    .isEqualTo(expected.lineage());
+            assertThat(plan.referents()).as("the plan's referents in %s", workspace)
+                    .isEqualTo(expected.referents());
+            assertThat(plan.rejected()).as("the claims the policy rejected in %s", workspace)
+                    .isEqualTo(expected.rejected());
+            // The referents and the rejections account for every inserted concept.
+            assertThat(plan.referents() + plan.rejected())
+                    .as("the referents and the rejections of %s", workspace)
+                    .isEqualTo(expected.inserted());
 
             // ── the rollback, on its own copy ────────────────────────────────
             WorkspaceSnapshot snapshot;
@@ -137,8 +227,16 @@ class LiveStoreMigrationDryRunTest {
                         workspace, conceptsAfterMigration, restored.concepts().size(),
                         restored.claims().size(),
                         (System.nanoTime() - started) / 1_000_000L);
+                // The published rollback: the workspace goes 11 -> 30 -> 11 (logic) and
+                // 13 -> 37 -> 13 (photosynthesis), and the claims come back whole.
+                assertThat(conceptsAfterMigration).as("the concepts of %s after the migration",
+                        workspace).isEqualTo(expected.concepts() + expected.inserted());
                 assertThat(restored.concepts().size()).isEqualTo(before.concepts().size());
+                assertThat(restored.concepts().size()).as("the concepts of %s after the rollback",
+                        workspace).isEqualTo(expected.concepts());
                 assertThat(restored.claims().size()).isEqualTo(before.claims().size());
+                assertThat(restored.claims().size()).as("the claims of %s after the rollback",
+                        workspace).isEqualTo(expected.claims());
             }
         }
 
@@ -152,6 +250,9 @@ class LiveStoreMigrationDryRunTest {
             assertThat(rows.next()).isTrue();
             System.out.printf("[live-migration] the source store: the schema version %d, the "
                     + "photosynthesis concepts %d — untouched%n", versionBefore, rows.getInt(1));
+            // The published number: the source still holds the pre-migration concepts.
+            assertThat(rows.getInt(1)).as("the source store's photosynthesis concepts")
+                    .isEqualTo(PHOTOSYNTHESIS.concepts());
         }
     }
 

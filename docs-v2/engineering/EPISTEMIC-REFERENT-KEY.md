@@ -747,10 +747,12 @@ records it.
 
 ### 9.3 The claim-scoped records stay retrievable
 
-The migration of the pool workspace produced **314 claim-scoped records**, each carrying
+The migration of the pool workspace produced **322 claim-scoped records**, each carrying
 the claim's own text as the retrievable unit. **17 of the 25 comparable cases depend on
 a claim whose gold lives in a claim-scoped record** (their gold claim was one the
-policy rejected as a surface form).
+policy rejected as a surface form). (The **314** this section carried before the
+prepositional-phrase rule was written was stale; the count the test prints on every
+run is **322**.)
 
 | the measure | the value |
 |---|---|
@@ -797,7 +799,7 @@ migration **carries it: 1 before, 1 after, 0 dangling** ✓.
 4. **The migration's effect on the learning tables** (the assessment items, the learning
    state) was not measured — the rows are re-pointed (2 089 of them on the pool) and the
    audit finds no orphan, but nothing asks whether the learning still works.
-5. **The seed's claim-scoped records were measured on the C2A pool's migration** (314
+5. **The seed's claim-scoped records were measured on the C2A pool's migration** (322
    records); the seed corpus's own 255 records were not asked a question directly.
 6. **The representation id rule breaks on a collision** — and the pool has **one** such
    collision (two representations of two merged concepts carry the same statement at
@@ -900,8 +902,8 @@ flock /tmp/gradle-matrix.lock bash -c 'rm -rf matrix-core/build/test-results && 
 
 | the scope | the tests | the failures | the errors | the XML |
 |---|---|---|---|---|
-| `io.matrix.knowledge.concept.research.ReferentKeyInstrumentTest` | 7 | 0 | 0 | `matrix-core/build/test-results/test/TEST-io.matrix.knowledge.concept.research.ReferentKeyInstrumentTest.xml` <!-- no-link: the JUnit XML is a runtime artefact of the run, not a repository file --> |
-| `io.matrix.knowledge.concept.research.ReferentKeyRetrievalTest` | 2 | 0 | 0 | `matrix-core/build/test-results/test/TEST-io.matrix.knowledge.concept.research.ReferentKeyRetrievalTest.xml` <!-- no-link: the JUnit XML is a runtime artefact of the run, not a repository file --> |
+| `io.matrix.knowledge.concept.research.ReferentKeyInstrumentTest` | 7 | 0 | 0 | `docs-v2/engineering/evidence/TEST-io.matrix.knowledge.concept.research.ReferentKeyInstrumentTest.xml` <!-- no-link: the JUnit XML is a runtime artefact of the run, not a repository file --> |
+| `io.matrix.knowledge.concept.research.ReferentKeyRetrievalTest` | 2 | 0 | 0 | `docs-v2/engineering/evidence/TEST-io.matrix.knowledge.concept.research.ReferentKeyRetrievalTest.xml` <!-- no-link: the JUnit XML is a runtime artefact of the run, not a repository file --> |
 | **the whole scope `io.matrix.knowledge.concept.*`** | **51** | **0** | **0** | |
 
 The seven instrument tests are: the baseline is reproduced; the fragmentation is measured;

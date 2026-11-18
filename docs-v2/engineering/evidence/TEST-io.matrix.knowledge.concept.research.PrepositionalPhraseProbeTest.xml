@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="P1 — the referent policy: a prepositional phrase is not a referent" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-18T18:31:10.590Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.002">
+  <properties/>
+  <testcase name="the control: a preposition followed by a NOUN still names a thing" classname="io.matrix.knowledge.concept.research.PrepositionalPhraseProbeTest" time="0.001"/>
+  <testcase name="the control: a preposition INSIDE a noun phrase is still a referent" classname="io.matrix.knowledge.concept.research.PrepositionalPhraseProbeTest" time="0.0"/>
+  <testcase name="a span that opens with a preposition and has no comma is not a referent" classname="io.matrix.knowledge.concept.research.PrepositionalPhraseProbeTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

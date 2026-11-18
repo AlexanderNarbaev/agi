@@ -586,10 +586,12 @@ abstention **1.0000**, unsupported **0.2800** — all identical before and after
 **On the migrated copy**: `BASELINE-PATH` **17/25** with the **same eight** failures, recall@1
 **0.5351**, MRR **0.8600**, abstention **1.0000**, unsupported **0.2800** — **no regression**. The one
 difference is a difference and not an improvement: the mean number of **non-gold** claims cited fell
-from **5.2105 to 4.6842**. **The claim-scoped records stay retrievable**: 314 of them on the pool, and
+from **5.2105 to 4.6842**. **The claim-scoped records stay retrievable**: 322 of them on the pool, and
 **17 of the 25** comparable cases depend on a claim whose gold lives in a claim-scoped record; after
 the migration 16 still answer, the one that does not (**H-P02**) did not answer before the migration
-either — **the changed answered-flags: 0**. The migration silenced nothing.
+either — **the changed answered-flags: 0**. The migration silenced nothing. (The **314** this
+paragraph carried before the prepositional-phrase rule was written was stale; the current measurement
+is **322**, and the count is printed by the test on every run.)
 
 **The two vacuous checks, now non-vacuous.** The C2A corpora hold **no prerequisite rows at all**
 (0 and 0) — those rows come from the bundled **knowledge packages**, so the acyclicity was checked
@@ -743,7 +745,11 @@ rather than silent; the lineage keeps the history of both ends. The `representat
 which the migration had always reported as `0`, now carries the real number — the representation
 collisions had been folded into `refinesCarried`.
 
-**The measured dry run** (a copy; the live store was never opened for writing):
+**The measured dry run** (a copy; the live store was never opened for writing). *(The `logic` column
+is the **first** migration's numbers — the run of 2026-11-18 before the prepositional-phrase rule
+(OD-071) changed the policy. The **current** `logic` numbers are in §J-quinque: the concepts 11 → **30**
+(19 inserted), the referents **6**, the rejected **13** — the two prepositional referents became
+claim-scoped records. The `photosynthesis` column did not move.)*:
 
 | what | the `logic` workspace | the `photosynthesis` workspace |
 |---|---|---|
@@ -834,6 +840,10 @@ lineage — nothing is deleted); the claims **52** (none lost) with **52** claim
 prerequisites **9** (the two measured losses); the representations 27; the sources 7; the
 concept-lineage 28; the claim-scoped records 13; the alias table **0** (nothing was seeded, as
 decided); **no self-requires**; **no claim without a concept**; no concept without a name.
+*(These are the FIRST migration's counts and they are **superseded**: the prepositional-phrase rule
+(OD-071) changed the policy and the store was re-migrated from the preserved original — the store's
+current counts are in §J-quinque: the concepts **67**, the concept-lineage **26**, the claim-scoped
+records **23**, of which **10** carry the new reason.)*
 
 **And the store still serves.** The production asking path (`KnowledgeWorkbench.ask`) answers from
 the migrated store in both workspaces: *logic* → "Propositional logic evaluates formulas by assigning
@@ -842,8 +852,24 @@ satisfiable when it is true on at least one, and a consequence of another when i
 other is."; *photosynthesis* → "Photosynthesis has two linked stages. The light-dependent reactions, in
 the thylakoid membranes, harvest light, split water and build a proton gradient that drives ATP and
 NADPH production. The light-independent reactions, in the chloroplast stroma, use that ATP and NADPH
-to fix carbon dioxide into carbohydrate through the Calvin-Benson cycle." ⇒ ⇒ ⇒ the migration is not
-merely internally consistent; the served answers are correct.
+to fix carbon dioxide into carbohydrate through the Calvin-Benson cycle. The plant also runs cellular
+respiration to release that stored energy again, and it does so continuously, including in daylight."
+⇒ ⇒ ⇒ the migration is not merely internally consistent; the served answers are correct.
+
+**What the quoted statements are, precisely.** They are the statements the asking path **composes**
+from the claims it retrieved — they are not sentences the store holds verbatim. Measured read-only on
+the migrated store: the *photosynthesis* workspace holds **24** claims (the *logic* workspace **28** —
+**52** in all), and **none** of them is the quoted sentence; the claims the statement was composed from
+are the store's own ("Light energy is absorbed and
+transferred to the photosystem II core by the light-harvesting complex II.", "Oxygenic photosynthesis
+releases oxygen as a byproduct of splitting water.", "Photosynthesis converts light energy into chemical
+energy stored in organic compounds such as sugars and starches."). ⇒ ⇒ ⇒ the honest reading is that
+the migration left the **material** the answers are built from intact and correctly addressed, and the
+statement is the asking path's composition of it ⇒ ⇒ ⇒ a reader must not take the quote for a stored
+sentence. (The hard review caught this: the reviewer's first reading was that the store contradicts the
+quote, and the measurement says it does not — the quote is composed, not stored. Both statements above
+are now **verbatim** from the serving check's retained XML, and the test asserts them, so they can no
+longer drift from the store without the suite going red.)
 
 **The way back.** The backup `matrix-core/data/knowledge/workbench.pre-migration-2026-11-18T16-04-34-729638675Z.sqlite`
 is kept beside the store (the directory is gitignored, so it is not in the repository) and holds the
@@ -855,14 +881,22 @@ The migrated live store is the **fresh data** Gate 4 asks for ("test whether imp
 supported answers on fresh data **without false promotions**"), and the measurement is honest in both
 directions.
 
-**What the repair does.** Of the 52 claims, **20** now resolve to a **referent** — a concept that names
-a thing — and **32** become **claim-scoped records** that keep their own text as the retrievable unit.
+**What the repair does.** Of the 52 claims, **29** sit on a **referent** — a concept that names a
+thing — and those 29 claims resolve to **20** referent concepts; the other **23** become
+**claim-scoped records** that keep their own text as the retrievable unit. (The first wording of this
+sentence said "of the 52 claims, 20 resolve to a referent and 32 become claim-scoped records": that
+conflated **concepts** with **claims** and carried the wrong record count — it is corrected here
+against the store itself, and the correction is noted in OD-072's register row.)
 The referents are *merges*: "Propositional logic" + "Modus ponens" + "Material conditional" become one
 referent, "The classical interpretation" absorbs six claims, "The classical propositional calculus"
 four, "The distinction between validity and soundness" two. The referent's identity is **anchored** to
 its lemma, its source and its span ("the classical propositional calculu@s-authoritative-reference-ada12fbb#-1--1"),
-so it is grounded, not recomputed from a name. The rejections are principled and named:
-`CLAUSE_PARTICIPLE` (6), `FUNCTION_HEAD` (3), `CONCATENATION` (2), `GENERIC_HEAD` (1), `BARE_PLURAL` (1).
+so it is grounded, not recomputed from a name. The rejections are principled and named, and **every
+claim-scoped record carries its own reason** — the live store's 23 records split as
+`PREPOSITIONAL_MODIFIER` (**10**), `CLAUSE_PARTICIPLE` (**6**), `FUNCTION_HEAD` (**3**),
+`CONCATENATION` (**2**), `GENERIC_HEAD` (**1**), `BARE_PLURAL` (**1**) ⇒ ⇒ ⇒ **23** in all ⇒ ⇒ ⇒ and
+the referents' 29 claims stand on their 20 concepts ⇒ ⇒ ⇒ the two numbers are different kinds of
+number, and the report now says which is which.
 
 **The false promotion the first migration carried.** Two of the 22 referents the first migration
 produced were **"In the assignment under consideration"** (8 claims) and **"In the other assignment
@@ -1006,6 +1040,19 @@ cases): **H-P02** `false → false`; **H-P03, H-P05, H-P06, H-P07, H-P10, H-P13,
 H-U03, H-U04, H-U05, H-U06, H-A01, H-C01, H-C02** all `true → true` ⇒ ⇒ ⇒ **no affected case changed
 its answered flag**, and the passed flags moved nowhere either.
 
+**The guarantee is now wider, and the two published numbers are pinned.** The comparison above covers
+the 17 cases the migration touches; it now covers **every comparable case** as well — the two rows'
+baseline rows carry **38** cases each, and the measured result is **the answered flags that changed:
+0** ⇒ ⇒ ⇒ "no case is gained, none is lost" is pinned over the **whole** comparable set and not over
+the affected subset (`assertEquals(List.of(), flagDifferences)`). And the two numbers of the table
+above are **assertions**, not prints: the unsupported-answer rate (`assertEquals(..., 1e-9)`) and the
+mean non-gold claims cited (`assertTrue(migrated <= unmigrated)`) ⇒ ⇒ ⇒ if the migration ever moved
+the unsupported rate or made the citation precision worse, the suite would go **red** instead of the
+report quietly becoming false ⇒ ⇒ ⇒ the calibration is pinned too: the migrated copy must be judged by
+the **baseline candidate alone** and on the **same number of cases** ⇒ ⇒ ⇒ and the other five
+candidates are **not** measured on the migrated copy — the absence of a measurement, not a
+regression, and this report says so rather than leaving the reader to infer it.
+
 **§J-novem — the learning tables after the migration: the pointers resolve, and they still mean the same thing.**
 
 The referent-key migration rewrites `concept_id` in **every** table that carries one, and the
@@ -1032,12 +1079,27 @@ unrelated concept. Measured against the preserved pre-migration backup:
 | `learning_error` | 1 | Photosynthesis | **Photosynthetic organisms** |
 | `hebbian_binding` | 1 | Photosynthesis | **Photosynthetic organisms** |
 | `assessment_outcome` | 3 | Photosynthesis | **Photosynthetic organisms** |
-| `assessment_item` | 64 | 8 concepts, 8 items each | **the same 8 concepts, 8 items each** |
+| `assessment_item` | 64 | 8 concepts, 8 items each | **8 concepts, 8 items each — but not the same eight** (below) |
 
 ⇒ ⇒ ⇒ the learning subsystem was **not** silently redirected: its state, its transitions, its error
-and its Hebbian binding all follow the renamed referent, and the 64 assessment items still point at
-their own eight concepts — including the one whose concept is named **"It"**, which the referent
-key keeps as it is ⇒ ⇒ ⇒ ⇒ ⇒ ⇒ ⇒ ⇒ ⇒
+and its Hebbian binding all follow the renamed referent ⇒ ⇒ ⇒ and the 64 assessment items still point
+at **eight** concepts with **eight** items each, including the one whose concept is named **"It"**,
+which the referent key keeps as it is ⇒ ⇒ ⇒ ⇒ ⇒ ⇒ ⇒ ⇒ ⇒
+
+**And the one honest correction this table needed.** The `assessment_item` row used to say "**the same
+8 concepts**, 8 items each" and the text said the items "still point at their own eight concepts". The
+**counts** are the same before and after (8 × 8 = 64) — but the **eight** are **not the same eight**:
+**six** of the eight concept ids were re-pointed to the referent that absorbed them, and **two** landed
+on a referent with a name that names something else — **"CO2-concentrating mechanisms" → "C4 plants"**
+and **"Light-dependent reactions" → "Wheat, shade-to-sun transitions"** (both old concepts split into
+several referents, and the pointer follows one of them). Measured mapping (the backup → the live
+store): CO2-concentrating mechanisms → C4 plants; Cellular respiration → Cellular respiration;
+Glycolysis → Glycolysis; It → It; Light-dependent reactions → Wheat, shade-to-sun transitions;
+Oxidative phosphorylation → Oxidative phosphorylation; The Calvin-Benson cycle → The Calvin-Benson
+cycle in oxygenic phototrophs; The Krebs cycle → The Krebs cycle ⇒ ⇒ ⇒ so the **counts** hold and the
+**no-drift** claim holds for the five single-target tables, and for the assessment items the drift is
+**two pointers that follow a different referent** — measured, named, and now pinned by the test
+(`LearningTablesAfterMigrationTest`) instead of being implied away by the word "same".
 
 **Open and owned:** the measured limitations of §B — the partial paraphrase equivalence, the two
 frozen-set cases whose disposition differs from the set's expectation, and the corpus-in-conflict
@@ -1085,6 +1147,99 @@ the **build-push-action** action at v5 with `load: true` and **no** `push:` ⇒ 
 registry login. **What still needs the credentials is the PUBLISH lane** (`publish.yml`,
 `workflow_dispatch` only) — the publication and the two deployments — and `gh secret list` still
 returns nothing ⇒ ⇒ ⇒ the residual owner item is the publication, not the merge.
+
+**§J-undecem — the hard review of the wave, and what it changed.**
+
+The wave was reviewed by an **independent** reviewer who did not write it: the scope was the
+programme's own **81** commits (`d0aea6e6..develop`, 119 files, +24 756/−1 099), the verdict was
+**MERGEABLE WITH FINDINGS**, and the findings are recorded here **with their fixes** — not as a
+praise, and not hidden.
+
+**Two findings changed a published number.**
+
+1. **The referent/record split was wrong.** §J-quinque said "of the 52 claims, **20** resolve to a
+   referent and **32** become claim-scoped records". Measured read-only on the live store: the 52
+   claims sit on **43** concepts — **20** referent concepts carrying **29** claims — and **23**
+   claim-scoped records; the record count was wrong, and the "20" was a count of **concepts** where
+   the sentence claimed a count of **claims** ⇒ ⇒ ⇒ the sentence now says which is which, and the
+   rejections are listed as the store carries them (`PREPOSITIONAL_MODIFIER` 10, `CLAUSE_PARTICIPLE` 6,
+   `FUNCTION_HEAD` 3, `CONCATENATION` 2, `GENERIC_HEAD` 1, `BARE_PLURAL` 1 — **23** in all).
+2. **A stale count.** §H said the pool's claim-scoped records number **314**; the measurement is
+   **322** (the prepositional-phrase rule changed the policy after that sentence was written) ⇒ ⇒ ⇒
+   §H, `EPISTEMIC-REFERENT-KEY.md` and the ledger now carry **322**, and the paragraph says that it
+   used to say **314**.
+
+**One finding found a hole in the evidence chain.** The ledger named **eight** JUnit XMLs for this
+wave; **seven** of them existed **nowhere** — the build tree is gitignored and a Gradle run wipes it.
+The claims were true (the review verified the numbers against the store and the code), but the
+**artefacts** could not be opened ⇒ ⇒ ⇒ the wave's targeted suites are now run in **one** invocation
+and their XMLs are copied into the tracked directory `docs-v2/engineering/evidence/` (**12** files,
+**36** tests, **0** failures, **0** errors, **0** skipped), and the ledger's rows point at **those**
+files ⇒ ⇒ ⇒ the risk is recorded as **R-EPIS-07**, and the two holes it could not close (the P0
+close-out's packaging XML and the launcher's console log) are named there rather than hidden.
+
+**The findings that turned printed numbers into assertions.** The review found that several numbers
+the report publishes were **printed** by the tests and **never asserted** — so a regression would
+have left the suite green while the published claim quietly became false. Those numbers are now
+pinned: the held-out evaluation asserts the **unsupported-answer rate** and the **mean non-gold
+claims cited** (the two numbers the report quotes as the migration's effect), it asserts the
+**calibration** (the migrated copy is judged by the baseline candidate alone, on the same number of
+cases — and the fact that the other five candidates are **not** measured on the migrated copy is now
+said in the report rather than left to be inferred), and it pins the **whole-set** guarantee: the two
+rows' baseline rows carry **38** cases each and **the answered flags that changed: 0** ⇒ ⇒ ⇒ "no case
+is gained, none is lost" is now an assertion over every comparable case, not only over the seventeen
+the migration touches. The same pass made the **learning tables** (the row counts, the before/after
+targets read from the preserved backup, the assessment items' structure), the **dry run's** per-
+workspace table, the **serving answers** (both statements, verbatim from the store's own
+representations) and the **journey's** trace (the seven phases **in order**, the replay's episode, the
+counts) **assertions** rather than prints ⇒ ⇒ ⇒ **36** tests across the wave's suites, **0** failures.
+
+**Two findings were defects in the launcher itself, and they are fixed.** The launcher's **abort**
+paths called `System.exit(1)`, so the very path the review was about could not be exercised — it
+killed the test JVM. The aborts are now a checked `LiveStoreMigration.Aborted`, and `main` maps them
+to exit code 1: the stderr text and the exit code are **unchanged** (verified through the real CLI),
+and the abort path is now a test. And the class javadoc **promised** "the check that the backup still
+holds the original bytes" — the code **never performed it**. It is performed now: the live file's
+sha256 is taken before the copy, the backup's sha256 is checked right after the copy, **again** before
+the atomic replacement (so the live file is **not** touched when the way back is broken) and **again**
+after it ⇒ ⇒ ⇒ the promise is now kept, and the new `LiveStoreLauncherTest` proves it on a copy of
+the preserved backup: the dirty-audit abort leaves the live file **byte-identical** and its **inode**
+unchanged, the clean run **replaces** the file (the inode changes — it is renamed into place, never
+written into, so it is never partially written), and no work file and no rollback copy is left behind.
+
+**Two more findings changed what this report claims.** §J-bis's dry-run table published the **first**
+migration's `logic` numbers (the concepts 11 → 22, the referents 8, the rejected 3) with no
+supersession marker; the current ones are 11 → **30** (19 inserted), the referents **6**, the rejected
+**13** ⇒ ⇒ ⇒ the table now carries the marker. And §J-novem claimed the assessment items "still point
+at their own eight concepts" — the **counts** are the same (8 × 8 = 64) but the eight are **not the
+same eight**: two of them follow a referent with another name ("CO2-concentrating mechanisms" → "C4
+plants", "Light-dependent reactions" → "Wheat, shade-to-sun transitions") ⇒ ⇒ ⇒ the table now carries
+the measured mapping instead of the word "same".
+
+**One finding is a latent defect that this wave does not fix.** The launcher copies only the **main**
+database file while the store runs in **WAL** mode, and a main-file-only copy of a WAL database with
+**un-checkpointed** frames loses them (reproduced: a table committed in the WAL was absent from the
+copy) ⇒ ⇒ ⇒ measured today, the live store's WAL holds **86** frames and **all 86** are already
+checkpointed, so the published numbers are unaffected and the defect is **latent** ⇒ ⇒ ⇒ the fix would
+change the contract the owner approved in OD-070, so it is **recorded as R-EPIS-08** and left to the
+owner rather than decided here.
+
+**One finding corrected a reading of the evidence.** The report quoted the served answers as if the
+store held them verbatim. It does not: the statements are **composed by the asking path** from the
+claims it retrieved — the *photosynthesis* workspace holds **24** claims and **none** of them is the
+quoted sentence ⇒ ⇒ ⇒ the report now says what the quote is, and the two statements are **verbatim**
+from the serving check's retained XML.
+
+**The governance check was clean.** The wave touches exactly **two** frozen paths, and both are
+sanctioned with exact arithmetic: `.github/` under OD-069 (**2370** diff lines against the recorded
+exception) and `EvalBattery.java` under OD-059 (**79** lines); `CONSTITUTION.md`, `AGENTS.md` and the
+`ethics/frozen/` tree are untouched.
+
+**What the review could not verify, and what it did not read** — the served answer texts by
+reproduction (the reading above is the measurement that replaced it), the launcher's console numbers
+(no log file exists), the CI run ids (read from `gh` here instead), and the pre-wave parts of the
+programme (the premise semantics, the definition half, the brain runtime). Those remain as the
+programme's own claims, not as verified facts.
 
 **Inherited reds that this programme did not cause and did not hide:** the Docker Hub publication
 (zero repository secrets — the owner's action, never in chat), ShellCheck (43 files), the GraalVM
@@ -1153,9 +1308,9 @@ python3 scripts/docs-link-check.py --root . --strict
 > claims without a concept — and it **serves**: the production asking path answers in both
 > workspaces, with the statements the store holds.
 >
-> **Gate 4 is measured on the fresh data** (§J-quinque): of the 52 claims, **20** resolve to a
-> referent and **32** become claim-scoped records; the referents are merges anchored to their
-> lemma, source and span. The measurement found **two false promotions** — "In the assignment under
+> **Gate 4 is measured on the fresh data** (§J-quinque): of the 52 claims, **29** sit on a referent
+> (those 29 claims resolve to **20** referent concepts) and **23** become claim-scoped records; the
+> referents are merges anchored to their lemma, source and span. The measurement found **two false promotions** — "In the assignment under
 > consideration" and "In the other assignment under consideration", a prepositional phrase promoted
 > to a concept with **10 claims** on it — and the policy had no rule for a span that opens with a
 > preposition followed by a determiner and carries no comma. **OD-071** adds that rule
