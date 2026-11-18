@@ -907,6 +907,58 @@ chloroplast stroma, use that ATP and NADPH to fix carbon dioxide into carbohydra
 Calvin-Benson cycle." ⇒ ⇒ ⇒ the false promotion cost the store **nothing** in served answers, and the
 repair took it back without touching one.
 
+**§J-sext — Gate 5: one complete existing-kernel-driven journey, on the owner's migrated store.**
+
+Gate 5 asks for ONE complete journey driven by the **existing** kernel: *"a question over a
+workspace, a plan and a method chosen by the kernel rather than written into the route, a
+permission honoured, an action executed, an artifact written, an effect observed by a reader that
+did not write it, and a trace left behind that the next analogous task can read — and does read,
+choosing a different method the second time."* The journey that already exists
+(`ClosedLoopReportJourneyTest`) runs over a fresh temporary store with the bundled package; the
+journey that matters here runs over the store the **identity migration rewrote** (schema v15 → v21),
+because that is the store the owner actually uses.
+
+**The chain, measured on the migrated live store** (`LiveStoreKernelJourneyTest`):
+
+- **the question** — "What is photosynthesis?" over the `photosynthesis` workspace of the migrated
+  store (the concepts 37, the claims 24);
+- **the kernel's plan** — the route carries no method and no method id; the selector chooses, and
+  the decision says why: *"selected report.journey.reference.v1@1.0.0 with score 1.0 over 1
+  admitted candidate(s)"*;
+- **the permission** — the consent is checked before anything is read, the output root is confined
+  and owned by one user, the writer's lease and the idempotency are honoured;
+- **the action** — the artifact is written; the disposition is **WRITTEN** and its sha256 matches
+  the file's bytes;
+- **the external effect observed by a reader that did not write it** — the trace's VERIFY phase
+  says *"the effect is verified"*;
+- **the trace** — the episode holds **7** steps: PLAN, PERMISSION, ACTION, OBSERVE, VERIFY, RESULT,
+  RETAINED.
+
+**And the next analogous task reads it and chooses differently.** The same request, sent again,
+is not a new creation: the disposition is **REPLAYED**, the same sha256 comes back, the reply says
+that it *"replayed the retained one"*, and the kernel's second plan reads:
+
+> *"selected report.journey.replay.v1@1.0.0 with score 1.0 over **2 admitted candidate(s)**"*
+
+⇒ ⇒ ⇒ the second journey planned the **replay** — the cheap path — because the first journey's
+trace left the facts it needed (the identity committed, the workspace unchanged, the name
+unchanged) ⇒ ⇒ ⇒ and the route's reply says in plain words that the answer is the retained one and
+not new evidence ⇒ ⇒ ⇒ ⇒ ⇒ ⇒ ⇒ ⇒ ⇒
+
+**What the journey does not claim.** The replayed report is a record of what the workspace said
+earlier, not new evidence; the response says so, and the replay is admissible only while the
+workspace is unchanged. Nothing here claims the loop makes the workspace smarter — it claims the
+loop closes, that the observation is kept, and that the kept observation changes the next choice.
+
+**Two findings the journey produced, both in the test rather than in the product.** The trace's
+episode is derived from the action identity, and a repeated request has the **same** identity, so
+the episode holds **both** journeys — the first one's seven steps and the second one's seven. A
+reader that takes the *first* step of a phase therefore reads the **first** journey's plan; the
+second journey's plan is the **last** step of that phase. The second finding: the journey's
+idempotency key must be **unique per run** in a test that runs against a persistent store, or
+every run appends to the same episode. Neither is a product defect; both are recorded here because
+they are the kind of reading that turns a green test into a false claim.
+
 **Open and owned:** the measured limitations of §B — the partial paraphrase equivalence, the two
 frozen-set cases whose disposition differs from the set's expectation, and the corpus-in-conflict
 precedence (which keeps "unsupported answering" at 2); the **latency plateau** of the premise path
