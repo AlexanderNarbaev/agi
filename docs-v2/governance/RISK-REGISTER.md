@@ -657,7 +657,7 @@ evidence is a suspicion, and it is marked as such.
 - **the fix**: the wave's targeted suites are now run in **one** invocation and their XMLs are copied
   into the tracked directory `docs-v2/engineering/evidence/`, whose README carries the rule and the
   command; the evidence ledger's rows now name **those tracked copies** instead of the wipe-able build
-  path. Measured: **13** XMLs retained, **52** tests, **0** failures, **0** errors, **0** skipped.
+  path. Measured: **14** XMLs retained, **53** tests, **0** failures, **0** errors, **0** skipped.
 - **the evidence**: `docs-v2/engineering/evidence/` (the retained XMLs with their counts) and the
   ledger's rows, which now name the files in it.
 - **status**: CLOSED **for this wave**; the exposure is **structural** — every future run that

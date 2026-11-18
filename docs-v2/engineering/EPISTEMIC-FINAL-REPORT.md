@@ -1179,8 +1179,8 @@ praise, and not hidden.
 wave; **seven** of them existed **nowhere** — the build tree is gitignored and a Gradle run wipes it.
 The claims were true (the review verified the numbers against the store and the code), but the
 **artefacts** could not be opened ⇒ ⇒ ⇒ the wave's targeted suites are now run in **one** invocation
-and their XMLs are copied into the tracked directory `docs-v2/engineering/evidence/` (**13** files,
-**52** tests, **0** failures, **0** errors, **0** skipped), and the ledger's rows point at **those**
+and their XMLs are copied into the tracked directory `docs-v2/engineering/evidence/` (**14** files,
+**53** tests, **0** failures, **0** errors, **0** skipped), and the ledger's rows point at **those**
 files ⇒ ⇒ ⇒ the risk is recorded as **R-EPIS-07**, and the two holes it could not close (the P0
 close-out's packaging XML and the launcher's console log) are named there rather than hidden.
 
@@ -1198,7 +1198,7 @@ the migration touches. The same pass made the **learning tables** (the row count
 targets read from the preserved backup, the assessment items' structure), the **dry run's** per-
 workspace table, the **serving answers** (both statements, verbatim from the store's own
 representations) and the **journey's** trace (the seven phases **in order**, the replay's episode, the
-counts) **assertions** rather than prints ⇒ ⇒ ⇒ **52** tests across the wave's suites, **0** failures.
+counts) **assertions** rather than prints ⇒ ⇒ ⇒ **53** tests across the wave's suites, **0** failures.
 
 **Two findings were defects in the launcher itself, and they are fixed.** The launcher's **abort**
 paths called `System.exit(1)`, so the very path the review was about could not be exercised — it
