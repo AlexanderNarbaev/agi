@@ -1016,103 +1016,111 @@ python3 scripts/docs-link-check.py --root . --strict
 **The cold-start resume prompt** (Gate 6 of the directive asks for one; copy it into a fresh session):
 
 > Continue the MATRIX EPISTEMIC-INTEGRITY programme in `/home/alexandr-narbaev/Projects/agi` (branch
-> `develop`). The owner's directive is READ-ONLY at
+> `develop`, the last pushed commit is **`e7a6144b`**). The owner's directive is READ-ONLY at
 > `/home/alexandr-narbaev/.dsh/attachments/v1/files/fa/fad9aeb5d7f1dae77e7070e73c9d9e4e6cfde6cf7537ad95b9a4cc098ec78584/MATRIX_AUTONOMOUS_DEVELOPMENT_MANDATE_2026-11-15.md`.
-> Read first: `docs-v2/engineering/EPISTEMIC-FINAL-REPORT.md` (sections A–J, the state of every
-> workstream and the open items), `docs-v2/engineering/EPISTEMIC-EXECUTION-PLAN.md` (the task graph
-> and the append-only evidence ledger), `docs-v2/governance/DECISION-REGISTER.md` (OD-053 … OD-067).
-> The P0 gates are closed. **P1** (the concept model: the definitions and the identity half) is
-> implemented, measured and independently reviewed — the third review round's verdict is MERGEABLE with
-> five published limits (the coverage 4/326 = 1.2 %, the rule's own precision 3 of 4, the
-> under-acceptance, the **null** retrieval benefit, and the count of lost referents). **P2** (the closed
-> loop) is implemented and measured: the kernel chooses the method, the observer is independent, the
-> trace is append-only, the counterfactual diff shows 19 aspects of which **4 differ** and 15 are
-> identical, and the restart re-selects the replay. **P3** (the learning label) is closed with a
-> **published null result**. The FAST PR lane is **green** (run 44169314944) after two defects in its
-> own checks were found and repaired (OD-066).
-> **The next step, in this order:** (1) **variant A of the owner's live-store decision (OD-067)** — copy
-> `matrix-core/data/knowledge/workbench.sqlite` (schema **v15**, 24 concepts, 52 claims, 27
-> representations, 2 workspaces) to a temporary directory, run the identity migration on the **copy**,
-> and measure the audit, the rollback and the re-measurement; the live store itself is not touched
-> until the owner decides again on the measured result. (2) Then the open items: the verb-list fix
-> (it changes names, therefore ids), the definition-merge collision rule (0 collisions on this corpus
-> ⇒ unverified), the HTTP status for a failed effect, the latency plateau of the premise path, and the
-> effect of the referent-key migration on the learning tables (not measured).
-> **Tomorrow's first step, with the API it uses (nothing new has to be written):** variant A of OD-067 —
-> the live store on a **copy**. `ReferentKeyMigration.copy(source, target)`
-> (`matrix-core/src/main/java/io/matrix/knowledge/concept/research/ReferentKeyMigration.java:1036`) makes
-> the SQLite-aware copy; `new KnowledgeStore(copy)` (`KnowledgeStore.java:330`) brings the schema forward
-> from **v15** — **verify and record the version it lands on**; `store.exportWorkspace(workspaceId)`
-> (`KnowledgeStore.java:5115`) returns the snapshot for each of the two workspaces (`logic`,
-> `photosynthesis`); `ReferentKeyMigration.plan(snapshot, workspace, …)` (`:232`) builds the plan;
-> `seedDeclaredAliases(copy, workspace, aliases)` (`:394`) seeds the declared aliases;
-> `ReferentKeyMigration.apply(copy, plan, workspace)` (`:353`) applies it; `ReferentKeyMigration.audit(copy,
-> workspace)` (`:822`) reports the orphan audit over the thirteen tables. The **rollback is the copy
-> itself** — the live file is never opened for writing. Measure and publish: the concepts inserted, the
-> **The order is not optional, and it was checked read-only on 2026-11-17.** The migration's SQL
-> writes into `concept_alias` and `concept_definition`, and **neither table exists in the v15 live
-> store** — the v18→v19 step creates `concept_definition` (`KnowledgeStore.java:1020`) and the
-> v20→v21 step creates `concept_alias` (`:988`), and the chain that carries v15 to v21 runs six
-> steps (`migrateFrom`, `KnowledgeStore.java:938`, with the steps at 1108, 1060, 1032, 998 and 939).
-> So the **schema step comes first**: opening the copy with `new KnowledgeStore(copy)` must precede
-> `plan`, `seedDeclaredAliases` and `apply`. The dry run must record **which version the schema
-> lands on** and the **time the chain took** — both are new numbers for a v15 store, whereas the
-> corpora's rehearsal began at v20.
-> **Three read-only findings about the live store (2026-11-17), each of which changes what the dry run must
-> measure.** (1) **The store's concept ids do not come from one scheme.** The current id function is
-> `Ids.digest` — an FNV-1a hash returned as a **bare** hex string (`Ids.java:117-124`) — and the
-> importer mints `digest(workspaceId + "|concept|" + name.strip().toLowerCase())`. Recomputing that
-> over the live store's 24 concepts **reproduces only 5 of the 24 ids**; the other 19 are shaped
-> `c-<slug>-<hash>` (for example `c-validity-58964155`), a shape the current function never produces.
-> ⇒ The migration's premise that a concept id is a pure function of the workspace and the name **does
-> not hold for 19 of the 24 live concepts**, so the plan must map **the store's actual rows** and must
-> never recompute an id from a name. The dry run must report how many of the 24 the plan mapped
-> one-to-one. (2) **Two concepts share a name with two different ids** — `Cellular respiration` in the
-> `photosynthesis` workspace, stored as `c-cellular-respiration-70762885` and `dbe3c115`. Under the
-> current scheme those two would collapse onto one id, so this is a **concept-id collision**; OD-065
-> covers the **representation** ids and says nothing about this case ⇒ if the plan materialises the
-> collision, it is an **owner decision**, not a coordinator's. (3) **The declared aliases do not apply.**
-> `ReferentPolicy.DECLARED_ALIASES` is 12 **geology** pairs (22 lemmas: seafloor spreading, slab pull,
-> the lithosphere, …); the live store holds **biology and logic** concepts (glycolysis, RuBisCO, modus
-> ponens, the truth table, …) and the lemma overlap is **zero**. ⇒ The dry run must **seed nothing**:
-> writing the corpus's lemmas into this store would put a `DECLARED_BY`/`DECLARED_ON` provenance on
-> declarations this store never made. The alias layer of the live store stays empty until its own
-> aliases are declared.
-> **The live store has TWO workspaces, so the plan/apply pair must be sequenced — and the sequence is
-> per workspace.** `plan(snapshot, workspace, strictness, createdAt, aliases)`
-> (`ReferentKeyMigration.java:252`) resolves **one workspace's** claims and concepts, and
-> `apply(database, plan, workspace)` (`:353`) applies **one workspace's** plan. The two workspaces of the
-> live store are `logic` (11 concepts) and `photosynthesis` (13 concepts) — the corpora each had **one**,
-> so nothing about this was visible there. ⇒ The dry run must therefore **plan and apply one workspace at
-> a time**: plan `logic` → apply `logic` → **re-export** → plan `photosynthesis` → apply `photosynthesis`.
-> Planning both from a single pre-migration snapshot would leave the second plan computed against a state
-> the first application had already changed.
+> Read first, in this order: `docs-v2/engineering/EPISTEMIC-FINAL-REPORT.md` (§A–J, the state of every
+> workstream, §J-bis/§J-ter/§J-quater/§J-quinque/§J-sext the last four sections, and the open items),
+> `docs-v2/engineering/EPISTEMIC-EXECUTION-PLAN.md` (the task graph and the append-only evidence
+> ledger), `docs-v2/governance/DECISION-REGISTER.md` (**OD-053 … OD-071**), `docs-v2/governance/RISK-REGISTER.md`
+> (**R-EPIS-02 … R-EPIS-06**).
 >
-> **The rewrite is workspace-scoped, so one workspace cannot bleed into the other.** The "other tables"
-> pass (`rewriteTheOtherTables`, `:634`) issues
-> `UPDATE <table> SET concept_id = ? WHERE concept_id = ? AND workspace_id = ?` — the workspace predicate
-> is present ✓ — and every table it can touch carries a `workspace_id` column in the live store
-> (checked with `pragma table_info`: `dialogue_turn`, `learning_state`, `learning_goal`,
-> `assessment_item`, `revision`, `derivation`, `contradiction`, `hebbian_binding`, `learning_transition`,
-> `learning_error`, `assessment_outcome` — all of them ✓).
+> **Where the programme stands (2026-11-18, end of the day).** P0, P1, P2 and P3 are closed with
+> published evidence. The **owner's live store is migrated** (D1-LIVE-STORE-MIGRATION-019, option A;
+> OD-070): the schema went **v15 → v21** in 104 ms, both workspaces were migrated one at a time
+> with a re-export between, the audit reported **0 orphans and 0 stale pointers** in all **13** tables
+> of both workspaces, the rollback restored both (`logic` 11 → 30 → 11, `photosynthesis` 13 → 37 → 13),
+> and the live file was replaced atomically only after that. The store now holds the version **21**,
+> **67** concepts (the 24 old rows kept and superseded by a 26-row lineage), **52** claims with 52
+> claim-lineage rows, **23** claim-scoped records, **9** prerequisites, **0** self-requires and **0**
+> claims without a concept — and it **serves**: the production asking path answers in both
+> workspaces, with the statements the store holds.
 >
-> **And that is why the audit's orphan count is the number that decides the whole run.** The rewrite is
-> keyed on `plan.oldToNew()`, so a plan that failed to carry the 19 ids the current scheme cannot
-> reproduce would leave those claims pointing at concept ids that no longer exist — a **half-migrated
-> store** that looks migrated. ⇒ The acceptance number for tomorrow's dry run is therefore:
-> `ReferentKeyMigration.audit(copy, workspace)` must report **zero orphans in each of the thirteen
-> tables, for each of the two workspaces**, after the second application.
-> claims re-pointed, the representations re-pointed, the audit's orphan count, the elapsed time, and the
-> **re-measurement** by the same judge (the C2A baseline is BASELINE-PATH 17/25 with the same eight
-> failures, recall@1 0.5351, MRR 0.8600).
-> The gates of the repository must stay
-> green: `./scripts/quality-gate.sh` (PASS, 271 literals, 0 violations), `validate-current-state.py
-> --strict`, `validate-test-catalogue.py --strict`, `docs-link-check.py --strict`. Every build runs
-> under `flock /tmp/gradle-matrix.lock` with the `--tests` filter immediately after the task name and
-> never `--rerun`. Answer the owner in Russian; the code, the identifiers and the commit messages stay
-> in English; commits are `WAL: <description>`; never print a secret; mark a guess below 80 %
-> confidence `[speculative]`; every published number needs its command and its artefact, and a null
-> result is a result.
+> **Gate 4 is measured on the fresh data** (§J-quinque): of the 52 claims, **20** resolve to a
+> referent and **32** become claim-scoped records; the referents are merges anchored to their
+> lemma, source and span. The measurement found **two false promotions** — "In the assignment under
+> consideration" and "In the other assignment under consideration", a prepositional phrase promoted
+> to a concept with **10 claims** on it — and the policy had no rule for a span that opens with a
+> preposition followed by a determiner and carries no comma. **OD-071** adds that rule
+> (`Rejection.PREPOSITIONAL_MODIFIER`); the probe was **red before the fix** and green after; the
+> corpora's measured baseline is **unchanged** (the seed 348/326, the referents 107, the frozen-150
+> precision 0.9444 LENIENT and 1.0000 STRICT, the definitions 3 of 107). The store was re-migrated
+> from the preserved original and now holds **0** such referents, and its served answers did not
+> change.
+>
+> **Gate 5 is closed** (§J-sext): the complete existing-kernel-driven journey closes **on the
+> migrated store** — the question → the kernel's plan (the selector chose, the route carries no
+> method) → the permissioned action (WRITTEN, the artifact's sha256 equal to the file's bytes) →
+> the effect verified by a reader that did not write it → the trace with its seven phases → and the
+> **next analogous task reads that trace and chooses differently**: the same request is REPLAYED and
+> the second plan reads *"selected report.journey.replay.v1 with score 1.0 over 2 admitted
+> candidate(s)"*.
+>
+> **Tomorrow's first step, in this order, with the commands (nothing new has to be written):**
+>
+> 1. **Re-measure the concept identity against the migrated store with the *same* judge** — the C2A
+>    baseline is BASELINE-PATH **17/25** with the same eight failures (H-P02, H-P05, H-P06, H-P08,
+>    H-P10, H-P11, H-P13, H-P17), recall@1 **0.5351**, MRR **0.8600**. The identity repair was measured
+>    on the store's own claims (§J-quinque), but the **held-out evaluation was not re-run against the
+>    migrated store** ⇒ ⇒ ⇒ that is the gap. The command:
+>    `flock /tmp/gradle-matrix.lock ./gradlew :matrix-core:test --tests "io.matrix.knowledge.concept.*" --offline`
+>    ⇒ the artefacts `docs-v2/engineering/C2A-HELDOUT-EVALUATION.json` and
+>    `C2A-CONCEPT-ENRICHMENT-RESULTS.json` are **rewritten by the run** ⇒ copy them out and compare
+>    the quality numbers (every number but the latency must be identical; a change in recall, MRR or
+>    the failed-case list is a **finding**, not a nuisance).
+> 2. **Measure the learning tables' state after the migration** — the effect of the referent-key
+>    migration on `learning_state`, `learning_goal`, `hebbian_binding` and the rest is still
+>    **not measured** (the audit covers the thirteen knowledge tables, not the learning ones). The
+>    migration rewrote `concept_id` in the "other tables" pass ⇒ ⇒ ⇒ ask the store what the learning
+>    subsystem now points at, and whether its canary still holds.
+> 3. **The open items that need the owner, not the coordinator:** the HTTP status for a failed
+>    effect; the latency plateau of the premise path; the definition-merge collision rule (0
+>    collisions on this corpus ⇒ unverified); and the inherited **ShellCheck** red over ~36 scripts
+>    that predates this programme (the last two CI runs were green because the path-sensitive
+>    check was skipped — the scripts under test were untouched).
+>
+> **The commands that reproduce what was measured tonight, in order:**
+> ```
+> cd /home/alexandr-narbaev/Projects/agi
+> export JAVA_HOME=$HOME/jdk25                      # a full JDK 25; the system one is a JRE
+> flock /tmp/gradle-matrix.lock ./gradlew :matrix-core:test \
+>   --tests "io.matrix.knowledge.concept.research.*" --offline
+> # the live store's own checks (skipped, not failed, when the store is absent):
+> #   LiveStoreServingCheckTest    — the asking path answers from the migrated store
+> #   LiveStoreKernelJourneyTest   — Gate 5: the journey closes and the replay is chosen
+> #   LiveStoreMigrationDryRunTest — the dry run on the preserved pre-migration backup
+> #   PrepositionalPhraseProbeTest — the false promotion's rule, with its two controls
+> bash scripts/migrate-live-store.sh              # the owner's launcher: backup → work file →
+>                                                 # audit → rehearsed rollback → atomic replace
+> ./scripts/quality-gate.sh                       # PASS, 271 literals, 0 violations
+> python3 scripts/validate-current-state.py --strict
+> python3 scripts/validate-test-catalogue.py --strict
+> python3 scripts/docs-link-check.py --strict
+> ```
+>
+> **The traps this programme paid for, so the next wave does not pay again.** (1) A **count** is not
+> a **match**: the ambiguity metric reported 7/7 because it counted the readings it showed; the
+> honest number was 3/7. (2) A **before/after against an uncommitted state** is not comparable:
+> the latency was reported as "faster" against a tree that was not the historical baseline, and
+> the three-point A/B on the historical commits says otherwise. Measure against a **named commit**,
+> in a worktree, with the same harness. (3) **The trace's episode is derived from the action
+> identity, and a repeated request has the same identity** ⇒ the episode holds **both** journeys,
+> so a reader that takes the *first* step of a phase reads the **first** journey's plan; the
+> second journey's plan is the **last** step. (4) A test that runs against a **persistent** store
+> needs a **unique idempotency key per run**, or every run appends to the same episode and the
+> assertions read the first run's evidence. (5) The dry run migrates the **preserved
+> pre-migration backup** — after the live store was migrated, re-migrating the live file means
+> migrating an already migrated store.
+>
+> **The rules that stay in force.** Answer the owner in **Russian**; the code, the identifiers, the
+> comments and the commit messages stay in **English**; commits are `WAL: <description>` and one
+> commit is one significant change; never print a secret; mark a guess below 80 % confidence
+> `[speculative]`; every published number needs its command and its artefact; **a null result is a
+> result**; the frozen zones (`CONSTITUTION.md`, `AGENTS.md`,
+> `matrix-core/src/main/java/io/matrix/ethics/frozen/`, the Avro schemas, `.github/workflows/**`)
+> need an explicit owner RFC; every Gradle run goes under `flock /tmp/gradle-matrix.lock` with the
+> `--tests` filter immediately after the task name and **never** `--rerun`/`--rerun-tasks`; and a
+> Gradle test run **wipes** the module's `build/test-results` ⇒ copy the XML out before the next
+> run.
 
 **The two measurement traps this programme paid for, so the next wave does not pay again.** (1) A
 **count** is not a **match**: the ambiguity metric reported 7/7 because it counted the readings it
