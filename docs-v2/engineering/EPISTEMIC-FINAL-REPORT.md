@@ -815,7 +815,11 @@ enforces the order the decision requires (`scripts/migrate-live-store.sh` →
 `:matrix-core:liveStoreMigration` → `LiveStoreMigration`):
 
 1. the live file is **copied to a timestamped backup** — sha256 `6d963dff9d5c07982faf4b81f0b927f9c9b7f2992b5ac0a77af2954d4b7f94c9`,
-   the exact bytes of the pre-migration file;
+   the exact bytes of the pre-migration file. *(The launcher of that run copied the main file. After
+   the hard review exposed the WAL defect, the owner's **OD-075** changed the contract: today's
+   launcher takes a **consistent snapshot** (`VACUUM INTO`) instead, so the backup is no longer a byte
+   copy — the sha256 above is the digest of the **original file**, and the backup that stands on the
+   disk still holds those exact bytes.)*;
 2. the live file is copied to a **work file**, and the work file is migrated: the schema chain
    (v15 → v21, **104 ms**), then one workspace at a time with a re-export between, because a
    workspace's plan is built from that workspace's own rows;
@@ -1123,6 +1127,8 @@ on `develop`, one per push:
 | `bac60413` — the cold-start prompt | 44358768382 | **success** |
 | `3384dab4` — the held-out measurement | 44359659091 | **success** |
 | `453b1a81` — the learning tables | 44360149337 | **success** |
+| `055be44d` — the link check's green again | 44367226208 | **success** |
+| `06346be8` — the release-readiness section | 44366273940 | **failure** — and it is this programme's own text: the new section named a GitHub Action reference (the **build-push-action** action at v5) that the documentation link checker read as a **repository path** ⇒ ⇒ ⇒ the documentation gate was red, the next commit fixed the wording, and the red is recorded here rather than dropped from the table |
 
 ⇒ ⇒ ⇒ **every commit of the wave is green**. The one red of the wave is `44350641760` (`d8341d56`),
 and it is **not** this programme's code: the **path-sensitive ShellCheck** over ~36 inherited scripts,
@@ -1174,7 +1180,7 @@ wave; **seven** of them existed **nowhere** — the build tree is gitignored and
 The claims were true (the review verified the numbers against the store and the code), but the
 **artefacts** could not be opened ⇒ ⇒ ⇒ the wave's targeted suites are now run in **one** invocation
 and their XMLs are copied into the tracked directory `docs-v2/engineering/evidence/` (**12** files,
-**36** tests, **0** failures, **0** errors, **0** skipped), and the ledger's rows point at **those**
+**37** tests, **0** failures, **0** errors, **0** skipped), and the ledger's rows point at **those**
 files ⇒ ⇒ ⇒ the risk is recorded as **R-EPIS-07**, and the two holes it could not close (the P0
 close-out's packaging XML and the launcher's console log) are named there rather than hidden.
 
@@ -1192,7 +1198,7 @@ the migration touches. The same pass made the **learning tables** (the row count
 targets read from the preserved backup, the assessment items' structure), the **dry run's** per-
 workspace table, the **serving answers** (both statements, verbatim from the store's own
 representations) and the **journey's** trace (the seven phases **in order**, the replay's episode, the
-counts) **assertions** rather than prints ⇒ ⇒ ⇒ **36** tests across the wave's suites, **0** failures.
+counts) **assertions** rather than prints ⇒ ⇒ ⇒ **37** tests across the wave's suites, **0** failures.
 
 **Two findings were defects in the launcher itself, and they are fixed.** The launcher's **abort**
 paths called `System.exit(1)`, so the very path the review was about could not be exercised — it
@@ -1216,13 +1222,17 @@ same eight**: two of them follow a referent with another name ("CO2-concentratin
 plants", "Light-dependent reactions" → "Wheat, shade-to-sun transitions") ⇒ ⇒ ⇒ the table now carries
 the measured mapping instead of the word "same".
 
-**One finding is a latent defect that this wave does not fix.** The launcher copies only the **main**
-database file while the store runs in **WAL** mode, and a main-file-only copy of a WAL database with
-**un-checkpointed** frames loses them (reproduced: a table committed in the WAL was absent from the
-copy) ⇒ ⇒ ⇒ measured today, the live store's WAL holds **86** frames and **all 86** are already
-checkpointed, so the published numbers are unaffected and the defect is **latent** ⇒ ⇒ ⇒ the fix would
-change the contract the owner approved in OD-070, so it is **recorded as R-EPIS-08** and left to the
-owner rather than decided here.
+**One finding was a latent defect, and the owner has now closed it.** The launcher copied only the
+**main** database file while the store runs in **WAL** mode, and a main-file-only copy of a WAL
+database with **un-checkpointed** frames loses them (reproduced: a table committed in the WAL was
+absent from the copy) ⇒ ⇒ ⇒ measured at the time, the live store's WAL held **86** frames and **all
+86** were already checkpointed, so the published numbers were unaffected and the defect was
+**latent** ⇒ ⇒ ⇒ the owner's decision (**OD-075**, option B) is `VACUUM INTO`: the backup and the
+work file are now **consistent snapshots** that merge the WAL into one file, the launcher
+**checkpoints** the live store's WAL and **removes its sidecars** before the replacement, and the way
+back is proved over the backup's **content** (a digest over every table and every row) instead of its
+bytes ⇒ ⇒ ⇒ the regression is now a **test**: a store whose WAL holds un-checkpointed frames, whose
+**main file alone** does not hold the committed table, and whose backup **does** hold it.
 
 **One finding corrected a reading of the evidence.** The report quoted the served answers as if the
 store held them verbatim. It does not: the statements are **composed by the asking path** from the
@@ -1358,16 +1368,20 @@ python3 scripts/docs-link-check.py --root . --strict
 >    that is the second thing worth a probe, and it is now pinned by the test. The held-out evaluation is
 >    **not** a gap either (it already judges a migrated copy with the same judge — see the note
 >    below).
-> 2. **The open items that need the owner, not the coordinator:** the **`main` release decision**
->    (the protected-`main` ruleset requires the FAST PR lane's six checks — green on every commit of
->    the wave — and **one code-owner review**, so the gate on a release is the owner, not a secret:
->    §J-decem); the **WAL guard of the launcher** (**R-EPIS-08**: copy the sidecars, or `VACUUM INTO`,
->    or refuse to run while the WAL holds un-checkpointed frames — the owner's call, because it
->    changes OD-070's contract); the HTTP status for a failed
+> 2. **The owner's decisions of 2026-11-18 (evening) are taken and recorded** — **OD-074** (the
+>    release: open the pull request `develop` → `main`, wait for the **full** release lane `ci.yml`
+>    to go green, then merge it as a **squash** with the ruleset's **admin bypass**, which is
+>    logged — the sole collaborator cannot approve their own pull request and the repository has no
+>    CODEOWNERS file, so the code owner is the repository owner), **OD-075** (the launcher's WAL
+>    guard: `VACUUM INTO` — the backup and the work file are consistent snapshots, the launcher
+>    checkpoints the WAL and removes the sidecars before the replacement, and the way back is proved
+>    over the backup's **content**; implemented and pinned by `LiveStoreLauncherTest`), **OD-076**
+>    (the inherited **ShellCheck** red over ~36 scripts is a **separate cleanup wave**, not this
+>    programme's). **The open items that still need the owner, not the coordinator:** the HTTP
+>    status for a failed
 >    effect; the latency plateau of the premise path; the definition-merge collision rule (0
->    collisions on this corpus ⇒ unverified); and the inherited **ShellCheck** red over ~36 scripts
->    that predates this programme (the last two CI runs were green because the path-sensitive
->    check was skipped — the scripts under test were untouched).
+>    collisions on this corpus ⇒ unverified); and the publication's own credentials (the
+>    dispatch-only `publish.yml` lane — R-W48-04).
 > 3. **Optional, if the owner wants the live store judged by the sealed set** — the held-out set
 >    judges a **migrated copy** of the **corpus** workspace (the plate-tectonics pool), not the
 >    owner's live store, and it already does so: `HeldOutEvaluationTest.theMigratedCopyIsJudgedByTheSameJudge`

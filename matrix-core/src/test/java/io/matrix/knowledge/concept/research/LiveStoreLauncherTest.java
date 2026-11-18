@@ -34,18 +34,24 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * against a <b>copy</b> of the preserved pre-migration backup in a temporary directory.
  * The owner's live store is never opened.</p>
  *
- * <p><b>What it pins.</b> Four claims:</p>
+ * <p><b>What it pins.</b> Five claims:</p>
  * <ol>
  *   <li><b>The abort.</b> A dirty audit stops the launcher <b>before</b> the live file is
  *       touched: the live file keeps its exact bytes, and the abort says so.</li>
  *   <li><b>The way back.</b> After a successful run the backup still holds the original
- *       bytes — the same sha256 the pre-migration file had.</li>
+ *       <b>content</b> — the same content digest the pre-migration store had. The backup is a
+ *       consistent snapshot (SQLite's {@code VACUUM INTO}), not a byte copy: the store runs in
+ *       WAL mode, and a copy of the main file alone can lose the frames that are not yet
+ *       checkpointed into it (the owner's decision on R-EPIS-08, option B).</li>
  *   <li><b>The atomic replace.</b> The migrated store is in place afterwards: the schema
  *       version, the counts and the audit are the published ones.</li>
  *   <li><b>No partial write.</b> The live file is <b>replaced</b>, not written into: its
  *       inode changes (a rename carries the inode of the work file), so a reader can
  *       never see a half-written store. The bytes that were there before are recoverable
  *       from the backup.</li>
+ *   <li><b>The WAL.</b> A store whose WAL still holds un-checkpointed frames loses nothing:
+ *       the backup is a snapshot, so the WAL's committed row is in it — the regression test
+ *       for R-EPIS-08.</li>
  * </ol>
  *
  * <p><b>Why the inode is the probe for "never partially written".</b> A file that is
@@ -62,7 +68,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * log the launcher writes is unchanged. The launcher's own javadoc also promised
  * "the check that the backup still holds the original bytes" and the code never performed
  * it; the check is now performed — before the replacement, so a broken way back stops the
- * run, and after it, so a broken way back is reported.</p>
+ * run, and after it, so a broken way back is reported. The check is over the backup's
+ * <b>content</b>, because the backup is now a consistent snapshot and not a byte copy.</p>
  *
  * <p>The test is <b>skipped, not failed</b>, when the preserved backup is not in the
  * checkout (CI).</p>
@@ -111,11 +118,12 @@ class LiveStoreLauncherTest {
                 .isEmpty();
         assertThat(leftovers("workbench.rollback-")).as("the rollback copy after the abort")
                 .isEmpty();
-        // The backup was taken before the abort, and it holds the original bytes.
+        // The backup was taken before the abort, and it holds the original CONTENT.
         List<Path> backups = leftovers("workbench.pre-migration-");
         assertThat(backups).as("the backups after the abort").hasSize(1);
-        assertThat(sha256(backups.get(0))).as("the backup's bytes after the abort")
-                .isEqualTo(bytesBefore);
+        assertThat(LiveStoreMigration.contentDigest(backups.get(0)))
+                .as("the backup's content after the abort")
+                .isEqualTo(LiveStoreMigration.contentDigest(live));
     }
 
     @Test
@@ -133,11 +141,18 @@ class LiveStoreLauncherTest {
 
         LiveStoreMigration.Outcome outcome = LiveStoreMigration.run(live);
 
-        // ── the way back: the backup holds the original bytes ──────────────────
+        // ── the way back: the backup holds the original CONTENT ────────────────
+        // The backup is a consistent snapshot (SQLite's VACUUM INTO), so it does NOT
+        // have the live file's bytes — it has the live store's content, and the
+        // content is what is proved.
         assertThat(outcome.backup()).as("the backup the launcher kept")
                 .isRegularFile();
-        assertThat(sha256(outcome.backup())).as("the backup's bytes after the run")
-                .isEqualTo(bytesBefore);
+        assertThat(LiveStoreMigration.contentDigest(outcome.backup()))
+                .as("the backup's content after the run")
+                .isEqualTo(LiveStoreMigration.contentDigest(source));
+        assertThat(outcome.originalContentDigest())
+                .as("the launcher's record of the original content")
+                .isEqualTo(LiveStoreMigration.contentDigest(source));
         assertThat(outcome.originalSha256()).as("the launcher's record of the original bytes")
                 .isEqualTo(bytesBefore);
 
@@ -173,6 +188,50 @@ class LiveStoreLauncherTest {
                 .isEmpty();
         assertThat(leftovers("workbench.pre-migration-")).as("the backups after the run")
                 .hasSize(1);
+    }
+
+    @Test
+    @DisplayName("the backup holds the content of a store whose WAL is not yet checkpointed")
+    void theBackupHoldsTheContentOfAStoreWithAnUncheckpointedWal() throws Exception {
+        Path source = preservedBackup();
+        Assumptions.assumeTrue(source != null,
+                "the preserved pre-migration backup is not in this checkout — the launcher check "
+                        + "is skipped, not failed");
+
+        Path live = directory.resolve("workbench.sqlite");
+        Files.copy(source, live, StandardCopyOption.COPY_ATTRIBUTES);
+
+        // A row committed in the WAL and not yet checkpointed into the main file. The
+        // connection stays OPEN on purpose: closing the last connection to a WAL database
+        // checkpoints it, and the defect this reproduces is exactly the state in which the
+        // frames are still in the WAL.
+        Connection connection = DriverManager.getConnection("jdbc:sqlite:" + live);
+        Statement statement = connection.createStatement();
+        statement.execute("PRAGMA journal_mode=WAL");
+        statement.execute("PRAGMA wal_autocheckpoint=0");
+        statement.executeUpdate("CREATE TABLE wal_probe (id INTEGER PRIMARY KEY, note TEXT)");
+        statement.executeUpdate("INSERT INTO wal_probe (note) VALUES "
+                + "('the frame lives in the WAL')");
+        Path wal = Path.of(live + "-wal");
+        assertThat(Files.exists(wal)).as("the WAL sidecar exists").isTrue();
+        assertThat(Files.size(wal)).as("the WAL sidecar holds the un-checkpointed frames")
+                .isPositive();
+        // The MAIN FILE alone — copied without its sidecar — does not hold the table: the
+        // frames are still in the WAL. That is the defect the snapshot fixes.
+        Path mainFileOnly = directory.resolve("main-file-only.sqlite");
+        Files.copy(live, mainFileOnly, StandardCopyOption.COPY_ATTRIBUTES);
+        assertThat(count(mainFileOnly, "wal_probe"))
+                .as("the main file alone does NOT hold the WAL's table — the defect is reproduced")
+                .isEqualTo(-1);
+
+        LiveStoreMigration.Outcome outcome = LiveStoreMigration.run(live);
+
+        // The backup is a consistent snapshot, so the WAL's committed row is IN it: a
+        // main-file-only copy would have lost it.
+        assertThat(count(outcome.backup(), "wal_probe"))
+                .as("the rows of the table committed in the WAL, as the backup holds them")
+                .isEqualTo(1);
+        connection.close();
     }
 
     /**
@@ -240,12 +299,14 @@ class LiveStoreLauncherTest {
         }
     }
 
-    /** A count over a table. */
-    private static int count(Path database, String table) throws SQLException {
+    /** A count over a table — {@code -1} when the table does not exist. */
+    private static int count(Path database, String table) {
         try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + database);
              Statement statement = connection.createStatement();
              ResultSet rows = statement.executeQuery("SELECT COUNT(*) FROM " + table)) {
             return rows.next() ? rows.getInt(1) : -1;
+        } catch (SQLException e) {
+            return -1;
         }
     }
 

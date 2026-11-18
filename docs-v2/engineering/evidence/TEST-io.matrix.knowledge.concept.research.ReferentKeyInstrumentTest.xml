@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="P1 — the referent key: the resolution and alias policy" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-11-18T18:31:47.186Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="12.236">
+<testsuite name="P1 — the referent key: the resolution and alias policy" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-11-18T19:10:29.700Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="12.106">
   <properties/>
-  <testcase name="the four properties the directive names, on the corpus's own cases" classname="io.matrix.knowledge.concept.research.ReferentKeyInstrumentTest" time="0.001"/>
-  <testcase name="the key's fragmentation: the referents against the current concepts" classname="io.matrix.knowledge.concept.research.ReferentKeyInstrumentTest" time="0.43"/>
-  <testcase name="the production importer reproduces the baseline the research measured" classname="io.matrix.knowledge.concept.research.ReferentKeyInstrumentTest" time="0.0"/>
-  <testcase name="the relation candidates that survive the policy" classname="io.matrix.knowledge.concept.research.ReferentKeyInstrumentTest" time="0.053"/>
-  <testcase name="the definition coverage under the key, against the current 4/326" classname="io.matrix.knowledge.concept.research.ReferentKeyInstrumentTest" time="0.023"/>
-  <testcase name="the two precisions and their intervals" classname="io.matrix.knowledge.concept.research.ReferentKeyInstrumentTest" time="0.005"/>
+  <testcase name="the four properties the directive names, on the corpus's own cases" classname="io.matrix.knowledge.concept.research.ReferentKeyInstrumentTest" time="0.0"/>
+  <testcase name="the key's fragmentation: the referents against the current concepts" classname="io.matrix.knowledge.concept.research.ReferentKeyInstrumentTest" time="0.434"/>
+  <testcase name="the production importer reproduces the baseline the research measured" classname="io.matrix.knowledge.concept.research.ReferentKeyInstrumentTest" time="0.001"/>
+  <testcase name="the relation candidates that survive the policy" classname="io.matrix.knowledge.concept.research.ReferentKeyInstrumentTest" time="0.055"/>
+  <testcase name="the definition coverage under the key, against the current 4/326" classname="io.matrix.knowledge.concept.research.ReferentKeyInstrumentTest" time="0.024"/>
+  <testcase name="the two precisions and their intervals" classname="io.matrix.knowledge.concept.research.ReferentKeyInstrumentTest" time="0.006"/>
   <testcase name="the policy's precision on the frozen hand-labelled 150" classname="io.matrix.knowledge.concept.research.ReferentKeyInstrumentTest" time="0.005"/>
   <system-out><![CDATA[[referent-key] the properties: the same word in different contexts 4/4, the synonym 4/4, the paraphrase 3/3, the homonym 3/3
 [referent-key] the property failures: []
@@ -19,7 +19,7 @@
 [referent-key] the control (the source-anchoring alone, no rejection): the seed 325 referents, the wider 824 referents
 [referent-key] the rejections (the seed): {NONE=110, FUNCTION_HEAD=74, CLAUSE_CUT=1, CLASS_OPENER=15, GENERIC_HEAD=34, DISCOURSE_HEAD=3, TOO_LONG=38, ARTEFACT=10, CLAUSE_RELATIVE=10, CLAUSE_PARTICIPLE=9, CLAUSE_SUBORDINATOR=14, CONCATENATION=22, CAPTION_REPEAT=2, BARE_PLURAL=3, PREPOSITIONAL_MODIFIER=3}
 [referent-key] the rejections (the wider): {NONE=352, FUNCTION_HEAD=150, CLAUSE_CUT=1, CLASS_OPENER=31, GENERIC_HEAD=58, DISCOURSE_HEAD=9, TOO_LONG=94, ARTEFACT=17, CLAUSE_RELATIVE=29, CLAUSE_PARTICIPLE=31, CLAUSE_SUBORDINATOR=40, CONCATENATION=42, CAPTION_REPEAT=3, BARE_PLURAL=12, PREPOSITIONAL_MODIFIER=19}
-[referent-key] the seed import took 1097 ms, the wider import 10615 ms
+[referent-key] the seed import took 1116 ms, the wider import 10458 ms
 [referent-key] the relations: 7 candidates of the frozen rule, 2 of them have both endpoints accepted by the policy; the rejected: [PRODUCES: Picture two giant conveyor belts, facing each other but slowly moving in opposite directions as they -> Oceanic crust, IS_A: Plate tectonics (from Latin tectonicus, from Ancient Greek τεκτονικός (tektonikós) 'pertaining to building') -> Tectonic plates, PRODUCES: The processes that -> Earth's crust, PART_OF: Tectonic plates may -> Continental crust, PRODUCES: Starting from the idea (also expressed by his forerunners) that the present continents once -> Wegener]
 [referent-key] the relations (LENIENT): 2 of 7 candidates have both endpoints accepted
 [referent-key] the relations (STRICT): 2 of 7 candidates have both endpoints accepted

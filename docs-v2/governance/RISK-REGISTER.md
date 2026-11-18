@@ -657,7 +657,7 @@ evidence is a suspicion, and it is marked as such.
 - **the fix**: the wave's targeted suites are now run in **one** invocation and their XMLs are copied
   into the tracked directory `docs-v2/engineering/evidence/`, whose README carries the rule and the
   command; the evidence ledger's rows now name **those tracked copies** instead of the wipe-able build
-  path. Measured: **12** XMLs retained, **36** tests, **0** failures, **0** errors, **0** skipped.
+  path. Measured: **12** XMLs retained, **37** tests, **0** failures, **0** errors, **0** skipped.
 - **the evidence**: `docs-v2/engineering/evidence/` (the retained XMLs with their counts) and the
   ledger's rows, which now name the files in it.
 - **status**: CLOSED **for this wave**; the exposure is **structural** — every future run that
@@ -681,13 +681,22 @@ evidence is a suspicion, and it is marked as such.
   already checkpointed into the main file (measured with `PRAGMA wal_checkpoint(PASSIVE)` on a
   **copy**), so the migration that produced the published numbers is unaffected and the backup is
   complete ⇒ ⇒ ⇒ the defect is **latent**, not active.
-- **the fix** — **not applied**: it changes the contract the owner approved in OD-070 ("a timestamped
-  backup of the original bytes"), so the choice is the owner's. The options: copy the `-wal` and `-shm`
-  sidecars with the main file and delete the stale ones next to the replaced file; take the backup with
-  SQLite's own consistent snapshot (`VACUUM INTO`), which merges the WAL into one file; or **refuse to
-  run** while the WAL holds un-checkpointed frames — the honest guard, since a launcher that silently
-  loses committed frames is worse than one that stops.
-- **owner**: the owner — the launcher's contract is OD-070's, and the change is to it.
-- **status**: OPEN — the defect is measured, the reproduction is exact, and the published numbers are
-  unaffected. The launcher is not needed again unless the store is re-migrated, and the store's WAL is
-  checkpointed now.
+- **the fix** — **applied** (the owner's decision on R-EPIS-08, option B, OD-075): the backup and the
+  work file are now **consistent snapshots** taken with SQLite's own `VACUUM INTO`, which merges the
+  WAL into one file; the launcher **checkpoints the live store's WAL and removes its sidecars**
+  before the atomic replacement, so the new file never sits next to a stale WAL; and the way back is
+  proved over the backup's **content** — a digest over every user table and every row, order-
+  independent — rather than over its bytes ⇒ ⇒ ⇒ the launcher no longer copies a main file that can
+  miss a frame, and the proof is a statement about the store's data rather than about a file's bytes.
+- **the consequence to name**: the backup is no longer a **byte copy** of the pre-migration file, so
+  the sha256 `6d963dff…` the report publishes is the digest of the **original file**, not of a
+  backup this launcher would make today. The launcher prints the backup's own sha256 **and** the
+  content digest, and the checks are over the content ⇒ ⇒ ⇒ the published evidence stays true
+  (that file still holds the original bytes) and the new contract is stated.
+- **the evidence**: `LiveStoreLauncherTest` — the third test reproduces the defect (a store whose WAL
+  holds un-checkpointed frames: the **main file alone** does not hold the committed table) and then
+  proves the fix (the backup **does** hold it) ⇒ ⇒ ⇒ the regression is pinned, not merely argued.
+- **owner**: the owner — OD-075.
+- **status**: CLOSED (2026-11-18) — the owner's option B is implemented and pinned by a test. The
+  two leftovers are named: the launcher's own **console log** is still not a file (R-EPIS-07), and the
+  backup of 2026-11-18 on disk is a byte copy made by the previous launcher.

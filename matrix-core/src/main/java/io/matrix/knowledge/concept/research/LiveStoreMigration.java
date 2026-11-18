@@ -6,6 +6,7 @@ import io.matrix.knowledge.WorkspaceSnapshot;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -14,9 +15,11 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
 
@@ -26,24 +29,30 @@ import java.util.List;
  *
  * <p><b>What it does, in this order, and why this order.</b></p>
  * <ol>
- *   <li>the live file is copied to a <b>backup</b> with a timestamped name — the backup is
- *       the way back, and it is taken before anything is written; the backup's bytes are
- *       checked against the live file's, so the way back is <b>proved</b> and not assumed;</li>
- *   <li>the live file is copied to a <b>work file</b>, and the work file is migrated: the
+ *   <li>the live store is snapshotted into a <b>backup</b> with a timestamped name, with
+ *       SQLite's own {@code VACUUM INTO} — the store runs in WAL mode, so a copy of the main
+ *       file alone can miss the frames that are not yet checkpointed into it, and the snapshot
+ *       merges them into one file. The backup is the way back, it is taken before anything is
+ *       written, and its <b>content</b> is compared with the live store's, table by table, so
+ *       the way back is <b>proved</b> and not assumed (the owner's decision on R-EPIS-08,
+ *       option B);</li>
+ *   <li>the live store is snapshotted into a <b>work file</b>, and the work file is migrated:
+ *       the
  *       schema chain first, then one workspace at a time, with a re-export between the
  *       workspaces, because the plan of a workspace is built from that workspace's own
  *       rows;</li>
  *   <li>every workspace is <b>audited</b>: the audit must report zero orphans and zero
  *       stale pointers in every table — a non-zero count <b>aborts</b> before the live
  *       file is touched;</li>
- *   <li>the <b>rollback</b> is rehearsed on a second copy: the store's own snapshot
+ *   <li>the <b>rollback</b> is rehearsed on a second snapshot: the store's own snapshot
  *       restores the workspace to its pre-migration size — if that fails, the live file is
  *       not touched;</li>
  *   <li>only then is the live file <b>replaced</b> by the migrated work file, atomically
  *       through a rename in the same directory — and only when the backup still holds the
- *       original bytes;</li>
+ *       original content. The live store's WAL is checkpointed and its sidecars are removed
+ *       first, so the new file never sits next to a stale WAL;</li>
  *   <li>the live file is <b>re-verified</b> afterwards: the schema version, the counts and
- *       the audit, plus the check that the backup still holds the original bytes.</li>
+ *       the audit, plus the check that the backup still holds the original content.</li>
  * </ol>
  *
  * <p><b>What it deliberately does not do.</b> It does not seed the alias layer: the declared
@@ -92,10 +101,13 @@ public final class LiveStoreMigration {
      * What a launcher run did.
      *
      * @param live the live store, replaced by the migrated work file
-     * @param backup the backup the launcher kept — it holds the original bytes
+     * @param backup the backup the launcher kept — it holds the original CONTENT (a
+     *               consistent snapshot), not a byte copy of the live file
      * @param originalSha256 the sha256 of the live file before the run
+     * @param originalContentDigest the content digest of the live store before the run
      */
-    public record Outcome(Path live, Path backup, String originalSha256) {
+    public record Outcome(Path live, Path backup, String originalSha256,
+            String originalContentDigest) {
     }
 
     public static void main(String[] args) throws Exception {
@@ -142,20 +154,26 @@ public final class LiveStoreMigration {
         Path rollback = directory.resolve("workbench.rollback-" + stamp + ".sqlite");
 
         // ── 1. the backup, before anything is written ───────────────────────────
-        // The original bytes are hashed BEFORE the copy, so the backup can be proved to
-        // hold them and not merely believed to.
+        // The backup is a CONSISTENT SNAPSHOT (SQLite's own VACUUM INTO), not a copy
+        // of the main file: the store runs in WAL mode, and a main-file-only copy
+        // loses the frames that are not yet checkpointed into it (the owner's
+        // decision on R-EPIS-08, option B). The snapshot merges the WAL into one
+        // file, so the backup holds the store's whole content — and the CONTENT is
+        // then compared with the live store's, table by table, so the way back is
+        // PROVED and not assumed.
         String originalSha256 = sha256(live);
-        Files.copy(live, backup, StandardCopyOption.COPY_ATTRIBUTES);
-        System.out.printf("[live-migration] the backup: %s (%d bytes)%n",
-                backup, Files.size(backup));
-        if (!originalSha256.equals(sha256(backup))) {
+        String originalContent = contentDigest(live);
+        vacuumInto(live, backup);
+        System.out.printf("[live-migration] the backup: %s (%d bytes, the sha256 %s)%n",
+                backup, Files.size(backup), sha256(backup));
+        if (!originalContent.equals(contentDigest(backup))) {
             Files.deleteIfExists(backup);
             throw new Aborted("[live-migration] ABORTED: the backup does not hold the original "
-                    + "bytes. The live store was NOT touched.");
+                    + "content. The live store was NOT touched.");
         }
 
         // ── 2. the work file: the schema chain, then one workspace at a time ──
-        Files.copy(live, work, StandardCopyOption.COPY_ATTRIBUTES);
+        vacuumInto(live, work);
         int versionBefore = schemaVersion(work);
         long started = System.nanoTime();
         try (KnowledgeStore store = new KnowledgeStore(work)) {
@@ -202,7 +220,7 @@ public final class LiveStoreMigration {
         }
 
         // ── 4. the rollback, rehearsed on a second copy ───────────────────────
-        Files.copy(live, rollback, StandardCopyOption.COPY_ATTRIBUTES);
+        vacuumInto(live, rollback);
         try (KnowledgeStore store = new KnowledgeStore(rollback)) {
             for (String workspace : WORKSPACES) {
                 KnowledgeSnapshot before = store.exportWorkspace(workspace);
@@ -228,12 +246,17 @@ public final class LiveStoreMigration {
 
         // ── 5. the live file is replaced, atomically ───────────────────────────
         // The way back must still be there when the live file is replaced: the backup's
-        // bytes are checked one last time before the swap.
-        if (!originalSha256.equals(sha256(backup))) {
+        // content is checked one last time before the swap.
+        if (!originalContent.equals(contentDigest(backup))) {
             Files.deleteIfExists(work);
             throw new Aborted("[live-migration] ABORTED: the backup no longer holds the original "
-                    + "bytes. The live store was NOT touched.");
+                    + "content. The live store was NOT touched.");
         }
+        // The live store's own WAL is checkpointed into its main file and its sidecars
+        // are removed, so the file that replaces it never sits next to a stale WAL: a
+        // stale -wal beside a new database is replayed onto it by SQLite, which is
+        // exactly the corruption the snapshot above exists to prevent.
+        checkpointAndDropSidecars(live);
         Path target = directory.resolve("workbench.migrated-" + stamp + ".sqlite");
         Files.move(work, target, StandardCopyOption.ATOMIC_MOVE);
         Files.move(target, live, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
@@ -258,16 +281,107 @@ public final class LiveStoreMigration {
                     + "the stale pointers %d%n", workspace, audit.totalOrphans(), audit.totalStale());
         }
         // The way back, checked AFTER the replacement: the backup must still hold the
-        // original bytes of the file the live store has just replaced.
-        String backupSha256 = sha256(backup);
-        if (!originalSha256.equals(backupSha256)) {
+        // original content of the store the live file has just replaced.
+        String backupContent = contentDigest(backup);
+        if (!originalContent.equals(backupContent)) {
             throw new IllegalStateException("the backup " + backup + " does not hold the original "
-                    + "bytes any more: it hashes to " + backupSha256 + " and the pre-migration live "
-                    + "file hashed to " + originalSha256);
+                    + "content any more: its content digest is " + backupContent + " and the "
+                    + "pre-migration live store's was " + originalContent);
         }
         System.out.printf("[live-migration] the backup is kept: %s (%d bytes)%n",
                 backup, Files.size(backup));
-        return new Outcome(live, backup, originalSha256);
+        return new Outcome(live, backup, originalSha256, originalContent);
+    }
+
+    /**
+     * A consistent snapshot of a database, taken with SQLite's own {@code VACUUM INTO}.
+     *
+     * <p>The store runs in WAL mode, so a copy of the main file alone can miss the
+     * frames that are not yet checkpointed into it. {@code VACUUM INTO} merges them
+     * into the new file, so the snapshot holds the database's whole content.</p>
+     *
+     * @param source the database to snapshot
+     * @param target the file to write — it must not exist
+     */
+    private static void vacuumInto(Path source, Path target) throws SQLException, IOException {
+        Files.deleteIfExists(target);
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + source);
+             Statement statement = connection.createStatement()) {
+            statement.execute("VACUUM INTO '" + target.toString().replace("'", "''") + "'");
+        }
+    }
+
+    /**
+     * Checkpoints a database's WAL into its main file and removes its sidecars.
+     *
+     * <p>Called immediately before the live file is replaced: a stale {@code -wal}
+     * beside a new database would be replayed onto it by SQLite.</p>
+     *
+     * @param live the live database
+     */
+    private static void checkpointAndDropSidecars(Path live) throws SQLException, IOException {
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + live);
+             Statement statement = connection.createStatement()) {
+            statement.execute("PRAGMA wal_checkpoint(TRUNCATE)");
+        }
+        Files.deleteIfExists(Path.of(live + "-wal"));
+        Files.deleteIfExists(Path.of(live + "-shm"));
+    }
+
+    /**
+     * A digest of a database's CONTENT: every user table, every row, order-independent.
+     *
+     * <p>Two databases with the same content have the same digest whatever order the
+     * rows are read in — the per-row digests are sorted before they are folded
+     * together. The digest is what proves that the backup holds the store's content;
+     * a byte digest cannot, because the backup is now a snapshot and not a copy.</p>
+     *
+     * @param database the database to digest
+     * @return the digest, as a lower-case hex string
+     */
+    static String contentDigest(Path database)
+            throws SQLException, IOException, NoSuchAlgorithmException {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + database);
+             Statement statement = connection.createStatement()) {
+            List<String> tables = new ArrayList<>();
+            try (ResultSet rows = statement.executeQuery("SELECT name FROM sqlite_master "
+                    + "WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name")) {
+                while (rows.next()) {
+                    tables.add(rows.getString(1));
+                }
+            }
+            for (String table : tables) {
+                List<String> rowDigests = new ArrayList<>();
+                try (ResultSet rows = statement.executeQuery("SELECT * FROM \""
+                        + table.replace("\"", "\"\"") + "\"")) {
+                    ResultSetMetaData meta = rows.getMetaData();
+                    int columns = meta.getColumnCount();
+                    while (rows.next()) {
+                        MessageDigest row = MessageDigest.getInstance("SHA-256");
+                        for (int column = 1; column <= columns; column++) {
+                            Object value = rows.getObject(column);
+                            if (value == null) {
+                                row.update((byte) 0);
+                            } else if (value instanceof byte[] bytes) {
+                                row.update(bytes);
+                            } else {
+                                row.update(value.toString().getBytes(StandardCharsets.UTF_8));
+                            }
+                            row.update((byte) 0);
+                        }
+                        rowDigests.add(HexFormat.of().formatHex(row.digest()));
+                    }
+                }
+                rowDigests.sort(null);
+                digest.update(table.getBytes(StandardCharsets.UTF_8));
+                for (String rowDigest : rowDigests) {
+                    digest.update(rowDigest.getBytes(StandardCharsets.UTF_8));
+                }
+                digest.update(Integer.toString(rowDigests.size()).getBytes(StandardCharsets.UTF_8));
+            }
+        }
+        return HexFormat.of().formatHex(digest.digest());
     }
 
     /** The store's schema version, read directly. */
