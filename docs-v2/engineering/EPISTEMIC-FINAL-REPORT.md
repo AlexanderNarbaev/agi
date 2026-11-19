@@ -73,7 +73,8 @@ refusal names the claim and source ids that do the refuting.
 **The regressions do not move.** The official 29-case evaluation: **18/29**, the qualitative columns
 byte-identical, the same eleven failures (`A-02, A-04, A-05, A-06, F-02, M-01, M-03, P-01, P-02,
 R-04, R-05`); the unanswerable abstention **6/6**, accuracy 1.0000, no case lost; the C2A
-`BASELINE-PATH` 17/25. The scope `io.matrix.knowledge.*`: **731 tests, 0 failures**.
+`BASELINE-PATH` **18/25** (it was 17/25 until the false abstention was fixed — §J-terdecem). The scope
+`io.matrix.knowledge.*`: **731 tests, 0 failures**.
 
 **The price, measured — and corrected twice.** The implementer's own before/after claimed the path got
 *faster* (the seed corpus 28.67/25.83 ms → 22.92/23.39 ms), because the refutation scan now reads the
@@ -580,18 +581,18 @@ harness), and the owner's store was never exercised.
 **The migrated copy, re-measured by the same judge.** The harness gained a second phase (a copy of
 the workspace → the copy-forward → **the same** `judge` method, the same questions, the same
 dataset) and its **calibration** is a comparison against the committed artefact, not an assertion of
-a number it also computes: the published row `BASELINE-PATH` **17/25**, judged 38, the eight failures
-(H-P02, H-P05, H-P06, H-P08, H-P10, H-P11, H-P13, H-P17), recall@1 **0.5351**, MRR **0.8600**,
+a number it also computes: the published row `BASELINE-PATH` **18/25**, judged 38, the seven failures
+(H-P05, H-P06, H-P08, H-P10, H-P11, H-P13, H-P17), recall@1 **0.5351**, MRR **0.8600**,
 abstention **1.0000**, unsupported **0.2800** — all identical before and after the harness change.
-**On the migrated copy**: `BASELINE-PATH` **17/25** with the **same eight** failures, recall@1
+**On the migrated copy**: `BASELINE-PATH` **18/25** with the **same seven** failures, recall@1
 **0.5351**, MRR **0.8600**, abstention **1.0000**, unsupported **0.2800** — **no regression**. The one
 difference is a difference and not an improvement: the mean number of **non-gold** claims cited fell
-from **5.2105 to 4.6842**. **The claim-scoped records stay retrievable**: 322 of them on the pool, and
+from **5.2632 to 4.7368**. **The claim-scoped records stay retrievable**: 322 of them on the pool, and
 **17 of the 25** comparable cases depend on a claim whose gold lives in a claim-scoped record; after
-the migration 16 still answer, the one that does not (**H-P02**) did not answer before the migration
-either — **the changed answered-flags: 0**. The migration silenced nothing. (The **314** this
-paragraph carried before the prepositional-phrase rule was written was stale; the current measurement
-is **322**, and the count is printed by the test on every run.)
+the migration **all 17 still answer** ⇒ ⇒ ⇒ the changed answered-flags: 0 — the migration silenced
+nothing. (This row was **17/25** with **eight** failures and the mean non-gold cited **5.2105 →
+4.6842** until the false abstention was found and fixed — §J-terdecem — and the row moved by exactly
+the case it regained: **H-P02**.)
 
 **The two vacuous checks, now non-vacuous.** The C2A corpora hold **no prerequisite rows at all**
 (0 and 0) — those rows come from the bundled **knowledge packages**, so the acyclicity was checked
@@ -1009,40 +1010,36 @@ promotions"* — and it was run on 2026-11-18.
 
 | | the unmigrated row | the migrated row |
 |---|---|---|
-| the cases passed | **17/25** | **17/25** |
-| the failures | H-P02, H-P05, H-P06, H-P08, H-P10, H-P11, H-P13, H-P17 | **the same eight** |
+| the cases passed | **18/25** | **18/25** |
+| the failures | H-P05, H-P06, H-P08, H-P10, H-P11, H-P13, H-P17 | **the same seven** |
 | recall@1 | 0.5351 | **0.5351** |
 | MRR | 0.8600 | **0.8600** |
 | the abstention accuracy | 1.0000 | **1.0000** |
 | the unsupported-answer rate | 0.2800 | **0.2800** |
-| the mean non-gold claims cited | 5.2105 | **4.6842** |
+| the mean non-gold claims cited | 5.2632 | **4.7368** |
 
 ⇒ ⇒ ⇒ **the identity repair changes no served answer on the sealed set** — no case is gained, none is
 lost, no ranking moves ⇒ ⇒ ⇒ and the **citation precision improves**: the answers cite **fewer
-non-gold claims** (5.2105 → 4.6842) ⇒ ⇒ ⇒ the referents are the things the answers actually use ⇒ ⇒ ⇒
+non-gold claims** (5.2632 → 4.7368) ⇒ ⇒ ⇒ the referents are the things the answers actually use ⇒ ⇒ ⇒
 
-**The one honest limit — and the measurement that narrows it.** The migration produced **322** claim-scoped
-records, each carrying its own text. Of the **17** cases whose gold claim lives in one of them,
-**16 still answer** and **one does not**: **H-P02**, a POSITIVE case ⇒ ⇒ ⇒ the count alone cannot say
-whether the migration silenced it ⇒ ⇒ ⇒ the **case-by-case comparison** of the two rows can: it shows
-**H-P02's answered flag was `false` before the migration as well** ⇒ ⇒ ⇒ **the changed answered-flags:
-0** ⇒ ⇒ ⇒ **the migration silenced nothing**.
-
-⇒ ⇒ ⇒ The honest reading is therefore **narrower** than "a claim-scoped gold can be silently lost":
-**H-P02 is a pre-existing failure** — it sits in **both** rows' failure list — and what it shows is
-that a POSITIVE case whose gold lives in a claim-scoped record does not answer **at all**, before or
-after ⇒ ⇒ ⇒ that is a real defect and it is the next one worth a probe, but it is **not** a regression
-of the identity repair ⇒ ⇒ ⇒ this corrects the first wording of this section, which read the count as
-a migration loss; the per-case comparison refutes it.
+**The one honest limit — closed.** The migration produced **322** claim-scoped records, each carrying
+its own text. Of the **17** cases whose gold claim lives in one of them, **all 17 answer** ⇒ ⇒ ⇒ the
+count alone cannot say whether the migration silenced anything ⇒ ⇒ ⇒ the **case-by-case comparison**
+of the two rows can: **the changed answered-flags: 0** ⇒ ⇒ ⇒ **the migration silenced nothing** ⇒ ⇒ ⇒
+and there is **no** affected case that fails to answer ⇒ ⇒ ⇒ the limit this section carried — one
+POSITIVE case whose gold lives in a claim-scoped record and does not answer — **is closed**, and §J-terdecem
+says how: it was never a migration effect, it was a **false abstention** in the premise check.
 
 **The comparison is now pinned, so it cannot hide again.** The loop prints the answered flag **before
 and after** for **every** affected case, a missing counterpart is a **failure** and not a skip
 (`assertNotNull`), and the two sets of answering cases must be equal
 (`assertEquals(answeredBefore, answeredAfter)`) ⇒ ⇒ ⇒ a silent loss in the evidence chain would now
-break the test rather than pass unnoticed ⇒ ⇒ ⇒ the measured table (2026-11-18, 17 of 17 affected
-cases): **H-P02** `false → false`; **H-P03, H-P05, H-P06, H-P07, H-P10, H-P13, H-P15, H-P19, H-U01,
-H-U03, H-U04, H-U05, H-U06, H-A01, H-C01, H-C02** all `true → true` ⇒ ⇒ ⇒ **no affected case changed
-its answered flag**, and the passed flags moved nowhere either.
+break the test rather than pass unnoticed ⇒ ⇒ ⇒ and the **silent ones are now named by an assertion
+of zero**: `assertEquals(0, silent.size(), ...)` ⇒ ⇒ ⇒ a case that stops answering breaks the suite
+instead of quietly joining the failure list ⇒ ⇒ ⇒ the measured table (2026-11-18, after the fix, 17 of
+17 affected cases): **H-P02** `false → true` and **H-P03, H-P05, H-P06, H-P07, H-P10, H-P13, H-P15,
+H-P19, H-U01, H-U03, H-U04, H-U05, H-U06, H-A01, H-C01, H-C02** all `true → true` ⇒ ⇒ ⇒ and the two rows
+still agree on every flag, so the migration still changes no answer.
 
 **The guarantee is now wider, and the two published numbers are pinned.** The comparison above covers
 the 17 cases the migration touches; it now covers **every comparable case** as well — the two rows'
@@ -1056,6 +1053,66 @@ report quietly becoming false ⇒ ⇒ ⇒ the calibration is pinned too: the mig
 the **baseline candidate alone** and on the **same number of cases** ⇒ ⇒ ⇒ and the other five
 candidates are **not** measured on the migrated copy — the absence of a measurement, not a
 regression, and this report says so rather than leaving the reader to infer it.
+
+**§J-terdecem — the false abstention: a past-relative adverb refused a question the workspace could
+answer.**
+
+The limit §J-sept carried — one POSITIVE case whose gold lives in a claim-scoped record and does not
+answer — was probed, and the probe found something the count could not: **the cause was not the
+identity repair at all**.
+
+**The case.** H-P02: *"In the research pool, what did Wegener call the single landmass from which the
+continents later broke apart?"* — a POSITIVE case, and the sealed set's own **expected disposition is
+ANSWERED**. The production path refused it, and the refusal's reason was *"the question asks about a
+time that has not happened"* ⇒ ⇒ ⇒ for a question about **1912**.
+
+**The cause.** `QuestionDemand.futurePattern` treated the bare word **"later"** as a future
+reference. In an English question about history, "later" is a **PAST-relative** adverb ("the
+continents **later** broke apart", "the later editions", "later renamed") ⇒ ⇒ ⇒ the production path
+refused a question the workspace could answer, while the five retriever-based candidates answered it
+and cited the gold at rank 1 ⇒ ⇒ ⇒ the refusal was a false abstention of the production path alone.
+
+**The fix.** The word "later" is out of the future-demand list; the unambiguous markers stay ("will",
+"shall", "predict", "forecast", "projection", "next year", "next decade", "future", "tomorrow", and a
+year in the 2030s) ⇒ ⇒ ⇒ a question that really is about the future is still refused, and a question
+about the past is not.
+
+**The measurement, before and after** (the same judge, the same 38 questions, the same dataset):
+
+| | before | after |
+|---|---|---|
+| the cases passed | 17/25 | **18/25** |
+| the failures | 8 (H-P02 among them) | **7** |
+| the affected cases that answer | 16 of 17 | **17 of 17** |
+| the claim-scoped golds that do not answer | H-P02 | **none** |
+| the mean non-gold claims cited (unmigrated → migrated) | 5.2105 → 4.6842 | 5.2632 → 4.7368 |
+| the unsupported-answer rate | 0.2800 | 0.2800 |
+| the abstention accuracy | 1.0000 | 1.0000 |
+
+⇒ ⇒ ⇒ **a measurable user benefit**: the production path answers one more sealed-set case, and the
+case it regained is one the sealed set **expects** to be answered ⇒ ⇒ ⇒ and the identity repair's own
+result is untouched: the two rows still agree on every flag (the changed answered-flags: **0**) ⇒ ⇒ ⇒
+the fix is in the **premise check**, not in the retrieval and not in the migration.
+
+**The probe is pinned.** `QuestionDemandTest.aHistoricalQuestionWithLaterIsNotAFutureDemand` asserts
+that the sealed set's own H-P02 question is not a future demand and that the unambiguous markers still
+refuse ⇒ ⇒ ⇒ and the held-out evaluation now asserts `silent.size() == 0` ⇒ ⇒ ⇒ a case that stops
+answering breaks the suite instead of quietly joining the failure list.
+
+**And the question this report asked is answered.** The open question was whether the answer "must say
+'this claim is not retrievable as a concept any more'". It must not: the claim **is** retrievable, the
+answer **is** given, and the refusal was a premise-check artefact ⇒ ⇒ ⇒ **no message is owed to the
+user — the answer itself is the remedy.**
+
+**And the probe leaves the next one named, with its two defects already separated.** The seven POSITIVE
+cases that still fail all fail with *"the proposition is not cited"*, and the sealed set's own rows say
+why ⇒ ⇒ ⇒ in **four** of them a gold claim **was retrieved and not cited** — the gold's ranks are **8**
+(H-P05), **17** (H-P08), **26** (H-P17), **11** (H-P10) ⇒ ⇒ ⇒ the **citation layer's selection** is the
+first suspect (the budget, the support threshold, or the representation that carries the gold); in
+**three** of them a gold claim was **not retrieved at all** — the rank is **0** for H-P10's second
+gold, H-P11's second and H-P13's second, and **134** for H-P06's second ⇒ ⇒ ⇒ the **retrieval** is the
+second suspect ⇒ ⇒ ⇒ the next probe has its subject and its two candidates measured before it starts;
+nothing about it is a guess.
 
 **§J-novem — the learning tables after the migration: the pointers resolve, and they still mean the same thing.**
 
@@ -1179,8 +1236,8 @@ praise, and not hidden.
 wave; **seven** of them existed **nowhere** — the build tree is gitignored and a Gradle run wipes it.
 The claims were true (the review verified the numbers against the store and the code), but the
 **artefacts** could not be opened ⇒ ⇒ ⇒ the wave's targeted suites are now run in **one** invocation
-and their XMLs are copied into the tracked directory `docs-v2/engineering/evidence/` (**14** files,
-**53** tests, **0** failures, **0** errors, **0** skipped), and the ledger's rows point at **those**
+and their XMLs are copied into the tracked directory `docs-v2/engineering/evidence/` (**25** files,
+**97** tests, **0** failures, **0** errors, **0** skipped), and the ledger's rows point at **those**
 files ⇒ ⇒ ⇒ the risk is recorded as **R-EPIS-07**, and the two holes it could not close (the P0
 close-out's packaging XML and the launcher's console log) are named there rather than hidden.
 
@@ -1198,7 +1255,7 @@ the migration touches. The same pass made the **learning tables** (the row count
 targets read from the preserved backup, the assessment items' structure), the **dry run's** per-
 workspace table, the **serving answers** (both statements, verbatim from the store's own
 representations) and the **journey's** trace (the seven phases **in order**, the replay's episode, the
-counts) **assertions** rather than prints ⇒ ⇒ ⇒ **53** tests across the wave's suites, **0** failures.
+counts) **assertions** rather than prints ⇒ ⇒ ⇒ **97** tests across the wave's suites, **0** failures.
 
 **Two findings were defects in the launcher itself, and they are fixed.** The launcher's **abort**
 paths called `System.exit(1)`, so the very path the review was about could not be exercised — it
@@ -1284,6 +1341,22 @@ application's, and the build validates the wiring ⇒ ⇒ ⇒ measured: the task
 caught by the release lane ⇒ ⇒ ⇒ the owner's decision to wait for that lane is what kept this
 release from shipping a build that could not start.
 
+**And the release lane caught a second defect, of the same kind.** The FAST PR lane also does not run
+the **full** unit suite — it runs the **targeted** suites of the touched packages ⇒ ⇒ ⇒ the wave's
+**decision-path determinism gate** (CONSTITUTION Article I) failed on the release lane with two
+**new** wall-clock findings that the accepted baseline does not list: the stamp that names the
+live-store migration's files, and the default timestamp of a quarantine ledger mark ⇒ ⇒ ⇒ both are
+timestamps that **decide nothing** — the migration's order, its audit and its outcome do not depend on
+the file names, and the quarantine decides on the reasons, the ids and the flags ⇒ ⇒ ⇒ the
+constitution's own mechanism for that is `@ArticleIPermitted` (the gate's message says so verbatim:
+*"if this only records an audit field, annotate the member with @ArticleIPermitted; if it influences a
+decision, inject a clock"*) ⇒ ⇒ ⇒ both reads are now annotated, the gate is **green** (the two gate
+tests failed on `develop` and pass now), and the decision is recorded as **OD-078** ⇒ ⇒ ⇒ ⇒ so the
+release lane has now caught **two** defects of this wave that the fast lane could not see ⇒ ⇒ ⇒ the
+gap is named as **R-EPIS-09**: the fast lane covers neither the packaged application nor the full unit
+suite ⇒ ⇒ ⇒ the release lane must be watched before a merge — which is exactly what the owner's
+decision (OD-074) says.
+
 **Inherited reds that this programme did not cause and did not hide:** the Docker Hub publication
 (zero repository secrets — the owner's action, never in chat), ShellCheck (43 files), the GraalVM
 native build (OOM, red since 2026-10-31), the PR-event TruffleHog findings, and the two known
@@ -1332,24 +1405,26 @@ python3 scripts/docs-link-check.py --root . --strict
 **The cold-start resume prompt** (Gate 6 of the directive asks for one; copy it into a fresh session):
 
 > Continue the MATRIX EPISTEMIC-INTEGRITY programme in `/home/alexandr-narbaev/Projects/agi` (branch
-> `develop`, the last pushed commit is **`7610f1e0`**). The owner's directive is READ-ONLY at
+> `develop`, the last pushed commit is the **head of `develop`** — read it with `git log --oneline -1
+> origin/develop`). The owner's directive is READ-ONLY at
 > `/home/alexandr-narbaev/.dsh/attachments/v1/files/fa/fad9aeb5d7f1dae77e7070e73c9d9e4e6cfde6cf7537ad95b9a4cc098ec78584/MATRIX_AUTONOMOUS_DEVELOPMENT_MANDATE_2026-11-15.md`.
 > Read first, in this order: `docs-v2/engineering/EPISTEMIC-FINAL-REPORT.md` (§A–J, the state of every
-> workstream, §J-bis/§J-ter/§J-quater/§J-quinque/§J-sext/§J-sept/§J-novem/§J-decem/**§J-undecem** the
-> last sections, and the open items),
+> workstream, §J-bis/§J-ter/§J-quater/§J-quinque/§J-sext/§J-sept/§J-novem/§J-decem/**§J-undecem**/
+> **§J-duodecim**/**§J-terdecem** the last sections, and the open items),
 > `docs-v2/engineering/EPISTEMIC-EXECUTION-PLAN.md` (the task graph and the append-only evidence
-> ledger), `docs-v2/governance/DECISION-REGISTER.md` (**OD-053 … OD-073**), `docs-v2/governance/RISK-REGISTER.md`
-> (**R-EPIS-02 … R-EPIS-08**), and `docs-v2/engineering/evidence/README.md` (the retained JUnit XML
+> ledger), `docs-v2/governance/DECISION-REGISTER.md` (**OD-053 … OD-077**), `docs-v2/governance/RISK-REGISTER.md`
+> (**R-EPIS-02 … R-EPIS-09**), and `docs-v2/engineering/evidence/README.md` (the retained JUnit XML
 > and the rule that keeps it).
 >
 > **The wave was hard-reviewed and the review's findings are fixed** (§J-undecem, OD-073): an
 > independent reviewer read the programme's own **81** commits and returned **MERGEABLE WITH
 > FINDINGS**. Two published numbers were wrong and are corrected; one claim was not true as written;
 > the numbers that were only **printed** are now **asserted**; two defects in the live-store launcher
-> are fixed; and the **evidence chain is restored** — the wave's **12** JUnit XMLs are retained in
-> `docs-v2/engineering/evidence/` (**36** tests, **0** failures) and the ledger points at them. One
-> latent defect is **recorded, not fixed** (**R-EPIS-08**): the launcher copies only the main database
-> file while the store runs in WAL mode ⇒ the owner's call.
+> are fixed; and the **evidence chain is restored** — the wave's JUnit XMLs are retained in
+> `docs-v2/engineering/evidence/` and the ledger points at them. The launcher's WAL defect is **closed**
+> by the owner's decision (**OD-075**: `VACUUM INTO`) and pinned by a regression test; the release lane
+> caught a **CDI defect that made the packaged application unbuildable** (**R-EPIS-09**) and that is fixed
+> too.
 >
 > **Where the programme stands (2026-11-18, end of the day).** P0, P1, P2 and P3 are closed with
 > published evidence. The **owner's live store is migrated** (D1-LIVE-STORE-MIGRATION-019, option A;
@@ -1384,21 +1459,28 @@ python3 scripts/docs-link-check.py --root . --strict
 >
 > **Tomorrow's first step, in this order, with the commands (nothing new has to be written):**
 >
-> 1. **Probe the pre-existing H-P02 failure** (§J-sept): of the **17** cases whose gold claim lives in
->    a **claim-scoped record**, **16 answer before and after the migration** and **one does not** —
->    **H-P02**, a POSITIVE case — and the case-by-case comparison shows its answered flag was
->    **`false` before the migration too** ⇒ ⇒ ⇒ **the changed answered-flags: 0**, the migration
->    silenced nothing ⇒ ⇒ ⇒ the defect is **pre-existing**, not a migration regression: a POSITIVE
->    case whose gold lives in a claim-scoped record does not answer at all ⇒ ⇒ ⇒ write the probe that
->    reproduces it, and decide whether the answer must say "this claim is not retrievable as a
->    concept any more". The comparison is now **pinned**: a missing counterpart is a **failure**, not
->    a skip, and the two sets of answering cases must be equal ⇒ ⇒ ⇒ a silent loss cannot hide in the
->    evidence chain again. The learning tables' state after the migration is **measured** (§J-novem:
->    0 dangling pointers; the five single-target tables show no drift) ⇒ ⇒ ⇒ it is **not** a gap —
->    but the assessment items' row now says what the measurement says: **8 concepts, 8 items each,
->    and not the same eight** (two of them follow a referent with another name: "CO2-concentrating
+> 1. **The next probe is named and measured: the seven POSITIVE cases that still fail, and the two
+>    defects inside them** (§J-terdecem, and the sealed set's own rows). The H-P02 probe is **done** — it
+>    found a false abstention (the bare word "later" read as a future reference) and the fix took the row
+>    from **17/25** to **18/25** with **all 17 of the 17** claim-scoped golds answerable again ⇒ ⇒ ⇒ the
+>    seven that remain all fail with *"the proposition is not cited"*, and the sealed set's rows say exactly
+>    why ⇒ ⇒ ⇒ **two different defects, already separated by the measurement**: in **four** of them a gold
+>    claim WAS retrieved and NOT cited (the gold's ranks: **8** in H-P05, **17** in H-P08, **26** in H-P17,
+>    **11** in H-P10) ⇒ ⇒ ⇒ the **citation layer's selection** is the first suspect (the budget, the
+>    support threshold, or the representation that carries the gold); in **three** of them a gold claim was
+>    **not retrieved at all** (rank 0: H-P10's second gold, H-P11's second, H-P13's second; and H-P06's
+>    second gold sits at rank **134**) ⇒ ⇒ ⇒ the **retrieval** is the second suspect ⇒ ⇒ ⇒ the probe
+>    writes itself: take H-P05 (the gold is at rank 1 AND at rank 8, the answer cites one and not the
+>    other) and read the citation layer's own selection — no new corpus, no new judge, the rows are in
+>    `docs-v2/engineering/C2A-HELDOUT-EVALUATION.json` ⇒ ⇒ ⇒ and the comparison is now **pinned**: a
+>    missing counterpart is a **failure**, not a skip, the two sets of answering cases must be equal, and
+>    `assertEquals(0, silent.size(), ...)` says that no claim-scoped gold may stop answering ⇒ ⇒ ⇒ a
+>    silent loss cannot hide in the evidence chain again. The learning tables' state after the migration is
+>    **measured** (§J-novem: 0 dangling pointers; the five single-target tables show no drift) ⇒ ⇒ ⇒ it is
+>    **not** a gap — but the assessment items' row now says what the measurement says: **8 concepts, 8 items
+>    each, and not the same eight** (two of them follow a referent with another name: "CO2-concentrating
 >    mechanisms" → "C4 plants", "Light-dependent reactions" → "Wheat, shade-to-sun transitions") ⇒ ⇒ ⇒
->    that is the second thing worth a probe, and it is now pinned by the test. The held-out evaluation is
+>    that is the third thing worth a probe, and it is now pinned by the test. The held-out evaluation is
 >    **not** a gap either (it already judges a migrated copy with the same judge — see the note
 >    below).
 > **The release lane earned its place** (§J-duodecim): the FAST PR lane compiles and runs the

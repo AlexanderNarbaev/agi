@@ -673,10 +673,14 @@ class HeldOutEvaluationTest {
         assertThat(affected).as("at least one case must depend on a claim-scoped record")
                 .isPositive();
         // The state is pinned, not smoothed: the cases that a claim-scoped record
-        // silences are named, so that a change in the number is visible.
-        assertEquals(1, silent.size(),
-                "exactly one case whose gold lives in a claim-scoped record does not answer — "
-                        + "the pre-existing failure of a POSITIVE case, not a migration loss");
+        // silences are named, so that a change in the number is visible. The number is
+        // ZERO: the one case that used to be silenced (H-P02, a POSITIVE case) was
+        // silenced by a FALSE ABSTENTION — the premise check's time-demand rule read the
+        // bare word "later" in a question about 1912 as a future reference — and not by
+        // the migration. The rule no longer reads it that way, and the case answers.
+        assertEquals(0, silent.size(),
+                "every case whose gold lives in a claim-scoped record must answer — a case that "
+                        + "does not answer is a defect, and this assertion is what names it");
         // The migration moved no answer: the cases that answer before and after are the
         // same set, in the same order. A silent loss would show up here as a case that
         // answered before and does not answer now.

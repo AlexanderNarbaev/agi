@@ -657,7 +657,7 @@ evidence is a suspicion, and it is marked as such.
 - **the fix**: the wave's targeted suites are now run in **one** invocation and their XMLs are copied
   into the tracked directory `docs-v2/engineering/evidence/`, whose README carries the rule and the
   command; the evidence ledger's rows now name **those tracked copies** instead of the wipe-able build
-  path. Measured: **14** XMLs retained, **53** tests, **0** failures, **0** errors, **0** skipped.
+  path. Measured: **25** XMLs retained, **97** tests, **0** failures, **0** errors, **0** skipped.
 - **the evidence**: `docs-v2/engineering/evidence/` (the retained XMLs with their counts) and the
   ledger's rows, which now name the files in it.
 - **status**: CLOSED **for this wave**; the exposure is **structural** — every future run that
@@ -724,8 +724,17 @@ evidence is a suspicion, and it is marked as such.
   gates (can fail)" failed with the `UnsatisfiedResolutionException` above; the local
   `:matrix-core:quarkusAppPartsBuild` failed the same way before the fix and succeeds after it.
 - **owner**: the coordinator — the defect is fixed; the *gap* is the lane's.
-- **status**: OPEN as a **gap**, CLOSED as a defect. The gap: the fast lane does not build the
-  packaged application, so a CDI wiring defect can only be caught by the release lane ⇒ ⇒ ⇒ the
-  release lane must be watched before a merge, and the owner's release decision (OD-074) says
-  exactly that ⇒ ⇒ ⇒ a cheaper guard (building the application in the fast lane) would cost the
-  lane its speed and is **not** decided here.
+- **the second instance, the same gap**: the fast lane also does not run the **full** unit suite —
+  it runs the **targeted** suites of the touched packages ⇒ ⇒ ⇒ a second defect of the wave reached
+  the release lane the same way: the **decision-path determinism gate** (CONSTITUTION Article I)
+  failed with two **new** wall-clock findings that the accepted baseline does not list —
+  `matrix-core/…/research/LiveStoreMigration.java` (the stamp that names the migration's files) and
+  `matrix-brain-runtime/…/EpisodeQuarantineTool.java` (the default timestamp of a ledger mark) ⇒ ⇒ ⇒
+  both are **timestamps that decide nothing**, and the constitution's own mechanism for that is
+  `@ArticleIPermitted` ⇒ ⇒ ⇒ both are now annotated, and the gate is **green** (measured: the two
+  gate tests pass on `develop` and failed before the annotations).
+- **status**: OPEN as a **gap**, CLOSED as defects. The gap: the fast lane covers neither the
+  packaged application nor the full unit suite, so two defects of this wave (a CDI wiring defect and
+  a determinism-gate violation) could only be caught by the release lane ⇒ ⇒ ⇒ the release lane must
+  be watched before a merge, and the owner's release decision (OD-074) says exactly that ⇒ ⇒ ⇒
+  widening the fast lane would cost it its speed and is **not** decided here.

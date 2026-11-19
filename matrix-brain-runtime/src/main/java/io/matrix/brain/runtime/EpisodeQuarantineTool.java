@@ -1,5 +1,7 @@
 package io.matrix.brain.runtime;
 
+import io.matrix.auditor.ArticleIPermitted;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -68,6 +70,23 @@ public final class EpisodeQuarantineTool {
      * @param args the command and its arguments
      * @return 0 when the command succeeded, 2 when it was refused
      */
+    /**
+     * The default timestamp of the ledger entries.
+     *
+     * <p>The caller may supply the timestamp itself with {@code --now}, and absent that the
+     * wall clock provides it. It is written into the ledger and decides nothing: the scan,
+     * the quarantine, the release and the dry run decide on the reasons, the ids and the
+     * flags — the timestamp records <i>when</i> the mark was made.</p>
+     *
+     * @return the timestamp, in milliseconds
+     */
+    @ArticleIPermitted("the ledger mark's timestamp; it decides nothing — the quarantine, the "
+            + "release and the dry run decide on the reasons, the ids and the flags, and the "
+            + "caller can supply the timestamp itself with --now")
+    private static long defaultNow() {
+        return System.currentTimeMillis();
+    }
+
     static int run(String[] args) {
         if (args.length < 2) {
             usage();
@@ -78,7 +97,7 @@ public final class EpisodeQuarantineTool {
         Path ledgerPath = null;
         String reason = "operator quarantine (P0.4)";
         boolean dryRun = false;
-        long now = System.currentTimeMillis();
+        long now = defaultNow();
         List<String> positional = new ArrayList<>();
         for (int i = 2; i < args.length; i++) {
             switch (args[i]) {

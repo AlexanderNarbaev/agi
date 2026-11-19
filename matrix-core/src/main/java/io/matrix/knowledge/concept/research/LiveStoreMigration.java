@@ -1,5 +1,6 @@
 package io.matrix.knowledge.concept.research;
 
+import io.matrix.auditor.ArticleIPermitted;
 import io.matrix.knowledge.KnowledgeSnapshot;
 import io.matrix.knowledge.KnowledgeStore;
 import io.matrix.knowledge.WorkspaceSnapshot;
@@ -148,7 +149,7 @@ public final class LiveStoreMigration {
             throw new IllegalArgumentException("there is no live store at " + live);
         }
         Path directory = live.getParent();
-        String stamp = Instant.now().toString().replace(':', '-').replace('.', '-');
+        String stamp = stamp();
         Path backup = directory.resolve("workbench.pre-migration-" + stamp + ".sqlite");
         Path work = directory.resolve("workbench.migrating-" + stamp + ".sqlite");
         Path rollback = directory.resolve("workbench.rollback-" + stamp + ".sqlite");
@@ -392,6 +393,23 @@ public final class LiveStoreMigration {
                      "SELECT value FROM schema_meta WHERE key = 'version'")) {
             return rows.next() ? Integer.parseInt(rows.getString(1)) : 0;
         }
+    }
+
+    /**
+     * The stamp that names this run's files.
+     *
+     * <p>The stamp records when the migration ran: it names the backup, the work file and the
+     * rollback copy, and it appears in the log. It decides nothing — the migration's order,
+     * its audit, its rollback and its outcome do not depend on the name of the files it
+     * works on, and the backup's contents are compared by their <b>content</b>, not by their
+     * name.</p>
+     *
+     * @return the stamp
+     */
+    @ArticleIPermitted("the stamp names this run's files and appears in the log; it decides "
+            + "nothing — the migration's order, its audit and its outcome do not depend on it")
+    private static String stamp() {
+        return Instant.now().toString().replace(':', '-').replace('.', '-');
     }
 
     /**

@@ -704,6 +704,8 @@ tests).
 
 ### 9.1 The calibration — the judge is unchanged, BY COMPARISON
 
+> **These tables are the measurement of 2026-11-18, and they are dated.** The row they record was **17/25** with eight failures; the production path has changed since (a false abstention was found and fixed — §J-terdecem of the final report), and the row is now **18/25** with seven. The tables below are kept as the study's own measurement, and the current numbers are in `docs-v2/engineering/EPISTEMIC-FINAL-REPORT.md` §J-sept and in the regenerated `C2A-HELDOUT-EVALUATION.json`.
+
 | the row | the published artefact (the committed `C2A-HELDOUT-EVALUATION.json`) | the harness's own row after the change | the same? |
 |---|---|---|---|
 | `BASELINE-PATH` passed | 17 | 17 | ✓ |

@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="P1 — the owner's live store: the identity migration on a copy" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-18T19:27:22.052Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.106">
+<testsuite name="P1 — the owner's live store: the identity migration on a copy" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-19T19:57:32.441Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.121">
   <properties/>
-  <testcase name="the live store on a copy: the schema, the two workspaces, the audit and the rollback" classname="io.matrix.knowledge.concept.research.LiveStoreMigrationDryRunTest" time="0.105"/>
+  <testcase name="the live store on a copy: the schema, the two workspaces, the audit and the rollback" classname="io.matrix.knowledge.concept.research.LiveStoreMigrationDryRunTest" time="0.12"/>
   <system-out><![CDATA[[live-migration] the schema: the copy's version 15 -> 21, the chain took 18 ms
 [live-migration] the workspace logic: the concepts 11 -> 30 (inserted 19), the claims 28 (re-pointed 28), the representations re-pointed 8, the representation collisions 0, the prerequisites 6, the prerequisite collapses 1, the prerequisite self-loops 1, the other rows 88, the lineage 56, the plan's referents 6, the rejected 13, the copy-forward took 2 ms
 [live-migration] the workspace logic: the audit walked 13 tables, the orphans 0, the stale pointers 0
-[live-migration] the workspace logic: the rollback — the concepts 30 -> 11, the claims 28, the restore took 6 ms
+[live-migration] the workspace logic: the rollback — the concepts 30 -> 11, the claims 28, the restore took 8 ms
 [live-migration] the workspace photosynthesis: the concepts 13 -> 37 (inserted 24), the claims 24 (re-pointed 24), the representations re-pointed 14, the representation collisions 0, the prerequisites 5, the prerequisite collapses 0, the prerequisite self-loops 0, the other rows 272, the lineage 48, the plan's referents 14, the rejected 10, the copy-forward took 2 ms
 [live-migration] the workspace photosynthesis: the audit walked 13 tables, the orphans 0, the stale pointers 0
-[live-migration] the workspace photosynthesis: the rollback — the concepts 37 -> 13, the claims 24, the restore took 16 ms
+[live-migration] the workspace photosynthesis: the rollback — the concepts 37 -> 13, the claims 24, the restore took 17 ms
 [live-migration] the source store: the schema version 15, the photosynthesis concepts 13 — untouched
 ]]></system-out>
   <system-err><![CDATA[]]></system-err>

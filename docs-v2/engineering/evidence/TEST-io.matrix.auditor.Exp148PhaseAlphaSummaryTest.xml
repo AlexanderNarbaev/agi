@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.auditor.Exp148PhaseAlphaSummaryTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-19T19:57:13.540Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.001">
+  <properties/>
+  <testcase name="phaseAlphaAcceptance()" classname="io.matrix.auditor.Exp148PhaseAlphaSummaryTest" time="0.0"/>
+  <system-out><![CDATA[[PHASE-α] Decision-path: ✓ auditor file
+[PHASE-α] MatrixTrace:   ✓ auditor file
+[PHASE-α] TLA+ BRC-Step: ✓ cfg file
+[PHASE-α] DistillCli:    ✓ separate Gradle module
+[PHASE-α] Determinism:   ✓ (RUN 147 EXP verified)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
