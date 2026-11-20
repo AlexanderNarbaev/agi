@@ -2896,12 +2896,67 @@ public final class KnowledgeStore implements AutoCloseable {
      * <p>Two wordings of the same question share one record: the count
      * grows, the earliest asking is kept, and the most recent wording is
      * kept because it is the one the user last used.
+     *
+     * <p><b>Why the read and the write are one transaction.</b> This is a read-then-write:
+     * the count is read and then written back as one more. In autocommit mode the two
+     * statements are two transactions, and the first one leaves a READ SNAPSHOT open while
+     * the second one writes. The snapshot is the problem: this store shares its file with
+     * the cognitive store, which writes the journey's trace into it, so another connection
+     * can commit between the read and the write. A snapshot that another commit has
+     * invalidated cannot be UPGRADED to a write - SQLite answers {@code SQLITE_BUSY} at
+     * once, and the busy timeout does not apply to that case, because waiting cannot make
+     * a stale snapshot fresh.
+     *
+     * <p>The failure is real and was observed: the report journey refused a request with
+     * {@code output_root_unavailable} - a wrong name for a database that was busy - about
+     * two rounds in three when two requests raced. The transaction below takes the write
+     * lock when it BEGINS, so the wait for it is a wait, the read that follows sees a
+     * database nobody else can change under it, and the write that closes it needs no
+     * upgrade at all.
+     *
+     * <p>The transaction is IMMEDIATE because the connection is configured that way (see
+     * {@link #sqliteConfiguration()}), which is the same reason the other write paths of
+     * this store use one.</p>
      */
     public synchronized AskedQuestion recordAskedQuestion(String workspaceId, String question,
                                              List<String> uncoveredTerms, boolean answered,
                                              long askedAt) {
         String key = QuestionConsolidator.canonicalKey(question);
         String id = Ids.askedQuestion(workspaceId, key);
+        try {
+            connection.setAutoCommit(false);
+            try {
+                AskedQuestion recorded = foldAskedQuestion(id, workspaceId, key, question,
+                        uncoveredTerms, answered, askedAt);
+                connection.commit();
+                return recorded;
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to record the asked question", e);
+        }
+    }
+
+    /**
+     * The fold itself, inside the transaction its caller opened.
+     *
+     * @param id             the record's id
+     * @param workspaceId    the workspace
+     * @param key            the canonical key of the question
+     * @param question       the question as it was worded now
+     * @param uncoveredTerms the terms the answer did not cover
+     * @param answered       whether the workspace answered it
+     * @param askedAt        the instant of the asking, in epoch millis
+     * @return the record as it stands after the fold
+     * @throws SQLException when the record cannot be read or written
+     */
+    private AskedQuestion foldAskedQuestion(String id, String workspaceId, String key,
+                                             String question, List<String> uncoveredTerms,
+                                             boolean answered, long askedAt) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement(
                 "SELECT times_asked, answered, first_asked_at, last_asked_at, status, "
                         + "resolution_note FROM asked_question WHERE id = ?")) {
@@ -2941,8 +2996,6 @@ public final class KnowledgeStore implements AutoCloseable {
                             null, null, null);
                 }
             }
-        } catch (SQLException e) {
-            throw new IllegalStateException("Failed to read the asked question", e);
         }
         try (PreparedStatement ps = connection.prepareStatement(
                 "INSERT INTO asked_question(id, workspace_id, canonical_key, question, "
@@ -2963,8 +3016,6 @@ public final class KnowledgeStore implements AutoCloseable {
                     : null);
             ps.setInt(11, answered ? 1 : 0);
             ps.executeUpdate();
-        } catch (SQLException e) {
-            throw new IllegalStateException("Failed to record the asked question", e);
         }
         return new AskedQuestion(id, workspaceId, key, question, uncoveredTerms, 1, answered,
                 Instant.ofEpochMilli(askedAt).toString(), Instant.ofEpochMilli(askedAt).toString(),
