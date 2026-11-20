@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.epistemic.PremiseSameAssertionAndAmbiguityTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:59:02.067Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="5.122">
+  <properties/>
+  <testcase name="T1: the premise that repeats the claim the workspace calls false is refused" classname="io.matrix.knowledge.epistemic.PremiseSameAssertionAndAmbiguityTest" time="0.055"/>
+  <testcase name="T2: accounts of the subject that disagree make the question ambiguous" classname="io.matrix.knowledge.epistemic.PremiseSameAssertionAndAmbiguityTest" time="4.958"/>
+  <testcase name="T1: a premise about the same subject that states another proposition is not false" classname="io.matrix.knowledge.epistemic.PremiseSameAssertionAndAmbiguityTest" time="0.053"/>
+  <testcase name="T1: the same premise in Russian is refused as well" classname="io.matrix.knowledge.epistemic.PremiseSameAssertionAndAmbiguityTest" time="0.055"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

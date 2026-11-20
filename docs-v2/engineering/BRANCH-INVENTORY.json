@@ -1,0 +1,2100 @@
+{
+  "document": "BRANCH-INVENTORY",
+  "generated_at": "2026-11-15T18:00:00+03:00",
+  "repository": "https://github.com/AlexanderNarbaev/agi",
+  "measured_at": {
+    "origin_heads": 19,
+    "gitverse_heads": 2,
+    "local_stale_tracking_refs": 5,
+    "total_refs_covered": 27,
+    "open_pull_requests": 0,
+    "worktrees": 0,
+    "default_branch": "develop",
+    "delete_branch_on_merge": false,
+    "ruleset": "Protected main (id 20469548)",
+    "protected_branches": [
+      "develop"
+    ]
+  },
+  "classification_policy": {
+    "W46_boundary_commit": "6c003e05",
+    "W46_boundary_date": "2026-11-05",
+    "owner_decision": "OD-054 of 2026-11-15",
+    "conditions_for_PRUNE_ELIGIBLE": [
+      "the branch is post-W46",
+      "its pull request is closed AND merged",
+      "it holds no unique unrecovered content (proved by the branch tip's tree being byte-identical to the PR merge commit's tree)",
+      "no open pull request and no worktree depends on it",
+      "a verified durable recovery reference exists: an archive tag pushed to origin AND a git bundle with a manifest and its sha256, whose restoration was proven in a temporary independent clone"
+    ]
+  },
+  "recovery_material": {
+    "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+    "bundle_bytes": 968683,
+    "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+    "manifest": "/home/alexandr-narbaev/branch-recovery/MANIFEST.md",
+    "restoration_proof": "a bare, blob-filtered clone of https://github.com/AlexanderNarbaev/agi.git was created in /tmp/prune-proof/independent.git and the bundle was fetched into it; all seven archived tips were verified to peel to the recorded SHA",
+    "restoration_proof_result": "7 of 7 archived tips restored from the bundle into the independent clone; every tip matched the recorded SHA and the recorded tree",
+    "manifest_sha256_file": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle.sha256"
+  },
+  "counts": {
+    "KEEP": 20,
+    "PRUNE-ELIGIBLE": 5,
+    "OWNER-QUESTION": 2
+  },
+  "branches": [
+    {
+      "name": "dependabot/npm_and_yarn/matrix-web-ui/next-16.4.1",
+      "remote": "origin",
+      "live_on_the_remote": true,
+      "tip_sha": "5da72c360d7031cf814d8b9621ff8f659db10025",
+      "ref": "origin/dependabot/npm_and_yarn/matrix-web-ui/next-16.4.1",
+      "tip_committed_at": "2026-11-06T17:59:55Z",
+      "tip_subject": "build(deps): bump next from 16.3.5 to 16.4.1 in /matrix-web-ui",
+      "unique_commits_vs_develop": 0,
+      "unique_commits": [],
+      "first_unique_commit_at": null,
+      "tip_is_ancestor_of_develop": true,
+      "tree_diff_files_vs_develop": 422,
+      "tree_diff_shortstat_vs_develop": "",
+      "tags_at_tip": [],
+      "pull_requests": [
+        {
+          "number": 43,
+          "state": "CLOSED",
+          "base": "main",
+          "merged_at": null,
+          "closed_at": "2026-11-13T04:33:52Z",
+          "merge_commit": null,
+          "title": "build(deps): bump next from 16.3.5 to 16.4.1 in /matrix-web-ui"
+        }
+      ],
+      "branch_tip_tree_identical_to_pr_merge_commit": null,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "KEEP",
+      "reason": "a dependabot branch; the owner's directive preserves the dependabot branches unconditionally",
+      "recovery": {
+        "archive_tag": "archive/branch/dependabot-npm_and_yarn-matrix-web-ui-next-16.4.1-20261115",
+        "archive_tag_exists_locally": false,
+        "archive_tag_pushed_to_origin": false,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/dependabot-npm_and_yarn-matrix-web-ui-next-16.4.1-20261115:refs/tags/archive/branch/dependabot-npm_and_yarn-matrix-web-ui-next-16.4.1-20261115",
+          "git branch dependabot/npm_and_yarn/matrix-web-ui/next-16.4.1 refs/tags/archive/branch/dependabot-npm_and_yarn-matrix-web-ui-next-16.4.1-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch dependabot/npm_and_yarn/matrix-web-ui/next-16.4.1 refs/tags/archive/branch/dependabot-npm_and_yarn-matrix-web-ui-next-16.4.1-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": false,
+        "why": "the branch is preserved; no recovery reference was needed or created"
+      }
+    },
+    {
+      "name": "dependabot/npm_and_yarn/matrix-web-ui/sharp-0.35.5",
+      "remote": "origin",
+      "live_on_the_remote": true,
+      "tip_sha": "c36367def6a4bfc8adb12ae53ec6244c6dfea03e",
+      "ref": "origin/dependabot/npm_and_yarn/matrix-web-ui/sharp-0.35.5",
+      "tip_committed_at": "2026-11-06T17:58:19Z",
+      "tip_subject": "build(deps): bump sharp from 0.35.4 to 0.35.5 in /matrix-web-ui",
+      "unique_commits_vs_develop": 0,
+      "unique_commits": [],
+      "first_unique_commit_at": null,
+      "tip_is_ancestor_of_develop": true,
+      "tree_diff_files_vs_develop": 423,
+      "tree_diff_shortstat_vs_develop": "",
+      "tags_at_tip": [],
+      "pull_requests": [
+        {
+          "number": 46,
+          "state": "CLOSED",
+          "base": "main",
+          "merged_at": null,
+          "closed_at": "2026-11-13T04:33:58Z",
+          "merge_commit": null,
+          "title": "build(deps): bump sharp from 0.35.4 to 0.35.5 in /matrix-web-ui"
+        }
+      ],
+      "branch_tip_tree_identical_to_pr_merge_commit": null,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "KEEP",
+      "reason": "a dependabot branch; the owner's directive preserves the dependabot branches unconditionally",
+      "recovery": {
+        "archive_tag": "archive/branch/dependabot-npm_and_yarn-matrix-web-ui-sharp-0.35.5-20261115",
+        "archive_tag_exists_locally": false,
+        "archive_tag_pushed_to_origin": false,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/dependabot-npm_and_yarn-matrix-web-ui-sharp-0.35.5-20261115:refs/tags/archive/branch/dependabot-npm_and_yarn-matrix-web-ui-sharp-0.35.5-20261115",
+          "git branch dependabot/npm_and_yarn/matrix-web-ui/sharp-0.35.5 refs/tags/archive/branch/dependabot-npm_and_yarn-matrix-web-ui-sharp-0.35.5-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch dependabot/npm_and_yarn/matrix-web-ui/sharp-0.35.5 refs/tags/archive/branch/dependabot-npm_and_yarn-matrix-web-ui-sharp-0.35.5-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": false,
+        "why": "the branch is preserved; no recovery reference was needed or created"
+      }
+    },
+    {
+      "name": "develop",
+      "remote": "origin",
+      "live_on_the_remote": true,
+      "tip_sha": "c5853ac3af9b11f5bc3859cac66cfc97e50514f2",
+      "ref": "origin/develop",
+      "tip_committed_at": "2026-11-15T16:42:18+03:00",
+      "tip_subject": "WAL: the EPISTEMIC-INTEGRITY plan, evidence ledger and question register are written down",
+      "unique_commits_vs_develop": 0,
+      "unique_commits": [],
+      "first_unique_commit_at": null,
+      "tip_is_ancestor_of_develop": true,
+      "tree_diff_files_vs_develop": 0,
+      "tree_diff_shortstat_vs_develop": "",
+      "tags_at_tip": [],
+      "pull_requests": [
+        {
+          "number": 61,
+          "state": "MERGED",
+          "base": "main",
+          "merged_at": "2026-11-15T11:43:33Z",
+          "closed_at": "2026-11-15T11:43:33Z",
+          "merge_commit": "26c549c4e425000f2d6aa197df407dbf2002b443",
+          "title": "Release: CONCEPT-TO-ACTION — the bounded action is served, the retrieval and the learning evidence are measured"
+        },
+        {
+          "number": 59,
+          "state": "MERGED",
+          "base": "main",
+          "merged_at": "2026-11-14T21:16:45Z",
+          "closed_at": "2026-11-14T21:16:46Z",
+          "merge_commit": "724ea537a24a96be5fdae24bdf6da716abcbe44f",
+          "title": "Release: EVID-BASE — the release record, the consistency checker in the gate, and the registers in truth"
+        },
+        {
+          "number": 56,
+          "state": "MERGED",
+          "base": "main",
+          "merged_at": "2026-11-14T17:40:46Z",
+          "closed_at": "2026-11-14T17:40:46Z",
+          "merge_commit": "3266621840c472ff55af397819c6e3cca4d47de3",
+          "title": "Release: EVID-BASE — measured retrieval, the learning evidence base, and one real bounded action"
+        },
+        {
+          "number": 52,
+          "state": "MERGED",
+          "base": "main",
+          "merged_at": "2026-11-14T09:28:12Z",
+          "closed_at": "2026-11-14T09:28:12Z",
+          "merge_commit": "1dc0153771fd9bf922771524562e91def52a7244",
+          "title": "W53: the registers name the release's final commits"
+        },
+        {
+          "number": 51,
+          "state": "MERGED",
+          "base": "main",
+          "merged_at": "2026-11-14T09:03:31Z",
+          "closed_at": "2026-11-14T09:03:31Z",
+          "merge_commit": "c4cee8abb1edfa27fcc9b78fd1320a37a7db7146",
+          "title": "W53: the release record - the wave is in main, and the two branches hold one project"
+        },
+        {
+          "number": 50,
+          "state": "MERGED",
+          "base": "main",
+          "merged_at": "2026-11-14T08:13:37Z",
+          "closed_at": "2026-11-14T08:13:37Z",
+          "merge_commit": "bcdd1a0a2f13471deb62b9753dbeee7617f15978",
+          "title": "W53: the distributed cognition wave — the bounded task, its adjudication, the durable trace, and the web UI's dependency bumps"
+        },
+        {
+          "number": 49,
+          "state": "MERGED",
+          "base": "main",
+          "merged_at": "2026-11-09T10:52:13Z",
+          "closed_at": "2026-11-09T10:52:13Z",
+          "merge_commit": "7709dc9e5ebd3bd641124ad2a3f6bb053ac2dab6",
+          "title": "W52–W53: the canonical path, the second bridge direction, the reusable procedure, and the registers in truth"
+        },
+        {
+          "number": 48,
+          "state": "MERGED",
+          "base": "main",
+          "merged_at": "2026-11-09T06:53:06Z",
+          "closed_at": "2026-11-09T06:53:06Z",
+          "merge_commit": "3ef8a5c81c1e4de1c969cb6007ea3eae22c488c7",
+          "title": "W51: the unified cognitive runtime — the bridge between the chains, the world-state memory, the plugins and the measured Java/C boundary"
+        },
+        {
+          "number": 47,
+          "state": "MERGED",
+          "base": "main",
+          "merged_at": "2026-11-07T19:31:20Z",
+          "closed_at": "2026-11-07T19:31:20Z",
+          "merge_commit": "67b3410d21f3e895e02b93713952ccdcfa4f59c5",
+          "title": "W50: the MATRIX local evidence-grounded demonstrator — learns, refuses a false premise, revises its model"
+        },
+        {
+          "number": 44,
+          "state": "MERGED",
+          "base": "main",
+          "merged_at": "2026-11-06T17:57:02Z",
+          "closed_at": "2026-11-06T17:57:02Z",
+          "merge_commit": "79045c57cc55cc275caaf3d94afa433b469ae339",
+          "title": "W37.5 → W49: the public face, the autonomy consumer, and the reproducible CI"
+        },
+        {
+          "number": 14,
+          "state": "MERGED",
+          "base": "release/v1.0",
+          "merged_at": "2026-09-25T11:54:45Z",
+          "closed_at": "2026-09-25T11:54:45Z",
+          "merge_commit": "678b7091b4322d74f5c1f04dd3f40ec60dbf3d28",
+          "title": "release: Bring release/v1.0 up to date (4 Liquid Federation research artifacts)"
+        },
+        {
+          "number": 13,
+          "state": "CLOSED",
+          "base": "feature/t-01-module-foundation",
+          "merged_at": null,
+          "closed_at": "2026-09-25T11:48:37Z",
+          "merge_commit": null,
+          "title": "Develop"
+        }
+      ],
+      "pr_merge_commit": "26c549c4e425000f2d6aa197df407dbf2002b443",
+      "branch_tip_tree_identical_to_pr_merge_commit": false,
+      "protected_on_github": true,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "KEEP",
+      "reason": "the working branch and the GitHub default branch, protected, and named by the owner's directive as a branch to keep",
+      "recovery": {
+        "archive_tag": "archive/branch/develop-20261115",
+        "archive_tag_exists_locally": false,
+        "archive_tag_pushed_to_origin": false,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/develop-20261115:refs/tags/archive/branch/develop-20261115",
+          "git branch develop refs/tags/archive/branch/develop-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch develop refs/tags/archive/branch/develop-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": false,
+        "why": "the branch is preserved; no recovery reference was needed or created"
+      }
+    },
+    {
+      "name": "docs/evid-base-integrated-state",
+      "remote": "origin",
+      "live_on_the_remote": true,
+      "tip_sha": "f484f3bc5cdeaa76c2516b4b71c65a032ddeacaa",
+      "ref": "origin/docs/evid-base-integrated-state",
+      "tip_committed_at": "2026-11-14T19:19:18+03:00",
+      "tip_subject": "docs(evid-base): the state names the integrated develop commit; the final report records PR #53's actual checks",
+      "unique_commits_vs_develop": 1,
+      "unique_commits": [
+        {
+          "sha": "f484f3bc5cdeaa76c2516b4b71c65a032ddeacaa",
+          "committed_at": "2026-11-14T19:19:18+03:00",
+          "subject": "docs(evid-base): the state names the integrated develop commit; the final report records PR #53's actual checks"
+        }
+      ],
+      "first_unique_commit_at": "2026-11-14T19:19:18+03:00",
+      "tip_is_ancestor_of_develop": false,
+      "tree_diff_files_vs_develop": 54,
+      "tree_diff_shortstat_vs_develop": "2 files changed, 28 insertions(+), 9 deletions(-)",
+      "tags_at_tip": [
+        "archive/branch/docs-evid-base-integrated-state-20261115",
+        "archive/branch/release-state-20261115"
+      ],
+      "pull_requests": [
+        {
+          "number": 55,
+          "state": "MERGED",
+          "base": "develop",
+          "merged_at": "2026-11-14T17:04:35Z",
+          "closed_at": "2026-11-14T17:04:35Z",
+          "merge_commit": "5ff4964aa2aa3054cae8d873c56e13f463fd3d8e",
+          "title": "EVID-BASE: the state names the integrated commit, and the report records the actual checks"
+        }
+      ],
+      "pr_merge_commit": "5ff4964aa2aa3054cae8d873c56e13f463fd3d8e",
+      "branch_tip_tree_identical_to_pr_merge_commit": true,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "PRUNE-ELIGIBLE",
+      "reason": "PR #55 merged 2026-11-14 (squash); the branch tip's tree is byte-identical to the PR merge commit 5ff4964a, so no content is unique; the one commit f484f3bc is preserved by the archive tag and the bundle",
+      "recovery_reference": {
+        "archive_tag": "archive/branch/docs-evid-base-integrated-state-20261115",
+        "archive_tag_pushed_to": "origin",
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle"
+      },
+      "recovery": {
+        "archive_tag": "archive/branch/docs-evid-base-integrated-state-20261115",
+        "archive_tag_exists_locally": true,
+        "archive_tag_pushed_to_origin": true,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/docs-evid-base-integrated-state-20261115:refs/tags/archive/branch/docs-evid-base-integrated-state-20261115",
+          "git branch docs/evid-base-integrated-state refs/tags/archive/branch/docs-evid-base-integrated-state-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch docs/evid-base-integrated-state refs/tags/archive/branch/docs-evid-base-integrated-state-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": true,
+        "clone": "git clone --bare --filter=blob:none --single-branch --branch develop https://github.com/AlexanderNarbaev/agi.git /tmp/prune-proof/independent.git",
+        "restored_tip": "f484f3bc5cdeaa76c2516b4b71c65a032ddeacaa",
+        "expected_tip": "f484f3bc5cdeaa76c2516b4b71c65a032ddeacaa",
+        "tip_matches": true,
+        "restored_tree": "39399ed955"
+      }
+    },
+    {
+      "name": "feature/concept-to-action",
+      "remote": "origin",
+      "live_on_the_remote": true,
+      "tip_sha": "6ff0612badf1733cfb4551b436d1a3bbbae7f6ea",
+      "ref": "origin/feature/concept-to-action",
+      "tip_committed_at": "2026-11-15T13:54:24+03:00",
+      "tip_subject": "WAL: the event append resolves a position taken by another writer instead of failing",
+      "unique_commits_vs_develop": 17,
+      "unique_commits": [
+        {
+          "sha": "c8c1ec239cfe1fe238956f5a36e9d40fca1edfca",
+          "committed_at": "2026-11-15T10:35:36+03:00",
+          "subject": "WAL: CONCEPT-TO-ACTION execution plan and Stage 0 reconnaissance"
+        },
+        {
+          "sha": "d15eb3340e99b31aebff552791b0f1fd6a90e095",
+          "committed_at": "2026-11-15T10:35:36+03:00",
+          "subject": "WAL: the artifact writer takes a root lease, bounds its trace, and verifies every record it acts on"
+        },
+        {
+          "sha": "9011782123d6df50e99d554c19c27053b5cc21e0",
+          "committed_at": "2026-11-15T10:44:24+03:00",
+          "subject": "WAL: the learning window's one-class collapse is diagnosed from the retained log"
+        },
+        {
+          "sha": "09489ecff55a850fb5ad16f4976ac904b074601d",
+          "committed_at": "2026-11-15T10:44:24+03:00",
+          "subject": "WAL: the concept coverage baseline is measured before any enrichment is proposed"
+        },
+        {
+          "sha": "16639c44755718c6523849511efc2c350de45f9d",
+          "committed_at": "2026-11-15T11:15:36+03:00",
+          "subject": "WAL: the bounded report action is served over one opt-in local-only route"
+        },
+        {
+          "sha": "6b485ef089c41edd8cc827943917aad0864dd4c3",
+          "committed_at": "2026-11-15T11:17:47+03:00",
+          "subject": "WAL: the frozen enrichment candidates are measured and none of them is promoted"
+        },
+        {
+          "sha": "cd40a97068b7212648d7b2a4715af93301aa25d4",
+          "committed_at": "2026-11-15T11:31:26+03:00",
+          "subject": "WAL: the bounded report route is demonstrated over real HTTP against the running server"
+        },
+        {
+          "sha": "0aef4596e8e75895485144512a9db73f8a015382",
+          "committed_at": "2026-11-15T11:32:43+03:00",
+          "subject": "WAL: the held-out set confirms the enrichment negative result on independent data"
+        },
+        {
+          "sha": "31410e5ebba15d36c7153c32d0a2ab84c588940c",
+          "committed_at": "2026-11-15T11:35:10+03:00",
+          "subject": "WAL: real learning evidence puts both classes into the production window and measures every representation"
+        },
+        {
+          "sha": "47c1c4ce0801d97b9317b88621db29eddccf3700",
+          "committed_at": "2026-11-15T11:39:21+03:00",
+          "subject": "WAL: the independent review's blockers are fixed — no deadlocked asking path, no poisoned trace, no path in a refusal"
+        },
+        {
+          "sha": "d68dd1b879eefea2463187b48812b1d8dae14448",
+          "committed_at": "2026-11-15T11:39:54+03:00",
+          "subject": "WAL: the review's claims about independence and staleness are corrected in the documents"
+        },
+        {
+          "sha": "2e91e8a8d33343a44f64a1599f4d26ab67944413",
+          "committed_at": "2026-11-15T11:47:35+03:00",
+          "subject": "WAL: the demonstration is re-run against the reviewed code and every check passes"
+        },
+        {
+          "sha": "4aa754ae92c73309d69dd26ce776ba95f8811f6d",
+          "committed_at": "2026-11-15T12:16:59+03:00",
+          "subject": "WAL: the metrics are corrected against a second freeze and both measurements are redone"
+        },
+        {
+          "sha": "1a5aef1573934794a2191fdc0d578bf6a67ff220",
+          "committed_at": "2026-11-15T12:17:37+03:00",
+          "subject": "WAL: the roadmap records the CONCEPT-TO-ACTION wave and the tasks its measurements created"
+        },
+        {
+          "sha": "aec6521f02beb9b63cf6c8dee1d36ed1871fc9d8",
+          "committed_at": "2026-11-15T12:22:35+03:00",
+          "subject": "WAL: the measured artefacts are refreshed at the branch head; no metric changes"
+        },
+        {
+          "sha": "3a9a95e96bb0fa14baa2ebb0497290eee8b05268",
+          "committed_at": "2026-11-15T12:30:41+03:00",
+          "subject": "WAL: the measured collection is opt-in and the projection helper reads the bits it claims to"
+        },
+        {
+          "sha": "6ff0612badf1733cfb4551b436d1a3bbbae7f6ea",
+          "committed_at": "2026-11-15T13:54:24+03:00",
+          "subject": "WAL: the event append resolves a position taken by another writer instead of failing"
+        }
+      ],
+      "first_unique_commit_at": "2026-11-15T10:35:36+03:00",
+      "tip_is_ancestor_of_develop": false,
+      "tree_diff_files_vs_develop": 7,
+      "tree_diff_shortstat_vs_develop": "43 files changed, 46475 insertions(+), 114 deletions(-)",
+      "tags_at_tip": [
+        "archive/branch/feature-concept-to-action-20261115"
+      ],
+      "pull_requests": [
+        {
+          "number": 60,
+          "state": "MERGED",
+          "base": "develop",
+          "merged_at": "2026-11-15T11:17:18Z",
+          "closed_at": "2026-11-15T11:17:18Z",
+          "merge_commit": "dfd24b44ceca6524781aa5791c2a2bc035a57457",
+          "title": "WAL: CONCEPT-TO-ACTION — the bounded action is served, the retrieval and the learning evidence are measured"
+        }
+      ],
+      "pr_merge_commit": "dfd24b44ceca6524781aa5791c2a2bc035a57457",
+      "branch_tip_tree_identical_to_pr_merge_commit": true,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "PRUNE-ELIGIBLE",
+      "reason": "PR #60 merged 2026-11-15 (squash); the branch tip's tree is byte-identical to the PR merge commit dfd24b44; 17 commits are preserved by the archive tag and the bundle",
+      "recovery_reference": {
+        "archive_tag": "archive/branch/feature-concept-to-action-20261115",
+        "archive_tag_pushed_to": "origin",
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle"
+      },
+      "recovery": {
+        "archive_tag": "archive/branch/feature-concept-to-action-20261115",
+        "archive_tag_exists_locally": true,
+        "archive_tag_pushed_to_origin": true,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/feature-concept-to-action-20261115:refs/tags/archive/branch/feature-concept-to-action-20261115",
+          "git branch feature/concept-to-action refs/tags/archive/branch/feature-concept-to-action-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch feature/concept-to-action refs/tags/archive/branch/feature-concept-to-action-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": true,
+        "clone": "git clone --bare --filter=blob:none --single-branch --branch develop https://github.com/AlexanderNarbaev/agi.git /tmp/prune-proof/independent.git",
+        "restored_tip": "6ff0612badf1733cfb4551b436d1a3bbbae7f6ea",
+        "expected_tip": "6ff0612badf1733cfb4551b436d1a3bbbae7f6ea",
+        "tip_matches": true,
+        "restored_tree": "1e70749981"
+      }
+    },
+    {
+      "name": "feature/evid-base-evidence-to-action",
+      "remote": "origin",
+      "live_on_the_remote": true,
+      "tip_sha": "43fba12464cfd45359b0153cc1a4bfbe9b64bfee",
+      "ref": "origin/feature/evid-base-evidence-to-action",
+      "tip_committed_at": "2026-11-14T18:54:04+03:00",
+      "tip_subject": "docs(evid-base): the ledger describes the pre-existing Liquid brace issue without a literal sequence, so the documentation build can render it",
+      "unique_commits_vs_develop": 19,
+      "unique_commits": [
+        {
+          "sha": "8050de55138a99e0760a8c088075d60c68ba4690",
+          "committed_at": "2026-11-14T16:15:59+03:00",
+          "subject": "evidence: EVID-BASE stage-0 baseline (remote state, hardware, 18/29 reproduced)"
+        },
+        {
+          "sha": "1687de91268a71abda753572084be3aa5d1bccaf",
+          "committed_at": "2026-11-14T16:18:24+03:00",
+          "subject": "docs(canonical): reconcile current state with the released W53 (PROJECT-STATE, ROADMAP, RUNTIME-TOPOLOGY, W53 reports, READMEs, risk evidence)"
+        },
+        {
+          "sha": "de87afbf45fa94b3b7032cc4594b319f71f96927",
+          "committed_at": "2026-11-14T16:20:09+03:00",
+          "subject": "verify: current-state consistency check (release claims, topology crossing, stale citations) + negative-control selftest + initiative ledger"
+        },
+        {
+          "sha": "b0ef337619dfeff0ebfe5e69b0738a9974ee18db",
+          "committed_at": "2026-11-14T16:20:37+03:00",
+          "subject": "evidence: record the validator status after stage 1 (pre-existing docs-validator red separated from this work)"
+        },
+        {
+          "sha": "51b5d3a0145f05ca468171bd188b4159e2ed492e",
+          "committed_at": "2026-11-14T16:23:31+03:00",
+          "subject": "feat(knowledge): configurable retrieval floor (matrix.retrieval.minimum-coverage) for the E2 parameter sweep; default unchanged; contract test"
+        },
+        {
+          "sha": "4271674cfcebb954323476cf378d3f3838f7cbc4",
+          "committed_at": "2026-11-14T16:53:00+03:00",
+          "subject": "evidence(E2): the floor sweep and the citation-floor experiment - measured trade-off, one rejected-with-numbers negative result, no production change beyond the inert knob"
+        },
+        {
+          "sha": "b00e7e0b49c22460b30200d233786e09746c0400",
+          "committed_at": "2026-11-14T17:07:18+03:00",
+          "subject": "evidence(E2): candidate recall measured (18/18 gold claims present and citable; H2 refuted; H3 confirmed as the residual; H4 for F-02/R-04/R-05)"
+        },
+        {
+          "sha": "61bcf6527952d20cb966082b7cc92f9b59af19ff",
+          "committed_at": "2026-11-14T17:19:16+03:00",
+          "subject": "evidence(E2): the middle-floor sweep rules the threshold out (no separable floor); the residual is a semantic-enrichment gap, not a ranking patch"
+        },
+        {
+          "sha": "48359c25a764259a0c62308b042aaff9a1cde532",
+          "committed_at": "2026-11-14T17:19:37+03:00",
+          "subject": "evidence(E1): reproducible learning-evidence dataset - real log referenced by path+sha256 (108 entries, both classes), 144 controlled synthetic fixtures with a documented content rule, provenance manifest"
+        },
+        {
+          "sha": "3904c17b3390571e27e0c492c0e0c0f204dffaf5",
+          "committed_at": "2026-11-14T17:21:49+03:00",
+          "subject": "evidence(E1): the learning-evidence harness and its measured result - real window is one-class (20/20), 24 distinct features with 1 cross-label collision, no measurable fold-vs-projection gap; the A/B/C decision is INSUFFICIENT_DATA"
+        },
+        {
+          "sha": "47e9df144eb72830306bb4741d659e14667b2f3e",
+          "committed_at": "2026-11-14T17:22:21+03:00",
+          "subject": "design(B3): the evidence-to-action plan anchored on the existing action contract, audit hash chain and workbench routes; boundary, crash-boundary tests and demonstration defined"
+        },
+        {
+          "sha": "a07fb500883e9eacc396f4f2f288f6ca21b22d33",
+          "committed_at": "2026-11-14T17:26:07+03:00",
+          "subject": "feat(actions): the bounded Evidence-to-Action file action - canonical-path/symlink/size boundary, atomic staged write, append-only trace, idempotent identity and crash recovery; 11 boundary tests and a real end-to-end demonstration with refusals"
+        },
+        {
+          "sha": "062991265f8be15863f943f245e46eef88db2ec7",
+          "committed_at": "2026-11-14T17:43:21+03:00",
+          "subject": "fix(actions): resolve the independent review's findings - symlink-planted staged path and index refused (NOFOLLOW+CREATE_NEW), crash window between move and COMMITTED treated as a commit, replay re-hashes and reconciles tampered/missing artifacts, identity bound to one artifact name, exact staged-name recovery (never substring), torn index tolerated, records validated on read, residue cleaned, trace-incomplete distinguished, strict JSON, artifact budget; E1 informative-bit counter fixed + leakage asserted; unreproducible E2 cite artifacts removed and all numbers corrected to the artifacts"
+        },
+        {
+          "sha": "b9a93dfef22de2d69c2f5ccdda1b67b47b72ba59",
+          "committed_at": "2026-11-14T17:51:55+03:00",
+          "subject": "docs(evid-base): policy-conformant statuses (RESEARCH/REFERENCE), INDEX row reaching every EVID-BASE document; the ledger's snapshot lag is left for the final pre-PR commit"
+        },
+        {
+          "sha": "e6668c126643571aa4dfcaacfa84c42c456ca501",
+          "committed_at": "2026-11-14T17:55:58+03:00",
+          "subject": "fix(actions): close the round-2 findings - cross-identity takeover of the crash-window commit refused, budget after identity checks (a replay is not a new write), torn-line newline repair, hard-linked index refused, control-character names refused, hashed staged names, staged-append residue cleanup; 26 boundary tests + demo (27); runbook --rerun-tasks + artifact assertions; E2 harness mode leftovers removed; docs restated from the artifacts"
+        },
+        {
+          "sha": "d678cdad20a894d4fbaac04ff13041b9c07bdbbe",
+          "committed_at": "2026-11-14T17:57:39+03:00",
+          "subject": "fix(actions): close the round-2 residuals - replay at the budget, STAGED-append residue test, refused-index recovery state, exact bit-64 counter test; docs: exact test counts (29+1), latency range, concurrency/denial/hard-link/unbounded-trace residual risks stated"
+        },
+        {
+          "sha": "6481ac6e8f087d3c5ebebe70d8c9649cac220553",
+          "committed_at": "2026-11-14T18:22:09+03:00",
+          "subject": "docs(evid-base): the final report; Article-I permission for the journal timestamps (the decision-path audit flags them, and they decide nothing); snapshot re-pointed"
+        },
+        {
+          "sha": "53beb67a254c1ea9dcd3e871ea161e24b59e171d",
+          "committed_at": "2026-11-14T18:49:00+03:00",
+          "subject": "fix(scripts): keep the clean-code gate at its accepted baseline - the runbook's message loses its numeric literal and the negative-control fixture names its PR number as a constant"
+        },
+        {
+          "sha": "43fba12464cfd45359b0153cc1a4bfbe9b64bfee",
+          "committed_at": "2026-11-14T18:54:04+03:00",
+          "subject": "docs(evid-base): the ledger describes the pre-existing Liquid brace issue without a literal sequence, so the documentation build can render it"
+        }
+      ],
+      "first_unique_commit_at": "2026-11-14T16:15:59+03:00",
+      "tip_is_ancestor_of_develop": false,
+      "tree_diff_files_vs_develop": 54,
+      "tree_diff_shortstat_vs_develop": "46 files changed, 10479 insertions(+), 33 deletions(-)",
+      "tags_at_tip": [
+        "archive/branch/feature-evid-base-evidence-to-action-20261115"
+      ],
+      "pull_requests": [
+        {
+          "number": 53,
+          "state": "MERGED",
+          "base": "develop",
+          "merged_at": "2026-11-14T16:18:57Z",
+          "closed_at": "2026-11-14T16:18:58Z",
+          "merge_commit": "01d4cdc0122350a3083fdbfdb47c4e9f48eec9f0",
+          "title": "EVID-BASE: measured retrieval evidence, the learning evidence base, and one real bounded action"
+        }
+      ],
+      "pr_merge_commit": "01d4cdc0122350a3083fdbfdb47c4e9f48eec9f0",
+      "branch_tip_tree_identical_to_pr_merge_commit": true,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "PRUNE-ELIGIBLE",
+      "reason": "PR #53 merged 2026-11-14 (squash); the branch tip's tree is byte-identical to the PR merge commit 01d4cdc0; 19 commits are preserved by the archive tag and the bundle",
+      "recovery_reference": {
+        "archive_tag": "archive/branch/feature-evid-base-evidence-to-action-20261115",
+        "archive_tag_pushed_to": "origin",
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle"
+      },
+      "recovery": {
+        "archive_tag": "archive/branch/feature-evid-base-evidence-to-action-20261115",
+        "archive_tag_exists_locally": true,
+        "archive_tag_pushed_to_origin": true,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/feature-evid-base-evidence-to-action-20261115:refs/tags/archive/branch/feature-evid-base-evidence-to-action-20261115",
+          "git branch feature/evid-base-evidence-to-action refs/tags/archive/branch/feature-evid-base-evidence-to-action-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch feature/evid-base-evidence-to-action refs/tags/archive/branch/feature-evid-base-evidence-to-action-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": true,
+        "clone": "git clone --bare --filter=blob:none --single-branch --branch develop https://github.com/AlexanderNarbaev/agi.git /tmp/prune-proof/independent.git",
+        "restored_tip": "43fba12464cfd45359b0153cc1a4bfbe9b64bfee",
+        "expected_tip": "43fba12464cfd45359b0153cc1a4bfbe9b64bfee",
+        "tip_matches": true,
+        "restored_tree": "759517458d"
+      }
+    },
+    {
+      "name": "feature/evid-base-release-record",
+      "remote": "origin",
+      "live_on_the_remote": true,
+      "tip_sha": "6d751ae7de8ba4f84663ca6829a9a8bb11160ce3",
+      "ref": "origin/feature/evid-base-release-record",
+      "tip_committed_at": "2026-11-14T23:35:31+03:00",
+      "tip_subject": "WAL: the register's numbers are re-measured, and the review's last notes are closed",
+      "unique_commits_vs_develop": 6,
+      "unique_commits": [
+        {
+          "sha": "b949462bd75f60f9ae2494e759fc5ef39b76d204",
+          "committed_at": "2026-11-14T21:51:30+03:00",
+          "subject": "WAL: the release record, the held-out statement, and the checker in the gate"
+        },
+        {
+          "sha": "99d9ef6d59eb99b8838be276ad8e777f4939900f",
+          "committed_at": "2026-11-14T22:09:06+03:00",
+          "subject": "WAL: the release record corrected, the registers brought to the release, the control made real"
+        },
+        {
+          "sha": "8f07e514b54313b05e052337ad4103108e000f4b",
+          "committed_at": "2026-11-14T22:09:31+03:00",
+          "subject": "WAL: the self-test's pull-request number is a named constant, so the gate's baseline does not move"
+        },
+        {
+          "sha": "a845adc4a60236d109f7840db89e1ebdad894bbd",
+          "committed_at": "2026-11-14T22:31:26+03:00",
+          "subject": "WAL: the checker's pattern sees the form the documents use, and the registers stop contradicting themselves"
+        },
+        {
+          "sha": "2a9ded9752768c6d2c2fabfc7ae562e97ad0353c",
+          "committed_at": "2026-11-14T23:03:35+03:00",
+          "subject": "WAL: the canonical register's row is whole again, and the gate's comment says what it does"
+        },
+        {
+          "sha": "6d751ae7de8ba4f84663ca6829a9a8bb11160ce3",
+          "committed_at": "2026-11-14T23:35:31+03:00",
+          "subject": "WAL: the register's numbers are re-measured, and the review's last notes are closed"
+        }
+      ],
+      "first_unique_commit_at": "2026-11-14T21:51:30+03:00",
+      "tip_is_ancestor_of_develop": false,
+      "tree_diff_files_vs_develop": 49,
+      "tree_diff_shortstat_vs_develop": "7 files changed, 384 insertions(+), 39 deletions(-)",
+      "tags_at_tip": [
+        "archive/branch/feature-evid-base-release-record-20261115"
+      ],
+      "pull_requests": [
+        {
+          "number": 58,
+          "state": "MERGED",
+          "base": "develop",
+          "merged_at": "2026-11-14T21:06:06Z",
+          "closed_at": "2026-11-14T21:06:06Z",
+          "merge_commit": "5d0967621271e582f6898557135a6486b78aedb3",
+          "title": "EVID-BASE: the release record, the held-out statement, and the checker in the gate"
+        }
+      ],
+      "pr_merge_commit": "5d0967621271e582f6898557135a6486b78aedb3",
+      "branch_tip_tree_identical_to_pr_merge_commit": true,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "PRUNE-ELIGIBLE",
+      "reason": "PR #58 merged 2026-11-14 (squash); the branch tip's tree is byte-identical to the PR merge commit 5d096762; 6 commits are preserved by the archive tag and the bundle",
+      "recovery_reference": {
+        "archive_tag": "archive/branch/feature-evid-base-release-record-20261115",
+        "archive_tag_pushed_to": "origin",
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle"
+      },
+      "recovery": {
+        "archive_tag": "archive/branch/feature-evid-base-release-record-20261115",
+        "archive_tag_exists_locally": true,
+        "archive_tag_pushed_to_origin": true,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/feature-evid-base-release-record-20261115:refs/tags/archive/branch/feature-evid-base-release-record-20261115",
+          "git branch feature/evid-base-release-record refs/tags/archive/branch/feature-evid-base-release-record-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch feature/evid-base-release-record refs/tags/archive/branch/feature-evid-base-release-record-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": true,
+        "clone": "git clone --bare --filter=blob:none --single-branch --branch develop https://github.com/AlexanderNarbaev/agi.git /tmp/prune-proof/independent.git",
+        "restored_tip": "6d751ae7de8ba4f84663ca6829a9a8bb11160ce3",
+        "expected_tip": "6d751ae7de8ba4f84663ca6829a9a8bb11160ce3",
+        "tip_matches": true,
+        "restored_tree": "6051348d65"
+      }
+    },
+    {
+      "name": "feature/mind-w1-cognitive-orchestration",
+      "remote": "origin",
+      "live_on_the_remote": true,
+      "tip_sha": "1cc0df97226e1702c11bcfed363d997c604bd483",
+      "ref": "origin/feature/mind-w1-cognitive-orchestration",
+      "tip_committed_at": "2026-09-25T17:50:16+03:00",
+      "tip_subject": "feat(brain-runtime): MIND-W2 — Persistent Mind + review-fix deltas",
+      "unique_commits_vs_develop": 3,
+      "unique_commits": [
+        {
+          "sha": "13df11719feeb52efd0d0e53d41df95280a501ee",
+          "committed_at": "2026-09-25T16:28:22+03:00",
+          "subject": "feat(brain-runtime): MIND-W1 — Cognitive Orchestration Layer (MindCycle)"
+        },
+        {
+          "sha": "4470b56ef253e9e909db9a488c6b18e903f937bb",
+          "committed_at": "2026-09-25T16:29:55+03:00",
+          "subject": "docs(session): MIND-W1 Cognitive Orchestration Layer delivered"
+        },
+        {
+          "sha": "1cc0df97226e1702c11bcfed363d997c604bd483",
+          "committed_at": "2026-09-25T17:50:16+03:00",
+          "subject": "feat(brain-runtime): MIND-W2 — Persistent Mind + review-fix deltas"
+        }
+      ],
+      "first_unique_commit_at": "2026-09-25T16:28:22+03:00",
+      "tip_is_ancestor_of_develop": false,
+      "tree_diff_files_vs_develop": 1752,
+      "tree_diff_shortstat_vs_develop": "24 files changed, 2502 insertions(+), 162 deletions(-)",
+      "tags_at_tip": [],
+      "pull_requests": [
+        {
+          "number": 17,
+          "state": "CLOSED",
+          "base": "develop",
+          "merged_at": null,
+          "closed_at": "2026-09-25T14:54:10Z",
+          "merge_commit": null,
+          "title": "feat(brain-runtime): MIND-W2 — Persistent Mind (NDJSON-backed HDC store)"
+        },
+        {
+          "number": 16,
+          "state": "MERGED",
+          "base": "develop",
+          "merged_at": "2026-09-25T13:41:53Z",
+          "closed_at": "2026-09-25T13:41:53Z",
+          "merge_commit": "1374c48071b197064857db99ae672a67a796145b",
+          "title": "feat(brain-runtime): MIND-W1 — Cognitive Orchestration Layer (MindCycle)"
+        }
+      ],
+      "pr_merge_commit": "1374c48071b197064857db99ae672a67a796145b",
+      "branch_tip_tree_identical_to_pr_merge_commit": false,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "KEEP",
+      "reason": "pre-W46 (the W46 consolidation commit is 6c003e05 of 2026-11-05; this branch's work is from 2026-09-25); the owner's directive preserves every pre-W46 branch unconditionally",
+      "recovery": {
+        "archive_tag": "archive/branch/feature-mind-w1-cognitive-orchestration-20261115",
+        "archive_tag_exists_locally": false,
+        "archive_tag_pushed_to_origin": false,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/feature-mind-w1-cognitive-orchestration-20261115:refs/tags/archive/branch/feature-mind-w1-cognitive-orchestration-20261115",
+          "git branch feature/mind-w1-cognitive-orchestration refs/tags/archive/branch/feature-mind-w1-cognitive-orchestration-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch feature/mind-w1-cognitive-orchestration refs/tags/archive/branch/feature-mind-w1-cognitive-orchestration-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": false,
+        "why": "the branch is preserved; no recovery reference was needed or created"
+      }
+    },
+    {
+      "name": "feature/mind-w2-persistent-mind",
+      "remote": "origin",
+      "live_on_the_remote": true,
+      "tip_sha": "7517840fac70ae30c118522352e33fc59c0d2e76",
+      "ref": "origin/feature/mind-w2-persistent-mind",
+      "tip_committed_at": "2026-09-25T18:11:02+03:00",
+      "tip_subject": "feat(brain-runtime): MIND-W3 — Sleep & Consolidation Engine",
+      "unique_commits_vs_develop": 2,
+      "unique_commits": [
+        {
+          "sha": "ca2e2941105fab58cb51c3523ff3dab6701ef2ea",
+          "committed_at": "2026-09-25T17:53:07+03:00",
+          "subject": "feat(brain-runtime): MIND-W2 — Persistent Mind + review-fix deltas"
+        },
+        {
+          "sha": "7517840fac70ae30c118522352e33fc59c0d2e76",
+          "committed_at": "2026-09-25T18:11:02+03:00",
+          "subject": "feat(brain-runtime): MIND-W3 — Sleep & Consolidation Engine"
+        }
+      ],
+      "first_unique_commit_at": "2026-09-25T17:53:07+03:00",
+      "tip_is_ancestor_of_develop": false,
+      "tree_diff_files_vs_develop": 1754,
+      "tree_diff_shortstat_vs_develop": "15 files changed, 2136 insertions(+), 253 deletions(-)",
+      "tags_at_tip": [],
+      "pull_requests": [
+        {
+          "number": 19,
+          "state": "CLOSED",
+          "base": "develop",
+          "merged_at": null,
+          "closed_at": "2026-09-25T15:13:07Z",
+          "merge_commit": null,
+          "title": "feat(brain-runtime): MIND-W3 — Sleep & Consolidation Engine"
+        },
+        {
+          "number": 18,
+          "state": "MERGED",
+          "base": "develop",
+          "merged_at": "2026-09-25T14:54:47Z",
+          "closed_at": "2026-09-25T14:54:47Z",
+          "merge_commit": "4d510640d6e78a89604bc39989aedb51ff38a6f9",
+          "title": "feat(brain-runtime): MIND-W2 — Persistent Mind (NDJSON-backed HDC store)"
+        }
+      ],
+      "pr_merge_commit": "4d510640d6e78a89604bc39989aedb51ff38a6f9",
+      "branch_tip_tree_identical_to_pr_merge_commit": false,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "KEEP",
+      "reason": "pre-W46 (the W46 consolidation commit is 6c003e05 of 2026-11-05; this branch's work is from 2026-09-25); the owner's directive preserves every pre-W46 branch unconditionally",
+      "recovery": {
+        "archive_tag": "archive/branch/feature-mind-w2-persistent-mind-20261115",
+        "archive_tag_exists_locally": false,
+        "archive_tag_pushed_to_origin": false,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/feature-mind-w2-persistent-mind-20261115:refs/tags/archive/branch/feature-mind-w2-persistent-mind-20261115",
+          "git branch feature/mind-w2-persistent-mind refs/tags/archive/branch/feature-mind-w2-persistent-mind-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch feature/mind-w2-persistent-mind refs/tags/archive/branch/feature-mind-w2-persistent-mind-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": false,
+        "why": "the branch is preserved; no recovery reference was needed or created"
+      }
+    },
+    {
+      "name": "feature/mind-w3-sleep-consolidation",
+      "remote": "origin",
+      "live_on_the_remote": true,
+      "tip_sha": "fd7c3137bfff288c7f7794b2a9413f77b0160427",
+      "ref": "origin/feature/mind-w3-sleep-consolidation",
+      "tip_committed_at": "2026-09-25T18:21:23+03:00",
+      "tip_subject": "feat(brain-runtime): MIND-W4 — Autonomy, Goals & Stimuli",
+      "unique_commits_vs_develop": 2,
+      "unique_commits": [
+        {
+          "sha": "7c4a1dda036b385d56699f157730bcae19c6fc1d",
+          "committed_at": "2026-09-25T18:12:40+03:00",
+          "subject": "feat(brain-runtime): MIND-W3 — Sleep & Consolidation Engine"
+        },
+        {
+          "sha": "fd7c3137bfff288c7f7794b2a9413f77b0160427",
+          "committed_at": "2026-09-25T18:21:23+03:00",
+          "subject": "feat(brain-runtime): MIND-W4 — Autonomy, Goals & Stimuli"
+        }
+      ],
+      "first_unique_commit_at": "2026-09-25T18:12:40+03:00",
+      "tip_is_ancestor_of_develop": false,
+      "tree_diff_files_vs_develop": 1756,
+      "tree_diff_shortstat_vs_develop": "10 files changed, 1581 insertions(+), 55 deletions(-)",
+      "tags_at_tip": [],
+      "pull_requests": [
+        {
+          "number": 21,
+          "state": "CLOSED",
+          "base": "develop",
+          "merged_at": null,
+          "closed_at": "2026-09-25T15:22:42Z",
+          "merge_commit": null,
+          "title": "feat(brain-runtime): MIND-W4 — Autonomy, Goals & Stimuli"
+        },
+        {
+          "number": 20,
+          "state": "MERGED",
+          "base": "develop",
+          "merged_at": "2026-09-25T15:13:14Z",
+          "closed_at": "2026-09-25T15:13:14Z",
+          "merge_commit": "af10ae0bd57df8f02d82956a3029abf75f3f988a",
+          "title": "feat(brain-runtime): MIND-W3 — Sleep & Consolidation Engine"
+        }
+      ],
+      "pr_merge_commit": "af10ae0bd57df8f02d82956a3029abf75f3f988a",
+      "branch_tip_tree_identical_to_pr_merge_commit": false,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "KEEP",
+      "reason": "pre-W46 (the W46 consolidation commit is 6c003e05 of 2026-11-05; this branch's work is from 2026-09-25); the owner's directive preserves every pre-W46 branch unconditionally",
+      "recovery": {
+        "archive_tag": "archive/branch/feature-mind-w3-sleep-consolidation-20261115",
+        "archive_tag_exists_locally": false,
+        "archive_tag_pushed_to_origin": false,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/feature-mind-w3-sleep-consolidation-20261115:refs/tags/archive/branch/feature-mind-w3-sleep-consolidation-20261115",
+          "git branch feature/mind-w3-sleep-consolidation refs/tags/archive/branch/feature-mind-w3-sleep-consolidation-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch feature/mind-w3-sleep-consolidation refs/tags/archive/branch/feature-mind-w3-sleep-consolidation-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": false,
+        "why": "the branch is preserved; no recovery reference was needed or created"
+      }
+    },
+    {
+      "name": "feature/mind-w6-gpu-acceleration",
+      "remote": "origin",
+      "live_on_the_remote": true,
+      "tip_sha": "8eed7711921c83084a88267aae1bd89bcc0ffe31",
+      "ref": "origin/feature/mind-w6-gpu-acceleration",
+      "tip_committed_at": "2026-09-25T18:44:47+03:00",
+      "tip_subject": "feat(brain-runtime): MIND-W6 — GPU Acceleration of MATRIX-native math",
+      "unique_commits_vs_develop": 3,
+      "unique_commits": [
+        {
+          "sha": "bf047d766a1863b9fffb6e648bb32f95b3bb36d8",
+          "committed_at": "2026-09-25T18:37:26+03:00",
+          "subject": "feat(brain-runtime): MIND-W5 — Distillation Factory"
+        },
+        {
+          "sha": "c30ffc23a4ad534b0d40c3300d21c46d319716a3",
+          "committed_at": "2026-09-25T18:37:26+03:00",
+          "subject": "docs(session): MIND-W5 — Distillation Factory delivered"
+        },
+        {
+          "sha": "8eed7711921c83084a88267aae1bd89bcc0ffe31",
+          "committed_at": "2026-09-25T18:44:47+03:00",
+          "subject": "feat(brain-runtime): MIND-W6 — GPU Acceleration of MATRIX-native math"
+        }
+      ],
+      "first_unique_commit_at": "2026-09-25T18:37:26+03:00",
+      "tip_is_ancestor_of_develop": false,
+      "tree_diff_files_vs_develop": 1754,
+      "tree_diff_shortstat_vs_develop": "7 files changed, 1190 insertions(+), 55 deletions(-)",
+      "tags_at_tip": [
+        "checkpoint/feature-mind-w5-distillation-factory-20261009-230349"
+      ],
+      "pull_requests": [
+        {
+          "number": 24,
+          "state": "CLOSED",
+          "base": "develop",
+          "merged_at": null,
+          "closed_at": "2026-09-25T15:46:03Z",
+          "merge_commit": null,
+          "title": "feat(brain-runtime): MIND-W6 — GPU Acceleration of MATRIX-native math"
+        }
+      ],
+      "branch_tip_tree_identical_to_pr_merge_commit": null,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "KEEP",
+      "reason": "pre-W46 (the W46 consolidation commit is 6c003e05 of 2026-11-05; this branch's work is from 2026-09-25); the owner's directive preserves every pre-W46 branch unconditionally",
+      "recovery": {
+        "archive_tag": "archive/branch/feature-mind-w6-gpu-acceleration-20261115",
+        "archive_tag_exists_locally": false,
+        "archive_tag_pushed_to_origin": false,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/feature-mind-w6-gpu-acceleration-20261115:refs/tags/archive/branch/feature-mind-w6-gpu-acceleration-20261115",
+          "git branch feature/mind-w6-gpu-acceleration refs/tags/archive/branch/feature-mind-w6-gpu-acceleration-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch feature/mind-w6-gpu-acceleration refs/tags/archive/branch/feature-mind-w6-gpu-acceleration-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": false,
+        "why": "the branch is preserved; no recovery reference was needed or created"
+      }
+    },
+    {
+      "name": "feature/mind-w6-gpu-final",
+      "remote": "origin",
+      "live_on_the_remote": true,
+      "tip_sha": "473ec8a15b0639502bb6c545dc5b1035ee68fbcc",
+      "ref": "origin/feature/mind-w6-gpu-final",
+      "tip_committed_at": "2026-09-25T18:52:13+03:00",
+      "tip_subject": "feat(brain-runtime): MIND-W7 partial — Credit Ledger",
+      "unique_commits_vs_develop": 2,
+      "unique_commits": [
+        {
+          "sha": "6f6762b7f0a4e6dc76235d6fb63885a6845327c7",
+          "committed_at": "2026-09-25T18:45:58+03:00",
+          "subject": "feat(brain-runtime): MIND-W6 — GPU Acceleration of MATRIX-native math"
+        },
+        {
+          "sha": "473ec8a15b0639502bb6c545dc5b1035ee68fbcc",
+          "committed_at": "2026-09-25T18:52:13+03:00",
+          "subject": "feat(brain-runtime): MIND-W7 partial — Credit Ledger"
+        }
+      ],
+      "first_unique_commit_at": "2026-09-25T18:45:58+03:00",
+      "tip_is_ancestor_of_develop": false,
+      "tree_diff_files_vs_develop": 1752,
+      "tree_diff_shortstat_vs_develop": "5 files changed, 684 insertions(+), 21 deletions(-)",
+      "tags_at_tip": [],
+      "pull_requests": [
+        {
+          "number": 26,
+          "state": "CLOSED",
+          "base": "develop",
+          "merged_at": null,
+          "closed_at": "2026-09-25T15:53:43Z",
+          "merge_commit": null,
+          "title": "feat(brain-runtime): MIND-W7 partial — Credit Ledger"
+        },
+        {
+          "number": 25,
+          "state": "MERGED",
+          "base": "develop",
+          "merged_at": "2026-09-25T15:46:10Z",
+          "closed_at": "2026-09-25T15:46:10Z",
+          "merge_commit": "2f2d83e2b3d448ba497904dbc2d320b57ac3cf92",
+          "title": "feat(brain-runtime): MIND-W6 — GPU Acceleration of MATRIX-native math"
+        }
+      ],
+      "pr_merge_commit": "2f2d83e2b3d448ba497904dbc2d320b57ac3cf92",
+      "branch_tip_tree_identical_to_pr_merge_commit": false,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "KEEP",
+      "reason": "pre-W46 (the W46 consolidation commit is 6c003e05 of 2026-11-05; this branch's work is from 2026-09-25); the owner's directive preserves every pre-W46 branch unconditionally",
+      "recovery": {
+        "archive_tag": "archive/branch/feature-mind-w6-gpu-final-20261115",
+        "archive_tag_exists_locally": false,
+        "archive_tag_pushed_to_origin": false,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/feature-mind-w6-gpu-final-20261115:refs/tags/archive/branch/feature-mind-w6-gpu-final-20261115",
+          "git branch feature/mind-w6-gpu-final refs/tags/archive/branch/feature-mind-w6-gpu-final-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch feature/mind-w6-gpu-final refs/tags/archive/branch/feature-mind-w6-gpu-final-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": false,
+        "why": "the branch is preserved; no recovery reference was needed or created"
+      }
+    },
+    {
+      "name": "feature/mind-w7-complete",
+      "remote": "origin",
+      "live_on_the_remote": true,
+      "tip_sha": "e9f22d3af11b07e31794779e0e610e21386544d3",
+      "ref": "origin/feature/mind-w7-complete",
+      "tip_committed_at": "2026-09-25T18:58:17+03:00",
+      "tip_subject": "feat(brain-runtime): MIND-W7 remainder — Audit Chain + License + Federation",
+      "unique_commits_vs_develop": 2,
+      "unique_commits": [
+        {
+          "sha": "6686385845a0a56a62e37e2ae701c70559da3087",
+          "committed_at": "2026-09-25T18:53:37+03:00",
+          "subject": "feat(brain-runtime): MIND-W7 partial — Credit Ledger"
+        },
+        {
+          "sha": "e9f22d3af11b07e31794779e0e610e21386544d3",
+          "committed_at": "2026-09-25T18:58:17+03:00",
+          "subject": "feat(brain-runtime): MIND-W7 remainder — Audit Chain + License + Federation"
+        }
+      ],
+      "first_unique_commit_at": "2026-09-25T18:53:37+03:00",
+      "tip_is_ancestor_of_develop": false,
+      "tree_diff_files_vs_develop": 1750,
+      "tree_diff_shortstat_vs_develop": "7 files changed, 706 insertions(+), 31 deletions(-)",
+      "tags_at_tip": [
+        "checkpoint/feature-mind-w7-credit-ledger-20261009-230349"
+      ],
+      "pull_requests": [
+        {
+          "number": 28,
+          "state": "CLOSED",
+          "base": "develop",
+          "merged_at": null,
+          "closed_at": "2026-09-25T16:00:50Z",
+          "merge_commit": null,
+          "title": "feat(brain-runtime): MIND-W7 complete — Audit Chain + License + Federation"
+        }
+      ],
+      "branch_tip_tree_identical_to_pr_merge_commit": null,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "KEEP",
+      "reason": "pre-W46 (the W46 consolidation commit is 6c003e05 of 2026-11-05; this branch's work is from 2026-09-25); the owner's directive preserves every pre-W46 branch unconditionally",
+      "recovery": {
+        "archive_tag": "archive/branch/feature-mind-w7-complete-20261115",
+        "archive_tag_exists_locally": false,
+        "archive_tag_pushed_to_origin": false,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/feature-mind-w7-complete-20261115:refs/tags/archive/branch/feature-mind-w7-complete-20261115",
+          "git branch feature/mind-w7-complete refs/tags/archive/branch/feature-mind-w7-complete-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch feature/mind-w7-complete refs/tags/archive/branch/feature-mind-w7-complete-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": false,
+        "why": "the branch is preserved; no recovery reference was needed or created"
+      }
+    },
+    {
+      "name": "feature/mind-w7-credit-ledger",
+      "remote": "origin",
+      "live_on_the_remote": true,
+      "tip_sha": "e9f22d3af11b07e31794779e0e610e21386544d3",
+      "ref": "origin/feature/mind-w7-credit-ledger",
+      "tip_committed_at": "2026-09-25T18:58:17+03:00",
+      "tip_subject": "feat(brain-runtime): MIND-W7 remainder — Audit Chain + License + Federation",
+      "unique_commits_vs_develop": 2,
+      "unique_commits": [
+        {
+          "sha": "6686385845a0a56a62e37e2ae701c70559da3087",
+          "committed_at": "2026-09-25T18:53:37+03:00",
+          "subject": "feat(brain-runtime): MIND-W7 partial — Credit Ledger"
+        },
+        {
+          "sha": "e9f22d3af11b07e31794779e0e610e21386544d3",
+          "committed_at": "2026-09-25T18:58:17+03:00",
+          "subject": "feat(brain-runtime): MIND-W7 remainder — Audit Chain + License + Federation"
+        }
+      ],
+      "first_unique_commit_at": "2026-09-25T18:53:37+03:00",
+      "tip_is_ancestor_of_develop": false,
+      "tree_diff_files_vs_develop": 1750,
+      "tree_diff_shortstat_vs_develop": "7 files changed, 706 insertions(+), 31 deletions(-)",
+      "tags_at_tip": [
+        "checkpoint/feature-mind-w7-credit-ledger-20261009-230349"
+      ],
+      "pull_requests": [
+        {
+          "number": 27,
+          "state": "MERGED",
+          "base": "develop",
+          "merged_at": "2026-09-25T15:53:50Z",
+          "closed_at": "2026-09-25T15:53:50Z",
+          "merge_commit": "006ec7c7cebafc972a9393a1d0776c9ccf37a03f",
+          "title": "feat(brain-runtime): MIND-W7 partial — Credit Ledger"
+        }
+      ],
+      "pr_merge_commit": "006ec7c7cebafc972a9393a1d0776c9ccf37a03f",
+      "branch_tip_tree_identical_to_pr_merge_commit": false,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "KEEP",
+      "reason": "pre-W46 (the W46 consolidation commit is 6c003e05 of 2026-11-05; this branch's work is from 2026-09-25); the owner's directive preserves every pre-W46 branch unconditionally",
+      "recovery": {
+        "archive_tag": "archive/branch/feature-mind-w7-credit-ledger-20261115",
+        "archive_tag_exists_locally": false,
+        "archive_tag_pushed_to_origin": false,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/feature-mind-w7-credit-ledger-20261115:refs/tags/archive/branch/feature-mind-w7-credit-ledger-20261115",
+          "git branch feature/mind-w7-credit-ledger refs/tags/archive/branch/feature-mind-w7-credit-ledger-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch feature/mind-w7-credit-ledger refs/tags/archive/branch/feature-mind-w7-credit-ledger-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": false,
+        "why": "the branch is preserved; no recovery reference was needed or created"
+      }
+    },
+    {
+      "name": "feature/w53-distributed-cognition",
+      "remote": "origin",
+      "live_on_the_remote": true,
+      "tip_sha": "8cfcf854b3215c8ea3c9c3fd9c18a6377b5e3a34",
+      "ref": "origin/feature/w53-distributed-cognition",
+      "tip_committed_at": "2026-11-13T07:31:07+03:00",
+      "tip_subject": "WAL: the wave's review, the defect that killed a live task, and the reconciled record",
+      "unique_commits_vs_develop": 0,
+      "unique_commits": [],
+      "first_unique_commit_at": null,
+      "tip_is_ancestor_of_develop": true,
+      "tree_diff_files_vs_develop": 119,
+      "tree_diff_shortstat_vs_develop": "",
+      "tags_at_tip": [
+        "archive/branch/feature-w53-distributed-cognition-20261115"
+      ],
+      "pull_requests": [],
+      "branch_tip_tree_identical_to_pr_merge_commit": null,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "OWNER-QUESTION",
+      "reason": "NO pull request was ever opened for this branch, so OD-054's condition 'its PR is closed and merged' has no referent; the condition it does satisfy is the stronger one — the tip 8cfcf854 is an ANCESTOR of develop, so every one of its commits is already inside develop's history and nothing at all would be lost; the archive tag and the bundle preserve it as well",
+      "recovery_reference": {
+        "archive_tag": "archive/branch/feature-w53-distributed-cognition-20261115",
+        "archive_tag_pushed_to": "origin",
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle"
+      },
+      "recovery": {
+        "archive_tag": "archive/branch/feature-w53-distributed-cognition-20261115",
+        "archive_tag_exists_locally": true,
+        "archive_tag_pushed_to_origin": true,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/feature-w53-distributed-cognition-20261115:refs/tags/archive/branch/feature-w53-distributed-cognition-20261115",
+          "git branch feature/w53-distributed-cognition refs/tags/archive/branch/feature-w53-distributed-cognition-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch feature/w53-distributed-cognition refs/tags/archive/branch/feature-w53-distributed-cognition-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": true,
+        "clone": "git clone --bare --filter=blob:none --single-branch --branch develop https://github.com/AlexanderNarbaev/agi.git /tmp/prune-proof/independent.git",
+        "restored_tip": "8cfcf854b3215c8ea3c9c3fd9c18a6377b5e3a34",
+        "expected_tip": "8cfcf854b3215c8ea3c9c3fd9c18a6377b5e3a34",
+        "tip_matches": true,
+        "restored_tree": "733cd21172"
+      }
+    },
+    {
+      "name": "fix/evid-base-shellcheck",
+      "remote": "origin",
+      "live_on_the_remote": true,
+      "tip_sha": "7125b337dd5b4f0c4899df33207e6fdd51f1463a",
+      "ref": "origin/fix/evid-base-shellcheck",
+      "tip_committed_at": "2026-11-14T20:15:23+03:00",
+      "tip_subject": "fix(scripts): address the negative-control script's ShellCheck findings (printf format arguments, awk indenting, direct status checks); the self-test still passes",
+      "unique_commits_vs_develop": 1,
+      "unique_commits": [
+        {
+          "sha": "7125b337dd5b4f0c4899df33207e6fdd51f1463a",
+          "committed_at": "2026-11-14T20:15:23+03:00",
+          "subject": "fix(scripts): address the negative-control script's ShellCheck findings (printf format arguments, awk indenting, direct status checks); the self-test still passes"
+        }
+      ],
+      "first_unique_commit_at": "2026-11-14T20:15:23+03:00",
+      "tip_is_ancestor_of_develop": false,
+      "tree_diff_files_vs_develop": 54,
+      "tree_diff_shortstat_vs_develop": "1 file changed, 14 insertions(+), 8 deletions(-)",
+      "tags_at_tip": [
+        "archive/branch/fix-evid-base-shellcheck-20261115"
+      ],
+      "pull_requests": [
+        {
+          "number": 57,
+          "state": "MERGED",
+          "base": "develop",
+          "merged_at": "2026-11-14T17:15:49Z",
+          "closed_at": "2026-11-14T17:15:49Z",
+          "merge_commit": "2b531dd0dbeba7a0527a3ab8a79972baa086ea95",
+          "title": "EVID-BASE: the negative-control script's ShellCheck findings"
+        }
+      ],
+      "pr_merge_commit": "2b531dd0dbeba7a0527a3ab8a79972baa086ea95",
+      "branch_tip_tree_identical_to_pr_merge_commit": true,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "PRUNE-ELIGIBLE",
+      "reason": "PR #57 merged 2026-11-14 (squash); the branch tip's tree is byte-identical to the PR merge commit 2b531dd0; 1 commit is preserved by the archive tag and the bundle",
+      "recovery_reference": {
+        "archive_tag": "archive/branch/fix-evid-base-shellcheck-20261115",
+        "archive_tag_pushed_to": "origin",
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle"
+      },
+      "recovery": {
+        "archive_tag": "archive/branch/fix-evid-base-shellcheck-20261115",
+        "archive_tag_exists_locally": true,
+        "archive_tag_pushed_to_origin": true,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/fix-evid-base-shellcheck-20261115:refs/tags/archive/branch/fix-evid-base-shellcheck-20261115",
+          "git branch fix/evid-base-shellcheck refs/tags/archive/branch/fix-evid-base-shellcheck-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch fix/evid-base-shellcheck refs/tags/archive/branch/fix-evid-base-shellcheck-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": true,
+        "clone": "git clone --bare --filter=blob:none --single-branch --branch develop https://github.com/AlexanderNarbaev/agi.git /tmp/prune-proof/independent.git",
+        "restored_tip": "7125b337dd5b4f0c4899df33207e6fdd51f1463a",
+        "expected_tip": "7125b337dd5b4f0c4899df33207e6fdd51f1463a",
+        "tip_matches": true,
+        "restored_tree": "7a703df9b6"
+      }
+    },
+    {
+      "name": "main",
+      "remote": "origin",
+      "live_on_the_remote": true,
+      "tip_sha": "26c549c4e425000f2d6aa197df407dbf2002b443",
+      "ref": "origin/main",
+      "tip_committed_at": "2026-11-15T14:43:32+03:00",
+      "tip_subject": "Release: CONCEPT-TO-ACTION — the bounded action is served, the retrieval and the learning evidence are measured",
+      "unique_commits_vs_develop": 0,
+      "unique_commits": [],
+      "first_unique_commit_at": null,
+      "tip_is_ancestor_of_develop": true,
+      "tree_diff_files_vs_develop": 7,
+      "tree_diff_shortstat_vs_develop": "",
+      "tags_at_tip": [],
+      "pull_requests": [],
+      "branch_tip_tree_identical_to_pr_merge_commit": null,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "KEEP",
+      "reason": "the release branch, protected by the repository ruleset 'Protected main' and named by the owner's directive as a branch to keep",
+      "recovery": {
+        "archive_tag": "archive/branch/main-20261115",
+        "archive_tag_exists_locally": false,
+        "archive_tag_pushed_to_origin": false,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/main-20261115:refs/tags/archive/branch/main-20261115",
+          "git branch main refs/tags/archive/branch/main-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch main refs/tags/archive/branch/main-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": false,
+        "why": "the branch is preserved; no recovery reference was needed or created"
+      }
+    },
+    {
+      "name": "release-state",
+      "remote": "origin",
+      "live_on_the_remote": true,
+      "tip_sha": "f484f3bc5cdeaa76c2516b4b71c65a032ddeacaa",
+      "ref": "origin/release-state",
+      "tip_committed_at": "2026-11-14T19:19:18+03:00",
+      "tip_subject": "docs(evid-base): the state names the integrated develop commit; the final report records PR #53's actual checks",
+      "unique_commits_vs_develop": 1,
+      "unique_commits": [
+        {
+          "sha": "f484f3bc5cdeaa76c2516b4b71c65a032ddeacaa",
+          "committed_at": "2026-11-14T19:19:18+03:00",
+          "subject": "docs(evid-base): the state names the integrated develop commit; the final report records PR #53's actual checks"
+        }
+      ],
+      "first_unique_commit_at": "2026-11-14T19:19:18+03:00",
+      "tip_is_ancestor_of_develop": false,
+      "tree_diff_files_vs_develop": 54,
+      "tree_diff_shortstat_vs_develop": "2 files changed, 28 insertions(+), 9 deletions(-)",
+      "tags_at_tip": [
+        "archive/branch/docs-evid-base-integrated-state-20261115",
+        "archive/branch/release-state-20261115"
+      ],
+      "pull_requests": [
+        {
+          "number": 54,
+          "state": "CLOSED",
+          "base": "develop",
+          "merged_at": null,
+          "closed_at": "2026-11-14T16:22:57Z",
+          "merge_commit": null,
+          "title": "EVID-BASE: the state names the integrated commit, and the report records the actual checks"
+        }
+      ],
+      "branch_tip_tree_identical_to_pr_merge_commit": null,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "OWNER-QUESTION",
+      "reason": "its own PR #54 was CLOSED WITHOUT BEING MERGED, so OD-054's condition 'its PR is closed and merged' is not literally met; its content IS provably in develop (its tip f484f3bc is byte-identical to the tip of PR #55's branch, which merged as 5ff4964a) and the archive tag and the bundle already preserve it, so one owner answer promotes it to PRUNE-ELIGIBLE",
+      "recovery_reference": {
+        "archive_tag": "archive/branch/release-state-20261115",
+        "archive_tag_pushed_to": "origin",
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle"
+      },
+      "recovery": {
+        "archive_tag": "archive/branch/release-state-20261115",
+        "archive_tag_exists_locally": true,
+        "archive_tag_pushed_to_origin": true,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/release-state-20261115:refs/tags/archive/branch/release-state-20261115",
+          "git branch release-state refs/tags/archive/branch/release-state-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch release-state refs/tags/archive/branch/release-state-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": true,
+        "clone": "git clone --bare --filter=blob:none --single-branch --branch develop https://github.com/AlexanderNarbaev/agi.git /tmp/prune-proof/independent.git",
+        "restored_tip": "f484f3bc5cdeaa76c2516b4b71c65a032ddeacaa",
+        "expected_tip": "f484f3bc5cdeaa76c2516b4b71c65a032ddeacaa",
+        "tip_matches": true,
+        "restored_tree": "39399ed955"
+      }
+    },
+    {
+      "name": "release/v1.0",
+      "remote": "origin",
+      "live_on_the_remote": true,
+      "tip_sha": "c9ce58800a9f1d7b753d833b4231cd275e6c0d8f",
+      "ref": "origin/release/v1.0",
+      "tip_committed_at": "2026-09-26T18:39:49+03:00",
+      "tip_subject": "release: TRUE-W14 — Federation dual-node + Sparse-HDC research iteration",
+      "unique_commits_vs_develop": 0,
+      "unique_commits": [],
+      "first_unique_commit_at": null,
+      "tip_is_ancestor_of_develop": true,
+      "tree_diff_files_vs_develop": 1732,
+      "tree_diff_shortstat_vs_develop": "",
+      "tags_at_tip": [
+        "v16.0.0-mind"
+      ],
+      "pull_requests": [
+        {
+          "number": 15,
+          "state": "MERGED",
+          "base": "main",
+          "merged_at": "2026-09-25T11:56:49Z",
+          "closed_at": "2026-09-25T11:56:49Z",
+          "merge_commit": "10da39a797d887c466e95ee6735eed9e19b1f17e",
+          "title": "release: Promote v1.0 patch to main (4 Liquid Federation research artifacts)"
+        }
+      ],
+      "pr_merge_commit": "10da39a797d887c466e95ee6735eed9e19b1f17e",
+      "branch_tip_tree_identical_to_pr_merge_commit": false,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "KEEP",
+      "reason": "pre-W46 (PR #15 merged 2026-09-25); the owner's directive preserves every pre-W46 branch unconditionally",
+      "recovery": {
+        "archive_tag": "archive/branch/release-v1.0-20261115",
+        "archive_tag_exists_locally": false,
+        "archive_tag_pushed_to_origin": false,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/release-v1.0-20261115:refs/tags/archive/branch/release-v1.0-20261115",
+          "git branch release/v1.0 refs/tags/archive/branch/release-v1.0-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch release/v1.0 refs/tags/archive/branch/release-v1.0-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": false,
+        "why": "the branch is preserved; no recovery reference was needed or created"
+      }
+    },
+    {
+      "name": "safe-main",
+      "remote": "origin",
+      "live_on_the_remote": true,
+      "tip_sha": "6d7410fcabd9be3d0175094a4b8def5e6ef5b3b7",
+      "ref": "origin/safe-main",
+      "tip_committed_at": "2026-08-30T22:50:10+03:00",
+      "tip_subject": "Merge safe-main (LTM persistence + 896-bit encoder + all session improvements)",
+      "unique_commits_vs_develop": 0,
+      "unique_commits": [],
+      "first_unique_commit_at": null,
+      "tip_is_ancestor_of_develop": true,
+      "tree_diff_files_vs_develop": 3982,
+      "tree_diff_shortstat_vs_develop": "",
+      "tags_at_tip": [],
+      "pull_requests": [],
+      "branch_tip_tree_identical_to_pr_merge_commit": null,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "KEEP",
+      "reason": "named by the owner's directive as a branch to preserve; its provenance is never merged and never closed by a PR, so it is ambiguous by the standard the directive sets",
+      "recovery": {
+        "archive_tag": "archive/branch/safe-main-20261115",
+        "archive_tag_exists_locally": false,
+        "archive_tag_pushed_to_origin": false,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/safe-main-20261115:refs/tags/archive/branch/safe-main-20261115",
+          "git branch safe-main refs/tags/archive/branch/safe-main-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch safe-main refs/tags/archive/branch/safe-main-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": false,
+        "why": "the branch is preserved; no recovery reference was needed or created"
+      }
+    },
+    {
+      "name": "dependabot/npm_and_yarn/matrix-web-ui/multi-d49ef80a9c",
+      "remote": "origin",
+      "live_on_the_remote": false,
+      "tip_sha": "bb8836bc9522554b38629063e92faf6c80fa4d30",
+      "ref": "origin/dependabot/npm_and_yarn/matrix-web-ui/multi-d49ef80a9c",
+      "tip_committed_at": "2026-10-19T20:03:06Z",
+      "tip_subject": "build(deps): bump postcss-selector-parser and tailwindcss",
+      "unique_commits_vs_develop": 1,
+      "unique_commits": [
+        {
+          "sha": "bb8836bc9522554b38629063e92faf6c80fa4d30",
+          "committed_at": "2026-10-19T20:03:06Z",
+          "subject": "build(deps): bump postcss-selector-parser and tailwindcss"
+        }
+      ],
+      "first_unique_commit_at": "2026-10-19T20:03:06Z",
+      "tip_is_ancestor_of_develop": false,
+      "tree_diff_files_vs_develop": 1324,
+      "tree_diff_shortstat_vs_develop": "2 files changed, 41 insertions(+), 486 deletions(-)",
+      "tags_at_tip": [],
+      "pull_requests": [
+        {
+          "number": 42,
+          "state": "CLOSED",
+          "base": "main",
+          "merged_at": null,
+          "closed_at": "2026-11-06T17:59:33Z",
+          "merge_commit": null,
+          "title": "build(deps): bump postcss-selector-parser and tailwindcss in /matrix-web-ui"
+        }
+      ],
+      "branch_tip_tree_identical_to_pr_merge_commit": null,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "KEEP",
+      "reason": "this ref does NOT exist on the remote any more: it is a stale local remote-tracking ref left by a deleted remote branch. There is nothing on GitHub to delete. Its PR is closed and unmerged, and the local tracking ref is the only copy of its tip. A local `git remote prune origin` would remove the tracking ref only (no remote object is touched); the object itself would then be reachable only through the reflog, so the ref is kept here rather than pruned.",
+      "recovery": {
+        "archive_tag": "archive/branch/dependabot-npm_and_yarn-matrix-web-ui-multi-d49ef80a9c-20261115",
+        "archive_tag_exists_locally": false,
+        "archive_tag_pushed_to_origin": false,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/dependabot-npm_and_yarn-matrix-web-ui-multi-d49ef80a9c-20261115:refs/tags/archive/branch/dependabot-npm_and_yarn-matrix-web-ui-multi-d49ef80a9c-20261115",
+          "git branch dependabot/npm_and_yarn/matrix-web-ui/multi-d49ef80a9c refs/tags/archive/branch/dependabot-npm_and_yarn-matrix-web-ui-multi-d49ef80a9c-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch dependabot/npm_and_yarn/matrix-web-ui/multi-d49ef80a9c refs/tags/archive/branch/dependabot-npm_and_yarn-matrix-web-ui-multi-d49ef80a9c-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": false,
+        "why": "the branch is preserved; no recovery reference was needed or created"
+      }
+    },
+    {
+      "name": "dependabot/npm_and_yarn/matrix-web-ui/next-16.3.8",
+      "remote": "origin",
+      "live_on_the_remote": false,
+      "tip_sha": "1f2a5b3636668b1cfde281bc16eb6be6944cec08",
+      "ref": "origin/dependabot/npm_and_yarn/matrix-web-ui/next-16.3.8",
+      "tip_committed_at": "2026-10-09T06:00:03Z",
+      "tip_subject": "build(deps): bump next from 16.3.5 to 16.3.8 in /matrix-web-ui",
+      "unique_commits_vs_develop": 1,
+      "unique_commits": [
+        {
+          "sha": "1f2a5b3636668b1cfde281bc16eb6be6944cec08",
+          "committed_at": "2026-10-09T06:00:03Z",
+          "subject": "build(deps): bump next from 16.3.5 to 16.3.8 in /matrix-web-ui"
+        }
+      ],
+      "first_unique_commit_at": "2026-10-09T06:00:03Z",
+      "tip_is_ancestor_of_develop": false,
+      "tree_diff_files_vs_develop": 1467,
+      "tree_diff_shortstat_vs_develop": "2 files changed, 41 insertions(+), 41 deletions(-)",
+      "tags_at_tip": [],
+      "pull_requests": [
+        {
+          "number": 40,
+          "state": "CLOSED",
+          "base": "main",
+          "merged_at": null,
+          "closed_at": "2026-10-31T16:20:41Z",
+          "merge_commit": null,
+          "title": "build(deps): bump next from 16.3.5 to 16.3.8 in /matrix-web-ui"
+        }
+      ],
+      "branch_tip_tree_identical_to_pr_merge_commit": null,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "KEEP",
+      "reason": "this ref does NOT exist on the remote any more: it is a stale local remote-tracking ref left by a deleted remote branch. There is nothing on GitHub to delete. Its PR is closed and unmerged, and the local tracking ref is the only copy of its tip. A local `git remote prune origin` would remove the tracking ref only (no remote object is touched); the object itself would then be reachable only through the reflog, so the ref is kept here rather than pruned.",
+      "recovery": {
+        "archive_tag": "archive/branch/dependabot-npm_and_yarn-matrix-web-ui-next-16.3.8-20261115",
+        "archive_tag_exists_locally": false,
+        "archive_tag_pushed_to_origin": false,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/dependabot-npm_and_yarn-matrix-web-ui-next-16.3.8-20261115:refs/tags/archive/branch/dependabot-npm_and_yarn-matrix-web-ui-next-16.3.8-20261115",
+          "git branch dependabot/npm_and_yarn/matrix-web-ui/next-16.3.8 refs/tags/archive/branch/dependabot-npm_and_yarn-matrix-web-ui-next-16.3.8-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch dependabot/npm_and_yarn/matrix-web-ui/next-16.3.8 refs/tags/archive/branch/dependabot-npm_and_yarn-matrix-web-ui-next-16.3.8-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": false,
+        "why": "the branch is preserved; no recovery reference was needed or created"
+      }
+    },
+    {
+      "name": "dependabot/npm_and_yarn/matrix-web-ui/postcss-selector-parser-6.1.5",
+      "remote": "origin",
+      "live_on_the_remote": false,
+      "tip_sha": "3626fe15bce955675ca72e30de83b500c907506a",
+      "ref": "origin/dependabot/npm_and_yarn/matrix-web-ui/postcss-selector-parser-6.1.5",
+      "tip_committed_at": "2026-11-06T17:58:19Z",
+      "tip_subject": "build(deps): bump postcss-selector-parser in /matrix-web-ui",
+      "unique_commits_vs_develop": 0,
+      "unique_commits": [],
+      "first_unique_commit_at": null,
+      "tip_is_ancestor_of_develop": true,
+      "tree_diff_files_vs_develop": 423,
+      "tree_diff_shortstat_vs_develop": "",
+      "tags_at_tip": [],
+      "pull_requests": [
+        {
+          "number": 45,
+          "state": "CLOSED",
+          "base": "main",
+          "merged_at": null,
+          "closed_at": "2026-11-13T04:33:55Z",
+          "merge_commit": null,
+          "title": "build(deps): bump postcss-selector-parser from 6.1.4 to 6.1.5 in /matrix-web-ui"
+        }
+      ],
+      "branch_tip_tree_identical_to_pr_merge_commit": null,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "KEEP",
+      "reason": "this ref does NOT exist on the remote any more: it is a stale local remote-tracking ref left by a deleted remote branch. There is nothing on GitHub to delete. Its PR is closed and unmerged, and the local tracking ref is the only copy of its tip. A local `git remote prune origin` would remove the tracking ref only (no remote object is touched); the object itself would then be reachable only through the reflog, so the ref is kept here rather than pruned.",
+      "recovery": {
+        "archive_tag": "archive/branch/dependabot-npm_and_yarn-matrix-web-ui-postcss-selector-parser-6.1.5-20261115",
+        "archive_tag_exists_locally": false,
+        "archive_tag_pushed_to_origin": false,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/dependabot-npm_and_yarn-matrix-web-ui-postcss-selector-parser-6.1.5-20261115:refs/tags/archive/branch/dependabot-npm_and_yarn-matrix-web-ui-postcss-selector-parser-6.1.5-20261115",
+          "git branch dependabot/npm_and_yarn/matrix-web-ui/postcss-selector-parser-6.1.5 refs/tags/archive/branch/dependabot-npm_and_yarn-matrix-web-ui-postcss-selector-parser-6.1.5-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch dependabot/npm_and_yarn/matrix-web-ui/postcss-selector-parser-6.1.5 refs/tags/archive/branch/dependabot-npm_and_yarn-matrix-web-ui-postcss-selector-parser-6.1.5-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": false,
+        "why": "the branch is preserved; no recovery reference was needed or created"
+      }
+    },
+    {
+      "name": "dependabot/npm_and_yarn/matrix-web-ui/source-map-js-1.2.2",
+      "remote": "origin",
+      "live_on_the_remote": false,
+      "tip_sha": "c0447e108cdb8519fd3dd176cf62050a05e91dac",
+      "ref": "origin/dependabot/npm_and_yarn/matrix-web-ui/source-map-js-1.2.2",
+      "tip_committed_at": "2026-10-18T12:02:33Z",
+      "tip_subject": "build(deps): bump source-map-js from 1.2.1 to 1.2.2 in /matrix-web-ui",
+      "unique_commits_vs_develop": 0,
+      "unique_commits": [],
+      "first_unique_commit_at": null,
+      "tip_is_ancestor_of_develop": true,
+      "tree_diff_files_vs_develop": 1324,
+      "tree_diff_shortstat_vs_develop": "",
+      "tags_at_tip": [],
+      "pull_requests": [
+        {
+          "number": 41,
+          "state": "CLOSED",
+          "base": "main",
+          "merged_at": null,
+          "closed_at": "2026-11-13T04:33:49Z",
+          "merge_commit": null,
+          "title": "build(deps): bump source-map-js from 1.2.1 to 1.2.2 in /matrix-web-ui"
+        }
+      ],
+      "branch_tip_tree_identical_to_pr_merge_commit": null,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "KEEP",
+      "reason": "this ref does NOT exist on the remote any more: it is a stale local remote-tracking ref left by a deleted remote branch. There is nothing on GitHub to delete. Its PR is closed and unmerged, and the local tracking ref is the only copy of its tip. A local `git remote prune origin` would remove the tracking ref only (no remote object is touched); the object itself would then be reachable only through the reflog, so the ref is kept here rather than pruned.",
+      "recovery": {
+        "archive_tag": "archive/branch/dependabot-npm_and_yarn-matrix-web-ui-source-map-js-1.2.2-20261115",
+        "archive_tag_exists_locally": false,
+        "archive_tag_pushed_to_origin": false,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/dependabot-npm_and_yarn-matrix-web-ui-source-map-js-1.2.2-20261115:refs/tags/archive/branch/dependabot-npm_and_yarn-matrix-web-ui-source-map-js-1.2.2-20261115",
+          "git branch dependabot/npm_and_yarn/matrix-web-ui/source-map-js-1.2.2 refs/tags/archive/branch/dependabot-npm_and_yarn-matrix-web-ui-source-map-js-1.2.2-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch dependabot/npm_and_yarn/matrix-web-ui/source-map-js-1.2.2 refs/tags/archive/branch/dependabot-npm_and_yarn-matrix-web-ui-source-map-js-1.2.2-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": false,
+        "why": "the branch is preserved; no recovery reference was needed or created"
+      }
+    },
+    {
+      "name": "_dependabot.rootowned-stale/npm_and_yarn/matrix-web-ui/source-map-js-1.2.2",
+      "remote": "origin",
+      "live_on_the_remote": false,
+      "tip_sha": "c0447e108cdb8519fd3dd176cf62050a05e91dac",
+      "ref": "origin/_dependabot.rootowned-stale/npm_and_yarn/matrix-web-ui/source-map-js-1.2.2",
+      "tip_committed_at": "2026-10-18T12:02:33Z",
+      "tip_subject": "build(deps): bump source-map-js from 1.2.1 to 1.2.2 in /matrix-web-ui",
+      "unique_commits_vs_develop": 0,
+      "unique_commits": [],
+      "first_unique_commit_at": null,
+      "tip_is_ancestor_of_develop": true,
+      "tree_diff_files_vs_develop": 1324,
+      "tree_diff_shortstat_vs_develop": "",
+      "tags_at_tip": [],
+      "pull_requests": [],
+      "branch_tip_tree_identical_to_pr_merge_commit": null,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "KEEP",
+      "reason": "this ref does NOT exist on the remote any more: it is a stale local remote-tracking ref left by a deleted remote branch. There is nothing on GitHub to delete. Its PR is closed and unmerged, and the local tracking ref is the only copy of its tip. A local `git remote prune origin` would remove the tracking ref only (no remote object is touched); the object itself would then be reachable only through the reflog, so the ref is kept here rather than pruned.",
+      "recovery": {
+        "archive_tag": "archive/branch/_dependabot.rootowned-stale-npm_and_yarn-matrix-web-ui-source-map-js-1.2.2-20261115",
+        "archive_tag_exists_locally": false,
+        "archive_tag_pushed_to_origin": false,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/_dependabot.rootowned-stale-npm_and_yarn-matrix-web-ui-source-map-js-1.2.2-20261115:refs/tags/archive/branch/_dependabot.rootowned-stale-npm_and_yarn-matrix-web-ui-source-map-js-1.2.2-20261115",
+          "git branch _dependabot.rootowned-stale/npm_and_yarn/matrix-web-ui/source-map-js-1.2.2 refs/tags/archive/branch/_dependabot.rootowned-stale-npm_and_yarn-matrix-web-ui-source-map-js-1.2.2-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch _dependabot.rootowned-stale/npm_and_yarn/matrix-web-ui/source-map-js-1.2.2 refs/tags/archive/branch/_dependabot.rootowned-stale-npm_and_yarn-matrix-web-ui-source-map-js-1.2.2-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": false,
+        "why": "the branch is preserved; no recovery reference was needed or created"
+      }
+    },
+    {
+      "name": "develop",
+      "remote": "gitverse",
+      "live_on_the_remote": true,
+      "tip_sha": "0c47e51a19064059b8edb79f1d5b42e8bdf973a6",
+      "ref": "gitverse/develop",
+      "tip_committed_at": "2026-11-01T19:31:35+03:00",
+      "tip_subject": "WAL: Three axes instead of one, and the correction of a false claim",
+      "unique_commits_vs_develop": 0,
+      "unique_commits": [],
+      "first_unique_commit_at": null,
+      "tip_is_ancestor_of_develop": true,
+      "tree_diff_files_vs_develop": 1171,
+      "tree_diff_shortstat_vs_develop": "",
+      "tags_at_tip": [],
+      "pull_requests": [
+        {
+          "number": 61,
+          "state": "MERGED",
+          "base": "main",
+          "merged_at": "2026-11-15T11:43:33Z",
+          "closed_at": "2026-11-15T11:43:33Z",
+          "merge_commit": "26c549c4e425000f2d6aa197df407dbf2002b443",
+          "title": "Release: CONCEPT-TO-ACTION — the bounded action is served, the retrieval and the learning evidence are measured"
+        },
+        {
+          "number": 59,
+          "state": "MERGED",
+          "base": "main",
+          "merged_at": "2026-11-14T21:16:45Z",
+          "closed_at": "2026-11-14T21:16:46Z",
+          "merge_commit": "724ea537a24a96be5fdae24bdf6da716abcbe44f",
+          "title": "Release: EVID-BASE — the release record, the consistency checker in the gate, and the registers in truth"
+        },
+        {
+          "number": 56,
+          "state": "MERGED",
+          "base": "main",
+          "merged_at": "2026-11-14T17:40:46Z",
+          "closed_at": "2026-11-14T17:40:46Z",
+          "merge_commit": "3266621840c472ff55af397819c6e3cca4d47de3",
+          "title": "Release: EVID-BASE — measured retrieval, the learning evidence base, and one real bounded action"
+        },
+        {
+          "number": 52,
+          "state": "MERGED",
+          "base": "main",
+          "merged_at": "2026-11-14T09:28:12Z",
+          "closed_at": "2026-11-14T09:28:12Z",
+          "merge_commit": "1dc0153771fd9bf922771524562e91def52a7244",
+          "title": "W53: the registers name the release's final commits"
+        },
+        {
+          "number": 51,
+          "state": "MERGED",
+          "base": "main",
+          "merged_at": "2026-11-14T09:03:31Z",
+          "closed_at": "2026-11-14T09:03:31Z",
+          "merge_commit": "c4cee8abb1edfa27fcc9b78fd1320a37a7db7146",
+          "title": "W53: the release record - the wave is in main, and the two branches hold one project"
+        },
+        {
+          "number": 50,
+          "state": "MERGED",
+          "base": "main",
+          "merged_at": "2026-11-14T08:13:37Z",
+          "closed_at": "2026-11-14T08:13:37Z",
+          "merge_commit": "bcdd1a0a2f13471deb62b9753dbeee7617f15978",
+          "title": "W53: the distributed cognition wave — the bounded task, its adjudication, the durable trace, and the web UI's dependency bumps"
+        },
+        {
+          "number": 49,
+          "state": "MERGED",
+          "base": "main",
+          "merged_at": "2026-11-09T10:52:13Z",
+          "closed_at": "2026-11-09T10:52:13Z",
+          "merge_commit": "7709dc9e5ebd3bd641124ad2a3f6bb053ac2dab6",
+          "title": "W52–W53: the canonical path, the second bridge direction, the reusable procedure, and the registers in truth"
+        },
+        {
+          "number": 48,
+          "state": "MERGED",
+          "base": "main",
+          "merged_at": "2026-11-09T06:53:06Z",
+          "closed_at": "2026-11-09T06:53:06Z",
+          "merge_commit": "3ef8a5c81c1e4de1c969cb6007ea3eae22c488c7",
+          "title": "W51: the unified cognitive runtime — the bridge between the chains, the world-state memory, the plugins and the measured Java/C boundary"
+        },
+        {
+          "number": 47,
+          "state": "MERGED",
+          "base": "main",
+          "merged_at": "2026-11-07T19:31:20Z",
+          "closed_at": "2026-11-07T19:31:20Z",
+          "merge_commit": "67b3410d21f3e895e02b93713952ccdcfa4f59c5",
+          "title": "W50: the MATRIX local evidence-grounded demonstrator — learns, refuses a false premise, revises its model"
+        },
+        {
+          "number": 44,
+          "state": "MERGED",
+          "base": "main",
+          "merged_at": "2026-11-06T17:57:02Z",
+          "closed_at": "2026-11-06T17:57:02Z",
+          "merge_commit": "79045c57cc55cc275caaf3d94afa433b469ae339",
+          "title": "W37.5 → W49: the public face, the autonomy consumer, and the reproducible CI"
+        },
+        {
+          "number": 14,
+          "state": "MERGED",
+          "base": "release/v1.0",
+          "merged_at": "2026-09-25T11:54:45Z",
+          "closed_at": "2026-09-25T11:54:45Z",
+          "merge_commit": "678b7091b4322d74f5c1f04dd3f40ec60dbf3d28",
+          "title": "release: Bring release/v1.0 up to date (4 Liquid Federation research artifacts)"
+        },
+        {
+          "number": 13,
+          "state": "CLOSED",
+          "base": "feature/t-01-module-foundation",
+          "merged_at": null,
+          "closed_at": "2026-09-25T11:48:37Z",
+          "merge_commit": null,
+          "title": "Develop"
+        }
+      ],
+      "pr_merge_commit": "26c549c4e425000f2d6aa197df407dbf2002b443",
+      "branch_tip_tree_identical_to_pr_merge_commit": false,
+      "protected_on_github": true,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "KEEP",
+      "reason": "a branch of the SECOND remote (gitverse.ru), not of the GitHub repository the owner's directive governs. Its tip is an ancestor of origin/develop, so it holds nothing that origin/develop lacks, but deleting it is outside the authorized scope.",
+      "recovery": {
+        "archive_tag": "archive/branch/develop-20261115",
+        "archive_tag_exists_locally": false,
+        "archive_tag_pushed_to_origin": false,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/develop-20261115:refs/tags/archive/branch/develop-20261115",
+          "git branch develop refs/tags/archive/branch/develop-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch develop refs/tags/archive/branch/develop-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": false,
+        "why": "the branch is preserved; no recovery reference was needed or created"
+      }
+    },
+    {
+      "name": "main",
+      "remote": "gitverse",
+      "live_on_the_remote": true,
+      "tip_sha": "7a0ed0cc1f829bbd5241814b3b9a47ad60eec021",
+      "ref": "gitverse/main",
+      "tip_committed_at": "2026-10-12T19:03:57+03:00",
+      "tip_subject": "docs(session): RECON-W37.5 release — v18.0.0-mind Connectome Alpha",
+      "unique_commits_vs_develop": 0,
+      "unique_commits": [],
+      "first_unique_commit_at": null,
+      "tip_is_ancestor_of_develop": true,
+      "tree_diff_files_vs_develop": 1324,
+      "tree_diff_shortstat_vs_develop": "",
+      "tags_at_tip": [
+        "v18.0.0-mind"
+      ],
+      "pull_requests": [],
+      "branch_tip_tree_identical_to_pr_merge_commit": null,
+      "protected_on_github": false,
+      "open_pr_depends_on_it": false,
+      "worktree_depends_on_it": false,
+      "candidate_action": "KEEP",
+      "reason": "a branch of the SECOND remote (gitverse.ru), not of the GitHub repository the owner's directive governs. Its tip is an ancestor of origin/develop, so it holds nothing that origin/develop lacks, but deleting it is outside the authorized scope.",
+      "recovery": {
+        "archive_tag": "archive/branch/main-20261115",
+        "archive_tag_exists_locally": false,
+        "archive_tag_pushed_to_origin": false,
+        "bundle": "/home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle",
+        "bundle_sha256": "9a2b54bf2c8996355d8bbdbb5f9ccb4aba76d6011feeddd300f82ee322c8a290",
+        "restore_recipe_from_the_remote": [
+          "git fetch origin refs/tags/archive/branch/main-20261115:refs/tags/archive/branch/main-20261115",
+          "git branch main refs/tags/archive/branch/main-20261115^{commit}"
+        ],
+        "restore_recipe_offline": [
+          "sha256sum -c matrix-prune-candidates-20261115.bundle.sha256",
+          "git fetch /home/alexandr-narbaev/branch-recovery/matrix-prune-candidates-20261115.bundle 'refs/tags/archive/branch/*:refs/tags/archive/branch/*'",
+          "git branch main refs/tags/archive/branch/main-20261115^{commit}"
+        ]
+      },
+      "restoration_proof": {
+        "restored_in_an_independent_clone": false,
+        "why": "the branch is preserved; no recovery reference was needed or created"
+      }
+    }
+  ],
+  "notes": {
+    "nothing_was_deleted": "no branch, tag or ref was removed by this work; the seven archive tags were added and pushed to origin, which is the only remote write",
+    "the_default_branch": "develop; the ruleset 'Protected main' (id 20469548) conditions on ~DEFAULT_BRANCH and therefore now protects develop and no longer protects main",
+    "open_pull_requests": 0,
+    "worktrees": 1
+  }
+}

@@ -30,6 +30,17 @@ public final class AlgorithmFamilies {
     /** A previously validated procedure, reused inside its applicability domain. */
     public static final String REUSABLE_PROCEDURE = "procedure.reuse";
 
+    /**
+     * P2 — the report journey: one question over one workspace, turned into one artifact.
+     *
+     * <p>The family exists because the product's one real action — the bounded artifact
+     * write — had no method of its own: the route called the workbench and the writer
+     * directly, so nothing in the product chose a method, recorded why, or consulted what
+     * happened last time. The family gives that journey a place in the portfolio, where
+     * the selector chooses between the methods that serve it and says why.</p>
+     */
+    public static final String KNOWLEDGE_REPORT = "knowledge.report";
+
     private AlgorithmFamilies() {
     }
 }

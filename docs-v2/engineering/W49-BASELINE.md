@@ -57,7 +57,7 @@ The last observed run of the `ci` workflow is `42206946030` at `f6e2be9f`
 
 The red job is the release path, not the verification path. Its cause is
 external and exact: the step reads `secrets.DOCKERHUB_USERNAME` and
-`secrets.DOCKERHUB_TOKEN` (`.github/workflows/ci.yml:460-463`) and **the
+`secrets.DOCKERHUB_TOKEN` (the `ci` workflow's Docker Hub login step (the workflow was rewritten on 2026-11-15 by the CI simplification)) and **the
 repository has no secrets at all**:
 
 ```

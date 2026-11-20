@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.epistemic.AdversarialProbeRound4Test" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:58:31.966Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="6.261">
+  <properties/>
+  <testcase name="R4-3: the ambiguity reaches the caller and the gold readings match" classname="io.matrix.knowledge.epistemic.AdversarialProbeRound4Test" time="0.064"/>
+  <testcase name="R4-2: none of the corpus-stated premises is called refuted" classname="io.matrix.knowledge.epistemic.AdversarialProbeRound4Test" time="0.253"/>
+  <testcase name="R4-4: the same-assertion rule does not refute a premise the corpus states" classname="io.matrix.knowledge.epistemic.AdversarialProbeRound4Test" time="0.013"/>
+  <testcase name="R4-1: the plants premise is unsupported, the two false premises are refuted" classname="io.matrix.knowledge.epistemic.AdversarialProbeRound4Test" time="0.012"/>
+  <testcase name="R4-5: the ambiguity rule on the cases the implementer names" classname="io.matrix.knowledge.epistemic.AdversarialProbeRound4Test" time="0.063"/>
+  <testcase name="R4-4a: the water premise — a TRUE premise the corpus states" classname="io.matrix.knowledge.epistemic.AdversarialProbeRound4Test" time="0.005"/>
+  <system-out><![CDATA[### R4-3 - E-A01: status=AMBIGUOUS readings=4 goldMatched=3/3 saysAmbiguous=true
+  reason=The question is ambiguous: the corpus holds accounts of its subject that disagree with each other, and it does not choose between them. Claim clm-1eba5a66 of "usgs-this-dynamic-earth.md" states "Plate boundary zones -- broad belts in which boundaries are not well defined and the effects of plate interaction are unclear.", and claim clm-2a8c6945 of "wikipedia-plate-tectonics.md" states "Other plate boundary zones occur where the effects of the interactions are unclear, and the boundaries, usually occurring along a broad belt, are not well defined and may show various types of movements in different episodes." — the two are about the same subject and cannot both hold. Both are reported with their provenance, the system does not decide between them, and none of them is chosen as the answer.
+### R4-3 - E-A02: status=AMBIGUOUS readings=4 goldMatched=3/4 saysAmbiguous=true
+  reason=The question is ambiguous: the corpus holds accounts of its subject that disagree with each other, and it does not choose between them. Claim clm-986ef446 of "wikipedia-plate-tectonics.md" states "It is thus thought that forces associated with the downgoing plate (slab pull and slab suction) are the driving forces which determine the motion of plates, except for those plates which are not being subducted.", and claim clm-73261435 of "wikipedia-plate-tectonics.md" states "This view however has been contradicted by a recent study which found that the actual motions of the Pacific plate and other plates associated with the East Pacific Rise do not correlate mainly with either slab pull or slab push, but rather with a mantle convection upwelling whose horizontal spreading along the bases of the various plates drives them along via viscosity-related traction forces." — the two are about the same subject and cannot both hold. Both are reported with their provenance, the system does not decide between them, and none of them is chosen as the answer.
+### R4-2 - nine premises the corpora STATE
+  UNSUPPORTED answered=true | Since photosynthesis stores energy in chemical bonds, what is the role of RuBisCO?
+  UNSUPPORTED answered=true | Since RuBisCO fixes carbon dioxide, what is the role of RuBisCO?
+  UNSUPPORTED answered=true | Since plants release oxygen during the day, what does a plant release during the day?
+  SUPPORTED answered=true | Since an argument of the modus ponens form is valid, what are the premises of modus ponens?
+  CONTRADICTORY answered=true | Since validity says nothing about whether the premises of an argument are true, what are the premises of modus ponens?
+  SUPPORTED answered=true | Since oceanic crust is created at spreading centers, what takes place along the Mid-Atlantic Ridge?
+  SUPPORTED answered=true | Since subduction is the driving force behind plate tectonics, what does the corpus say about the Pacific plate?
+  AMBIGUOUS answered=true | Given that Mid-Atlantic Ridge is a divergent boundary, what takes place along it?
+  SUPPORTED answered=true | Since divergent boundaries are where new crust is generated, what happens where Mid-Atlantic Ridge runs?
+  premises called refuted: 0 of 9
+### R4-4 - the same-assertion rule, probed for false positives
+  (a) the water premise: answered=true status=UNSUPPORTED
+     reason=The workspace mentions the subject of this premise — claim cl-a9724c3d of "Photosynthesis (encyclopedia entry)" states "Oxygenic photosynthesis releases oxygen as a byproduct of splitting water." — but that claim does not bear on the premise, so the premise has no supporting evidence here. The absence of evidence is not a contradiction: the workspace neither confirms nor refutes this premise.
+  (b) the synonym premise: answered=false status=REFUTED
+  (c) the Russian misconception: answered=false status=REFUTED
+     reason=The workspace contradicts this premise: claim cl-f322edeb of "Photosynthesis (encyclopedia entry)" states "The oxygen a plant releases comes from the carbon dioxide it absorbs.", and the evidence behind that claim contradicts the premise rather than merely failing to support it. The relation was read from the text of the two sides - the terms they share and the negations they carry - so it is a lexical candidate and not a demonstration of meaning: a premise that shares terms with a claim is about the same subject whether or not the two mean the same thing.
+### R4-1 - the three photosynthesis/logic premises
+  the plants premise: answered=true status=UNSUPPORTED
+  the false photosynthesis premise: answered=false status=REFUTED
+  the false logic premise: answered=false status=REFUTED
+### R4-5 - E-S02 and E-R02
+  E-S02 expects ANSWERED
+     observed=AMBIGUOUS answered=true
+     reason=The question is ambiguous: the corpus holds accounts of its subject that disagree with each other, and it does not choose between them. Claim clm-ee8d4b79 of "wikipedia-plate-tectonics.md" states "The increasingly felsic nature of preserved rocks between 3 and 2.5 billion years ago implies that subduction zones had emerged by this time, with preserved zircons suggesting that subduction may have begun as early as 3.8 billion years ago.", and claim clm-ee8d4b79 of "wikipedia-plate-tectonics.md" states "The increasingly felsic nature of preserved rocks between 3 and 2.5 billion years ago implies that subduction zones had emerged by this time, with preserved zircons suggesting that subduction may have begun as early as 3.8 billion years ago." — the two are about the same subject and cannot both hold. Both are reported with their provenance, the system does not decide between them, and none of them is chosen as the answer.
+  E-R02 expects REFUTED
+     observed=CONTRADICTORY answered=true
+     reason=The evidence this answer rests on holds claims that cannot both hold (1 conflict(s)); both sides are reported with their provenance and the system does not decide between them: the two accounts are about the same subject and one of them denies what the other asserts: "This view however has been contradicted by a recent study which found that the actual motions of the Pacific plate and other plates associated with the East Pacific Rise do not correlate mainly with either slab pull or slab push, but rather with a mantle convection upwelling whose horizontal spreading along the bases of the various plates drives them along via viscosity-related traction forces.". The workspace contradicts this premise: claim clm-fec91309 of "wikipedia-plate-tectonics.md" states "This is a misnomer as there is no force "pushing" horizontally, indeed tensional features are dominant along ridges.", and the evidence behind that claim contradicts the premise rather than merely failing to support it. The relation was read from the text of the two sides - the terms they share and the negations they carry - so it is a lexical candidate and not a demonstration of meaning: a premise that shares terms with a claim is about the same subject whether or not the two mean the same thing.
+### R4-4a - the water premise: answered=true status=UNSUPPORTED
+  reason=The workspace mentions the subject of this premise — claim cl-a9724c3d of "Photosynthesis (encyclopedia entry)" states "Oxygenic photosynthesis releases oxygen as a byproduct of splitting water." — but that claim does not bear on the premise, so the premise has no supporting evidence here. The absence of evidence is not a contradiction: the workspace neither confirms nor refutes this premise.
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

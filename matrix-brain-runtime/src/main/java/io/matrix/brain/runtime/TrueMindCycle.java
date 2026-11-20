@@ -151,9 +151,29 @@ public TrueMindCycle() {
         this.codebook = brain.getCodebook();
     }
 
-    /** Run one cognitive cycle using real core engines. */
+    /**
+     * Run one cognitive cycle using real core engines.
+     *
+     * <p>EPISTEMIC-INTEGRITY P0.4 (review fix F3): no provenance is declared here,
+     * so the result is {@link EpisodeRole#LEGACY_UNTAGGED} — an UNDECLARED result,
+     * not an organic one. The caller that writes the episode declares the
+     * provenance if it knows it; nothing is claimed on its behalf.</p>
+     */
     public MindResult think(String input) {
         return think(input, input);
+    }
+
+    /**
+     * Run one cognitive cycle and DECLARE the provenance of the traffic.
+     *
+     * <p>EPISTEMIC-INTEGRITY P0.4. The role travels with the result so the caller
+     * that writes the episode can declare it: an evaluation harness that runs the
+     * real conductor must not have its observations land in the organic learning
+     * feed just because it forgot to say so. The cycle's BEHAVIOUR is unchanged by
+     * the role — only the provenance of the resulting record differs.</p>
+     */
+    public MindResult think(String input, EpisodeRole role) {
+        return think(input, input, role);
     }
 
     /**
@@ -167,6 +187,20 @@ public TrueMindCycle() {
      * single-argument form, preserving the Article III determinism guarantee.</p>
      */
     public MindResult think(String input, String originalInput) {
+        return think(input, originalInput, EpisodeRole.LEGACY_UNTAGGED);
+    }
+
+    /**
+     * RECON-W22 — run the cycle with BOTH the retrieval form and the original form,
+     * and with a declared provenance.
+     *
+     * <p>EPISTEMIC-INTEGRITY P0.4 adds the role parameter. It changes nothing about
+     * how the cycle reasons; it only labels the result, so the write path can refuse
+     * to learn from evaluation traffic.</p>
+     */
+    public MindResult think(String input, String originalInput, EpisodeRole role) {
+        final EpisodeRole effectiveRole =
+            role == null ? EpisodeRole.LEGACY_UNTAGGED : role;
         final String original = (originalInput == null) ? input : originalInput;
         long startNs = System.nanoTime();
         List<BrcStep> trace = new ArrayList<>();
@@ -176,7 +210,8 @@ public TrueMindCycle() {
                 List.of("engine=" + ReflexEngine.class.getSimpleName()
                     + ".tryReflex(empty) -> reject")));
             return finalize("I cannot answer an empty input.", 0.10,
-                List.of("ETHICAL_FILTER", "CONSISTENCY_CHECKER"), trace, startNs);
+                List.of("ETHICAL_FILTER", "CONSISTENCY_CHECKER"), trace, startNs,
+                effectiveRole);
         }
 
         // ---- Stage 1: REFLEX (real engine) ----
@@ -191,7 +226,7 @@ public TrueMindCycle() {
             return new MindResult(reflexReply, 0.85, dur,
                 false,  // refused
                 List.of("ETHICAL_FILTER", "SAFETY_MONITOR", "CONSISTENCY_CHECKER"),
-                trace);
+                trace, effectiveRole);
         }
         trace.add(BrcStep.of("REFLEX", false, 0.99,
             List.of(ev(ReflexEngine.class.getSimpleName(), "tryReflex", "no-match"))));
@@ -219,7 +254,7 @@ public TrueMindCycle() {
                 0.85, durNs,
                 false,  // refused
                 List.of("ETHICAL_FILTER", "SAFETY_MONITOR", "CONSISTENCY_CHECKER"),
-                trace);
+                trace, effectiveRole);
         }
         trace.add(BrcStep.of("HARMFUL_INTENT", false, 0.99,
             List.of(ev(HarmfulIntentClassifier.class.getSimpleName(), "saysHarmful",
@@ -256,7 +291,7 @@ public TrueMindCycle() {
                 List.of("engine=" + BirBrainCycle.class.getSimpleName() + ".cycle -> "
                     + "exception=" + t.getClass().getSimpleName() + ": " + t.getMessage())));
             return finalize("I cannot answer that confidently. (internal error)",
-                0.0, List.of("CONSISTENCY_CHECKER"), trace, startNs);
+                0.0, List.of("CONSISTENCY_CHECKER"), trace, startNs, effectiveRole);
         }
         trace.add(BrcStep.of("BIR", core.accepted(), core.confidence(),
             List.of(ev(BirBrainCycle.class.getSimpleName(), "cycle",
@@ -422,7 +457,8 @@ public TrueMindCycle() {
         // The brain's own reply (`core.reply()`) is for trace/audit only,
         // not the user-facing answer. This way "What is 2+3?" gets "2 + 3 = 5"
         // from arithmetic, not "I need more information" from the brain's no-KB fallback.
-        return finalize(composedReply, composedConfidence, modulatorsFired, trace, startNs);
+        return finalize(composedReply, composedConfidence, modulatorsFired, trace, startNs,
+            effectiveRole);
     }
 
     /**
@@ -493,9 +529,9 @@ public TrueMindCycle() {
 
     private static MindResult finalize(String reply, double confidence,
                                        List<String> mods, List<BrcStep> trace,
-                                       long startNs) {
+                                       long startNs, EpisodeRole role) {
         long dur = (System.nanoTime() - startNs) / 1_000_000L;
         boolean accepted = confidence >= 0.40;
-        return new MindResult(reply, confidence, dur, accepted, mods, trace);
+        return new MindResult(reply, confidence, dur, accepted, mods, trace, role);
     }
 }

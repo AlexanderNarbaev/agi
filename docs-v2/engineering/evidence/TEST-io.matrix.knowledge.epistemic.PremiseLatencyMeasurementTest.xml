@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.epistemic.PremiseLatencyMeasurementTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:58:50.651Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="11.176">
+  <properties/>
+  <testcase name="where the time of one question goes" classname="io.matrix.knowledge.epistemic.PremiseLatencyMeasurementTest" time="0.127"/>
+  <testcase name="the latency of the asking path: in-process, two repetitions, 36 questions a corpus" classname="io.matrix.knowledge.epistemic.PremiseLatencyMeasurementTest" time="5.064"/>
+  <system-out><![CDATA[### seed: the workspace read 3.0 ms, the retrieval's index 5.0 ms (mean of 5)
+### pool: the workspace read 5.4 ms, the retrieval's index 7.4 ms (mean of 5)
+### the questions measured: 36 (and 6 that carry a premise)
+### the 36 unanswered questions
+### seed repetition 1: the mean 24.0 ms over 36 questions
+### seed repetition 2: the mean 22.833333333333332 ms over 36 questions
+### pool repetition 1: the mean 34.083333333333336 ms over 36 questions
+### pool repetition 2: the mean 34.05555555555556 ms over 36 questions
+### the questions that carry a premise
+### seed repetition 1: the mean 23.666666666666668 ms over 6 questions
+### seed repetition 2: the mean 24.0 ms over 6 questions
+### pool repetition 1: the mean 34.833333333333336 ms over 6 questions
+### pool repetition 2: the mean 35.166666666666664 ms over 6 questions
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

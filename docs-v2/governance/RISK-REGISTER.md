@@ -45,7 +45,7 @@ implemented, tested and never called has no exposure, and saying so is part of t
 | [R-W48-01](#r-w48-01--a-restore-of-an-incomplete-legacy-snapshot-erases-the-history-it-cannot-bring-back-and-reports-success)| A restore of an incomplete legacy snapshot erases the history it cannot bring back and reports success | high | medium | CLOSED — W48-01, commit 4084538a: the coverage contract refuses an incomplete legacy payload before any destructive change. The residual is named in the record |
 | [R-W48-02](#r-w48-02--the-ci-toolchain-is-not-reproducible-and-the-gpu-path-is-not-exercised-by-any-ci-job)| The CI toolchain is not reproducible, and the GPU path is not exercised by any CI job | medium | medium | PARTIALLY CLOSED — the formal tool is tracked and verified (16a2d0c5, 9bb6bf5c). The GPU path is NOT exercised in CI: no workflow contains a gpu/cuda/nvidia job |
 | [R-W48-03](#r-w48-03--the-mandatory-ci-jobs-depended-on-things-the-runner-does-not-have-and-on-steps-that-had-never-run)| The mandatory CI jobs depended on things the runner does not have, and on steps that had never run | high | high | CLOSED — the three causes are diagnosed from the runner's own logs and fixed (bc87935c, e0de8419); the security boundary and the formal gate are green on a clean runner |
-| [R-W48-04](#r-w48-04--the-release-path-needs-credentials-the-repository-does-not-have-so-it-is-red-on-every-push)| The release path needs credentials the repository does not have, so it is red on every push | medium | high | OPEN — external: `gh secret list` is empty; the owner's credentials are required |
+| [R-W48-04](#r-w48-04--the-release-path-needs-credentials-the-repository-does-not-have-so-it-is-red-on-every-push)| The release path needs credentials the repository does not have, so it is red on every push | medium | high | OPEN, narrowed (2026-11-18) — the release lane's credential cause is **gone** (the login step was removed by 8d1a60c3; `ci.yml` needs no registry login); what still needs the owner's credentials is the **PUBLISH** lane — the publication and the two deployments |
 | [R-W49-01](#r-w49-01--the-native-build-cannot-succeed-on-the-runner-the-workflow-selects-and-its-second-blocker-is-a-missing-dependency)| The native build cannot succeed on the runner the workflow selects, and its second blocker is a missing dependency | medium | high | MEASURED — the heap and the runner budget are recorded; the capability stays BLOCKED (OD-046) |
 | [R-W49-02](#r-w49-02--the-public-face-is-published-from-main-which-now-carries-w49-and-is-behind-develop-by-the-w50-work)| The public face is published from `main`, which now carries W49 and is behind `develop` by the W50 work | high | high | OPEN — the owner's decision: move `main` again, or publish from `develop` (Q-W49-01) |
 | [R-W49-03](#r-w49-03--the-shellcheck-workflow-has-been-red-since-at-least-2026-10-31)| The ShellCheck workflow has been red since at least 2026-10-31 | low | low | OPEN — inherited, recorded, not repaired in this wave |
@@ -392,7 +392,7 @@ implemented, tested and never called has no exposure, and saying so is part of t
 - **severity**: medium
 - **probability**: medium
 - **impact**: medium
-- **evidence**: Two facts, both measured. First, the formal tool was fetched from an upstream URL that had been RECREATED: the tlaplus `v1.8.0` release was created on 2026-11-06 and serves different bytes (sha256 `654aa501…`, 4 509 176 bytes) than the pinned ones (`fc6878c6…`, 4 504 421 bytes), and the `ci` workflow's quality-gates job downloaded the upstream and correctly refused them — the check was right and the SOURCE was replaceable. Second, the GPU path is not exercised by CI at all: `grep -rniE "gpu|cuda|nvidia" .github/workflows/` returns NO match in any of the seven workflows (`branch-validation.yml`, `ci.yml`, `docs-validation.yml`, `native.yml`, `pages.yml`, `shellcheck.yml`, `tla.yml`), and `.onnx_libs` — the symlinks into the virtualenv's CUDA libraries — is gitignored, so the libraries the measurement needs are not in the repository.
+- **evidence**: Two facts, both measured. First, the formal tool was fetched from an upstream URL that had been RECREATED: the tlaplus `v1.8.0` release was created on 2026-11-06 and serves different bytes (sha256 `654aa501…`, 4 509 176 bytes) than the pinned ones (`fc6878c6…`, 4 504 421 bytes), and the `ci` workflow's quality-gates job downloaded the upstream and correctly refused them — the check was right and the SOURCE was replaceable. Second, the GPU path is not exercised by CI at all: `grep -rniE "gpu|cuda|nvidia" .github/workflows/` returns NO match in any of the seven workflows of that day (the branch-validation, ci, docs-validation, native, pages, shellcheck and tla workflows; **three of them were removed on 2026-11-15 by the CI simplification**, and their checks moved into the FAST PR lane), and `.onnx_libs` — the symlinks into the virtualenv's CUDA libraries — is gitignored, so the libraries the measurement needs are not in the repository.
 - **exposure**: Real and bounded. The formal tool was the only replaceable input, and it is now pinned by bytes. The GPU path is unproven in CI, which means the committed benchmark is reproducible on the owner's machine only. The native path is unproven in CI for a third reason: `.github/workflows/native.yml` triggers only on `main`, so `develop` never reaches it (R-W46-11).
 - **mitigation**: The formal tool is TRACKED — `tools/tla2tools.jar`, with its provenance in `tools/README.md` — and VERIFIED by digest: `16a2d0c5` makes `.github/workflows/tla.yml` and `scripts/formal-gate.sh` verify the tracked bytes instead of downloading them, and `9bb6bf5c` makes the `ci` workflow's step do the same, so the two workflows cannot drift apart again (`grep -rn "releases/download/v1.8.0/tla2tools.jar" .github/workflows/` returns nothing). For the GPU: a CI job on a runner that has the CUDA libraries and the documented model digests — the graph sha256 `5f59f2cd…` and the external weights sha256 `72303ef1…`.
 - **owner**: agent (Level 1) for the pinning; the owner for a GPU runner, which is a cost decision
@@ -416,11 +416,12 @@ implemented, tested and never called has no exposure, and saying so is part of t
 - **severity**: medium
 - **probability**: high
 - **impact**: high
-- **evidence**: The run `42206946030` is green in all five MANDATORY jobs, and red in one: "Docker Build & Push (api-gateway)". Its FIRST step fails with `::[error]Username and password required`. The step reads `secrets.DOCKERHUB_USERNAME` and `secrets.DOCKERHUB_TOKEN` (`.github/workflows/ci.yml:460-463`), and the repository has no secrets at all: `gh secret list` and `gh variable list` both return nothing. The deploy jobs below it need `K8S_STAGING_KUBECONFIG`, `K8S_PROD_KUBECONFIG`, `STRIPE_WEBHOOK_SECRET` and `LICENSE_SIGNING_SECRET`, which are equally absent. Before W48's repairs this job never ran at all: it was skipped because its dependencies were red, so the missing credentials had never surfaced.
+- **evidence**: The run `42206946030` is green in all five MANDATORY jobs, and red in one: "Docker Build & Push (api-gateway)". Its FIRST step fails with `::[error]Username and password required`. The step reads `secrets.DOCKERHUB_USERNAME` and `secrets.DOCKERHUB_TOKEN` (the `ci` workflow's Docker Hub login step (the workflow was rewritten on 2026-11-15 by the CI simplification)), and the repository has no secrets at all: `gh secret list` and `gh variable list` both return nothing. The deploy jobs below it need `K8S_STAGING_KUBECONFIG`, `K8S_PROD_KUBECONFIG`, `STRIPE_WEBHOOK_SECRET` and `LICENSE_SIGNING_SECRET`, which are equally absent. Before W48's repairs this job never ran at all: it was skipped because its dependencies were red, so the missing credentials had never surfaced.
+- **the re-verification** (2026-11-18): the cause named above **no longer exists in the release lane**. `grep -rn "docker/login-action" .github/workflows/` returns **one** hit — `.github/workflows/publish.yml:92` — and **none** in `ci.yml`; the step was removed by `8d1a60c3` ("the CI lanes are narrowed to a fast PR gate, and the release lane keeps the full regression"), which is what `git log -S "docker/login-action" -- .github/workflows/ci.yml` names. `ci.yml`'s three image steps run `docker/build-push-action@v5` with `load: true` and **no** `push:`, so they need no registry login ⇒ ⇒ ⇒ **the release lane's credential cause is gone**. **What still needs the credentials is the PUBLISH lane** (`publish.yml`, `workflow_dispatch` only) — the publication and the two deployments — and `gh secret list` still returns nothing. **And the release PR's blocking gate is not that lane**: the protected-`main` ruleset (20469548) requires six status contexts, and all six are the FAST PR lane's checks ("Scope the pull request", "Branch name", "Compile + targeted tests", "CONSTITUTION + frozen boundary gate", "Documentation consistency", "Secret scan") ⇒ ⇒ ⇒ a release PR is gated by the lane that is **green on every commit of the wave**, plus **one code-owner review** (`require_code_owner_review: true`, `required_approving_review_count: 1`, `allowed_merge_methods: ["squash"]`, `require_last_push_approval: true`) ⇒ ⇒ ⇒ the gate on a release is the **owner**, not a secret. <!-- no-link: a GitHub Action reference, not a repository path -->
 - **exposure**: The pipeline is red on every push to `develop` for a reason that has nothing to do with the code, and the red step is the FIRST one — so a reader sees a credential problem where they expect a build problem. The images are built and smoke-tested by the container job, so the artifacts are verified; what cannot happen is their PUBLICATION and the two deployments.
 - **mitigation**: Either the owner configures the credentials, or the release job is declared to run only where they exist (a job that cannot run is a red job, not a safety net). W48 does neither: the credentials are the owner's to set, and marking the job away would remove the release path from the pipeline without an owner decision.
 - **owner**: the owner — the credentials and the release policy are both owner decisions.
-- **status**: OPEN — external, precisely stated. The five mandatory checks are green (`docs-v2/engineering/W48-CI-RECONCILIATION.md` §4.11); this record is the release path, not the verification path.
+- **status**: OPEN, **narrowed** (2026-11-18) — the release lane's credential cause is gone (measured above), so the release PR itself is **not** blocked by a secret; the residual is the **PUBLISH** lane's publication and the two deployments, which still need the owner's credentials, and the owner's credentials and the release policy remain owner decisions. The five mandatory checks are green (`docs-v2/engineering/W48-CI-RECONCILIATION.md` §4.11).
 
 ### R-W49-01 — The native build cannot succeed on the runner the workflow selects, and its second blocker is a missing dependency
 
@@ -454,7 +455,7 @@ implemented, tested and never called has no exposure, and saying so is part of t
 - **severity**: low
 - **probability**: high
 - **impact**: low
-- **evidence**: `.github/workflows/shellcheck.yml` runs only on a pull request to `main`, and this repository has had none — so the gate has not run since the W48 native-image attempt. Its last runs are `41219224444` (2026-10-31, at `e3dc1825`), `39316277048` and `39125667404`: **all failed**. The pull request that carries the W49 work to `main` (#44) ran it for the first time in months: **130 findings across ~30 inherited scripts** (SC2086, SC2155, SC2164, SC2034 and the like). **None of the findings is in this wave's scripts** — `scripts/validate-pages-config.sh` is not among the reported files.
+- **evidence**: the shellcheck workflow of that day (removed on 2026-11-15 by the CI simplification; its check moved into the FAST PR lane and became path-sensitive) runs only on a pull request to `main`, and this repository has had none — so the gate has not run since the W48 native-image attempt. Its last runs are `41219224444` (2026-10-31, at `e3dc1825`), `39316277048` and `39125667404`: **all failed**. The pull request that carries the W49 work to `main` (#44) ran it for the first time in months: **130 findings across ~30 inherited scripts** (SC2086, SC2155, SC2164, SC2034 and the like). **None of the findings is in this wave's scripts** — `scripts/validate-pages-config.sh` is not among the reported files.
 - **exposure**: a red gate on every release pull request, and no signal about new findings — the gate cannot distinguish "nothing new" from "never ran". The findings themselves are style and quoting issues in operational scripts; one of them (`SC2086`, an unquoted expansion) can split a word, which is a real defect class in a path-handling script.
 - **mitigation**: none in this wave, deliberately. Repairing 130 findings across ~30 scripts — among them `w45-chain-isolation-check.sh`, `w45-cognitive-recovery-journey.sh` and `security-boundary-check.sh`, the operational checkers themselves — means editing the scripts that decide whether the system is considered healthy, and that deserves its own wave with its own evidence. The honest record is that the gate was already red before this wave and that nothing in this wave made it worse.
 - **owner**: the owner — whether the shell gate is repaired, or its scope is narrowed to the scripts this repository maintains, is a decision about the gate's meaning, not a mechanical fix
@@ -500,6 +501,106 @@ implemented, tested and never called has no exposure, and saying so is part of t
 
 ---
 
+### R-EPIS-01 — The FAST PR lane's required check failed on every commit that touches no module
+
+- **category**: delivery-integrity
+- **severity**: high
+- **probability**: high (it was certain)
+- **impact**: high
+- **evidence**: The lane has been running on every push to `develop` (the trigger `push: [develop]` is in `.github/workflows/fast-pr.yml`), and the runs of this programme were **all red**: the runs 44029577415, 44030467272 and 44169093884. The failing job was the aggregator `build-and-test-gate` (the stable required check "Compile + targeted tests"): it required `needs.build-and-test.result == "success"`, while the matrix job's own condition is `needs.scope.outputs.build-matrix != '[]'` — so a change touching no module leaves the matrix empty, the matrix job **skipped**, and the aggregator failed. `gh run view 44029577415 --log-failed` shows the literal `the compile or the targeted tests did not succeed: skipped`.
+- **exposure**: Real: every documentation-only or script-only commit was unmergeable through the owner's ruleset, because the required context could not be satisfied.
+- **mitigation**: The aggregator distinguishes an **empty** matrix (nothing to compile → pass) from a matrix skipped because a **dependency failed** (→ fail), by reading the scope job's `build-matrix` output.
+- **owner**: owner (the frozen-zone edit), agent (the implementation)
+- **status**: CLOSED — the owner's answer to D1-CI-AGGREGATOR-017 (option A) is recorded as **OD-066**; the workflow change is one shell block in `.github/workflows/fast-pr.yml`; the frozen-zone exception was raised from 2350 to 2361 diff lines with the sanction recorded in `docs-v2/quality/frozen-zone-baseline.txt`; the logic was simulated in all five cases (empty matrix → pass, dependency failure → fail, success → pass, failure → fail); and the lane is **green**: run **44169314944** concludes `success` with every job `success`.
+- **the residual**: the lane's **compile-and-targeted-tests path with a non-empty matrix has still not run** — every run of the programme touched no module, so the matrix job was skipped each time. The known flake in `CognitiveKernelRemoteTest` is still neither skipped nor retried, so the first matrix run may be red for that reason, and that would be the lane measuring rather than hiding.
+
+### R-EPIS-02 — The documentation check reported "cannot see the line" as a contradiction, so it was red on every run
+
+- **category**: measurement-integrity
+- **severity**: high
+- **probability**: high (it was certain)
+- **impact**: medium
+- **evidence**: `scripts/validate-current-state.py` resolved the line it had to compare as `origin/main` and then `main`. The CI checkout of the documentation job (`actions/checkout@v4` with no `fetch-depth`) is a depth-1 checkout of the pushed branch and carries **neither** ref, so the check reported `UNREADABLE in docs-v2/governance/PROJECT-STATE.md / repository: no main line is readable (git cannot answer)` and exited 1 — the run 44029577415 log. The condition was reproduced exactly in a `--depth 1 --branch develop` clone, where the committed script reported **1 contradiction**.
+- **exposure**: Real: a required check was red for a reason that was not a contradiction in the documents, and a check that is always red stops being read.
+- **mitigation**: The script reads the first ref the checkout actually carries (`origin/main`, `main`, `origin/develop`, `develop`, and `GITHUB_SHA` for a pull-request merge commit) and names the compared line in every message. **The check was not weakened**: in the reproduced checkout the fixed script reports **0** contradictions, and a planted false release claim is still caught with exit code **1**.
+- **owner**: agent (Level 1 — `scripts/` is not a frozen zone)
+- **status**: CLOSED — the fix is committed (`WAL: the documentation check reads the line the checkout actually carries`), the reproduction and the negative control are recorded above, and the run 44169314944 shows the job `Documentation consistency` as `success`.
+- **the residual**: the check still compares against **one** line — the first ref it finds — and on a pull-request checkout that is the merge commit's history rather than `main`; a claim about a release merged only into `main` would not be seen. The comparison therefore names the line it used, and the line is the evidence.
+
+### R-EPIS-03 — The owner's live store's concept ids are not reproducible by the current id function, so an identity migration that recomputes ids from names would mint new identities for 19 of 24 concepts
+
+- **category**: identity-integrity
+- **severity**: high
+- **probability**: certain (it is a measured fact, not a forecast)
+- **impact**: high
+- **evidence**: `Ids.digest` is an FNV-1a hash returned as a bare hex string (`matrix-core/src/main/java/io/matrix/knowledge/Ids.java:117-124`), and the importer mints `digest(workspaceId + "|concept|" + name.strip().toLowerCase())`. Recomputing that over the live store (`matrix-core/data/knowledge/workbench.sqlite`, read-only) **reproduces 5 of its 24 concept ids**; 17 of the 24 are shaped `c-<slug>-<hash>` (for example `c-validity-58964155`), 5 are bare hashes and 2 have a long-slug variant — three shapes, one of which the current function never mints. The same store also holds **two concepts with the same name and two different ids** (`Cellular respiration` in `photosynthesis`: `c-cellular-respiration-70762885` and `dbe3c115`), which under the current scheme would collapse onto one id.
+- **exposure**: Real, for the migration only: a plan that recomputes ids from names would treat 19 concepts as having no identity and would mint new ones — the exact failure the identity work exists to prevent. The **inverse** case (two ids for one name) is a **concept-id collision**, and OD-065 decides only the **representation**-id collision.
+- **mitigation**: The plan must map **the store's rows** (the old id → the new id) and never recompute an id from a name; the dry run must publish how many of the 24 concepts the plan mapped one-to-one; a concept-id collision is an owner decision.
+- **owner**: owner (the collision rule), agent (the mapping and the dry run)
+- **status**: CLOSED — the dry run ran on 2026-11-18 and the migration was executed the same day under the owner's D1-LIVE-STORE-MIGRATION-019 (OD-070). The plan mapped the store's rows and minted no identity from a name: the store's 24 concept ids are all still there, superseded by a 28-row concept lineage, and every one of the 52 claims now points at a concept (0 claims without a concept). The **concept-id collision** the record names — the two concepts that share the name "Cellular respiration" with two different ids — did **not** materialise as a collision: the two became two claim-scoped records (13 of them in total), each keeping its own text, and neither was minted onto the other's id. The **residual** is unchanged and still the owner's: the two concepts that share a name remain two concepts, and whether they should be one is a decision the migration did not take.
+- **the residual**: the numbers above described the live store **before** the migration; the dry run's numbers and the migration's numbers (§J-bis, §J-quater) are now the evidence, and they agree with them.
+
+### R-EPIS-04 — The migration's prerequisite rewrite violated the primary key whenever a merge collapsed two edges onto one triple
+
+- **category**: identity-integrity
+- **severity**: high
+- **probability**: certain (it is a measured fact: the dry run crashed on it)
+- **impact**: high — without the fix the migration cannot run at all on any store whose concepts merge
+- **evidence**: the dry run of 2026-11-18 failed with
+  `org.sqlite.SQLiteException: [SQLITE_CONSTRAINT_PRIMARYKEY] A PRIMARY KEY constraint failed
+  (UNIQUE constraint failed: prerequisite.workspace_id, prerequisite.concept_id,
+  prerequisite.requires_concept_id)` at `ReferentKeyMigration.rewriteThePrerequisites`
+  (`matrix-core/src/main/java/io/matrix/knowledge/concept/research/ReferentKeyMigration.java:610`).
+  The old rewrite issued two blind `UPDATE`s per old→new pair (one per column), so two edges that
+  landed on the same triple violated the key. The corpora never exercised it: they hold **0**
+  prerequisite edges, so the rehearsal's own print reads `the prerequisite graph: 0 nodes, 0 edges`.
+  A second consequence of the same rewrite: an edge whose two ends merge into one referent became a
+  **self-require**, which the store's own `Prerequisite` record forbids — the rollback arm failed
+  with `IllegalArgumentException: a concept cannot require itself`
+- **exposure**: real for every store whose concepts merge — the owner's live store merges (the
+  `logic` workspace: 1 collapse, 1 self-loop); the corpora do not, which is exactly why the defect
+  survived until the owner's own data was tested
+- **mitigation**: the rewrite reads the edges, maps both ends, keeps the relation as a **set** of
+  triples, drops the edges that would become self-requires, and **counts and publishes** both
+  losses (`prerequisiteCollisions`, `prerequisiteSelfLoopsDropped` in `MigrationResult`); the
+  lineage keeps the history of both ends. A **synthetic regression test**
+  (`PrerequisiteMergeTest`) reproduces both outcomes in a clean CI checkout, because the live store
+  is not in the repository and the dry run is skipped there
+- **owner**: agent (the rewrite and the counters) — the owner decides whether the live store is
+  migrated, on the measured result
+- **status**: CLOSED — the dry run of 2026-11-18 completes with **0 orphans and 0 stale pointers in
+  every one of the 13 tables of both workspaces**, the rollback restores both workspaces, and the
+  live store is unchanged (schema version 15, 13 photosynthesis concepts); the residual (the two
+  dropped edges in `logic`) is **not** erased by the closure — it is the measured cost of the merge
+  and it is the owner's to accept with the second decision
+
+### R-EPIS-05 — The FAST PR lane's aggregator interpolated a JSON matrix into the shell, so the required check died with exit 127
+
+- **category**: delivery-integrity
+- **severity**: high — the aggregator IS the required status check of `develop`
+- **probability**: certain (it is a measured fact: the CI run of 2026-11-18)
+- **impact**: high — every change that touches a module makes the lane red, so nothing can be merged
+- **evidence**: the CI run **44244456922** of the commit `89731948`: the matrix job `Compile + targeted
+  tests (matrix-core)` **succeeded**, while the aggregator job failed with
+  `Process completed with exit code 127` and the log line
+  `line 2: io.matrix.knowledge.concept.research.*}]: command not found`. The scope job's
+  `build-matrix` output is `[{"module": "matrix-core", "filter": "--tests io.matrix.knowledge.concept.research.*"}]`
+  and the aggregator substituted it into a double-quoted shell string, so the inner quotes closed the
+  shell's own quoting. Reproduced locally under the runner's shell (`bash -e`): the old form exits
+  **127**, the new form exits **0**
+- **exposure**: real and total for module-touching changes. It did not show before because the lane
+  had only ever run on documentation changes, where the matrix is empty and the step exits early —
+  the first commit that touched `matrix-core` found it
+- **mitigation**: the values are passed through the environment (`BUILD_RESULT`, `BUILD_MATRIX`) and
+  read as data; the empty-matrix semantics of OD-066 are unchanged; the repair is reproduced locally
+  in all three cases (success, empty matrix, failed compile) before it is pushed
+- **owner**: owner (the frozen-zone sanction, D1-CI-AGGREGATOR-QUOTING-020 → OD-069), agent (the repair)
+- **status**: CLOSED — the owner's sanction is recorded (OD-069), the frozen exception is raised to
+  **2370** diff lines with the sanction in `docs-v2/quality/frozen-zone-baseline.txt`, and the quality
+  gate reports **PASS** (271 candidates, 0 violations) with the change in the tree. **The residual:**
+  the lane's own matrix path and its PR-event path have still never run green end to end on this
+  repository — that is measured by the next CI run, not assumed here
+
 ## How a risk is closed
 
 1. The **mitigation** is implemented and **verified** by an executed check — the evidence
@@ -514,3 +615,166 @@ implemented, tested and never called has no exposure, and saying so is part of t
 Any agent may add a record. A record must state the **evidence** (a path, a command or a
 measurement) and the **actual exposure** — not the implementation status. A record with no
 evidence is a suspicion, and it is marked as such.
+
+### R-EPIS-06 — the identity repair promotes a phrase where a thing should be
+
+- **the finding**: the referent policy accepted a span that opens with a **preposition followed by a
+  determiner** and carries no comma ("In the assignment under consideration"). Such a span modifies
+  something outside itself: it says *where* or *for what*, not *what*. The owner's migrated live store
+  carried **two** such referents with **10 claims** on them — the false promotion that Gate 4 names.
+- **why it happened**: the policy tested a preposition-led span only when the span carried a **comma**
+  (an adverbial plus a subject, cut at the comma). A preposition-led span **without** a comma was never
+  tested; a subordinator-led span was rejected (`CLAUSE_SUBORDINATOR`).
+- **the fix**: `Rejection.PREPOSITIONAL_MODIFIER` (OD-071). The rule is narrowed by two conditions so it
+  creates no false rejections: the preposition must be followed by a **determiner**, and the span must
+  carry **no comma**. The controls that must stay accepted are in the test.
+- **the evidence**: the test was **red before the fix** and green after
+  (`TEST-io.matrix.knowledge.concept.research.PrepositionalPhraseProbeTest.xml`); the corpora's measured
+  baseline is unchanged (the seed 348/326, the referents 107, the frozen-150 precision 0.9444 LENIENT and
+  1.0000 STRICT); the live store was re-migrated from the preserved original and now holds **0**
+  preposition-led referents, and its served answers are unchanged.
+- **status**: CLOSED — the rule is in the policy, the store is corrected, and the false promotion is
+  measured at zero.
+- **the residual**: the rule is a **structural** test, not a parser. A span that opens with a
+  preposition and a determiner but genuinely names a thing ("In vitro photosynthesis" is safe because
+  "vitro" is not a determiner; a hypothetical "In the presence of chlorophyll" is not) would be rejected
+  and its claims would become claim-scoped records — retrievable, but not concept-addressable. That is
+  the conservative direction: the claim is never lost and never answered as a different thing.
+
+### R-EPIS-07 — the published numbers' artefacts were deleted by the next test run, so the evidence chain had a hole
+
+- **the finding**: the hard review of the wave (2026-11-18) found that **seven of the eight** JUnit
+  XMLs the evidence ledger named for this wave existed **nowhere** — not in the repository (`build/`
+  is gitignored) and not in the working tree (a Gradle run wipes `matrix-core/build/test-results/`).
+  The ledger pointed at artefacts that could not be opened. The **claims** themselves were true (the
+  review verified the numbers against the store and against the code), but the **chain of evidence**
+  had a hole in it: a number whose artefact cannot be opened is a recollection.
+- **why it happened**: the rule ("the evidence is the retained JUnit XML") was applied to the **run**,
+  not to the **repository**. The XML was retained on the machine, and the next run deleted it. The
+  repository's own `AGENTS.md` warns of exactly this ("a Gradle test run **wipes** the module's
+  `build/test-results` ⇒ copy the XML out before the next run") — the warning was written down and
+  not followed for these artefacts.
+- **the fix**: the wave's targeted suites are now run in **one** invocation and their XMLs are copied
+  into the tracked directory `docs-v2/engineering/evidence/`, whose README carries the rule and the
+  command; the evidence ledger's rows now name **those tracked copies** instead of the wipe-able build
+  path. Measured: **25** XMLs retained, **97** tests, **0** failures, **0** errors, **0** skipped.
+- **the evidence**: `docs-v2/engineering/evidence/` (the retained XMLs with their counts) and the
+  ledger's rows, which now name the files in it.
+- **status**: CLOSED **for this wave**; the exposure is **structural** — every future run that
+  publishes a number must copy its XML into the tracked directory, or the number is a recollection.
+- **the residual**: two holes are **not** closed by this wave and are recorded here rather than hidden.
+  The older rows of the ledger (the P0 close-out) still name a packaging XML that was **never**
+  retained. And the **launcher's own console log** (`scripts/migrate-live-store.sh`) is not a file:
+  the launcher's numbers are quoted from the run's output, and the launcher's **contract** — the
+  backup-before-write order, the abort before the live file is touched, the atomic replace — is now
+  pinned by a test instead.
+
+### R-EPIS-08 — the launcher's backup copies only the main database file, so a live store with an un-checkpointed WAL would lose the frames in it
+
+- **the finding**: the store runs in **WAL** mode, and the launcher copies only the **main** file
+  (`Files.copy(live, backup)`). A main-file-only copy of a WAL database that holds **un-checkpointed
+  committed frames loses them** — reproduced with a minimal case: a table created and committed in the
+  WAL was **absent** from the main-file-only copy. So the backup, the work file and the migrated result
+  would all miss that content, and the stale `-wal`/`-shm` sidecars would be left next to the replaced
+  live file.
+- **the exposure, measured today**: the live store's `-wal` holds **86** frames and **all 86** are
+  already checkpointed into the main file (measured with `PRAGMA wal_checkpoint(PASSIVE)` on a
+  **copy**), so the migration that produced the published numbers is unaffected and the backup is
+  complete ⇒ ⇒ ⇒ the defect is **latent**, not active.
+- **the fix** — **applied** (the owner's decision on R-EPIS-08, option B, OD-075): the backup and the
+  work file are now **consistent snapshots** taken with SQLite's own `VACUUM INTO`, which merges the
+  WAL into one file; the launcher **checkpoints the live store's WAL and removes its sidecars**
+  before the atomic replacement, so the new file never sits next to a stale WAL; and the way back is
+  proved over the backup's **content** — a digest over every user table and every row, order-
+  independent — rather than over its bytes ⇒ ⇒ ⇒ the launcher no longer copies a main file that can
+  miss a frame, and the proof is a statement about the store's data rather than about a file's bytes.
+- **the consequence to name**: the backup is no longer a **byte copy** of the pre-migration file, so
+  the sha256 `6d963dff…` the report publishes is the digest of the **original file**, not of a
+  backup this launcher would make today. The launcher prints the backup's own sha256 **and** the
+  content digest, and the checks are over the content ⇒ ⇒ ⇒ the published evidence stays true
+  (that file still holds the original bytes) and the new contract is stated.
+- **the evidence**: `LiveStoreLauncherTest` — the third test reproduces the defect (a store whose WAL
+  holds un-checkpointed frames: the **main file alone** does not hold the committed table) and then
+  proves the fix (the backup **does** hold it) ⇒ ⇒ ⇒ the regression is pinned, not merely argued.
+- **owner**: the owner — OD-075.
+- **status**: CLOSED (2026-11-18) — the owner's option B is implemented and pinned by a test. The
+  two leftovers are named: the launcher's own **console log** is still not a file (R-EPIS-07), and the
+  backup of 2026-11-18 on disk is a byte copy made by the previous launcher.
+
+### R-EPIS-09 — the fast lane does not build the packaged application, so a wiring defect reaches the release lane
+
+- **the finding**: the FAST PR lane **compiles** the modules and runs the targeted tests; it does
+  **not** build the packaged Quarkus application. The release lane (`ci.yml`) does — and on
+  2026-11-18 it caught a defect the fast lane could not: `io.matrix.knowledge.ArtifactReportResource`
+  **injects** `io.matrix.cognitive.report.ReportJourneyPlanner`, which was a plain class and **not a
+  CDI bean**, so the build failed with
+  `UnsatisfiedResolutionException: Unsatisfied dependency for type io.matrix.cognitive.report.ReportJourneyPlanner`
+  in `:matrix-core:quarkusAppPartsBuild` ⇒ ⇒ ⇒ the packaged application **could not be built**, and the
+  defect sat in the tree through the whole wave.
+- **why it happened**: the route was added with the planner as an injected field, and the tests drive
+  the route by **constructing** it (the fields are public for that reason), so the tests never asked
+  the container to resolve it ⇒ ⇒ ⇒ the defect is invisible to every test that does not boot the
+  container — and there is **no `@QuarkusTest`** in the repository (0 of them).
+- **the fix**: the planner is now an **application-scoped bean** (`@ApplicationScoped`, and no longer
+  `final`, because a normal-scoped bean needs a client proxy) ⇒ ⇒ ⇒ the ledger the class's own
+  javadoc requires to outlive the request is the application's, and the build validates the wiring.
+  Measured: `:matrix-core:quarkusAppPartsBuild` **succeeds** where it failed, and a cheap unit test
+  pins the contract the build checks (the planner carries the scope annotation).
+- **the evidence**: the CI run `44378266172` (the release lane of the pull request) — the job "Quality
+  gates (can fail)" failed with the `UnsatisfiedResolutionException` above; the local
+  `:matrix-core:quarkusAppPartsBuild` failed the same way before the fix and succeeds after it.
+- **owner**: the coordinator — the defect is fixed; the *gap* is the lane's.
+- **the second instance, the same gap**: the fast lane also does not run the **full** unit suite —
+  it runs the **targeted** suites of the touched packages ⇒ ⇒ ⇒ a second defect of the wave reached
+  the release lane the same way: the **decision-path determinism gate** (CONSTITUTION Article I)
+  failed with two **new** wall-clock findings that the accepted baseline does not list —
+  `matrix-core/…/research/LiveStoreMigration.java` (the stamp that names the migration's files) and
+  `matrix-brain-runtime/…/EpisodeQuarantineTool.java` (the default timestamp of a ledger mark) ⇒ ⇒ ⇒
+  both are **timestamps that decide nothing**, and the constitution's own mechanism for that is
+  `@ArticleIPermitted` ⇒ ⇒ ⇒ both are now annotated, and the gate is **green** (measured: the two
+  gate tests pass on `develop` and failed before the annotations).
+- **status**: OPEN as a **gap**, CLOSED as defects. The gap: the fast lane covers neither the
+  packaged application nor the full unit suite, so two defects of this wave (a CDI wiring defect and
+  a determinism-gate violation) could only be caught by the release lane ⇒ ⇒ ⇒ the release lane must
+  be watched before a merge, and the owner's release decision (OD-074) says exactly that ⇒ ⇒ ⇒
+  widening the fast lane would cost it its speed and is **not** decided here.
+
+### R-EPIS-10 — the Article I exemption is file-granular, so a class that imports the annotation is outside the gate
+
+- **the finding**: the decision-path auditor arms its exemption when it finds the **text**
+  `ArticleIPermitted` on any line of a file — including the `import` statement ⇒ ⇒ ⇒ the exemption
+  then covers the **whole class body**, not the annotated member. Three production files that
+  import the annotation (`LiveStoreMigration`, `EpisodeQuarantineTool`, `ArtifactWriter`) are
+  therefore **outside the gate's reach**, whatever they contain: a synthetic, completely
+  unannotated `Instant.now()` in an unrelated method of such a class is classified **PERMITTED**
+  and does not block.
+- **why it matters**: the wave's own claim — "no wall-clock read remains in a decision path" — is
+  true only **within the gate's reach**. The two annotations the wave added are correctly placed
+  on the right members, and the gate is green, but the gate would not have found a third read in
+  those files.
+- **the fix**: not applied. The auditor's exemption must be **member-granular** — the annotation's
+  position must be recognised, and an `import` line must not arm it — and the three files must
+  then be re-scanned. Changing the gate changes the accepted baseline
+  (`docs-v2/quality/decision-path-baseline.txt`), which is a governance artefact ⇒ ⇒ ⇒ it needs the
+  owner's decision, and it is **not** decided by this release.
+- **owner**: the owner (the instrument's change is a governance decision) — the coordinator can
+  implement it once the decision is taken.
+- **status**: OPEN as a **gap in the instrument**, not as a defect in the wave's code. The wave's
+  two wall-clock reads are annotated and decide nothing.
+
+### R-EPIS-11 — the wave's own probe family reports a measurement and asserts nothing
+
+- **the finding**: the `HardReview*` and `AdversarialProbe*` classes of this wave (41 methods in 24
+  files) **print** their measurement and assert nothing. That is a legitimate **instrument** — a
+  probe that reports what it sees — but it is **not a gate**, and a reader who takes "the printed
+  numbers became assertions" (the phrase the wave's own hard review used) as covering the whole
+  family would be wrong: the phrase holds for the held-out evaluation, which does assert.
+- **the two that mattered, and are fixed**: the leakage probe's negative control only printed
+  whether the guard had caught the planted question (so it would have stayed green with a broken
+  guard), and the migration rehearsal counted zero concepts through a workspace id that does not
+  exist and printed the zeros as the store's contents. Both now **assert**, and the leakage probe
+  has a **mutation proof** (red with the guard disabled, green after the restoration).
+- **the fix**: the remaining probes are named, not fixed — converting a measurement probe into a
+  gate is a **design decision** about what the probe is for, and it is the next wave's work.
+- **owner**: the coordinator (Level 1 — test-only changes), after the release.
+- **status**: OPEN as a **labelled gap**; the two false-success probes of this wave are CLOSED.

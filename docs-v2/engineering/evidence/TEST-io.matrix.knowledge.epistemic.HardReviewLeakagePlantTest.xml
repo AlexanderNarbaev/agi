@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.epistemic.HardReviewLeakagePlantTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:58:49.966Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.042">
+  <properties/>
+  <testcase name="the exemption covers the NAME check only: a planted question still fails the guard" classname="io.matrix.knowledge.epistemic.HardReviewLeakagePlantTest" time="0.041"/>
+  <system-out><![CDATA[  the repository root the guard will use: /home/alexandr-narbaev/Projects/agi/data/tmp/junit-2128957614843471658/copy
+[P0.3-baseline] gold propositions 17, production references to the set 0
+### the leakage guard on the clean copy: it passed
+  the planted question: [Given that new crust is generated where the plates pull away from each other, what happens where Mid-Atlantic Ridge runs?]
+  the planted file: true
+  the file carries it: true
+### the leakage guard on the planted copy:
+  the guard failed: true
+  it says: [a question of the set appears in the development code: [matrix-core/src/test/java/io/matrix/knowledge/concept/definitions/HandLabelledSpans.java carries the question of E-S01]] Expecting empty but was: ["matrix-core/src/test/java/io/matrix/knowledge/concept/definitions/HandLabelledSpans.java carries the question of E-S01"]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

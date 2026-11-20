@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.epistemic.EpistemicHeldOutSetBuilderTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:58:48.790Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="1.176">
+  <properties/>
+  <testcase name="P0.3 — the new epistemic held-out set, built from the seed corpus and verified" classname="io.matrix.knowledge.epistemic.EpistemicHeldOutSetBuilderTest" time="1.175"/>
+  <system-out><![CDATA[[P0.3] /home/alexandr-narbaev/Projects/agi/docs-v2/engineering/EPISTEMIC-HELDOUT-SET.json (16 cases)
+[P0.3] classes {SUPPORTED_PREMISE=2, REFUTED_PREMISE=2, UNSUPPORTED_PREMISE=2, IRRELEVANT_REFUTATION=1, CONFLICTING_EVIDENCE=1, AMBIGUOUS_READINGS=2, LEXICAL_NEGATION=2, PARAPHRASE=2, NO_PREMISE=2}
+[P0.3] cases per document {usgs-this-dynamic-earth.md=9, wikipedia-plate-tectonics.md=4}
+[P0.3] gold claims per document {usgs-this-dynamic-earth.md=15, wikipedia-plate-tectonics.md=9}
+[P0.3] freeze {algorithm=sha-256, scope=the UTF-8 bytes of the compact JSON document that is the 'cases' array of this dataset, followed by a single line feed, sha256=2f4347da61b67df5f039f4dc72c985a8187f5c211e91faf7cd4a7ae2e791acbe, frozenAt=2026-11-15, frozenBefore=the measurement of any candidate implementation of the premise semantics, and before any algorithm was selected for the repair, regressionSets=[epistemic-eval/cases.json, docs-v2/engineering/C2A-HELDOUT-SET.json]}
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

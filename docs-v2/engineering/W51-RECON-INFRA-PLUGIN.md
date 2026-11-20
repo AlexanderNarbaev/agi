@@ -70,7 +70,7 @@ not** — the native job inherits only the repository-wide `gradle.properties`.
 |---|---|---|---|
 | **C1** | SpotBugs cannot analyse Java 25 bytecode (ASM too old) | **STILL PRESENT** | `matrix-core/build.gradle:4` `id 'com.github.spotbugs' version '6.1.7'`; `matrix-core/build.gradle:317` `toolVersion = '4.9.3'`; the file's own comment at `:310-316` states 4.9.3 bundles **ASM 9.7.1 → max class-file major 68 (Java 24)** against the project's **major 69 (Java 25)**. `matrix-core/build.gradle:30-31` pins `VERSION_25`. |
 | **C2** | TruffleHog reported 5 unverified PostgreSQL-like findings | **STILL PRESENT (the findings), but NOT APPLICABLE as a secret leak** | The step is `ci.yml:426-429` (`trufflesecurity/trufflehog@main`, `path: ./`, `extra_args: --results=verified,unverified,unknown`); there is **no** `.trufflehog.yml` / `.trufflehogignore` anywhere in the repo. The five strings are in §A.2.2 below — all five are **documentation placeholders**. |
-| **C3** | ShellCheck multiple findings | **STILL PRESENT** | `.github/workflows/shellcheck.yml` (17 lines, one job). **Measured here: 106 findings across 41 tracked `.sh` files** (1 error, 50 warnings, 55 notes) with ShellCheck 0.11.0. The repo's own record says 130 findings across ~30 scripts (`docs-v2/governance/RISK-REGISTER.md:451-457`, `docs-v2/engineering/W49-STATUS.md:243`) — the same gate, a different ShellCheck version and tree. |
+| **C3** | ShellCheck multiple findings | **STILL PRESENT** | the shellcheck workflow (removed on 2026-11-15 by the CI simplification) (17 lines, one job). **Measured here: 106 findings across 41 tracked `.sh` files** (1 error, 50 warnings, 55 notes) with ShellCheck 0.11.0. The repo's own record says 130 findings across ~30 scripts (`docs-v2/governance/RISK-REGISTER.md:451-457`, `docs-v2/engineering/W49-STATUS.md:243`) — the same gate, a different ShellCheck version and tree. |
 | **C4** | native-image job fails from memory exhaustion on the standard runner | **STILL PRESENT** | `.github/workflows/native.yml:28-34` — the job sets **no memory limit at all**; the only ceiling that reaches native-image is `-J-Xmx8g` (`matrix-core/build.gradle:383`) together with `--gc=epsilon` (`:387`, no GC, so the 8 GiB ceiling is hard). Recorded failure: `java.lang.OutOfMemoryError: Java heap space` with `-Xmx8g` (`docs-v2/engineering/W50-STATUS.md:182`). |
 | **C5** | Quality gate magic-literal baseline = 271 | **STILL PRESENT, and the baseline is correct** | `docs-v2/quality/quality-baseline.txt:1` `literal_candidates=271`; the gate script is `scripts/quality-gate.sh` (510 lines). **Measured here: 271 (shell 78 + Java 193), exit 0** — the gate is green *at* the baseline, so the debt is unchanged, not reduced. |
 
@@ -140,7 +140,7 @@ detector stops matching them. Both are owner decisions; this audit makes no chan
 
 ### A.2.3 C3 — ShellCheck in detail
 
-* Workflow: `.github/workflows/shellcheck.yml`, 17 lines, one job, three steps: checkout →
+* Workflow: the shellcheck workflow (removed on 2026-11-15 by the CI simplification), 17 lines, one job, three steps: checkout →
   `sudo apt-get install -y shellcheck` → `find . -name "*.sh" -exec shellcheck {} +`. There is **no**
   `.shellcheckrc` and **no** `.shellcheckignore` in the repository.
 * **Trigger gap:** `on: push: branches: [main]` and `on: pull_request: branches: [main]` — the

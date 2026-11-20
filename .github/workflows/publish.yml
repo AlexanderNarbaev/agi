@@ -1,0 +1,154 @@
+# PUBLISH LANE — credential-gated, manual only.
+#
+# Approval basis: the owner's directive of 2026-11-15 §4 and §11 Gate 1 ("move publish/Graal/
+# full expensive runs out of ordinary path") and OD-053: "missing Docker Hub credentials must
+# NOT make ordinary feature CI red".
+#
+# Two properties this file guarantees:
+#   1. It never runs on a pull request. It is `workflow_dispatch` only. The ordinary feature
+#      path therefore cannot be made red by the absence of a publishing credential.
+#   2. When the credential is absent, the publishing job is SKIPPED, not failed. The
+#      credential is read in a step, because the `secrets` context is not available in a
+#      job-level `if:` expression; the check therefore happens in a job whose output the
+#      publishing job depends on.
+#
+# The lane is not a required status check of any branch. It is never part of a merge gate.
+
+name: publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "The ref to publish (a commit SHA or a branch name)"
+        required: true
+        default: develop
+      target:
+        description: "staging | production"
+        required: true
+        default: staging
+      confirm:
+        description: "Type PUBLISH to confirm"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  credential-check:
+    name: "Publication credentials"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      dockerhub: ${{ steps.check.outputs.dockerhub }}
+      kubernetes: ${{ steps.check.outputs.kubernetes }}
+      confirmed: ${{ steps.check.outputs.confirmed }}
+    steps:
+      - id: check
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          K8S_STAGING_KUBECONFIG: ${{ secrets.K8S_STAGING_KUBECONFIG }}
+          K8S_PROD_KUBECONFIG: ${{ secrets.K8S_PROD_KUBECONFIG }}
+          TARGET: ${{ inputs.target }}
+          CONFIRM: ${{ inputs.confirm }}
+        run: |
+          set -euo pipefail
+          dockerhub=false; kubernetes=false
+          if [ -n "${DOCKERHUB_USERNAME}" ] && [ -n "${DOCKERHUB_TOKEN}" ]; then dockerhub=true; fi
+          if [ "${TARGET}" = "production" ]; then
+            if [ -n "${K8S_PROD_KUBECONFIG}" ]; then kubernetes=true; fi
+          else
+            if [ -n "${K8S_STAGING_KUBECONFIG}" ]; then kubernetes=true; fi
+          fi
+          confirmed=false
+          if [ "${CONFIRM}" = "PUBLISH" ]; then confirmed=true; fi
+          {
+            echo "dockerhub=${dockerhub}"
+            echo "kubernetes=${kubernetes}"
+            echo "confirmed=${confirmed}"
+          } >> "$GITHUB_OUTPUT"
+          echo "dockerhub=${dockerhub} kubernetes=${kubernetes} confirmed=${confirmed}"
+          if [ "${dockerhub}" != "true" ]; then
+            echo "::notice::The Docker Hub credential is absent. The publishing step will be SKIPPED, not failed. This is the owner's OD-053: a missing credential must not make ordinary feature CI red."
+          fi
+
+  publish:
+    name: "Publish (${{ inputs.target }})"
+    needs: credential-check
+    if: needs.credential-check.outputs.confirmed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        if: needs.credential-check.outputs.dockerhub == 'true'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        if: needs.credential-check.outputs.dockerhub == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: deploy/docker/Dockerfile.api-gateway
+          push: true
+          tags: |
+            alexandernarbaev/matrix-api-gateway:${{ github.sha }}
+            alexandernarbaev/matrix-api-gateway:latest
+
+  deploy:
+    name: "Deploy (${{ inputs.target }})"
+    needs: [credential-check, publish]
+    if: needs.credential-check.outputs.confirmed == 'true' && needs.credential-check.outputs.kubernetes == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: ${{ inputs.target }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ inputs.target == 'production' && secrets.K8S_PROD_KUBECONFIG || secrets.K8S_STAGING_KUBECONFIG }}
+
+      - name: Deploy with Helm
+        run: |
+          set -euo pipefail
+          if [ "${{ inputs.target }}" = "production" ]; then
+            helm upgrade --install matrix-prod deploy/helm/matrix \
+              --namespace matrix-prod \
+              --set image.tag=${{ github.sha }} \
+              --set secrets.stripeWebhookSecret=${{ secrets.STRIPE_WEBHOOK_SECRET_PROD }} \
+              --set secrets.licenseSigningSecret=${{ secrets.LICENSE_SIGNING_SECRET_PROD }} \
+              --wait --timeout 10m
+          else
+            helm upgrade --install matrix-staging deploy/helm/matrix \
+              --namespace matrix-staging --create-namespace \
+              --set image.tag=${{ github.sha }} \
+              --set secrets.stripeWebhookSecret=${{ secrets.STRIPE_WEBHOOK_SECRET }} \
+              --set secrets.licenseSigningSecret=${{ secrets.LICENSE_SIGNING_SECRET }} \
+              --wait --timeout 5m
+          fi
+
+      - name: Verify the deployment
+        run: |
+          set -euo pipefail
+          sleep 30
+          if [ "${{ inputs.target }}" = "production" ]; then
+            curl -f https://api.matrix.ai/q/health
+          else
+            curl -f https://staging-api.matrix.ai/q/health
+          fi
+          echo "::notice::the deployment is healthy"

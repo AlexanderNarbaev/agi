@@ -51,6 +51,42 @@ class QuestionDemandTest {
                 .isEqualTo(QuestionDemand.Kind.FUTURE);
     }
 
+    /**
+     * The probe for the sealed set's H-P02 — a false abstention measured on fresh data.
+     *
+     * <p>H-P02 is the only case of the sealed held-out set that the production path refused while
+     * the five retriever-based candidates answered it and cited the gold at rank 1. The refusal's
+     * reason was *"the question asks about a time that has not happened"* — for a question about
+     * **1912**: *"In the research pool, what did Wegener call the single landmass from which the
+     * continents later broke apart?"* ⇒ ⇒ ⇒ the cause was the bare word <b>"later"</b>, a
+     * PAST-relative adverb, in the future-demand rule ⇒ ⇒ ⇒ and the question's own
+     * <b>expected disposition is ANSWERED</b>: the production path was contradicting the sealed
+     * set's expectation.</p>
+     *
+     * <p>This probe pins the fix: the word alone is not a future demand, and the future markers
+     * that ARE unambiguous still refuse.</p>
+     */
+    @Test
+    @DisplayName("a historical question with \"later\" is not a future demand")
+    void aHistoricalQuestionWithLaterIsNotAFutureDemand() {
+        String question = "In the research pool, what did Wegener call the single landmass from "
+                + "which the continents later broke apart?";
+
+        QuestionDemand.Analysis analysis = analyse(question);
+
+        assertThat(analysis.kind())
+                .as("a question about 1912 is not a question about a time that has not happened")
+                .isNotEqualTo(QuestionDemand.Kind.FUTURE);
+        assertThat(analysis.answerable()).as("the question is answerable").isTrue();
+        // The unambiguous markers still refuse: the fix removes the word, not the rule.
+        assertThat(analyse("What will happen to the continents later on?").kind())
+                .isEqualTo(QuestionDemand.Kind.FUTURE);
+        assertThat(analyse("What will the continents do later?").kind())
+                .isEqualTo(QuestionDemand.Kind.FUTURE);
+        assertThat(analyse("In 2050, what will the continents look like?").kind())
+                .isEqualTo(QuestionDemand.Kind.FUTURE);
+    }
+
     @Test
     @DisplayName("an ambiguous question gets a clarification, not a guess")
     void anAmbiguousQuestionGetsAClarificationNotAGuess() {

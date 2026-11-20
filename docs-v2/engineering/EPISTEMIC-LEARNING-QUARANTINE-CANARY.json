@@ -1,0 +1,11 @@
+{
+  "schema": "matrix.epistemic.learning-isolation.quarantine-canary.v1",
+  "recordedAt": "2026-11-15T19:47:38Z",
+  "logPath": "data/mind/episodic.ndjson",
+  "ledgerPath": "data/mind/episodic.quarantine.ndjson",
+  "rule": "RULE A (a frozen evaluation probe, in the Cyrillic or the transliterated form, or a bare letter-less arithmetic expression) OR RULE B (the C2A collection harness's own designed workload inputs), applied by record id",
+  "recordedRecords": 226,
+  "recordedMarks": 212,
+  "logSha256AtRemediation": "5732004d24956132712f6a875ef6082faa3b8df251421f07390b500e894ca11b",
+  "note": "THE LEDGER IS MACHINE STATE and stays outside git: data/mind/* is gitignored, exactly like the log it governs. This file is the TRACKED record of what that machine state was, so its disappearance is a BUILD FAILURE instead of a silent fallback. The digest above is a HISTORICAL FACT (the log's digest at the moment of the remediation) and is NOT asserted: the log grows with every organic interaction, so pinning its digest would break the build on the next real conversation. The counts are MONOTONIC — 'at least', never 'exactly' — because the ledger is append-only and the log only grows: if the log holds at least recordedRecords records, then the ledger must exist and hold at least recordedMarks marks. Without it the admission gate falls back to 'nothing is quarantined', all 226 records are admitted again, and the contamination returns without a trace. The mark count was raised from 209 to 212 on 2026-11-15, when the owner's answer to D1-QUARANTINE-RESIDUAL-010 extended the frozen probe corpus to the letter-less arithmetic probes: the three additional records are '100-7?' and '7*6' (twice), appended to the ledger with EpisodeQuarantineTool quarantine-ids, and the log itself was not touched."
+}

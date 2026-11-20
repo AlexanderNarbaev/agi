@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.auditor.Exp144DecisionPathAuditTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:51:54.996Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.066">
+  <properties/>
+  <testcase name="auditReality()" classname="io.matrix.auditor.Exp144DecisionPathAuditTest" time="0.065"/>
+  <system-out><![CDATA[[DECPATH-AUDIT] files=1413 violations=106 passed=true
+  io/matrix/actions/ArtifactWriter.java:389 — wall-clock (Annotated permitted)
+  io/matrix/actions/ArtifactWriter.java:406 — wall-clock (Annotated permitted)
+  io/matrix/imports/ChainStateStore.java:93 — wall-clock (Annotated permitted)
+  io/matrix/neuron/RandomForest.java:56 — new Random(seed) (Seeded Random)
+  io/matrix/neuron/TSNE.java:60 — new Random(seed) (Seeded Random)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

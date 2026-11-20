@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.auditor.Exp145MatrixTraceTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:51:55.062Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.011">
+  <properties/>
+  <testcase name="hundredCyclesChained()" classname="io.matrix.auditor.Exp145MatrixTraceTest" time="0.01"/>
+  <testcase name="deterministicHash()" classname="io.matrix.auditor.Exp145MatrixTraceTest" time="0.001"/>
+  <system-out><![CDATA[[TRACE-EXP] 400 steps, lastHash=16d0aab25b5f2cba...
+[TRACE-DETERM] 5fa9862390c7c6700fab6b553dc7cdb9794956e2f894c5ce7fba0281eb4dfbec
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

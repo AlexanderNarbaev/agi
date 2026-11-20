@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.concept.definitions.ConceptDefinitionAcceptanceTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:55:09.772Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="2.702">
+  <properties/>
+  <testcase name="A3 — the relation candidates are measured, and the precision is reported" classname="io.matrix.knowledge.concept.definitions.ConceptDefinitionAcceptanceTest" time="0.05"/>
+  <testcase name="A2 (ii) — the frozen hand-verified census: is a definition" classname="io.matrix.knowledge.concept.definitions.ConceptDefinitionAcceptanceTest" time="0.001"/>
+  <testcase name="A2 — every definition is a VERBATIM sentence of the concept's own source" classname="io.matrix.knowledge.concept.definitions.ConceptDefinitionAcceptanceTest" time="0.195"/>
+  <testcase name="A1 — the precision on the frozen set, and on the research's first 40" classname="io.matrix.knowledge.concept.definitions.ConceptDefinitionAcceptanceTest" time="0.001"/>
+  <testcase name="A1 — the frozen hand-labelled set is drawn from this corpus and still holds" classname="io.matrix.knowledge.concept.definitions.ConceptDefinitionAcceptanceTest" time="0.001"/>
+  <testcase name="A2 — the seed corpus now carries the definitions the rule finds" classname="io.matrix.knowledge.concept.definitions.ConceptDefinitionAcceptanceTest" time="0.0"/>
+  <testcase name="A8 — no concept id changed: the ids are still the digests of the names" classname="io.matrix.knowledge.concept.definitions.ConceptDefinitionAcceptanceTest" time="0.001"/>
+  <testcase name="A7 — the retrieval latency, with the definitions and without them" classname="io.matrix.knowledge.concept.definitions.ConceptDefinitionAcceptanceTest" time="1.291"/>
+  <testcase name="A2 — the production rule refines the research instrument's rule" classname="io.matrix.knowledge.concept.definitions.ConceptDefinitionAcceptanceTest" time="0.047"/>
+  <system-out><![CDATA[[A3] relation candidates=7 true and correctly directed=0
+[A2] the hand-verified census: 3/4 definitions ARE a definition of their concept
+[A1] the frozen set: 35/150 are genuine referents; the research's first 40: 12
+[A2] concepts=326 with a definition=4
+[A2] DEFINITION :: Trenches :: Trenches are the deepest parts of the ocean floor and are created by subduction.
+[A2] DEFINITION :: The San Andreas :: The San Andreas is one of the few transform faults exposed on land.
+[A2] DEFINITION :: Subduction zones :: Subduction zones are of two types: ocean-to-continent subduction, where the dense oceanic lithosphere plunges beneath the less dense continent, or ocean-to-ocean subduction where older, cooler, denser oceanic crust slips beneath less dense oceanic crust.
+[A2] DEFINITION :: The trenches :: The trenches are the key to understanding how island arcs such as the Marianas and the Aleutian Islands have formed and why they experience numerous strong earthquakes.
+[A7] the mean retrieval over 20 questions: with the definitions=739 us / 745 us, without them=739 us / 734 us
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

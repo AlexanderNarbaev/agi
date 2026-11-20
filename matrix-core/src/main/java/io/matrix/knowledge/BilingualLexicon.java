@@ -49,6 +49,13 @@ public final class BilingualLexicon {
 
     private BilingualLexicon() {
         load();
+        // The sets are frozen ONCE, at load time. The lookup is made once per term of every
+        // claim of the workspace, and a lookup that copies the set it returns is a lookup that
+        // allocates: the table is immutable after the load, and the lookup hands out the
+        // table's own set.
+        for (Map.Entry<String, Set<String>> entry : byTerm.entrySet()) {
+            entry.setValue(Set.copyOf(entry.getValue()));
+        }
     }
 
     /** The lexicon, loaded once. */
@@ -145,8 +152,62 @@ public final class BilingualLexicon {
             return Set.of();
         }
         Set<String> found = byTerm.get(stem.toLowerCase(Locale.ROOT));
-        return found == null ? Set.of() : Set.copyOf(found);
+        return found == null ? Set.of() : found;
     }
+
+    /**
+     * The terms that mean the same thing as the given one, WHATEVER THE CASE FORM.
+     *
+     * <p><b>Why the case form matters to a premise and not to the retrieval.</b> The Russian
+     * fold strips a case ending, and two of its forms leave a vowel behind: "растения" folds
+     * to "растени" while the lexicon holds "растение" under "растен", and "световую" folds
+     * to "светову" while the lexicon holds "световой" under "светов". A word the lexicon KNOWS
+     * is not a word the lexicon has never seen, and a bridge that cannot reach "plant"
+     * because of the ending it stripped cannot reach the assertion the word names.</p>
+     *
+     * <p><b>Why the retrieval does not use this.</b> The retrieval asks whether a question is
+     * about what the workspace holds, and a question that reaches the workspace through a
+     * case ending is a question the workspace does not hold: "Как пчёлы опыляют растения?"
+     * asks about the bees, and "растения" is only the plants. The premise path asks a
+     * different question — whether a premise states the proposition a claim states — and
+     * there the case form is not a new word. The two lookups are therefore two methods.</p>
+     *
+     * @param stem the folded term
+     * @return the counterparts, or an empty set
+     */
+    public Set<String> translationsOfCaseForm(String stem) {
+        if (stem == null) {
+            return Set.of();
+        }
+        String key = stem.toLowerCase(Locale.ROOT);
+        Set<String> found = translations(key);
+        if (!found.isEmpty()) {
+            return found;
+        }
+        int last = key.length() - 1;
+        if (last > MINIMUM_STEM_LENGTH && VOWELS.indexOf(key.charAt(last)) >= 0) {
+            found = byTerm.get(key.substring(0, last));
+        }
+        return found == null ? Set.of() : found;
+    }
+
+    /**
+     * The vowels a case ending can leave behind.
+     *
+     * <p>The Russian fold strips the case endings "ие", "ия", "ого", "ых" and the like, and
+     * the endings that begin with a consonant leave a vowel behind. The lookup tries the stem
+     * without that vowel before it gives up.</p>
+     */
+    private static final String VOWELS = "аеёиоуыэюяaeiouy";
+
+    /**
+     * The length a stem keeps when the fold strips an ending.
+     *
+     * <p>The fold itself keeps three letters more than the ending it strips, so a stem
+     * shorter than this is not a stem the fold could have produced and the lookup does not
+     * try it.</p>
+     */
+    private static final int MINIMUM_STEM_LENGTH = 3;
 
     /** Whether the lexicon holds the term. */
     public boolean holds(String stem) {

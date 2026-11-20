@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="P3 — the owner's live store: the launcher, exercised" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:55:56.524Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.28">
+  <properties/>
+  <testcase name="a clean run replaces the live file atomically and keeps the original bytes" classname="io.matrix.knowledge.concept.research.LiveStoreLauncherTest" time="0.128"/>
+  <testcase name="a dirty audit aborts the launcher before the live file is touched" classname="io.matrix.knowledge.concept.research.LiveStoreLauncherTest" time="0.053"/>
+  <testcase name="the backup holds the content of a store whose WAL is not yet checkpointed" classname="io.matrix.knowledge.concept.research.LiveStoreLauncherTest" time="0.099"/>
+  <system-out><![CDATA[[live-migration] the backup: /home/alexandr-narbaev/Projects/agi/data/tmp/junit-6551200993262459572/workbench.pre-migration-2026-11-20T07-55-56-527466297Z.sqlite (462848 bytes, the sha256 ff921eac79e478f8d75c9d4af685136b86003a24bc3ea6d2bd6c96135f9a54d6)
+[live-migration] the schema: the copy's version 15 -> 21, the chain took 15 ms
+[live-migration] the workspace logic: the concepts 11 -> 30, the claims 28 (re-pointed 28), the representations 8, the representation collisions 0, the prerequisites 6, the prerequisite collapses 1, the prerequisite self-loops 1, the other rows 88, the lineage 56, the referents 6, the rejected 13, the copy-forward 2 ms
+[live-migration] the workspace photosynthesis: the concepts 13 -> 37, the claims 24 (re-pointed 24), the representations 14, the representation collisions 0, the prerequisites 5, the prerequisite collapses 0, the prerequisite self-loops 0, the other rows 272, the lineage 48, the referents 14, the rejected 10, the copy-forward 2 ms
+[live-migration] the workspace logic: the audit walked 13 tables, the orphans 0, the stale pointers 0
+[live-migration] the workspace photosynthesis: the audit walked 13 tables, the orphans 0, the stale pointers 0
+[live-migration] the workspace logic: the rollback — the concepts 11 -> 30 -> 11
+[live-migration] the workspace photosynthesis: the rollback — the concepts 13 -> 37 -> 13
+[live-migration] the live store is replaced: /home/alexandr-narbaev/Projects/agi/data/tmp/junit-6551200993262459572/workbench.sqlite
+[live-migration] the live store after: the schema version 21
+[live-migration] the live store: the concept rows 67
+[live-migration] the live store: the claim rows 52
+[live-migration] the live store: the prerequisite rows 9
+[live-migration] the live store: the source rows 7
+[live-migration] the live store: the representation rows 27
+[live-migration] the live store: the concept_lineage rows 26
+[live-migration] the live store: the claim_lineage rows 52
+[live-migration] the live store: the claim_scoped_record rows 23
+[live-migration] the live store: the workspace logic — the orphans 0, the stale pointers 0
+[live-migration] the live store: the workspace photosynthesis — the orphans 0, the stale pointers 0
+[live-migration] the backup is kept: /home/alexandr-narbaev/Projects/agi/data/tmp/junit-6551200993262459572/workbench.pre-migration-2026-11-20T07-55-56-527466297Z.sqlite (462848 bytes)
+[live-migration] the live store: the referent concepts 20, the claims on them 29, the claim-scoped records 23
+[live-migration] the live store: the rejections {BARE_PLURAL=1, CLAUSE_PARTICIPLE=6, CONCATENATION=2, FUNCTION_HEAD=3, GENERIC_HEAD=1, PREPOSITIONAL_MODIFIER=10}, the self-requires 0, the claims without a concept 0
+[live-migration] the backup: /home/alexandr-narbaev/Projects/agi/data/tmp/junit-17271076335944517188/workbench.pre-migration-2026-11-20T07-55-56-657469263Z.sqlite (466944 bytes, the sha256 a6bb208555d21ac1f2bda6360afe9c2ee085e4aab3e63a53dfcdec45e104caf8)
+[live-migration] the schema: the copy's version 15 -> 21, the chain took 15 ms
+[live-migration] the workspace logic: the concepts 11 -> 30, the claims 28 (re-pointed 28), the representations 8, the representation collisions 0, the prerequisites 6, the prerequisite collapses 1, the prerequisite self-loops 1, the other rows 88, the lineage 56, the referents 6, the rejected 13, the copy-forward 2 ms
+[live-migration] the workspace photosynthesis: the concepts 13 -> 37, the claims 24 (re-pointed 24), the representations 14, the representation collisions 0, the prerequisites 5, the prerequisite collapses 0, the prerequisite self-loops 0, the other rows 272, the lineage 48, the referents 14, the rejected 10, the copy-forward 2 ms
+[live-migration] the workspace logic: the audit walked 13 tables, the orphans 0, the stale pointers 0
+[live-migration] the workspace photosynthesis: the audit walked 13 tables, the orphans 1, the stale pointers 0
+[live-migration] the backup: /home/alexandr-narbaev/Projects/agi/data/tmp/junit-17008299276016924320/workbench.pre-migration-2026-11-20T07-55-56-708757883Z.sqlite (466944 bytes, the sha256 8943ce11961d282b8890e4d066d2c50f417c1dff28b6b9a38934ea0ffade2e8c)
+[live-migration] the schema: the copy's version 15 -> 21, the chain took 15 ms
+[live-migration] the workspace logic: the concepts 11 -> 30, the claims 28 (re-pointed 28), the representations 8, the representation collisions 0, the prerequisites 6, the prerequisite collapses 1, the prerequisite self-loops 1, the other rows 88, the lineage 56, the referents 6, the rejected 13, the copy-forward 2 ms
+[live-migration] the workspace photosynthesis: the concepts 13 -> 37, the claims 24 (re-pointed 24), the representations 14, the representation collisions 0, the prerequisites 5, the prerequisite collapses 0, the prerequisite self-loops 0, the other rows 272, the lineage 48, the referents 14, the rejected 10, the copy-forward 2 ms
+[live-migration] the workspace logic: the audit walked 13 tables, the orphans 0, the stale pointers 0
+[live-migration] the workspace photosynthesis: the audit walked 13 tables, the orphans 0, the stale pointers 0
+[live-migration] the workspace logic: the rollback — the concepts 11 -> 30 -> 11
+[live-migration] the workspace photosynthesis: the rollback — the concepts 13 -> 37 -> 13
+[live-migration] the live store is replaced: /home/alexandr-narbaev/Projects/agi/data/tmp/junit-17008299276016924320/workbench.sqlite
+[live-migration] the live store after: the schema version 21
+[live-migration] the live store: the concept rows 67
+[live-migration] the live store: the claim rows 52
+[live-migration] the live store: the prerequisite rows 9
+[live-migration] the live store: the source rows 7
+[live-migration] the live store: the representation rows 27
+[live-migration] the live store: the concept_lineage rows 26
+[live-migration] the live store: the claim_lineage rows 52
+[live-migration] the live store: the claim_scoped_record rows 23
+[live-migration] the live store: the workspace logic — the orphans 0, the stale pointers 0
+[live-migration] the live store: the workspace photosynthesis — the orphans 0, the stale pointers 0
+[live-migration] the backup is kept: /home/alexandr-narbaev/Projects/agi/data/tmp/junit-17008299276016924320/workbench.pre-migration-2026-11-20T07-55-56-708757883Z.sqlite (466944 bytes)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.epistemic.AdversarialProbeRound5Test" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:58:38.228Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="6.371">
+  <properties/>
+  <testcase name="R5-3: a Russian premise the corpus SUPPORTS is answered" classname="io.matrix.knowledge.epistemic.AdversarialProbeRound5Test" time="0.006"/>
+  <testcase name="R5-2: none of the nine corpus-stated premises is called refuted" classname="io.matrix.knowledge.epistemic.AdversarialProbeRound5Test" time="0.246"/>
+  <testcase name="R5-4: the rule still recognises the refutations it must recognise" classname="io.matrix.knowledge.epistemic.AdversarialProbeRound5Test" time="0.015"/>
+  <testcase name="R5-1: the pinned numbers" classname="io.matrix.knowledge.epistemic.AdversarialProbeRound5Test" time="0.023"/>
+  <system-out><![CDATA[### R5-3 - a Russian premise the corpus supports
+  answered=true status=UNSUPPORTED
+  reason=The workspace mentions the subject of this premise — claim cl-a9724c3d of "Photosynthesis (encyclopedia entry)" states "Oxygenic photosynthesis releases oxygen as a byproduct of splitting water." — but that claim does not bear on the premise, so the premise has no supporting evidence here. The absence of evidence is not a contradiction: the workspace neither confirms nor refutes this premise.
+### R5-2 - nine premises the corpora STATE
+  premises called refuted: 0 of 9
+### R5-4 - the false-negative check: paraphrases of the false premises
+  REFUTED answered=false | Since the oxygen a plant releases comes from the carbon dioxide it absorbs, what does a plant release during the day?
+  REFUTED answered=false | Since photosynthesis produces the oxygen of a plant from the carbon dioxide it absorbs, what does a plant release during the day?
+  REFUTED answered=false | Since valid arguments always have true premises, what are the premises of modus ponens?
+  REFUTED answered=false | Since the premises of a valid argument are always true, what are the premises of modus ponens?
+  refutations recognised: 4 of 4
+### R5-1 - the pinned numbers
+  (a) the water premise: answered=true status=UNSUPPORTED
+  (b) the synonym of the misconception: answered=false status=REFUTED
+  (c) the Russian misconception: answered=false status=REFUTED
+     reason=The workspace contradicts this premise: claim cl-f322edeb of "Photosynthesis (encyclopedia entry)" states "The oxygen a plant releases comes from the carbon dioxide it absorbs.", and the evidence behind that claim contradicts the premise rather than merely failing to support it. The relation was read from the text of the two sides - the terms they share and the negations they carry - so it is a lexical candidate and not a demonstration of meaning: a premise that shares terms with a claim is about the same subject whether or not the two mean the same thing.
+  (d) the plants premise: answered=true status=UNSUPPORTED
+  (e) the false photosynthesis premise: answered=false status=REFUTED
+  (e) the false logic premise: answered=false status=REFUTED
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

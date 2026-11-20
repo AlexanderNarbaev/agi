@@ -110,35 +110,6 @@ def build() -> str:
                           text=True).stdout.strip()
 
 
-def sqlite_native_library() -> str | None:
-    """Takes the SQLite native library out of the driver jar and returns its path.
-
-    The packaged application cannot extract the library itself: the driver's own
-    resource lookup fails inside the application's class loader, the driver reports
-    "No native library found", and the knowledge store refuses to open. The library
-    is therefore taken out of the driver jar and handed to the driver through the
-    property the driver documents. The workaround is recorded in the report, because
-    it is a property of the packaging, not of the route under demonstration.
-    """
-    import zipfile
-
-    directory = ROOT / "matrix-core" / "build" / "quarkus-app" / "lib" / "main"
-    drivers = sorted(directory.glob("org.xerial.sqlite-jdbc-*.jar"))
-    if not drivers:
-        return None
-    target = DEMO / "libsqlitejdbc.so"
-    with zipfile.ZipFile(drivers[0]) as archive:
-        names = [n for n in archive.namelist()
-                 if n.startswith("org/sqlite/native/Linux/x86_64/") and n.endswith(".so")]
-        if not names:
-            return None
-        target.write_bytes(archive.read(names[0]))
-    os.chmod(target, 0o700)
-    # the driver reads org.sqlite.lib.path as a DIRECTORY and appends the library's
-    # own name to it
-    return str(DEMO)
-
-
 def start_server() -> subprocess.Popen:
     environment = dict(os.environ)
     environment.update({
@@ -148,11 +119,17 @@ def start_server() -> subprocess.Popen:
         "QUARKUS_HTTP_PORT": str(PORT),
         "MATRIX_SECURITY_MODE": "LOCAL_ONLY",
     })
-    command = ["java"]
-    native = sqlite_native_library()
-    if native:
-        command += ["-Dorg.sqlite.lib.path=" + native]
-    command += ["-jar", "matrix-core/build/quarkus-app/quarkus-run.jar"]
+    # EPISTEMIC P0.5 — the packaged application opens its own store. The driver extracts
+    # its native library out of its own jar into the application's scratch directory and
+    # loads it there, so no property, no environment variable and no manual step is
+    # needed. The workaround this script used to apply — taking the library out of the
+    # driver jar by hand and pointing -Dorg.sqlite.lib.path at it — was a copy of the
+    # driver's own job, and it is gone: if the store cannot be opened, the run fails and
+    # says so, rather than hiding the defect behind a property.
+    if "org.sqlite.lib.path" in environment:
+        raise SystemExit("the environment carries org.sqlite.lib.path; the demonstration "
+                         "must run without the recorded workaround")
+    command = ["java", "-jar", "matrix-core/build/quarkus-app/quarkus-run.jar"]
     process = subprocess.Popen(
         command, cwd=ROOT, env=environment,
         stdout=(DEMO / ("server-" + PHASE[0] + ".log")).open("w"), stderr=subprocess.STDOUT)

@@ -96,19 +96,83 @@ public final class RuleInductionEngine {
     /**
      * Train on labeled episode features and register the best candidate.
      *
+     * <p>EPISTEMIC-INTEGRITY P0.4 (review fix F10): this overload REFUSES. A
+     * training call that cannot say where its episodes came from is exactly the hole
+     * this wave closed: it applies no role filter, so an evaluation record handed to
+     * it would be trained on. Every caller now states the provenance of its episodes
+     * through {@link #induce(List, long[][], boolean[], List)}, and a caller that
+     * genuinely has no provenance to state says so with
+     * {@link EpisodeRole#LEGACY_UNTAGGED}.</p>
+     *
      * @param episodeIds identifier labels (just for provenance)
      * @param features   input feature vectors (packed long[][])
      * @param labels     true=positive, false=negative
-     * @return RuleInductionResult with the registered Bir + fidelity scores
+     * @return never returns: the call is refused
+     * @throws IllegalStateException always
      */
+    @Deprecated(forRemoval = true)
     public RuleInductionResult induce(List<String> episodeIds, long[][] features,
                                      boolean[] labels) {
+        throw new IllegalStateException(
+            "the provenance of every episode must be stated before it is trained on: "
+                + "call induce(ids, features, labels, roles) — an evaluation record "
+                + "that reaches the trainer without a role is learned from silently");
+    }
+
+    /**
+     * Train on labeled episode features, refusing any record that is not organic
+     * learning material.
+     *
+     * <p><b>EPISTEMIC-INTEGRITY P0.4 — defence in depth.</b> The admission gate
+     * ({@link LearningAdmission}) is what keeps evaluation, experiment and synthetic
+     * records out of the window; this is the second line of defence, at the point
+     * where the training actually happens. A caller that hands the engine a
+     * non-organic record gets that record REFUSED, not trained on: the engine drops
+     * it, counts it, and trains on what remains. If nothing remains the call fails
+     * closed rather than training on nothing.</p>
+     *
+     * @param roles the provenance of each episode; a null entry means UNDECLARED
+     *              ({@link EpisodeRole#LEGACY_UNTAGGED}), which is learning-eligible
+     */
+    public RuleInductionResult induce(List<String> episodeIds, long[][] features,
+                                      boolean[] labels, List<EpisodeRole> roles) {
         if (features.length == 0) {
             throw new IllegalArgumentException("features cannot be empty");
         }
         if (features.length != labels.length) {
             throw new IllegalArgumentException(
                 "features and labels length mismatch: " + features.length + " vs " + labels.length);
+        }
+        // EPISTEMIC-INTEGRITY P0.4: drop every record that is not organic BEFORE the
+        // K_MAX check, so the cap applies to what is actually learned from.
+        List<String> ids = episodeIds == null ? List.of() : episodeIds;
+        int excluded = 0;
+        if (roles != null) {
+            if (roles.size() != features.length) {
+                throw new IllegalArgumentException(
+                    "roles length mismatch: " + roles.size() + " vs " + features.length);
+            }
+            List<String> keptIds = new java.util.ArrayList<>();
+            List<long[]> keptFeatures = new java.util.ArrayList<>();
+            List<Boolean> keptLabels = new java.util.ArrayList<>();
+            for (int i = 0; i < features.length; i++) {
+                EpisodeRole role = roles.get(i);
+                if (role != null && !role.learningEligible()) {
+                    excluded++;
+                    continue;
+                }
+                if (i < ids.size()) keptIds.add(ids.get(i));
+                keptFeatures.add(features[i]);
+                keptLabels.add(labels[i]);
+            }
+            episodeIds = keptIds;
+            features = keptFeatures.toArray(new long[0][]);
+            labels = new boolean[keptLabels.size()];
+            for (int i = 0; i < keptLabels.size(); i++) labels[i] = keptLabels.get(i);
+            if (features.length == 0) {
+                throw new IllegalArgumentException(
+                    "no learning-eligible episodes: " + excluded + " non-organic record(s) refused");
+            }
         }
         // Article II: K_MAX ≤ 20
         KMaxEnforcer.enforce(features.length);
@@ -191,7 +255,8 @@ public final class RuleInductionEngine {
                 provenance.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         }
 
-        return new RuleInductionResult(entry, tsetlinFidelity, mpdtFidelity, chosenFidelity, provenance);
+        return new RuleInductionResult(entry, tsetlinFidelity, mpdtFidelity, chosenFidelity,
+            provenance, features.length, excluded);
     }
 
     /** Build learned clauses from the labeled training data (heuristic). */
@@ -267,6 +332,19 @@ public final class RuleInductionEngine {
         double tsetlinFidelity,
         double mpdtFidelity,
         double chosenFidelity,
-        String provenance
-    ) {}
+        String provenance,
+        /**
+         * EPISTEMIC-INTEGRITY P0.4 — how many episodes were actually trained on, and
+         * how many non-organic records were refused before training.
+         */
+        int usedCount,
+        int excludedCount
+    ) {
+        /** The legacy shape: a result without the admission counters. */
+        public RuleInductionResult(BirRegistry.Entry entry, double tsetlinFidelity,
+                                   double mpdtFidelity, double chosenFidelity,
+                                   String provenance) {
+            this(entry, tsetlinFidelity, mpdtFidelity, chosenFidelity, provenance, 0, 0);
+        }
+    }
 }

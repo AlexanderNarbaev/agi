@@ -71,6 +71,21 @@ public class CognitiveService {
     private java.util.function.LongSupplier monotonicNanos;
 
     /**
+     * The workbench the service reads and writes through.
+     *
+     * <p>This is the seam a test uses to drive the service outside the container. In the
+     * container the workbench is injected; the setter exists for the same reason the
+     * monotonic clock's does — so that a test can supply the collaborator the container
+     * would, rather than the service guessing where the knowledge database lives.</p>
+     *
+     * @param workbench the workbench
+     */
+    public synchronized void workbench(KnowledgeWorkbench workbench) {
+        this.workbench = workbench;
+        this.store = null;
+    }
+
+    /**
      * Replaces the monotonic clock of the cycle's deadline.
      *
      * <p>W45.1. The clock is the seam a test uses to make the budget expire deterministically.

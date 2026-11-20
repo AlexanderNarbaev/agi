@@ -2208,35 +2208,35 @@
         "dataset" : "REAL_LOG (historical + new)",
         "provenance" : "HISTORICAL + NEWLY_EXECUTED_REAL_OBSERVATION; the labels are AUTOMATICALLY DERIVED by the production rule from what the runtime produced",
         "distribution" : {
-          "episodes" : 167,
-          "positives" : 108,
-          "negatives" : 59,
+          "episodes" : 226,
+          "positives" : 152,
+          "negatives" : 74,
           "distinctInputs" : 72,
           "distinctReplies" : 60,
           "singleClass" : false
         },
         "collisions" : {
-          "episodes" : 167,
+          "episodes" : 226,
           "distinctFullFeatures256" : 78,
           "crossLabelCollisions256Details" : [ {
             "feature256" : "[0, 18691697672192, 8796093022208, 4503599627370496]",
-            "episodes" : [ "[5] capital of italy -> Rome conf=0.5 accepted=true label=false", "[118] capital of italy -> Italy capital Rome conf=0.7822887811634349 accepted=true label=true" ]
+            "episodes" : [ "[5] capital of italy -> Rome conf=0.5 accepted=true label=false", "[118] capital of italy -> Italy capital Rome conf=0.7822887811634349 accepted=true label=true", "[177] capital of italy -> Italy capital Rome conf=0.7822887811634349 accepted=true label=true" ]
           } ],
           "crossLabelCollisions16Details" : [ {
             "fold16" : "0x0020",
             "episodes" : [ "[0] gravity -> gravity label=true", "[1] gravity -> 9.8 m/s^2 label=false" ]
           }, {
             "fold16" : "0x1910",
-            "episodes" : [ "[5] capital of italy -> Rome label=false", "[118] capital of italy -> Italy capital Rome label=true" ]
+            "episodes" : [ "[5] capital of italy -> Rome label=false", "[118] capital of italy -> Italy capital Rome label=true", "[177] capital of italy -> Italy capital Rome label=true" ]
           }, {
             "fold16" : "0x1000",
-            "episodes" : [ "[8] stolitsa anglii -> London label=false", "[11] stolitsa anglii -> London label=false", "[14] stolitsa anglii -> London label=false", "[17] stolitsa anglii -> London label=false", "[20] stolitsa anglii -> London label=false", "[24] stolitsa anglii -> London label=false", "[27] stolitsa anglii -> London label=false", "[30] stolitsa anglii -> London label=false", "[33] stolitsa anglii -> London label=false", "[36] stolitsa anglii -> London label=false", "[53] stolitsa anglii -> London label=false", "[56] stolitsa anglii -> London label=false", "[75] stolitsa anglii -> London label=false", "[123] Zimbabwe language English -> Zimbabwe language English label=true" ]
+            "episodes" : [ "[8] stolitsa anglii -> London label=false", "[11] stolitsa anglii -> London label=false", "[14] stolitsa anglii -> London label=false", "[17] stolitsa anglii -> London label=false", "[20] stolitsa anglii -> London label=false", "[24] stolitsa anglii -> London label=false", "[27] stolitsa anglii -> London label=false", "[30] stolitsa anglii -> London label=false", "[33] stolitsa anglii -> London label=false", "[36] stolitsa anglii -> London label=false", "[53] stolitsa anglii -> London label=false", "[56] stolitsa anglii -> London label=false", "[75] stolitsa anglii -> London label=false", "[123] Zimbabwe language English -> Zimbabwe language English label=true", "[182] Zimbabwe language English -> Zimbabwe language English label=true" ]
           }, {
             "fold16" : "0x1a00",
-            "episodes" : [ "[128] Nepal capital Kathmandu -> Nepal capital Kathmandu label=true", "[148] nepal capital city valley -> Nepal capital Kathmandu label=false" ]
+            "episodes" : [ "[128] Nepal capital Kathmandu -> Nepal capital Kathmandu label=true", "[148] nepal capital city valley -> Nepal capital Kathmandu label=false", "[187] Nepal capital Kathmandu -> Nepal capital Kathmandu label=true", "[207] nepal capital city valley -> Nepal capital Kathmandu label=false" ]
           }, {
             "fold16" : "0x0884",
-            "episodes" : [ "[139] Portugal capital Lisbon -> Portugal capital Lisbon label=true", "[152] australia capital city territory -> Australia capital Canberra label=false" ]
+            "episodes" : [ "[139] Portugal capital Lisbon -> Portugal capital Lisbon label=true", "[152] australia capital city territory -> Australia capital Canberra label=false", "[198] Portugal capital Lisbon -> Portugal capital Lisbon label=true", "[211] australia capital city territory -> Australia capital Canberra label=false" ]
           } ],
           "distinctFoldedValues16" : 74,
           "exactCollisions256" : 0,
@@ -2248,473 +2248,473 @@
           "note" : "a cross-label collision is one feature value that carries both labels; at 256 bits it is created by the encoder, at 16 bits by the fold"
         },
         "partitions" : {
-          "test" : 34,
-          "validation" : 33,
-          "train" : 100
+          "train" : 136,
+          "test" : 45,
+          "validation" : 45
         },
         "partitionClassDistribution" : {
+          "train" : {
+            "episodes" : 136,
+            "positives" : 92,
+            "negatives" : 44,
+            "distinctInputs" : 42,
+            "distinctReplies" : 42,
+            "singleClass" : false
+          },
           "test" : {
-            "episodes" : 34,
-            "positives" : 19,
+            "episodes" : 45,
+            "positives" : 30,
             "negatives" : 15,
-            "distinctInputs" : 34,
-            "distinctReplies" : 34,
+            "distinctInputs" : 45,
+            "distinctReplies" : 37,
             "singleClass" : false
           },
           "validation" : {
-            "episodes" : 33,
-            "positives" : 33,
-            "negatives" : 0,
-            "distinctInputs" : 25,
-            "distinctReplies" : 19,
-            "singleClass" : true
-          },
-          "train" : {
-            "episodes" : 100,
-            "positives" : 56,
-            "negatives" : 44,
-            "distinctInputs" : 20,
-            "distinctReplies" : 22,
+            "episodes" : 45,
+            "positives" : 30,
+            "negatives" : 15,
+            "distinctInputs" : 44,
+            "distinctReplies" : 34,
             "singleClass" : false
           }
         },
         "partitionsDisjoint" : true,
         "memorisationCeiling256" : {
-          "testEpisodes" : 34,
-          "testFeaturesSeenInTrain" : 1,
-          "sameLabel" : 1,
+          "testEpisodes" : 45,
+          "testFeaturesSeenInTrain" : 15,
+          "sameLabel" : 15,
           "accuracyOverSeen" : 1.0,
           "note" : "the information ceiling of the 256-bit representation: an exact lookup, no learning, no fold"
         },
         "nearestNeighbour256" : {
-          "accuracy" : 0.5294117647058824,
-          "balanced" : 0.5438596491228069,
-          "tp" : 8,
-          "tn" : 10,
-          "fp" : 5,
-          "fn" : 11,
+          "accuracy" : 0.4666666666666667,
+          "balanced" : 0.5333333333333333,
+          "tp" : 10,
+          "tn" : 11,
+          "fp" : 4,
+          "fn" : 20,
           "note" : "1-NN on the raw 256-bit feature: the ceiling of ANY function of the 256-bit representation on this partition"
         },
-        "informativeBitsOnTrain" : 70,
+        "informativeBitsOnTrain" : 104,
         "informativeBitPositionsUsed" : 16,
         "discriminativeBitPositionsUsed" : 16,
-        "shuffledLabelsMoved" : 52,
+        "shuffledLabelsMoved" : 60,
         "representations" : {
           "productionFold" : [ {
             "seed" : 42,
             "validation" : {
-              "accuracy" : 0.8787878787878788,
-              "balanced" : 0.4393939393939394,
-              "precision" : 1.0,
-              "recall" : 0.8787878787878788,
-              "f1" : 0.9354838709677419,
-              "tp" : 29,
-              "tn" : 0,
-              "fp" : 0,
-              "fn" : 4,
-              "trainNanos" : 7685533,
-              "predictNanos" : 179839,
-              "predictEpisodes" : 33
+              "accuracy" : 0.6222222222222222,
+              "balanced" : 0.5166666666666667,
+              "precision" : 0.6756756756756757,
+              "recall" : 0.8333333333333334,
+              "f1" : 0.746268656716418,
+              "tp" : 25,
+              "tn" : 3,
+              "fp" : 12,
+              "fn" : 5,
+              "trainNanos" : 9860829,
+              "predictNanos" : 260501,
+              "predictEpisodes" : 45
             },
             "test" : {
-              "accuracy" : 0.4411764705882353,
-              "balanced" : 0.40175438596491225,
-              "precision" : 0.5,
-              "recall" : 0.7368421052631579,
-              "f1" : 0.5957446808510638,
-              "tp" : 14,
-              "tn" : 1,
-              "fp" : 14,
+              "accuracy" : 0.6222222222222222,
+              "balanced" : 0.5166666666666667,
+              "precision" : 0.6756756756756757,
+              "recall" : 0.8333333333333334,
+              "f1" : 0.746268656716418,
+              "tp" : 25,
+              "tn" : 3,
+              "fp" : 12,
               "fn" : 5,
-              "trainNanos" : 6462971,
-              "predictNanos" : 69290,
-              "predictEpisodes" : 34
+              "trainNanos" : 8767649,
+              "predictNanos" : 112592,
+              "predictEpisodes" : 45
             },
             "deterministicRepeatEqual" : true
           }, {
             "seed" : 43,
             "validation" : {
-              "accuracy" : 0.9393939393939394,
-              "balanced" : 0.4696969696969697,
-              "precision" : 1.0,
-              "recall" : 0.9393939393939394,
-              "f1" : 0.96875,
-              "tp" : 31,
+              "accuracy" : 0.6,
+              "balanced" : 0.45,
+              "precision" : 0.6428571428571429,
+              "recall" : 0.9,
+              "f1" : 0.75,
+              "tp" : 27,
               "tn" : 0,
-              "fp" : 0,
-              "fn" : 2,
-              "trainNanos" : 6822427,
-              "predictNanos" : 59111,
-              "predictEpisodes" : 33
+              "fp" : 15,
+              "fn" : 3,
+              "trainNanos" : 8736510,
+              "predictNanos" : 85822,
+              "predictEpisodes" : 45
             },
             "test" : {
-              "accuracy" : 0.5882352941176471,
-              "balanced" : 0.5403508771929825,
-              "precision" : 0.5806451612903226,
-              "recall" : 0.9473684210526315,
-              "f1" : 0.72,
-              "tp" : 18,
-              "tn" : 2,
-              "fp" : 13,
-              "fn" : 1,
-              "trainNanos" : 6810786,
-              "predictNanos" : 64432,
-              "predictEpisodes" : 34
+              "accuracy" : 0.6,
+              "balanced" : 0.45,
+              "precision" : 0.6428571428571429,
+              "recall" : 0.9,
+              "f1" : 0.75,
+              "tp" : 27,
+              "tn" : 0,
+              "fp" : 15,
+              "fn" : 3,
+              "trainNanos" : 8097686,
+              "predictNanos" : 101491,
+              "predictEpisodes" : 45
             }
           }, {
             "seed" : 44,
             "validation" : {
-              "accuracy" : 0.8787878787878788,
-              "balanced" : 0.4393939393939394,
-              "precision" : 1.0,
-              "recall" : 0.8787878787878788,
-              "f1" : 0.9354838709677419,
-              "tp" : 29,
-              "tn" : 0,
-              "fp" : 0,
-              "fn" : 4,
-              "trainNanos" : 6048591,
-              "predictNanos" : 56987,
-              "predictEpisodes" : 33
-            },
-            "test" : {
-              "accuracy" : 0.5588235294117647,
+              "accuracy" : 0.6666666666666666,
               "balanced" : 0.5,
-              "precision" : 0.5588235294117647,
+              "precision" : 0.6666666666666666,
               "recall" : 1.0,
-              "f1" : 0.7169811320754718,
-              "tp" : 19,
+              "f1" : 0.8,
+              "tp" : 30,
               "tn" : 0,
               "fp" : 15,
               "fn" : 0,
-              "trainNanos" : 5580008,
-              "predictNanos" : 59532,
-              "predictEpisodes" : 34
+              "trainNanos" : 7531560,
+              "predictNanos" : 81514,
+              "predictEpisodes" : 45
+            },
+            "test" : {
+              "accuracy" : 0.6444444444444445,
+              "balanced" : 0.48333333333333334,
+              "precision" : 0.6590909090909091,
+              "recall" : 0.9666666666666667,
+              "f1" : 0.7837837837837838,
+              "tp" : 29,
+              "tn" : 0,
+              "fp" : 15,
+              "fn" : 1,
+              "trainNanos" : 7377350,
+              "predictNanos" : 84188,
+              "predictEpisodes" : 45
             }
           } ],
           "informativeProjection" : [ {
             "seed" : 42,
             "validation" : {
-              "accuracy" : 1.0,
-              "balanced" : 0.5,
-              "precision" : 1.0,
-              "recall" : 1.0,
-              "f1" : 1.0,
-              "tp" : 33,
-              "tn" : 0,
-              "fp" : 0,
-              "fn" : 0,
-              "trainNanos" : 5442510,
-              "predictNanos" : 50004,
-              "predictEpisodes" : 33
+              "accuracy" : 0.5111111111111111,
+              "balanced" : 0.6,
+              "precision" : 0.8333333333333334,
+              "recall" : 0.3333333333333333,
+              "f1" : 0.47619047619047616,
+              "tp" : 10,
+              "tn" : 13,
+              "fp" : 2,
+              "fn" : 20,
+              "trainNanos" : 7461669,
+              "predictNanos" : 61636,
+              "predictEpisodes" : 45
             },
             "test" : {
-              "accuracy" : 0.5,
-              "balanced" : 0.4473684210526316,
-              "precision" : 0.53125,
-              "recall" : 0.8947368421052632,
-              "f1" : 0.6666666666666666,
-              "tp" : 17,
-              "tn" : 0,
-              "fp" : 15,
-              "fn" : 2,
-              "trainNanos" : 5463940,
-              "predictNanos" : 52840,
-              "predictEpisodes" : 34
+              "accuracy" : 0.37777777777777777,
+              "balanced" : 0.5,
+              "precision" : 0.6666666666666666,
+              "recall" : 0.13333333333333333,
+              "f1" : 0.2222222222222222,
+              "tp" : 4,
+              "tn" : 13,
+              "fp" : 2,
+              "fn" : 26,
+              "trainNanos" : 7504329,
+              "predictNanos" : 61696,
+              "predictEpisodes" : 45
             },
             "deterministicRepeatEqual" : true
           }, {
             "seed" : 43,
             "validation" : {
-              "accuracy" : 1.0,
-              "balanced" : 0.5,
-              "precision" : 1.0,
-              "recall" : 1.0,
-              "f1" : 1.0,
-              "tp" : 33,
-              "tn" : 0,
-              "fp" : 0,
-              "fn" : 0,
-              "trainNanos" : 5635683,
-              "predictNanos" : 50065,
-              "predictEpisodes" : 33
+              "accuracy" : 0.5111111111111111,
+              "balanced" : 0.5833333333333334,
+              "precision" : 0.7857142857142857,
+              "recall" : 0.36666666666666664,
+              "f1" : 0.5,
+              "tp" : 11,
+              "tn" : 12,
+              "fp" : 3,
+              "fn" : 19,
+              "trainNanos" : 7494962,
+              "predictNanos" : 64852,
+              "predictEpisodes" : 45
             },
             "test" : {
-              "accuracy" : 0.5,
-              "balanced" : 0.4473684210526316,
-              "precision" : 0.53125,
-              "recall" : 0.8947368421052632,
-              "f1" : 0.6666666666666666,
-              "tp" : 17,
-              "tn" : 0,
-              "fp" : 15,
-              "fn" : 2,
-              "trainNanos" : 5612770,
-              "predictNanos" : 52379,
-              "predictEpisodes" : 34
+              "accuracy" : 0.4222222222222222,
+              "balanced" : 0.5166666666666667,
+              "precision" : 0.7,
+              "recall" : 0.23333333333333334,
+              "f1" : 0.35,
+              "tp" : 7,
+              "tn" : 12,
+              "fp" : 3,
+              "fn" : 23,
+              "trainNanos" : 7376207,
+              "predictNanos" : 56406,
+              "predictEpisodes" : 45
             }
           }, {
             "seed" : 44,
             "validation" : {
-              "accuracy" : 1.0,
-              "balanced" : 0.5,
-              "precision" : 1.0,
-              "recall" : 1.0,
-              "f1" : 1.0,
-              "tp" : 33,
-              "tn" : 0,
-              "fp" : 0,
-              "fn" : 0,
-              "trainNanos" : 5789713,
-              "predictNanos" : 50675,
-              "predictEpisodes" : 33
+              "accuracy" : 0.5111111111111111,
+              "balanced" : 0.6,
+              "precision" : 0.8333333333333334,
+              "recall" : 0.3333333333333333,
+              "f1" : 0.47619047619047616,
+              "tp" : 10,
+              "tn" : 13,
+              "fp" : 2,
+              "fn" : 20,
+              "trainNanos" : 7540907,
+              "predictNanos" : 64030,
+              "predictEpisodes" : 45
             },
             "test" : {
-              "accuracy" : 0.47058823529411764,
-              "balanced" : 0.42105263157894735,
-              "precision" : 0.5161290322580645,
-              "recall" : 0.8421052631578947,
-              "f1" : 0.6399999999999999,
-              "tp" : 16,
-              "tn" : 0,
-              "fp" : 15,
-              "fn" : 3,
-              "trainNanos" : 5933153,
-              "predictNanos" : 57839,
-              "predictEpisodes" : 34
+              "accuracy" : 0.37777777777777777,
+              "balanced" : 0.5,
+              "precision" : 0.6666666666666666,
+              "recall" : 0.13333333333333333,
+              "f1" : 0.2222222222222222,
+              "tp" : 4,
+              "tn" : 13,
+              "fp" : 2,
+              "fn" : 26,
+              "trainNanos" : 7275517,
+              "predictNanos" : 80461,
+              "predictEpisodes" : 45
             }
           } ],
           "discriminativeProjection" : [ {
             "seed" : 42,
             "validation" : {
-              "accuracy" : 1.0,
+              "accuracy" : 0.6666666666666666,
               "balanced" : 0.5,
-              "precision" : 1.0,
+              "precision" : 0.6666666666666666,
               "recall" : 1.0,
-              "f1" : 1.0,
-              "tp" : 33,
+              "f1" : 0.8,
+              "tp" : 30,
               "tn" : 0,
-              "fp" : 0,
+              "fp" : 15,
               "fn" : 0,
-              "trainNanos" : 4644156,
-              "predictNanos" : 42320,
-              "predictEpisodes" : 33
+              "trainNanos" : 7672606,
+              "predictNanos" : 76063,
+              "predictEpisodes" : 45
             },
             "test" : {
-              "accuracy" : 0.5294117647058824,
-              "balanced" : 0.47368421052631576,
-              "precision" : 0.5454545454545454,
-              "recall" : 0.9473684210526315,
-              "f1" : 0.6923076923076923,
-              "tp" : 18,
+              "accuracy" : 0.6444444444444445,
+              "balanced" : 0.48333333333333334,
+              "precision" : 0.6590909090909091,
+              "recall" : 0.9666666666666667,
+              "f1" : 0.7837837837837838,
+              "tp" : 29,
               "tn" : 0,
               "fp" : 15,
               "fn" : 1,
-              "trainNanos" : 4621743,
-              "predictNanos" : 36919,
-              "predictEpisodes" : 34
+              "trainNanos" : 6632967,
+              "predictNanos" : 56135,
+              "predictEpisodes" : 45
             },
             "deterministicRepeatEqual" : true
           }, {
             "seed" : 43,
             "validation" : {
-              "accuracy" : 0.7272727272727273,
-              "balanced" : 0.36363636363636365,
-              "precision" : 1.0,
-              "recall" : 0.7272727272727273,
-              "f1" : 0.8421052631578948,
-              "tp" : 24,
+              "accuracy" : 0.6666666666666666,
+              "balanced" : 0.5,
+              "precision" : 0.6666666666666666,
+              "recall" : 1.0,
+              "f1" : 0.8,
+              "tp" : 30,
               "tn" : 0,
-              "fp" : 0,
-              "fn" : 9,
-              "trainNanos" : 4945884,
-              "predictNanos" : 40115,
-              "predictEpisodes" : 33
+              "fp" : 15,
+              "fn" : 0,
+              "trainNanos" : 7704325,
+              "predictNanos" : 39524,
+              "predictEpisodes" : 45
             },
             "test" : {
-              "accuracy" : 0.4411764705882353,
-              "balanced" : 0.4789473684210527,
-              "precision" : 0.5,
-              "recall" : 0.15789473684210525,
-              "f1" : 0.23999999999999996,
-              "tp" : 3,
-              "tn" : 12,
-              "fp" : 3,
-              "fn" : 16,
-              "trainNanos" : 4996930,
-              "predictNanos" : 36419,
-              "predictEpisodes" : 34
+              "accuracy" : 0.6444444444444445,
+              "balanced" : 0.48333333333333334,
+              "precision" : 0.6590909090909091,
+              "recall" : 0.9666666666666667,
+              "f1" : 0.7837837837837838,
+              "tp" : 29,
+              "tn" : 0,
+              "fp" : 15,
+              "fn" : 1,
+              "trainNanos" : 6955785,
+              "predictNanos" : 35788,
+              "predictEpisodes" : 45
             }
           }, {
             "seed" : 44,
             "validation" : {
-              "accuracy" : 1.0,
+              "accuracy" : 0.6666666666666666,
               "balanced" : 0.5,
-              "precision" : 1.0,
+              "precision" : 0.6666666666666666,
               "recall" : 1.0,
-              "f1" : 1.0,
-              "tp" : 33,
-              "tn" : 0,
-              "fp" : 0,
-              "fn" : 0,
-              "trainNanos" : 4731309,
-              "predictNanos" : 48020,
-              "predictEpisodes" : 33
-            },
-            "test" : {
-              "accuracy" : 0.5294117647058824,
-              "balanced" : 0.47368421052631576,
-              "precision" : 0.5454545454545454,
-              "recall" : 0.9473684210526315,
-              "f1" : 0.6923076923076923,
-              "tp" : 18,
+              "f1" : 0.8,
+              "tp" : 30,
               "tn" : 0,
               "fp" : 15,
-              "fn" : 1,
-              "trainNanos" : 4730399,
-              "predictNanos" : 25819,
-              "predictEpisodes" : 34
+              "fn" : 0,
+              "trainNanos" : 7424308,
+              "predictNanos" : 36158,
+              "predictEpisodes" : 45
+            },
+            "test" : {
+              "accuracy" : 0.6666666666666666,
+              "balanced" : 0.5,
+              "precision" : 0.6666666666666666,
+              "recall" : 1.0,
+              "f1" : 0.8,
+              "tp" : 30,
+              "tn" : 0,
+              "fp" : 15,
+              "fn" : 0,
+              "trainNanos" : 7160290,
+              "predictNanos" : 37901,
+              "predictEpisodes" : 45
             }
           } ],
           "randomProjection" : [ {
             "seed" : 42,
             "validation" : {
-              "accuracy" : 0.030303030303030304,
-              "balanced" : 0.015151515151515152,
-              "precision" : 1.0,
-              "recall" : 0.030303030303030304,
-              "f1" : 0.05882352941176471,
-              "tp" : 1,
-              "tn" : 0,
-              "fp" : 0,
-              "fn" : 32,
-              "trainNanos" : 6081963,
-              "predictNanos" : 17654,
-              "predictEpisodes" : 33
-            },
-            "test" : {
-              "accuracy" : 0.4411764705882353,
-              "balanced" : 0.5,
+              "accuracy" : 0.3111111111111111,
+              "balanced" : 0.4666666666666667,
               "precision" : 0.0,
               "recall" : 0.0,
               "f1" : 0.0,
               "tp" : 0,
-              "tn" : 15,
-              "fp" : 0,
-              "fn" : 19,
-              "trainNanos" : 6092934,
-              "predictNanos" : 17974,
-              "predictEpisodes" : 34
+              "tn" : 14,
+              "fp" : 1,
+              "fn" : 30,
+              "trainNanos" : 8232210,
+              "predictNanos" : 43673,
+              "predictEpisodes" : 45
+            },
+            "test" : {
+              "accuracy" : 0.35555555555555557,
+              "balanced" : 0.5,
+              "precision" : 0.6666666666666666,
+              "recall" : 0.06666666666666667,
+              "f1" : 0.1212121212121212,
+              "tp" : 2,
+              "tn" : 14,
+              "fp" : 1,
+              "fn" : 28,
+              "trainNanos" : 8460320,
+              "predictNanos" : 41728,
+              "predictEpisodes" : 45
             },
             "deterministicRepeatEqual" : true
           }, {
             "seed" : 43,
             "validation" : {
-              "accuracy" : 0.06060606060606061,
-              "balanced" : 0.030303030303030304,
-              "precision" : 1.0,
-              "recall" : 0.06060606060606061,
-              "f1" : 0.1142857142857143,
-              "tp" : 2,
-              "tn" : 0,
-              "fp" : 0,
-              "fn" : 31,
-              "trainNanos" : 6201709,
-              "predictNanos" : 20528,
-              "predictEpisodes" : 33
+              "accuracy" : 0.3111111111111111,
+              "balanced" : 0.45,
+              "precision" : 0.3333333333333333,
+              "recall" : 0.03333333333333333,
+              "f1" : 0.0606060606060606,
+              "tp" : 1,
+              "tn" : 13,
+              "fp" : 2,
+              "fn" : 29,
+              "trainNanos" : 7972401,
+              "predictNanos" : 30016,
+              "predictEpisodes" : 45
             },
             "test" : {
-              "accuracy" : 0.4411764705882353,
-              "balanced" : 0.5,
-              "precision" : 0.0,
-              "recall" : 0.0,
-              "f1" : 0.0,
-              "tp" : 0,
-              "tn" : 15,
-              "fp" : 0,
-              "fn" : 19,
-              "trainNanos" : 6032861,
-              "predictNanos" : 21230,
-              "predictEpisodes" : 34
+              "accuracy" : 0.35555555555555557,
+              "balanced" : 0.48333333333333334,
+              "precision" : 0.6,
+              "recall" : 0.1,
+              "f1" : 0.17142857142857143,
+              "tp" : 3,
+              "tn" : 13,
+              "fp" : 2,
+              "fn" : 27,
+              "trainNanos" : 7899613,
+              "predictNanos" : 30187,
+              "predictEpisodes" : 45
             }
           }, {
             "seed" : 44,
             "validation" : {
-              "accuracy" : 0.09090909090909091,
-              "balanced" : 0.045454545454545456,
-              "precision" : 1.0,
-              "recall" : 0.09090909090909091,
-              "f1" : 0.16666666666666669,
-              "tp" : 3,
-              "tn" : 0,
-              "fp" : 0,
-              "fn" : 30,
-              "trainNanos" : 6144331,
-              "predictNanos" : 24126,
-              "predictEpisodes" : 33
+              "accuracy" : 0.3333333333333333,
+              "balanced" : 0.48333333333333334,
+              "precision" : 0.5,
+              "recall" : 0.03333333333333333,
+              "f1" : 0.0625,
+              "tp" : 1,
+              "tn" : 14,
+              "fp" : 1,
+              "fn" : 29,
+              "trainNanos" : 9900373,
+              "predictNanos" : 64772,
+              "predictEpisodes" : 45
             },
             "test" : {
-              "accuracy" : 0.4411764705882353,
-              "balanced" : 0.5,
+              "accuracy" : 0.3111111111111111,
+              "balanced" : 0.4666666666666667,
               "precision" : 0.0,
               "recall" : 0.0,
               "f1" : 0.0,
               "tp" : 0,
-              "tn" : 15,
-              "fp" : 0,
-              "fn" : 19,
-              "trainNanos" : 6100148,
-              "predictNanos" : 23034,
-              "predictEpisodes" : 34
+              "tn" : 14,
+              "fp" : 1,
+              "fn" : 30,
+              "trainNanos" : 9085317,
+              "predictNanos" : 41719,
+              "predictEpisodes" : 45
             }
           } ],
           "shuffledLabels_control" : [ {
             "seed" : 42,
             "test" : {
-              "accuracy" : 0.38235294117647056,
-              "balanced" : 0.34912280701754383,
-              "precision" : 0.46153846153846156,
-              "recall" : 0.631578947368421,
-              "f1" : 0.5333333333333333,
-              "tp" : 12,
+              "accuracy" : 0.5333333333333333,
+              "balanced" : 0.4166666666666667,
+              "precision" : 0.6216216216216216,
+              "recall" : 0.7666666666666667,
+              "f1" : 0.6865671641791045,
+              "tp" : 23,
               "tn" : 1,
               "fp" : 14,
               "fn" : 7,
-              "trainNanos" : 6600991,
-              "predictNanos" : 52799,
-              "predictEpisodes" : 34
+              "trainNanos" : 10021582,
+              "predictNanos" : 66145,
+              "predictEpisodes" : 45
             }
           }, {
             "seed" : 43,
             "test" : {
-              "accuracy" : 0.4411764705882353,
-              "balanced" : 0.42280701754385963,
-              "precision" : 0.5,
-              "recall" : 0.5789473684210527,
-              "f1" : 0.5365853658536586,
-              "tp" : 11,
-              "tn" : 4,
-              "fp" : 11,
-              "fn" : 8,
-              "trainNanos" : 6505802,
-              "predictNanos" : 50445,
-              "predictEpisodes" : 34
+              "accuracy" : 0.5777777777777777,
+              "balanced" : 0.45,
+              "precision" : 0.6410256410256411,
+              "recall" : 0.8333333333333334,
+              "f1" : 0.7246376811594204,
+              "tp" : 25,
+              "tn" : 1,
+              "fp" : 14,
+              "fn" : 5,
+              "trainNanos" : 8801102,
+              "predictNanos" : 90170,
+              "predictEpisodes" : 45
             }
           }, {
             "seed" : 44,
             "test" : {
-              "accuracy" : 0.4117647058823529,
-              "balanced" : 0.45263157894736844,
-              "precision" : 0.4,
-              "recall" : 0.10526315789473684,
-              "f1" : 0.16666666666666666,
-              "tp" : 2,
-              "tn" : 12,
-              "fp" : 3,
-              "fn" : 17,
-              "trainNanos" : 6533443,
-              "predictNanos" : 52438,
-              "predictEpisodes" : 34
+              "accuracy" : 0.6666666666666666,
+              "balanced" : 0.5,
+              "precision" : 0.6666666666666666,
+              "recall" : 1.0,
+              "f1" : 0.8,
+              "tp" : 30,
+              "tn" : 0,
+              "fp" : 15,
+              "fn" : 0,
+              "trainNanos" : 9326913,
+              "predictNanos" : 72507,
+              "predictEpisodes" : 45
             }
           } ]
         },
@@ -2735,9 +2735,9 @@
             "crossLabelRate" : 0.23529411764705882
           },
           "discriminativeProjection" : {
-            "distinctValues" : 30,
-            "crossLabelCollisions" : 2,
-            "crossLabelRate" : 0.06666666666666667
+            "distinctValues" : 23,
+            "crossLabelCollisions" : 5,
+            "crossLabelRate" : 0.21739130434782608
           },
           "randomProjection" : {
             "distinctValues" : 11,
@@ -2746,148 +2746,148 @@
           }
         },
         "representationWidths" : {
+          "discriminativeProjection" : 16,
           "informativeProjection" : 16,
           "productionFold" : 16,
           "randomProjection" : 16,
-          "raw256" : 256,
-          "discriminativeProjection" : 16
+          "raw256" : 256
         },
         "cost" : {
           "raw256BytesPerEpisode" : 32,
           "folded16BytesPerEpisode" : 2,
-          "foldNanosTotal" : 17883,
-          "foldNanosPerEpisode" : 107.08383233532935,
-          "encode256NanosPerEpisode" : 3857.622754491018,
+          "foldNanosTotal" : 23414,
+          "foldNanosPerEpisode" : 103.60176991150442,
+          "encode256NanosPerEpisode" : 3989.597345132743,
           "trainerStateCells" : 409600,
           "trainerStateNote" : "nClauses(64) x 2 polarities x inputBits(16) x nStates(200) — identical for every representation, because every representation is consumed at the trainer's 16-bit width",
           "note" : "the fold's CPU cost is measured with the production TsetlinTrainer.packForTest; the encode cost is the mirror's, and the mirror is verified equal to the production encoder by the cross-check"
         },
         "stabilityAcrossSeeds" : {
           "productionFold" : {
-            "testAccuracyMean" : 0.5294117647058824,
-            "testAccuracyMin" : 0.4411764705882353,
-            "testBalancedMin" : 0.40175438596491225,
-            "testAccuracyMax" : 0.5882352941176471,
-            "testBalancedMax" : 0.5403508771929825
+            "testBalancedMin" : 0.45,
+            "testAccuracyMax" : 0.6444444444444445,
+            "testBalancedMax" : 0.5166666666666667,
+            "testAccuracyMean" : 0.6222222222222222,
+            "testAccuracyMin" : 0.6
           },
           "informativeProjection" : {
-            "testAccuracyMean" : 0.4901960784313726,
-            "testAccuracyMin" : 0.47058823529411764,
-            "testBalancedMin" : 0.42105263157894735,
-            "testAccuracyMax" : 0.5,
-            "testBalancedMax" : 0.4473684210526316
+            "testBalancedMin" : 0.5,
+            "testAccuracyMax" : 0.4222222222222222,
+            "testBalancedMax" : 0.5166666666666667,
+            "testAccuracyMean" : 0.3925925925925926,
+            "testAccuracyMin" : 0.37777777777777777
           },
           "discriminativeProjection" : {
-            "testAccuracyMean" : 0.5,
-            "testAccuracyMin" : 0.4411764705882353,
-            "testBalancedMin" : 0.47368421052631576,
-            "testAccuracyMax" : 0.5294117647058824,
-            "testBalancedMax" : 0.4789473684210527
+            "testBalancedMin" : 0.48333333333333334,
+            "testAccuracyMax" : 0.6666666666666666,
+            "testBalancedMax" : 0.5,
+            "testAccuracyMean" : 0.6518518518518519,
+            "testAccuracyMin" : 0.6444444444444445
           },
           "randomProjection" : {
-            "testAccuracyMean" : 0.4411764705882353,
-            "testAccuracyMin" : 0.4411764705882353,
-            "testBalancedMin" : 0.5,
-            "testAccuracyMax" : 0.4411764705882353,
-            "testBalancedMax" : 0.5
+            "testBalancedMin" : 0.4666666666666667,
+            "testAccuracyMax" : 0.35555555555555557,
+            "testBalancedMax" : 0.5,
+            "testAccuracyMean" : 0.34074074074074073,
+            "testAccuracyMin" : 0.3111111111111111
           },
           "shuffledLabels_control" : {
-            "testAccuracyMean" : 0.411764705882353,
-            "testAccuracyMin" : 0.38235294117647056,
-            "testBalancedMin" : 0.34912280701754383,
-            "testAccuracyMax" : 0.4411764705882353,
-            "testBalancedMax" : 0.45263157894736844
+            "testBalancedMin" : 0.4166666666666667,
+            "testAccuracyMax" : 0.6666666666666666,
+            "testBalancedMax" : 0.5,
+            "testAccuracyMean" : 0.5925925925925926,
+            "testAccuracyMin" : 0.5333333333333333
           }
         },
         "groupedSplit" : {
           "partitions" : {
-            "test" : 31,
-            "validation" : 21,
-            "train" : 115
+            "train" : 166,
+            "test" : 0,
+            "validation" : 60
           },
           "partitionsDisjoint" : true,
           "inputsDisjoint" : true,
           "distribution" : {
-            "episodes" : 31,
-            "positives" : 16,
-            "negatives" : 15,
-            "distinctInputs" : 31,
-            "distinctReplies" : 31,
-            "singleClass" : false
+            "episodes" : 0,
+            "positives" : 0,
+            "negatives" : 0,
+            "distinctInputs" : 0,
+            "distinctReplies" : 0,
+            "singleClass" : true
           },
           "partitionClassDistribution" : {
-            "test" : {
-              "episodes" : 31,
-              "positives" : 16,
-              "negatives" : 15,
-              "distinctInputs" : 31,
-              "distinctReplies" : 31,
+            "train" : {
+              "episodes" : 166,
+              "positives" : 122,
+              "negatives" : 44,
+              "distinctInputs" : 42,
+              "distinctReplies" : 42,
               "singleClass" : false
             },
-            "validation" : {
-              "episodes" : 21,
-              "positives" : 21,
+            "test" : {
+              "episodes" : 0,
+              "positives" : 0,
               "negatives" : 0,
-              "distinctInputs" : 21,
-              "distinctReplies" : 16,
+              "distinctInputs" : 0,
+              "distinctReplies" : 0,
               "singleClass" : true
             },
-            "train" : {
-              "episodes" : 115,
-              "positives" : 71,
-              "negatives" : 44,
-              "distinctInputs" : 20,
-              "distinctReplies" : 26,
+            "validation" : {
+              "episodes" : 60,
+              "positives" : 30,
+              "negatives" : 30,
+              "distinctInputs" : 30,
+              "distinctReplies" : 30,
               "singleClass" : false
             }
           },
           "productionFold" : [ {
             "seed" : 42,
             "productionFold" : {
-              "accuracy" : 0.3870967741935484,
-              "balanced" : 0.3770833333333333,
-              "precision" : 0.44,
-              "recall" : 0.6875,
-              "f1" : 0.5365853658536586,
-              "tp" : 11,
-              "tn" : 1,
-              "fp" : 14,
-              "fn" : 5,
-              "trainNanos" : 6216858,
-              "predictNanos" : 46748,
-              "predictEpisodes" : 31
+              "accuracy" : 0.0,
+              "balanced" : 0.0,
+              "precision" : 0.0,
+              "recall" : 0.0,
+              "f1" : 0.0,
+              "tp" : 0,
+              "tn" : 0,
+              "fp" : 0,
+              "fn" : 0,
+              "trainNanos" : 9081942,
+              "predictNanos" : 260,
+              "predictEpisodes" : 0
             }
           }, {
             "seed" : 43,
             "productionFold" : {
-              "accuracy" : 0.2903225806451613,
-              "balanced" : 0.28541666666666665,
-              "precision" : 0.35,
-              "recall" : 0.4375,
-              "f1" : 0.38888888888888884,
-              "tp" : 7,
-              "tn" : 2,
-              "fp" : 13,
-              "fn" : 9,
-              "trainNanos" : 6453203,
-              "predictNanos" : 41568,
-              "predictEpisodes" : 31
+              "accuracy" : 0.0,
+              "balanced" : 0.0,
+              "precision" : 0.0,
+              "recall" : 0.0,
+              "f1" : 0.0,
+              "tp" : 0,
+              "tn" : 0,
+              "fp" : 0,
+              "fn" : 0,
+              "trainNanos" : 8969450,
+              "predictNanos" : 80,
+              "predictEpisodes" : 0
             }
           }, {
             "seed" : 44,
             "productionFold" : {
-              "accuracy" : 0.41935483870967744,
-              "balanced" : 0.41041666666666665,
-              "precision" : 0.4583333333333333,
-              "recall" : 0.6875,
-              "f1" : 0.5499999999999999,
-              "tp" : 11,
-              "tn" : 2,
-              "fp" : 13,
-              "fn" : 5,
-              "trainNanos" : 6635946,
-              "predictNanos" : 45044,
-              "predictEpisodes" : 31
+              "accuracy" : 0.0,
+              "balanced" : 0.0,
+              "precision" : 0.0,
+              "recall" : 0.0,
+              "f1" : 0.0,
+              "tp" : 0,
+              "tn" : 0,
+              "fp" : 0,
+              "fn" : 0,
+              "trainNanos" : 8429632,
+              "predictNanos" : 60,
+              "predictEpisodes" : 0
             }
           } ],
           "informativeProjectionWidth" : 16,
@@ -2899,23 +2899,23 @@
         "dataset" : "REAL_LOG (new observations only)",
         "provenance" : "HISTORICAL + NEWLY_EXECUTED_REAL_OBSERVATION; the labels are AUTOMATICALLY DERIVED by the production rule from what the runtime produced",
         "distribution" : {
-          "episodes" : 59,
-          "positives" : 44,
-          "negatives" : 15,
+          "episodes" : 118,
+          "positives" : 88,
+          "negatives" : 30,
           "distinctInputs" : 58,
           "distinctReplies" : 40,
           "singleClass" : false
         },
         "collisions" : {
-          "episodes" : 59,
+          "episodes" : 118,
           "distinctFullFeatures256" : 58,
           "crossLabelCollisions256Details" : [ ],
           "crossLabelCollisions16Details" : [ {
             "fold16" : "0x1a00",
-            "episodes" : [ "[20] Nepal capital Kathmandu -> Nepal capital Kathmandu label=true", "[40] nepal capital city valley -> Nepal capital Kathmandu label=false" ]
+            "episodes" : [ "[20] Nepal capital Kathmandu -> Nepal capital Kathmandu label=true", "[40] nepal capital city valley -> Nepal capital Kathmandu label=false", "[79] Nepal capital Kathmandu -> Nepal capital Kathmandu label=true", "[99] nepal capital city valley -> Nepal capital Kathmandu label=false" ]
           }, {
             "fold16" : "0x0884",
-            "episodes" : [ "[31] Portugal capital Lisbon -> Portugal capital Lisbon label=true", "[44] australia capital city territory -> Australia capital Canberra label=false" ]
+            "episodes" : [ "[31] Portugal capital Lisbon -> Portugal capital Lisbon label=true", "[44] australia capital city territory -> Australia capital Canberra label=false", "[90] Portugal capital Lisbon -> Portugal capital Lisbon label=true", "[103] australia capital city territory -> Australia capital Canberra label=false" ]
           } ],
           "distinctFoldedValues16" : 56,
           "exactCollisions256" : 0,
@@ -2927,473 +2927,473 @@
           "note" : "a cross-label collision is one feature value that carries both labels; at 256 bits it is created by the encoder, at 16 bits by the fold"
         },
         "partitions" : {
-          "test" : 12,
-          "validation" : 12,
-          "train" : 35
+          "train" : 71,
+          "test" : 23,
+          "validation" : 24
         },
         "partitionClassDistribution" : {
+          "train" : {
+            "episodes" : 71,
+            "positives" : 56,
+            "negatives" : 15,
+            "distinctInputs" : 58,
+            "distinctReplies" : 40,
+            "singleClass" : false
+          },
           "test" : {
-            "episodes" : 12,
-            "positives" : 6,
-            "negatives" : 6,
-            "distinctInputs" : 12,
-            "distinctReplies" : 12,
+            "episodes" : 23,
+            "positives" : 11,
+            "negatives" : 12,
+            "distinctInputs" : 23,
+            "distinctReplies" : 23,
             "singleClass" : false
           },
           "validation" : {
-            "episodes" : 12,
-            "positives" : 6,
-            "negatives" : 6,
-            "distinctInputs" : 12,
-            "distinctReplies" : 12,
-            "singleClass" : false
-          },
-          "train" : {
-            "episodes" : 35,
-            "positives" : 32,
+            "episodes" : 24,
+            "positives" : 21,
             "negatives" : 3,
-            "distinctInputs" : 34,
-            "distinctReplies" : 26,
+            "distinctInputs" : 24,
+            "distinctReplies" : 21,
             "singleClass" : false
           }
         },
         "partitionsDisjoint" : true,
         "memorisationCeiling256" : {
-          "testEpisodes" : 12,
-          "testFeaturesSeenInTrain" : 0,
-          "sameLabel" : 0,
-          "accuracyOverSeen" : null,
+          "testEpisodes" : 23,
+          "testFeaturesSeenInTrain" : 23,
+          "sameLabel" : 23,
+          "accuracyOverSeen" : 1.0,
           "note" : "the information ceiling of the 256-bit representation: an exact lookup, no learning, no fold"
         },
         "nearestNeighbour256" : {
-          "accuracy" : 0.5,
+          "accuracy" : 0.4782608695652174,
           "balanced" : 0.5,
-          "tp" : 6,
+          "tp" : 11,
           "tn" : 0,
-          "fp" : 6,
+          "fp" : 12,
           "fn" : 0,
           "note" : "1-NN on the raw 256-bit feature: the ceiling of ANY function of the 256-bit representation on this partition"
         },
-        "informativeBitsOnTrain" : 85,
+        "informativeBitsOnTrain" : 110,
         "informativeBitPositionsUsed" : 16,
         "discriminativeBitPositionsUsed" : 16,
-        "shuffledLabelsMoved" : 4,
+        "shuffledLabelsMoved" : 22,
         "representations" : {
           "productionFold" : [ {
             "seed" : 42,
             "validation" : {
-              "accuracy" : 0.5833333333333334,
-              "balanced" : 0.5833333333333334,
-              "precision" : 0.5454545454545454,
-              "recall" : 1.0,
-              "f1" : 0.7058823529411764,
-              "tp" : 6,
+              "accuracy" : 0.8333333333333334,
+              "balanced" : 0.6190476190476191,
+              "precision" : 0.9047619047619048,
+              "recall" : 0.9047619047619048,
+              "f1" : 0.9047619047619048,
+              "tp" : 19,
               "tn" : 1,
-              "fp" : 5,
-              "fn" : 0,
-              "trainNanos" : 1821360,
-              "predictNanos" : 22252,
-              "predictEpisodes" : 12
+              "fp" : 2,
+              "fn" : 2,
+              "trainNanos" : 4253734,
+              "predictNanos" : 48582,
+              "predictEpisodes" : 24
             },
             "test" : {
-              "accuracy" : 0.5833333333333334,
-              "balanced" : 0.5833333333333334,
-              "precision" : 0.5454545454545454,
+              "accuracy" : 0.6521739130434783,
+              "balanced" : 0.6666666666666666,
+              "precision" : 0.5789473684210527,
               "recall" : 1.0,
-              "f1" : 0.7058823529411764,
-              "tp" : 6,
-              "tn" : 1,
-              "fp" : 5,
+              "f1" : 0.7333333333333334,
+              "tp" : 11,
+              "tn" : 4,
+              "fp" : 8,
               "fn" : 0,
-              "trainNanos" : 1813605,
-              "predictNanos" : 24336,
-              "predictEpisodes" : 12
+              "trainNanos" : 4226313,
+              "predictNanos" : 37570,
+              "predictEpisodes" : 23
             },
             "deterministicRepeatEqual" : true
           }, {
             "seed" : 43,
             "validation" : {
-              "accuracy" : 0.5833333333333334,
-              "balanced" : 0.5833333333333334,
-              "precision" : 0.5454545454545454,
-              "recall" : 1.0,
-              "f1" : 0.7058823529411764,
-              "tp" : 6,
-              "tn" : 1,
-              "fp" : 5,
-              "fn" : 0,
-              "trainNanos" : 1823995,
-              "predictNanos" : 20739,
-              "predictEpisodes" : 12
+              "accuracy" : 0.8333333333333334,
+              "balanced" : 0.7619047619047619,
+              "precision" : 0.9473684210526315,
+              "recall" : 0.8571428571428571,
+              "f1" : 0.9,
+              "tp" : 18,
+              "tn" : 2,
+              "fp" : 1,
+              "fn" : 3,
+              "trainNanos" : 4252412,
+              "predictNanos" : 41298,
+              "predictEpisodes" : 24
             },
             "test" : {
-              "accuracy" : 0.4166666666666667,
-              "balanced" : 0.4166666666666667,
-              "precision" : 0.45454545454545453,
-              "recall" : 0.8333333333333334,
-              "f1" : 0.5882352941176471,
-              "tp" : 5,
-              "tn" : 0,
-              "fp" : 6,
-              "fn" : 1,
-              "trainNanos" : 3479593,
-              "predictNanos" : 24305,
-              "predictEpisodes" : 12
+              "accuracy" : 0.6086956521739131,
+              "balanced" : 0.6098484848484849,
+              "precision" : 0.5833333333333334,
+              "recall" : 0.6363636363636364,
+              "f1" : 0.6086956521739131,
+              "tp" : 7,
+              "tn" : 7,
+              "fp" : 5,
+              "fn" : 4,
+              "trainNanos" : 4246721,
+              "predictNanos" : 36940,
+              "predictEpisodes" : 23
             }
           }, {
             "seed" : 44,
             "validation" : {
-              "accuracy" : 0.5,
-              "balanced" : 0.5,
-              "precision" : 0.5,
-              "recall" : 1.0,
-              "f1" : 0.6666666666666666,
-              "tp" : 6,
-              "tn" : 0,
-              "fp" : 6,
-              "fn" : 0,
-              "trainNanos" : 1811642,
-              "predictNanos" : 21590,
-              "predictEpisodes" : 12
+              "accuracy" : 0.5416666666666666,
+              "balanced" : 0.5952380952380952,
+              "precision" : 0.9166666666666666,
+              "recall" : 0.5238095238095238,
+              "f1" : 0.6666666666666667,
+              "tp" : 11,
+              "tn" : 2,
+              "fp" : 1,
+              "fn" : 10,
+              "trainNanos" : 4390693,
+              "predictNanos" : 40226,
+              "predictEpisodes" : 24
             },
             "test" : {
-              "accuracy" : 0.5,
-              "balanced" : 0.5,
-              "precision" : 0.5,
-              "recall" : 1.0,
-              "f1" : 0.6666666666666666,
+              "accuracy" : 0.6521739130434783,
+              "balanced" : 0.6477272727272727,
+              "precision" : 0.6666666666666666,
+              "recall" : 0.5454545454545454,
+              "f1" : 0.6,
               "tp" : 6,
-              "tn" : 0,
-              "fp" : 6,
-              "fn" : 0,
-              "trainNanos" : 1793978,
-              "predictNanos" : 21721,
-              "predictEpisodes" : 12
+              "tn" : 9,
+              "fp" : 3,
+              "fn" : 5,
+              "trainNanos" : 4286116,
+              "predictNanos" : 34314,
+              "predictEpisodes" : 23
             }
           } ],
           "informativeProjection" : [ {
             "seed" : 42,
             "validation" : {
-              "accuracy" : 0.5,
+              "accuracy" : 0.875,
               "balanced" : 0.5,
-              "precision" : 0.5,
+              "precision" : 0.875,
               "recall" : 1.0,
-              "f1" : 0.6666666666666666,
-              "tp" : 6,
+              "f1" : 0.9333333333333333,
+              "tp" : 21,
               "tn" : 0,
-              "fp" : 6,
+              "fp" : 3,
               "fn" : 0,
-              "trainNanos" : 1757791,
-              "predictNanos" : 11912,
-              "predictEpisodes" : 12
+              "trainNanos" : 3909816,
+              "predictNanos" : 27201,
+              "predictEpisodes" : 24
             },
             "test" : {
-              "accuracy" : 0.5,
-              "balanced" : 0.5,
-              "precision" : 0.5,
-              "recall" : 1.0,
-              "f1" : 0.6666666666666666,
-              "tp" : 6,
-              "tn" : 0,
-              "fp" : 6,
-              "fn" : 0,
-              "trainNanos" : 1752421,
-              "predictNanos" : 10319,
-              "predictEpisodes" : 12
+              "accuracy" : 0.4782608695652174,
+              "balanced" : 0.4962121212121212,
+              "precision" : 0.47619047619047616,
+              "recall" : 0.9090909090909091,
+              "f1" : 0.6249999999999999,
+              "tp" : 10,
+              "tn" : 1,
+              "fp" : 11,
+              "fn" : 1,
+              "trainNanos" : 3871815,
+              "predictNanos" : 26780,
+              "predictEpisodes" : 23
             },
             "deterministicRepeatEqual" : true
           }, {
             "seed" : 43,
             "validation" : {
-              "accuracy" : 0.5,
-              "balanced" : 0.5,
-              "precision" : 0.5,
-              "recall" : 1.0,
-              "f1" : 0.6666666666666666,
-              "tp" : 6,
-              "tn" : 0,
-              "fp" : 6,
-              "fn" : 0,
-              "trainNanos" : 1765154,
-              "predictNanos" : 13315,
-              "predictEpisodes" : 12
+              "accuracy" : 0.25,
+              "balanced" : 0.42857142857142855,
+              "precision" : 0.8,
+              "recall" : 0.19047619047619047,
+              "f1" : 0.3076923076923077,
+              "tp" : 4,
+              "tn" : 2,
+              "fp" : 1,
+              "fn" : 17,
+              "trainNanos" : 3915096,
+              "predictNanos" : 16001,
+              "predictEpisodes" : 24
             },
             "test" : {
-              "accuracy" : 0.5,
-              "balanced" : 0.5,
+              "accuracy" : 0.5217391304347826,
+              "balanced" : 0.5037878787878788,
               "precision" : 0.5,
-              "recall" : 1.0,
-              "f1" : 0.6666666666666666,
-              "tp" : 6,
-              "tn" : 0,
-              "fp" : 6,
-              "fn" : 0,
-              "trainNanos" : 1758282,
-              "predictNanos" : 11832,
-              "predictEpisodes" : 12
+              "recall" : 0.09090909090909091,
+              "f1" : 0.15384615384615385,
+              "tp" : 1,
+              "tn" : 11,
+              "fp" : 1,
+              "fn" : 10,
+              "trainNanos" : 3851296,
+              "predictNanos" : 23915,
+              "predictEpisodes" : 23
             }
           }, {
             "seed" : 44,
             "validation" : {
-              "accuracy" : 0.5833333333333334,
-              "balanced" : 0.5833333333333334,
-              "precision" : 0.5454545454545454,
+              "accuracy" : 0.875,
+              "balanced" : 0.5,
+              "precision" : 0.875,
               "recall" : 1.0,
-              "f1" : 0.7058823529411764,
-              "tp" : 6,
-              "tn" : 1,
-              "fp" : 5,
+              "f1" : 0.9333333333333333,
+              "tp" : 21,
+              "tn" : 0,
+              "fp" : 3,
               "fn" : 0,
-              "trainNanos" : 1759052,
-              "predictNanos" : 10450,
-              "predictEpisodes" : 12
+              "trainNanos" : 3900639,
+              "predictNanos" : 17963,
+              "predictEpisodes" : 24
             },
             "test" : {
-              "accuracy" : 0.5,
-              "balanced" : 0.5,
+              "accuracy" : 0.5217391304347826,
+              "balanced" : 0.5416666666666666,
               "precision" : 0.5,
               "recall" : 1.0,
               "f1" : 0.6666666666666666,
-              "tp" : 6,
-              "tn" : 0,
-              "fp" : 6,
+              "tp" : 11,
+              "tn" : 1,
+              "fp" : 11,
               "fn" : 0,
-              "trainNanos" : 1742081,
-              "predictNanos" : 9518,
-              "predictEpisodes" : 12
+              "trainNanos" : 3907111,
+              "predictNanos" : 17844,
+              "predictEpisodes" : 23
             }
           } ],
           "discriminativeProjection" : [ {
             "seed" : 42,
             "validation" : {
-              "accuracy" : 0.5833333333333334,
-              "balanced" : 0.5833333333333334,
-              "precision" : 0.5454545454545454,
-              "recall" : 1.0,
-              "f1" : 0.7058823529411764,
-              "tp" : 6,
-              "tn" : 1,
-              "fp" : 5,
-              "fn" : 0,
-              "trainNanos" : 1506838,
-              "predictNanos" : 15058,
-              "predictEpisodes" : 12
+              "accuracy" : 0.9166666666666666,
+              "balanced" : 0.8095238095238095,
+              "precision" : 0.9523809523809523,
+              "recall" : 0.9523809523809523,
+              "f1" : 0.9523809523809523,
+              "tp" : 20,
+              "tn" : 2,
+              "fp" : 1,
+              "fn" : 1,
+              "trainNanos" : 3802754,
+              "predictNanos" : 29906,
+              "predictEpisodes" : 24
             },
             "test" : {
-              "accuracy" : 0.5833333333333334,
-              "balanced" : 0.5833333333333334,
-              "precision" : 0.5454545454545454,
+              "accuracy" : 0.8695652173913043,
+              "balanced" : 0.875,
+              "precision" : 0.7857142857142857,
               "recall" : 1.0,
-              "f1" : 0.7058823529411764,
-              "tp" : 6,
-              "tn" : 1,
-              "fp" : 5,
+              "f1" : 0.88,
+              "tp" : 11,
+              "tn" : 9,
+              "fp" : 3,
               "fn" : 0,
-              "trainNanos" : 1499444,
-              "predictNanos" : 15870,
-              "predictEpisodes" : 12
+              "trainNanos" : 3788117,
+              "predictNanos" : 23384,
+              "predictEpisodes" : 23
             },
             "deterministicRepeatEqual" : true
           }, {
             "seed" : 43,
             "validation" : {
-              "accuracy" : 0.5,
-              "balanced" : 0.5,
-              "precision" : 0.5,
-              "recall" : 1.0,
-              "f1" : 0.6666666666666666,
-              "tp" : 6,
-              "tn" : 0,
-              "fp" : 6,
-              "fn" : 0,
-              "trainNanos" : 1527035,
-              "predictNanos" : 13646,
-              "predictEpisodes" : 12
+              "accuracy" : 0.875,
+              "balanced" : 0.7857142857142857,
+              "precision" : 0.95,
+              "recall" : 0.9047619047619048,
+              "f1" : 0.9268292682926829,
+              "tp" : 19,
+              "tn" : 2,
+              "fp" : 1,
+              "fn" : 2,
+              "trainNanos" : 3787396,
+              "predictNanos" : 27772,
+              "predictEpisodes" : 24
             },
             "test" : {
-              "accuracy" : 0.5,
-              "balanced" : 0.5,
-              "precision" : 0.5,
+              "accuracy" : 0.9130434782608695,
+              "balanced" : 0.9166666666666667,
+              "precision" : 0.8461538461538461,
               "recall" : 1.0,
-              "f1" : 0.6666666666666666,
-              "tp" : 6,
-              "tn" : 0,
-              "fp" : 6,
+              "f1" : 0.9166666666666666,
+              "tp" : 11,
+              "tn" : 10,
+              "fp" : 2,
               "fn" : 0,
-              "trainNanos" : 1513440,
-              "predictNanos" : 15349,
-              "predictEpisodes" : 12
+              "trainNanos" : 3765194,
+              "predictNanos" : 22893,
+              "predictEpisodes" : 23
             }
           }, {
             "seed" : 44,
             "validation" : {
-              "accuracy" : 0.5,
-              "balanced" : 0.5,
-              "precision" : 0.5,
-              "recall" : 1.0,
-              "f1" : 0.6666666666666666,
-              "tp" : 6,
-              "tn" : 0,
-              "fp" : 6,
-              "fn" : 0,
-              "trainNanos" : 1554767,
-              "predictNanos" : 16140,
-              "predictEpisodes" : 12
+              "accuracy" : 0.9583333333333334,
+              "balanced" : 0.9761904761904762,
+              "precision" : 1.0,
+              "recall" : 0.9523809523809523,
+              "f1" : 0.975609756097561,
+              "tp" : 20,
+              "tn" : 3,
+              "fp" : 0,
+              "fn" : 1,
+              "trainNanos" : 3851627,
+              "predictNanos" : 25578,
+              "predictEpisodes" : 24
             },
             "test" : {
-              "accuracy" : 0.5833333333333334,
-              "balanced" : 0.5833333333333334,
-              "precision" : 0.5454545454545454,
+              "accuracy" : 0.9565217391304348,
+              "balanced" : 0.9583333333333333,
+              "precision" : 0.9166666666666666,
               "recall" : 1.0,
-              "f1" : 0.7058823529411764,
-              "tp" : 6,
-              "tn" : 1,
-              "fp" : 5,
+              "f1" : 0.9565217391304348,
+              "tp" : 11,
+              "tn" : 11,
+              "fp" : 1,
               "fn" : 0,
-              "trainNanos" : 1543307,
-              "predictNanos" : 17353,
-              "predictEpisodes" : 12
+              "trainNanos" : 3884428,
+              "predictNanos" : 22072,
+              "predictEpisodes" : 23
             }
           } ],
           "randomProjection" : [ {
             "seed" : 42,
             "validation" : {
-              "accuracy" : 0.5,
-              "balanced" : 0.5,
-              "precision" : 0.5,
-              "recall" : 1.0,
-              "f1" : 0.6666666666666666,
-              "tp" : 6,
-              "tn" : 0,
-              "fp" : 6,
-              "fn" : 0,
-              "trainNanos" : 1593331,
-              "predictNanos" : 8616,
-              "predictEpisodes" : 12
+              "accuracy" : 0.16666666666666666,
+              "balanced" : 0.5238095238095238,
+              "precision" : 1.0,
+              "recall" : 0.047619047619047616,
+              "f1" : 0.0909090909090909,
+              "tp" : 1,
+              "tn" : 3,
+              "fp" : 0,
+              "fn" : 20,
+              "trainNanos" : 3789489,
+              "predictNanos" : 12514,
+              "predictEpisodes" : 24
             },
             "test" : {
-              "accuracy" : 0.5,
-              "balanced" : 0.5,
-              "precision" : 0.5,
-              "recall" : 1.0,
-              "f1" : 0.6666666666666666,
-              "tp" : 6,
-              "tn" : 0,
-              "fp" : 6,
-              "fn" : 0,
-              "trainNanos" : 1587579,
-              "predictNanos" : 9087,
-              "predictEpisodes" : 12
+              "accuracy" : 0.4782608695652174,
+              "balanced" : 0.4583333333333333,
+              "precision" : 0.0,
+              "recall" : 0.0,
+              "f1" : 0.0,
+              "tp" : 0,
+              "tn" : 11,
+              "fp" : 1,
+              "fn" : 11,
+              "trainNanos" : 3741399,
+              "predictNanos" : 12564,
+              "predictEpisodes" : 23
             },
             "deterministicRepeatEqual" : true
           }, {
             "seed" : 43,
             "validation" : {
-              "accuracy" : 0.5,
-              "balanced" : 0.5,
-              "precision" : 0.0,
-              "recall" : 0.0,
-              "f1" : 0.0,
-              "tp" : 0,
-              "tn" : 6,
-              "fp" : 0,
-              "fn" : 6,
-              "trainNanos" : 1623948,
-              "predictNanos" : 11402,
-              "predictEpisodes" : 12
+              "accuracy" : 0.8333333333333334,
+              "balanced" : 0.47619047619047616,
+              "precision" : 0.8695652173913043,
+              "recall" : 0.9523809523809523,
+              "f1" : 0.909090909090909,
+              "tp" : 20,
+              "tn" : 0,
+              "fp" : 3,
+              "fn" : 1,
+              "trainNanos" : 3783509,
+              "predictNanos" : 21471,
+              "predictEpisodes" : 24
             },
             "test" : {
-              "accuracy" : 0.3333333333333333,
-              "balanced" : 0.3333333333333333,
-              "precision" : 0.0,
-              "recall" : 0.0,
-              "f1" : 0.0,
-              "tp" : 0,
-              "tn" : 4,
-              "fp" : 2,
-              "fn" : 6,
-              "trainNanos" : 1631622,
-              "predictNanos" : 11501,
-              "predictEpisodes" : 12
+              "accuracy" : 0.5217391304347826,
+              "balanced" : 0.5416666666666666,
+              "precision" : 0.5,
+              "recall" : 1.0,
+              "f1" : 0.6666666666666666,
+              "tp" : 11,
+              "tn" : 1,
+              "fp" : 11,
+              "fn" : 0,
+              "trainNanos" : 3799869,
+              "predictNanos" : 21370,
+              "predictEpisodes" : 23
             }
           }, {
             "seed" : 44,
             "validation" : {
-              "accuracy" : 0.5,
+              "accuracy" : 0.16666666666666666,
+              "balanced" : 0.5238095238095238,
+              "precision" : 1.0,
+              "recall" : 0.047619047619047616,
+              "f1" : 0.0909090909090909,
+              "tp" : 1,
+              "tn" : 3,
+              "fp" : 0,
+              "fn" : 20,
+              "trainNanos" : 3797725,
+              "predictNanos" : 20850,
+              "predictEpisodes" : 24
+            },
+            "test" : {
+              "accuracy" : 0.5217391304347826,
               "balanced" : 0.5,
               "precision" : 0.0,
               "recall" : 0.0,
               "f1" : 0.0,
               "tp" : 0,
-              "tn" : 6,
+              "tn" : 12,
               "fp" : 0,
-              "fn" : 6,
-              "trainNanos" : 1650358,
-              "predictNanos" : 7544,
-              "predictEpisodes" : 12
-            },
-            "test" : {
-              "accuracy" : 0.3333333333333333,
-              "balanced" : 0.3333333333333333,
-              "precision" : 0.0,
-              "recall" : 0.0,
-              "f1" : 0.0,
-              "tp" : 0,
-              "tn" : 4,
-              "fp" : 2,
-              "fn" : 6,
-              "trainNanos" : 1642684,
-              "predictNanos" : 8436,
-              "predictEpisodes" : 12
+              "fn" : 11,
+              "trainNanos" : 3759223,
+              "predictNanos" : 22212,
+              "predictEpisodes" : 23
             }
           } ],
           "shuffledLabels_control" : [ {
             "seed" : 42,
             "test" : {
-              "accuracy" : 0.5833333333333334,
-              "balanced" : 0.5833333333333334,
-              "precision" : 0.5454545454545454,
-              "recall" : 1.0,
-              "f1" : 0.7058823529411764,
-              "tp" : 6,
-              "tn" : 1,
-              "fp" : 5,
-              "fn" : 0,
-              "trainNanos" : 1763671,
-              "predictNanos" : 20519,
-              "predictEpisodes" : 12
+              "accuracy" : 0.5217391304347826,
+              "balanced" : 0.5378787878787878,
+              "precision" : 0.5,
+              "recall" : 0.9090909090909091,
+              "f1" : 0.6451612903225806,
+              "tp" : 10,
+              "tn" : 2,
+              "fp" : 10,
+              "fn" : 1,
+              "trainNanos" : 4254055,
+              "predictNanos" : 37761,
+              "predictEpisodes" : 23
             }
           }, {
             "seed" : 43,
             "test" : {
-              "accuracy" : 0.5,
-              "balanced" : 0.5,
-              "precision" : 0.5,
-              "recall" : 1.0,
-              "f1" : 0.6666666666666666,
-              "tp" : 6,
-              "tn" : 0,
-              "fp" : 6,
-              "fn" : 0,
-              "trainNanos" : 1738133,
-              "predictNanos" : 22282,
-              "predictEpisodes" : 12
+              "accuracy" : 0.30434782608695654,
+              "balanced" : 0.3068181818181818,
+              "precision" : 0.3076923076923077,
+              "recall" : 0.36363636363636365,
+              "f1" : 0.33333333333333337,
+              "tp" : 4,
+              "tn" : 3,
+              "fp" : 9,
+              "fn" : 7,
+              "trainNanos" : 4163684,
+              "predictNanos" : 30948,
+              "predictEpisodes" : 23
             }
           }, {
             "seed" : 44,
             "test" : {
-              "accuracy" : 0.5,
+              "accuracy" : 0.4782608695652174,
               "balanced" : 0.5,
-              "precision" : 0.5,
+              "precision" : 0.4782608695652174,
               "recall" : 1.0,
-              "f1" : 0.6666666666666666,
-              "tp" : 6,
+              "f1" : 0.6470588235294118,
+              "tp" : 11,
               "tn" : 0,
-              "fp" : 6,
+              "fp" : 12,
               "fn" : 0,
-              "trainNanos" : 1726020,
-              "predictNanos" : 21170,
-              "predictEpisodes" : 12
+              "trainNanos" : 4208749,
+              "predictNanos" : 37330,
+              "predictEpisodes" : 23
             }
           } ]
         },
@@ -3410,13 +3410,13 @@
           },
           "informativeProjection" : {
             "distinctValues" : 19,
-            "crossLabelCollisions" : 5,
-            "crossLabelRate" : 0.2631578947368421
+            "crossLabelCollisions" : 3,
+            "crossLabelRate" : 0.15789473684210525
           },
           "discriminativeProjection" : {
-            "distinctValues" : 25,
+            "distinctValues" : 22,
             "crossLabelCollisions" : 2,
-            "crossLabelRate" : 0.08
+            "crossLabelRate" : 0.09090909090909091
           },
           "randomProjection" : {
             "distinctValues" : 8,
@@ -3425,57 +3425,57 @@
           }
         },
         "representationWidths" : {
+          "discriminativeProjection" : 16,
           "informativeProjection" : 16,
           "productionFold" : 16,
           "randomProjection" : 16,
-          "raw256" : 256,
-          "discriminativeProjection" : 16
+          "raw256" : 256
         },
         "cost" : {
           "raw256BytesPerEpisode" : 32,
           "folded16BytesPerEpisode" : 2,
-          "foldNanosTotal" : 7004,
-          "foldNanosPerEpisode" : 118.71186440677967,
-          "encode256NanosPerEpisode" : 4026.0508474576272,
+          "foldNanosTotal" : 15509,
+          "foldNanosPerEpisode" : 131.4322033898305,
+          "encode256NanosPerEpisode" : 4187.550847457627,
           "trainerStateCells" : 409600,
           "trainerStateNote" : "nClauses(64) x 2 polarities x inputBits(16) x nStates(200) — identical for every representation, because every representation is consumed at the trainer's 16-bit width",
           "note" : "the fold's CPU cost is measured with the production TsetlinTrainer.packForTest; the encode cost is the mirror's, and the mirror is verified equal to the production encoder by the cross-check"
         },
         "stabilityAcrossSeeds" : {
           "productionFold" : {
-            "testAccuracyMean" : 0.5,
-            "testAccuracyMin" : 0.4166666666666667,
-            "testBalancedMin" : 0.4166666666666667,
-            "testAccuracyMax" : 0.5833333333333334,
-            "testBalancedMax" : 0.5833333333333334
+            "testBalancedMin" : 0.6098484848484849,
+            "testAccuracyMax" : 0.6521739130434783,
+            "testBalancedMax" : 0.6666666666666666,
+            "testAccuracyMean" : 0.6376811594202899,
+            "testAccuracyMin" : 0.6086956521739131
           },
           "informativeProjection" : {
-            "testAccuracyMean" : 0.5,
-            "testAccuracyMin" : 0.5,
-            "testBalancedMin" : 0.5,
-            "testAccuracyMax" : 0.5,
-            "testBalancedMax" : 0.5
+            "testBalancedMin" : 0.4962121212121212,
+            "testAccuracyMax" : 0.5217391304347826,
+            "testBalancedMax" : 0.5416666666666666,
+            "testAccuracyMean" : 0.5072463768115942,
+            "testAccuracyMin" : 0.4782608695652174
           },
           "discriminativeProjection" : {
-            "testAccuracyMean" : 0.5555555555555556,
-            "testAccuracyMin" : 0.5,
-            "testBalancedMin" : 0.5,
-            "testAccuracyMax" : 0.5833333333333334,
-            "testBalancedMax" : 0.5833333333333334
+            "testBalancedMin" : 0.875,
+            "testAccuracyMax" : 0.9565217391304348,
+            "testBalancedMax" : 0.9583333333333333,
+            "testAccuracyMean" : 0.9130434782608695,
+            "testAccuracyMin" : 0.8695652173913043
           },
           "randomProjection" : {
-            "testAccuracyMean" : 0.38888888888888884,
-            "testAccuracyMin" : 0.3333333333333333,
-            "testBalancedMin" : 0.3333333333333333,
-            "testAccuracyMax" : 0.5,
-            "testBalancedMax" : 0.5
+            "testBalancedMin" : 0.4583333333333333,
+            "testAccuracyMax" : 0.5217391304347826,
+            "testBalancedMax" : 0.5416666666666666,
+            "testAccuracyMean" : 0.5072463768115942,
+            "testAccuracyMin" : 0.4782608695652174
           },
           "shuffledLabels_control" : {
-            "testAccuracyMean" : 0.5277777777777778,
-            "testAccuracyMin" : 0.5,
-            "testBalancedMin" : 0.5,
-            "testAccuracyMax" : 0.5833333333333334,
-            "testBalancedMax" : 0.5833333333333334
+            "testBalancedMin" : 0.3068181818181818,
+            "testAccuracyMax" : 0.5217391304347826,
+            "testBalancedMax" : 0.5378787878787878,
+            "testAccuracyMean" : 0.43478260869565216,
+            "testAccuracyMin" : 0.30434782608695654
           }
         }
       },
@@ -3505,11 +3505,19 @@
           "note" : "a cross-label collision is one feature value that carries both labels; at 256 bits it is created by the encoder, at 16 bits by the fold"
         },
         "partitions" : {
+          "train" : 88,
           "test" : 28,
-          "validation" : 28,
-          "train" : 88
+          "validation" : 28
         },
         "partitionClassDistribution" : {
+          "train" : {
+            "episodes" : 88,
+            "positives" : 62,
+            "negatives" : 26,
+            "distinctInputs" : 88,
+            "distinctReplies" : 83,
+            "singleClass" : false
+          },
           "test" : {
             "episodes" : 28,
             "positives" : 20,
@@ -3524,14 +3532,6 @@
             "negatives" : 11,
             "distinctInputs" : 28,
             "distinctReplies" : 27,
-            "singleClass" : false
-          },
-          "train" : {
-            "episodes" : 88,
-            "positives" : 62,
-            "negatives" : 26,
-            "distinctInputs" : 88,
-            "distinctReplies" : 83,
             "singleClass" : false
           }
         },
@@ -3569,8 +3569,8 @@
               "tn" : 1,
               "fp" : 10,
               "fn" : 4,
-              "trainNanos" : 5512250,
-              "predictNanos" : 50304,
+              "trainNanos" : 5636881,
+              "predictNanos" : 49734,
               "predictEpisodes" : 28
             },
             "test" : {
@@ -3583,8 +3583,8 @@
               "tn" : 1,
               "fp" : 7,
               "fn" : 2,
-              "trainNanos" : 5429484,
-              "predictNanos" : 54081,
+              "trainNanos" : 5569243,
+              "predictNanos" : 44353,
               "predictEpisodes" : 28
             },
             "deterministicRepeatEqual" : true
@@ -3600,8 +3600,8 @@
               "tn" : 0,
               "fp" : 11,
               "fn" : 2,
-              "trainNanos" : 5522109,
-              "predictNanos" : 50605,
+              "trainNanos" : 5647009,
+              "predictNanos" : 46267,
               "predictEpisodes" : 28
             },
             "test" : {
@@ -3614,8 +3614,8 @@
               "tn" : 1,
               "fp" : 7,
               "fn" : 1,
-              "trainNanos" : 5572704,
-              "predictNanos" : 46398,
+              "trainNanos" : 5611372,
+              "predictNanos" : 43272,
               "predictEpisodes" : 28
             }
           }, {
@@ -3630,8 +3630,8 @@
               "tn" : 1,
               "fp" : 10,
               "fn" : 0,
-              "trainNanos" : 5505097,
-              "predictNanos" : 47650,
+              "trainNanos" : 5611002,
+              "predictNanos" : 47620,
               "predictEpisodes" : 28
             },
             "test" : {
@@ -3644,8 +3644,8 @@
               "tn" : 0,
               "fp" : 8,
               "fn" : 0,
-              "trainNanos" : 5472336,
-              "predictNanos" : 46587,
+              "trainNanos" : 5579813,
+              "predictNanos" : 46187,
               "predictEpisodes" : 28
             }
           } ],
@@ -3661,8 +3661,8 @@
               "tn" : 1,
               "fp" : 10,
               "fn" : 3,
-              "trainNanos" : 5253533,
-              "predictNanos" : 40627,
+              "trainNanos" : 5425242,
+              "predictNanos" : 44705,
               "predictEpisodes" : 28
             },
             "test" : {
@@ -3675,8 +3675,8 @@
               "tn" : 0,
               "fp" : 8,
               "fn" : 3,
-              "trainNanos" : 5203349,
-              "predictNanos" : 39715,
+              "trainNanos" : 5385146,
+              "predictNanos" : 38091,
               "predictEpisodes" : 28
             },
             "deterministicRepeatEqual" : true
@@ -3692,8 +3692,8 @@
               "tn" : 2,
               "fp" : 9,
               "fn" : 4,
-              "trainNanos" : 5157542,
-              "predictNanos" : 34035,
+              "trainNanos" : 5302130,
+              "predictNanos" : 33272,
               "predictEpisodes" : 28
             },
             "test" : {
@@ -3706,8 +3706,8 @@
               "tn" : 1,
               "fp" : 7,
               "fn" : 2,
-              "trainNanos" : 5140461,
-              "predictNanos" : 34595,
+              "trainNanos" : 5283415,
+              "predictNanos" : 31409,
               "predictEpisodes" : 28
             }
           }, {
@@ -3722,8 +3722,8 @@
               "tn" : 0,
               "fp" : 11,
               "fn" : 3,
-              "trainNanos" : 5200273,
-              "predictNanos" : 31178,
+              "trainNanos" : 5292711,
+              "predictNanos" : 29575,
               "predictEpisodes" : 28
             },
             "test" : {
@@ -3736,8 +3736,8 @@
               "tn" : 0,
               "fp" : 8,
               "fn" : 5,
-              "trainNanos" : 5118540,
-              "predictNanos" : 29455,
+              "trainNanos" : 5305576,
+              "predictNanos" : 28213,
               "predictEpisodes" : 28
             }
           } ],
@@ -3753,8 +3753,8 @@
               "tn" : 6,
               "fp" : 5,
               "fn" : 6,
-              "trainNanos" : 5124961,
-              "predictNanos" : 35086,
+              "trainNanos" : 5278906,
+              "predictNanos" : 34655,
               "predictEpisodes" : 28
             },
             "test" : {
@@ -3767,8 +3767,8 @@
               "tn" : 4,
               "fp" : 4,
               "fn" : 8,
-              "trainNanos" : 5112848,
-              "predictNanos" : 37881,
+              "trainNanos" : 5300927,
+              "predictNanos" : 36589,
               "predictEpisodes" : 28
             },
             "deterministicRepeatEqual" : true
@@ -3784,8 +3784,8 @@
               "tn" : 2,
               "fp" : 9,
               "fn" : 2,
-              "trainNanos" : 5157823,
-              "predictNanos" : 34976,
+              "trainNanos" : 5356533,
+              "predictNanos" : 34194,
               "predictEpisodes" : 28
             },
             "test" : {
@@ -3798,8 +3798,8 @@
               "tn" : 1,
               "fp" : 7,
               "fn" : 0,
-              "trainNanos" : 5144688,
-              "predictNanos" : 36940,
+              "trainNanos" : 5327427,
+              "predictNanos" : 36138,
               "predictEpisodes" : 28
             }
           }, {
@@ -3814,8 +3814,8 @@
               "tn" : 0,
               "fp" : 11,
               "fn" : 1,
-              "trainNanos" : 5211675,
-              "predictNanos" : 41167,
+              "trainNanos" : 5410484,
+              "predictNanos" : 40616,
               "predictEpisodes" : 28
             },
             "test" : {
@@ -3828,8 +3828,8 @@
               "tn" : 0,
               "fp" : 8,
               "fn" : 0,
-              "trainNanos" : 5211174,
-              "predictNanos" : 41909,
+              "trainNanos" : 5378724,
+              "predictNanos" : 40176,
               "predictEpisodes" : 28
             }
           } ],
@@ -3845,8 +3845,8 @@
               "tn" : 9,
               "fp" : 2,
               "fn" : 13,
-              "trainNanos" : 4891181,
-              "predictNanos" : 20097,
+              "trainNanos" : 5076926,
+              "predictNanos" : 19967,
               "predictEpisodes" : 28
             },
             "test" : {
@@ -3859,8 +3859,8 @@
               "tn" : 7,
               "fp" : 1,
               "fn" : 14,
-              "trainNanos" : 4879740,
-              "predictNanos" : 19877,
+              "trainNanos" : 5071806,
+              "predictNanos" : 20038,
               "predictEpisodes" : 28
             },
             "deterministicRepeatEqual" : true
@@ -3876,8 +3876,8 @@
               "tn" : 11,
               "fp" : 0,
               "fn" : 17,
-              "trainNanos" : 4886312,
-              "predictNanos" : 22132,
+              "trainNanos" : 5116019,
+              "predictNanos" : 20759,
               "predictEpisodes" : 28
             },
             "test" : {
@@ -3890,8 +3890,8 @@
               "tn" : 8,
               "fp" : 0,
               "fn" : 20,
-              "trainNanos" : 4892303,
-              "predictNanos" : 20819,
+              "trainNanos" : 5115088,
+              "predictNanos" : 28423,
               "predictEpisodes" : 28
             }
           }, {
@@ -3906,8 +3906,8 @@
               "tn" : 9,
               "fp" : 2,
               "fn" : 13,
-              "trainNanos" : 4807744,
-              "predictNanos" : 19116,
+              "trainNanos" : 5010971,
+              "predictNanos" : 22502,
               "predictEpisodes" : 28
             },
             "test" : {
@@ -3920,8 +3920,8 @@
               "tn" : 7,
               "fp" : 1,
               "fn" : 14,
-              "trainNanos" : 4804538,
-              "predictNanos" : 19136,
+              "trainNanos" : 5024116,
+              "predictNanos" : 18836,
               "predictEpisodes" : 28
             }
           } ],
@@ -3937,8 +3937,8 @@
               "tn" : 4,
               "fp" : 4,
               "fn" : 6,
-              "trainNanos" : 5478287,
-              "predictNanos" : 45976,
+              "trainNanos" : 5619317,
+              "predictNanos" : 46238,
               "predictEpisodes" : 28
             }
           }, {
@@ -3953,8 +3953,8 @@
               "tn" : 0,
               "fp" : 8,
               "fn" : 0,
-              "trainNanos" : 5484469,
-              "predictNanos" : 38041,
+              "trainNanos" : 5678058,
+              "predictNanos" : 37050,
               "predictEpisodes" : 28
             }
           }, {
@@ -3969,8 +3969,8 @@
               "tn" : 1,
               "fp" : 7,
               "fn" : 4,
-              "trainNanos" : 5462668,
-              "predictNanos" : 42870,
+              "trainNanos" : 5682005,
+              "predictNanos" : 41729,
               "predictEpisodes" : 28
             }
           } ]
@@ -4003,57 +4003,57 @@
           }
         },
         "representationWidths" : {
+          "discriminativeProjection" : 16,
           "informativeProjection" : 16,
           "productionFold" : 16,
           "randomProjection" : 16,
-          "raw256" : 256,
-          "discriminativeProjection" : 16
+          "raw256" : 256
         },
         "cost" : {
           "raw256BytesPerEpisode" : 32,
           "folded16BytesPerEpisode" : 2,
-          "foldNanosTotal" : 18344,
-          "foldNanosPerEpisode" : 127.38888888888889,
-          "encode256NanosPerEpisode" : 3803.6944444444443,
+          "foldNanosTotal" : 26270,
+          "foldNanosPerEpisode" : 182.43055555555554,
+          "encode256NanosPerEpisode" : 866.7708333333334,
           "trainerStateCells" : 409600,
           "trainerStateNote" : "nClauses(64) x 2 polarities x inputBits(16) x nStates(200) — identical for every representation, because every representation is consumed at the trainer's 16-bit width",
           "note" : "the fold's CPU cost is measured with the production TsetlinTrainer.packForTest; the encode cost is the mirror's, and the mirror is verified equal to the production encoder by the cross-check"
         },
         "stabilityAcrossSeeds" : {
           "productionFold" : {
-            "testAccuracyMean" : 0.7023809523809524,
-            "testAccuracyMin" : 0.6785714285714286,
             "testBalancedMin" : 0.5,
             "testAccuracyMax" : 0.7142857142857143,
-            "testBalancedMax" : 0.5375
+            "testBalancedMax" : 0.5375,
+            "testAccuracyMean" : 0.7023809523809524,
+            "testAccuracyMin" : 0.6785714285714286
           },
           "informativeProjection" : {
-            "testAccuracyMean" : 0.6071428571428571,
-            "testAccuracyMin" : 0.5357142857142857,
             "testBalancedMin" : 0.375,
             "testAccuracyMax" : 0.6785714285714286,
-            "testBalancedMax" : 0.5125
+            "testBalancedMax" : 0.5125,
+            "testAccuracyMean" : 0.6071428571428571,
+            "testAccuracyMin" : 0.5357142857142857
           },
           "discriminativeProjection" : {
-            "testAccuracyMean" : 0.6785714285714285,
-            "testAccuracyMin" : 0.5714285714285714,
             "testBalancedMin" : 0.5,
             "testAccuracyMax" : 0.75,
-            "testBalancedMax" : 0.5625
+            "testBalancedMax" : 0.5625,
+            "testAccuracyMean" : 0.6785714285714285,
+            "testAccuracyMin" : 0.5714285714285714
           },
           "randomProjection" : {
-            "testAccuracyMean" : 0.4047619047619048,
-            "testAccuracyMin" : 0.2857142857142857,
             "testBalancedMin" : 0.5,
             "testAccuracyMax" : 0.4642857142857143,
-            "testBalancedMax" : 0.5875
+            "testBalancedMax" : 0.5875,
+            "testAccuracyMean" : 0.4047619047619048,
+            "testAccuracyMin" : 0.2857142857142857
           },
           "shuffledLabels_control" : {
-            "testAccuracyMean" : 0.6547619047619048,
-            "testAccuracyMin" : 0.6071428571428571,
             "testBalancedMin" : 0.4625,
             "testAccuracyMax" : 0.7142857142857143,
-            "testBalancedMax" : 0.6
+            "testBalancedMax" : 0.6,
+            "testAccuracyMean" : 0.6547619047619048,
+            "testAccuracyMin" : 0.6071428571428571
           }
         }
       }
@@ -4062,7 +4062,7 @@
       "chronologicalInputsDisjoint" : false,
       "groupedInputsDisjoint" : true,
       "groupedPartitionsDisjoint" : true,
-      "chronologicalTestInputsSeenInTrain" : "3 of 34",
+      "chronologicalTestInputsSeenInTrain" : "15 of 45",
       "syntheticRealExactTextOverlap" : 0
     },
     "historicalMeasurement" : {

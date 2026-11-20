@@ -28,6 +28,7 @@ EXIT CODES
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -76,20 +77,36 @@ def git(root, *arguments):
 
 
 def merged_pull_requests(root, subjects_file):
-    """The pull-request numbers whose squash is on the main line."""
+    """The pull-request numbers whose squash is on the line the change lands on.
+
+    The line is read from the first ref the checkout actually carries. A CI
+    checkout of `develop` with the default depth carries neither `origin/main`
+    nor `main` — it carries the pushed branch and nothing else — and a pull-request
+    checkout carries a detached merge commit. The comparison must therefore name
+    the line it read, and it must FAIL when it can read none: a check that cannot
+    see the line cannot certify the claim, and a green check that compared
+    nothing would be a lie.
+    """
     if subjects_file:
         text = read(Path(subjects_file))
         if not text:
             return set(), "the --release-subjects-file is unreadable"
         mainline = "the given subject file"
     else:
-        out = git(root, "log", "origin/main", "--oneline")
-        mainline = "origin/main"
-        if out is None:
-            out = git(root, "log", "main", "--oneline")
-            mainline = "main"
-        if out is None:
-            return None, "no main line is readable (git cannot answer)"
+        candidates = ("origin/main", "main", "origin/develop", "develop")
+        sha = os.environ.get("GITHUB_SHA")
+        if sha:
+            candidates = candidates + (sha,)
+        out = None
+        mainline = None
+        for candidate in candidates:
+            out = git(root, "log", candidate, "--oneline")
+            if out is not None:
+                mainline = candidate
+                break
+        if mainline is None:
+            return None, ("no line is readable (git cannot answer); the refs tried: %s"
+                          % ", ".join(candidates))
         text = out
     numbers = set()
     for match in re.finditer(r"\(#(\d+)\)", text):
@@ -118,7 +135,7 @@ def check_release(root, subjects_file, defects):
                                % (mainline, match.group(1))) if match.groups()
                               else ("%s's history carries the release squashes: %s"
                                     % (mainline, sorted(numbers))),
-                "note": "a current-state document claims a release is pending that the main line has already merged",
+                "note": "a current-state document claims a release is pending that the compared line has already merged",
             })
 
 

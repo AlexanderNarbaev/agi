@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.HardReviewP2JourneyTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:52:13.065Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.862">
+  <properties/>
+  <testcase name="P2-c: the replay is refused when the workspace's content changed" classname="io.matrix.knowledge.HardReviewP2JourneyTest" time="0.103"/>
+  <testcase name="P2-a: the method is chosen by the selector, and the trace says why" classname="io.matrix.knowledge.HardReviewP2JourneyTest" time="0.082"/>
+  <testcase name="P2-f: the journey runs when the trace cannot be written, and says so" classname="io.matrix.knowledge.HardReviewP2JourneyTest" time="0.064"/>
+  <testcase name="P2-e: the replay against the no-learning baseline, interleaved" classname="io.matrix.knowledge.HardReviewP2JourneyTest" time="0.467"/>
+  <testcase name="P2-d: the consent is checked before the plan, and the name is bounded" classname="io.matrix.knowledge.HardReviewP2JourneyTest" time="0.066"/>
+  <testcase name="P2-b: the observer is not fooled by the writer's own bookkeeping" classname="io.matrix.knowledge.HardReviewP2JourneyTest" time="0.08"/>
+  <system-out><![CDATA[### P2-c - the workspace changes under the retained journey
+  the fingerprint before=da17faea4c1c7d01 after=9c83dfb4595aaa87 changed=true
+  the journey after the change: 200
+  the plan: report.journey.reference.v1: selected report.journey.reference.v1@1.0.0 with score 1.0 over 1 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 1 case(s); the cost came from DECLARED_COMPLEX…
+  the plan: report.journey.reference.v1: selected report.journey.reference.v1@1.0.0 with score 1.0 over 1 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 1 case(s); the cost came from MEASURED and was…
+### P2-a - the first journey: 201
+  the second journey: 200
+  PLAN / ReportJourneyPlanner :: report.journey.reference.v1: selected report.journey.reference.v1@1.0.0 with score 1.0 over 1 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 1 case(s); the cost came from DECLARED_COMPLEX…
+  PERMISSION / ArtifactReportResource :: the caller consented, the gate was open and the output root is the server's own; the plan did not widen either; no retained journey was found
+  ACTION / ArtifactAction :: report.artifact.write on c2a.report.v1.bb315f3471f1700fc2c92d8c produced WRITTEN for report-700fc2c92d8c.md with digest efe568902bf073cef8ade3b8adc49f31d590f6e4db92103e61224fd40dfca0c9
+  OBSERVE / ArtifactObserver :: the artifact is there with 5084 byte(s) and the digest matches the one that was reported; the index holds 1 STAGED and 1 COMMITTED record(s)
+  VERIFY / ArtifactObserver :: the effect is verified: the artifact is there, its digest is the one that was reported, and the index holds exactly one committed record for the identity
+  RESULT / ArtifactReportResource :: the method report.journey.reference.v1 produced WRITTEN
+  RETAINED / ArtifactReportResource :: {"responseJson":"{\"taskId\":\"c2a.report.v1.bb315f3471f1700fc2c92d8c\",\"actionName\":\"report.artifact.write\",\"actionVersion\":1,\"disposition\":\"WRITTEN\",\"artifactName\":\"report-700fc2c92d8c.md\",\"artifactLocat…
+  PLAN / ReportJourneyPlanner :: report.journey.replay.v1: selected report.journey.replay.v1@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 3 case(s); the cost came from DECLARED_COMPLEXITY an…
+  PERMISSION / ArtifactReportResource :: the caller consented, the gate was open and the output root is the server's own; the plan did not widen either; a retained journey was found and consulted
+  ACTION / ArtifactAction :: report.artifact.write on c2a.report.v1.bb315f3471f1700fc2c92d8c produced REPLAYED for report-700fc2c92d8c.md with digest efe568902bf073cef8ade3b8adc49f31d590f6e4db92103e61224fd40dfca0c9
+  OBSERVE / ArtifactObserver :: the artifact is there with 5084 byte(s) and the digest matches the one that was reported; the index holds 1 STAGED and 1 COMMITTED record(s)
+  VERIFY / ArtifactObserver :: the effect is verified: the artifact is there, its digest is the one that was reported, and the index holds exactly one committed record for the identity
+  RESULT / ArtifactReportResource :: the method report.journey.replay.v1 produced REPLAYED by replaying the retained journey
+  RETAINED / ArtifactReportResource :: the retained journey was served; the trace is unchanged
+### P2-f - the trace is not writable: 201
+  the body says the trace was not kept: true
+  the body: ReportResponse[taskId=c2a.report.v1.0590767b9f85418bcf197921, actionName=report.artifact.write, actionVersion=1, disposition=WRITTEN, artifactName=report-418bcf197921.md, artifactLocator=report-418bcf197921.md, sha256=efe568902bf073cef8ade3b8adc49f31d590f6e4db92103e61224fd40dfca0c9, evidence=[EvidenceReference[claimId=cl-4871463, proposition=Photosynthesis converts light energy into chemical energ…
+  the artifact on disk: report-418bcf197921.md
+### P2-e - the interleaved arms (40 rounds each)
+  the replay arm:    median=3 ms  min=2 max=4
+  the no-learning arm: median=6 ms  min=4 max=8
+  the difference of the medians: 3 ms
+### P2-d - the safety boundary
+  no consent and no method: 403
+  consent but no method: 422
+  a name with a parent reference: 400
+### P2-b - the observer: 201
+  before the change: exists=true matches=true staged=1 committed=1 verified=true
+  after the change:  exists=true matches=false committed=1 verified=false
+  detail: the artifact is there with 21 byte(s) and the digest does NOT match the one that was reported
+  after the removal: exists=false committed=1 verified=false
+  detail: the artifact is not there
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.auditor.MatrixTraceTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:51:55.140Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.004">
+  <properties/>
+  <testcase name="endSetsStatusAndComputesHash()" classname="io.matrix.auditor.MatrixTraceTest" time="0.001"/>
+  <testcase name="hashHexIsDeterministic()" classname="io.matrix.auditor.MatrixTraceTest" time="0.0"/>
+  <testcase name="hashHexChangesWithInput()" classname="io.matrix.auditor.MatrixTraceTest" time="0.001"/>
+  <testcase name="emptyTraceHasZeroCount()" classname="io.matrix.auditor.MatrixTraceTest" time="0.0"/>
+  <testcase name="hundredStepsInTrace()" classname="io.matrix.auditor.MatrixTraceTest" time="0.001"/>
+  <testcase name="autoCloseRecordsCloseStatus()" classname="io.matrix.auditor.MatrixTraceTest" time="0.0"/>
+  <testcase name="prevHashChainsBetweenSteps()" classname="io.matrix.auditor.MatrixTraceTest" time="0.0"/>
+  <testcase name="beginCreatesFirstStep()" classname="io.matrix.auditor.MatrixTraceTest" time="0.0"/>
+  <testcase name="inputAndOutputStored()" classname="io.matrix.auditor.MatrixTraceTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

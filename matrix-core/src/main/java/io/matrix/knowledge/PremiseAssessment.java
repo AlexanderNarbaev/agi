@@ -181,6 +181,19 @@ public final class PremiseAssessment {
     public static final double MINIMUM_DENIAL_COVERAGE = 0.50;
 
     /**
+     * The share of the other side's terms the DENIED OBJECT has to carry.
+     *
+     * <p><b>Why the denied object and not the denied clause.</b> A negation scopes over
+     * what follows it: "the Mid-Atlantic ridge is NOT bordered by plates that are being
+     * pulled into subduction zones" denies the BORDERING, and the ridge's classification as a
+     * divergent boundary is not what the denial is about. The clause that carries the denial
+     * also carries the subject of the denial, so the clause's own words say nothing about
+     * whether the denial lands on the other side. The object of the denial does: it has to
+     * carry a third of the other side's terms to be about it.
+     */
+    public static final double MINIMUM_DENIAL_OBJECT_COVERAGE = 0.30;
+
+    /**
      * The coverage a retrieved claim must reach before it is a candidate.
      *
      * <p>The floor is LOW on purpose: the retriever decides what it can
@@ -188,7 +201,7 @@ public final class PremiseAssessment {
      * of the retriever's own would silently decide the second question with
      * the first one's rule.
      */
-    private static final double MINIMUM_RETRIEVAL_COVERAGE = 0.10;
+    public static final double MINIMUM_RETRIEVAL_COVERAGE = 0.10;
 
     /**
      * The words that DENY.
@@ -196,6 +209,19 @@ public final class PremiseAssessment {
      * <p>A denial flips the polarity of what is asserted. The multi-word
      * markers are phrases, and they are matched as phrases.
      */
+    /**
+     * The words a negation is written with.
+     *
+     * <p>They are held apart from the denial markers on purpose: a marker such as
+     * "rejected" says that something was rejected, and what follows it is not the object of
+     * a negation.
+     */
+    private static final List<String> NEGATION_WORDS = List.of(
+            "not", "no", "never", "cannot", "nothing", "neither", "nor", "without",
+            // the contraction forms and the phrases that stand in for a negation
+            "isn't", "doesn't", "wasn't", "aren't", "weren't", "don't", "didn't", "can't",
+            "rather", "instead");
+
     private static final List<String> DENIAL_MARKERS = List.of(
             "not", "no", "never", "cannot", "can't", "nothing", "neither", "nor",
             "isn't", "doesn't", "wasn't", "aren't", "weren't", "don't", "didn't",
@@ -313,6 +339,80 @@ public final class PremiseAssessment {
     }
 
     /**
+     * Assesses ONE premise against the workspace's stored knowledge.
+     *
+     * <p>This is the single-premise entry point, and it is what the production asking path
+     * uses: a question asserts one premise, and the question's own premise is what the
+     * workspace is asked about. The assessment of a whole assertion
+     * ({@link #assess(KnowledgeWorkbench, String, String)}) splits the assertion into premises
+     * first and then calls this for each of them.
+     *
+     * @param workbench the workbench that holds the workspace
+     * @param workspaceId the workspace to read
+     * @param premise the premise, in the caller's own words
+     * @return the finding
+     */
+    public static Finding assessPremise(KnowledgeWorkbench workbench, String workspaceId,
+            String premise) {
+        if (workbench == null) {
+            throw new IllegalArgumentException("a workbench is required to assess a premise");
+        }
+        String workspace = workspaceId == null ? "" : workspaceId.strip();
+        return assessPremise(workbench.workspace(workspace), premise);
+    }
+
+    /**
+     * Assesses ONE premise against a workspace that has already been read.
+     *
+     * <p>The asking path holds the snapshot it is answering from, and reading the workspace a
+     * second time would ask the store the same question twice.
+     *
+     * @param snapshot the workspace
+     * @param premise the premise, in the caller's own words
+     * @return the finding
+     */
+    public static Finding assessPremise(KnowledgeSnapshot snapshot, String premise) {
+        if (snapshot == null) {
+            throw new IllegalArgumentException("a workspace is required to assess a premise");
+        }
+        String text = premise == null ? "" : premise.strip();
+        if (text.isEmpty()) {
+            return new Finding(text, Verdict.UNSUPPORTED,
+                    "There is no premise to assess, and nothing in the workspace bears on one.",
+                    List.of(), null);
+        }
+        KnowledgeRetriever retriever = new KnowledgeRetriever(snapshot, MINIMUM_RETRIEVAL_COVERAGE);
+        return assessPremise(text, retriever, snapshot);
+    }
+
+    /**
+     * The evidence reference for a claim, for a caller that holds a claim and a workspace.
+     *
+     * <p>The reference is the same one the assessment carries: the claim's proposition, the
+     * source behind it, and the excerpt of the evidence record that backs it.
+     *
+     * @param claim the claim
+     * @param snapshot the workspace
+     * @return the reference
+     */
+    public static EvidenceRef evidenceRefFor(Claim claim, KnowledgeSnapshot snapshot) {
+        return evidenceRef(claim, "MENTIONS", snapshot);
+    }
+
+    /**
+     * The evidence reference for a claim under a stated relation.
+     *
+     * @param claim the claim
+     * @param relation how the claim bears on what is being assessed
+     * @param snapshot the workspace
+     * @return the reference
+     */
+    public static EvidenceRef evidenceRefFor(Claim claim, String relation,
+            KnowledgeSnapshot snapshot) {
+        return evidenceRef(claim, relation, snapshot);
+    }
+
+    /**
      * The assessment of one premise.
      *
      * @param premise the premise, in the caller's own words
@@ -320,10 +420,27 @@ public final class PremiseAssessment {
      * @param snapshot the workspace
      * @return the finding
      */
-    private static Finding assessPremise(String premise, KnowledgeRetriever retriever,
+    static Finding assessPremise(String premise, KnowledgeRetriever retriever,
+            KnowledgeSnapshot snapshot) {
+        return assessPremise(premise, retriever.answer(premise).claims(), snapshot);
+    }
+
+    /**
+     * The assessment of a premise over an already retrieved candidate list.
+     *
+     * <p>The candidate list is passed in and not retrieved here so that the asking path reads
+     * the workspace ONCE: the same list serves the assessment of the premise and the accounts
+     * the question is read against.</p>
+     *
+     * @param premise the premise
+     * @param retrieved the claims the retrieval returned for it
+     * @param snapshot the workspace
+     * @return the finding
+     */
+    static Finding assessPremise(String premise, List<Claim> retrieved,
             KnowledgeSnapshot snapshot) {
         Set<String> premiseStems = distinctiveStems(premise);
-        List<Candidate> candidates = candidatesFor(premise, premiseStems, retriever, snapshot);
+        List<Candidate> candidates = candidatesFor(premise, premiseStems, retrieved, snapshot);
         if (candidates.isEmpty()) {
             return new Finding(premise, Verdict.UNSUPPORTED,
                     "No claim in this workspace is about the same subject as this premise, so "
@@ -404,16 +521,9 @@ public final class PremiseAssessment {
      * @return the candidates, best first, at most {@link #MAXIMUM_EVIDENCE}
      */
     private static List<Candidate> candidatesFor(String premise, Set<String> premiseStems,
-            KnowledgeRetriever retriever, KnowledgeSnapshot snapshot) {
-        Set<String> known = new LinkedHashSet<>();
-        for (Claim claim : snapshot.claims()) {
-            known.add(claim.id());
-        }
+            List<Claim> retrieved, KnowledgeSnapshot snapshot) {
         List<Candidate> candidates = new ArrayList<>();
-        for (Claim claim : retriever.answer(premise).claims()) {
-            if (!known.contains(claim.id())) {
-                continue;
-            }
+        for (Claim claim : retrieved) {
             Set<String> claimStems = distinctiveStems(claim.proposition());
             Set<String> shared = sharedStems(premiseStems, wordsByStem(premise), claimStems);
             if (shared.size() < MINIMUM_SHARED_TERMS) {
@@ -454,11 +564,44 @@ public final class PremiseAssessment {
 
         // A denial counts only when it is ABOUT the other side's subject.
         String premiseDenial = denialAbout(premise, claimStems);
-        String claimDenial = denialAbout(proposition, premiseStems);
+        String claimDenial = denialAbout(proposition, premise);
+        if (claimDenial == null) {
+            // THE SCOPE IS PART OF THE CLAIM'S STATEMENT.
+            //
+            // The photosynthesis package writes the truth in the scope of the claim that
+            // states it: "the oxygen originates from water, not from carbon dioxide" is the
+            // scope of "Oxygenic photosynthesis releases oxygen as a byproduct of splitting
+            // water". The denial lives there, and a reader that only looks at the proposition
+            // misses the corpus's own correction of the misconception.
+            claimDenial = claim.scope() == null ? null : denialAbout(claim.scope(), premise);
+        }
         if (premiseDenial != null && claimDenial == null) {
             return new Reading("CONTRADICTS", premiseDenial);
         }
         if (claimDenial != null && premiseDenial == null) {
+            // A CLAIM THAT STATES THE PREMISE SUPPORTS IT: a claim cannot be
+            // the evidence that its own assertion is false.
+            //
+            // THE SAME ASSERTION, NOT THE SAME SUBJECT. The denial above is a
+            // SUBJECT-level test: it says that the claim denies something
+            // about the premise's subject. It does not say that the claim
+            // denies THAT PROPOSITION.
+            //
+            // The corpus holds one claim that says subduction drives plate
+            // tectonics AND, in the same sentence, that plate tectonics could
+            // not occur without it.
+            // The premise names that claim's FIRST clause, and the second
+            // clause's negation denies a CONSEQUENCE, not the premise. The
+            // subject-level test read the premise as REFUTED — a false contradiction of a
+            // proposition the corpus states outright.
+            //
+            // The rule: the claim refutes the premise only when it asserts
+            // the OPPOSITE of that proposition. When it states the premise,
+            // it supports it, and the negation elsewhere in the claim is
+            // about something else.
+            if (statesThePremise(premise, claim)) {
+                return new Reading("SUPPORTS", null);
+            }
             return new Reading("CONTRADICTS", premise);
         }
         // A LIMITATION of the other side.
@@ -477,6 +620,18 @@ public final class PremiseAssessment {
             return new Reading("CONTRADICTS", premiseLimitation);
         }
         if (sameAssertion(premiseStems, claimStems)) {
+            // A RESTRICTION DOES NOT CARRY A BROADER STATEMENT.
+            //
+            // "So far, Earth is the only planet where subduction is known to occur" and
+            // "subduction is known to occur on planets other than Earth" share every content
+            // term except the one the restriction marker holds, and the marker was left out of
+            // the comparison because it carries no subject. So the two looked like the same
+            // assertion and the workspace appeared to CONFIRM a premise it does not hold. A
+            // claim that says less does not state what is said more: "only X" says less than
+            // "X and others", and the difference is exactly what the premise asks about.
+            if (restricts(proposition) && !restricts(premise)) {
+                return new Reading("MENTIONS", null);
+            }
             return new Reading("SUPPORTS", null);
         }
         return new Reading("MENTIONS", null);
@@ -539,19 +694,153 @@ public final class PremiseAssessment {
      *     other side's subject
      */
     static String denialAbout(String text, Set<String> otherStems) {
+        return denialAbout(text, otherStems, otherStems);
+    }
+
+    /**
+     * The clause of the text that denies the other side's subject, read through the lexicon.
+     *
+     * <p>The other side's terms are read as TOKENS and not as the crude stems the rest of the
+     * assessment uses: the lexicon is a table of folded stems, and a Russian premise and an
+     * English claim about it only meet through that folding.</p>
+     *
+     * @param text the text to read
+     * @param otherText the other side's text
+     * @return the denied clause, or null
+     */
+    static String denialAbout(String text, String otherText) {
+        return denialAbout(text, new LinkedHashSet<>(TextFeatures.tokens(otherText)),
+                new LinkedHashSet<>(TextFeatures.tokens(otherText)));
+    }
+
+    private static String denialAbout(String text, Set<String> otherStems,
+            Set<String> otherTokens) {
         for (String fragment : fragmentsOf(text)) {
             if (!denied(fragment)) {
                 continue;
             }
-            Set<String> fragmentStems = distinctiveStems(fragment);
-            if (fragmentStems.size() < MINIMUM_SHARED_TERMS) {
+            Set<String> deniedTerms = distinctiveStems(deniedObject(fragment));
+            Set<String> fragmentTerms = distinctiveStems(fragment);
+            if (deniedTerms.size() < MINIMUM_SHARED_TERMS
+                    && fragmentTerms.size() < MINIMUM_SHARED_TERMS) {
                 continue;
             }
-            if (covers(fragmentStems, otherStems)) {
+            // THE DENIAL LANDS ON THE OTHER SIDE when the object of the denial carries the
+            // other side's subject, or — the rule this one refines — when the whole clause
+            // carries it. The second reading is kept: a denial whose object is empty ("the
+            // idea that the continents could move was widely accepted" against "his theory
+            // met with little acceptance") says its subject in the clause itself.
+            if (coversSubject(deniedTerms, otherTokens)
+                    || coversSubject(fragmentTerms, otherTokens)) {
                 return fragment.strip();
             }
         }
         return null;
+    }
+
+    /**
+     * The terms of the object a denial scopes over.
+     *
+     * @param fragment the denied fragment
+     * @return the terms the negation scopes over, empty when the fragment does not deny
+     */
+    static String deniedObject(String fragment) {
+        int index = negationIndex(fragment);
+        if (index < 0) {
+            return "";
+        }
+        List<String> words = wordsOf(normalize(fragment));
+        StringBuilder object = new StringBuilder();
+        for (int i = index + 1; i < words.size(); i++) {
+            if (i > index + 1) {
+                object.append(' ');
+            }
+            object.append(words.get(i));
+        }
+        return object.toString();
+    }
+
+    /**
+     * The index of the first negation in a text, or -1 when it carries none.
+     *
+     * @param text the text
+     * @return the index of the negation word
+     */
+    static int negationIndex(String text) {
+        if (text == null || text.isBlank()) {
+            return -1;
+        }
+        String normalized = normalize(text);
+        boolean russian = "ru".equals(TextProfiles.detect(normalized));
+        List<String> words = wordsOf(normalized);
+        for (int i = 0; i < words.size(); i++) {
+            String word = words.get(i);
+            if (NEGATION_WORDS.contains(word)) {
+                return i;
+            }
+            if (russian) {
+                for (String negation : TextProfiles.RUSSIAN.negations()) {
+                    if (word.equals(negation)
+                            || (negation.length() <= 2 && word.startsWith(negation))) {
+                        return i;
+                    }
+                }
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Whether a set of terms carries every word of a phrase.
+     *
+     * @param terms the terms
+     * @param phrase the phrase
+     * @return whether every word of the phrase is there
+     */
+    private static boolean coversPhrase(Set<String> terms, String phrase) {
+        for (String word : phrase.split(" ")) {
+            if (!terms.contains(stem(word))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Whether a set of terms is ABOUT another set: the other side's terms have to be covered
+     * by them.
+     *
+     * @param terms the terms to be covered
+     * @param otherStems the covering terms
+     * @return whether at least {@value #MINIMUM_DENIAL_OBJECT_COVERAGE} of the other side's
+     *     terms are covered
+     */
+    static boolean coversSubject(Set<String> deniedTerms, Set<String> otherStems) {
+        if (deniedTerms.isEmpty() || otherStems.isEmpty()) {
+            return false;
+        }
+        int shared = 0;
+        for (String term : otherStems) {
+            if (deniedTerms.contains(term)) {
+                shared++;
+                continue;
+            }
+            // THE LEXICON IS THE BRIDGE (the Russian premise and the English denial carry
+            // the same words in two languages). A counterpart may be a PHRASE ("carbon
+            // dioxide"), and the denied object's terms are folded words ("dioxid"), so the
+            // phrase's words are folded before they are looked for.
+            for (String counterpart : BilingualLexicon.instance().translations(term)) {
+                if (deniedTerms.contains(counterpart)) {
+                    shared++;
+                    break;
+                }
+                if (counterpart.contains(" ") && coversPhrase(deniedTerms, counterpart)) {
+                    shared++;
+                    break;
+                }
+            }
+        }
+        return (double) shared / deniedTerms.size() >= MINIMUM_DENIAL_OBJECT_COVERAGE;
     }
 
     /**
@@ -599,6 +888,68 @@ public final class PremiseAssessment {
             return true;
         }
         return premiseStems.size() >= MINIMUM_SHARED_TERMS && claimStems.containsAll(premiseStems);
+    }
+
+    /**
+     * Whether the claim STATES the premise.
+     *
+     * <p><b>Why the claim's CLAUSES and not the claim.</b> A claim may say more than one
+     * thing, and a negation in one of them says nothing about the others. A corpus claim
+     * that asserts subduction drives plate tectonics and, in its second clause, denies
+     * that plate tectonics could occur without it, states the premise in its FIRST clause
+     * and denies a consequence in its second one; a comparison with the
+     * whole claim would see the negation and miss the statement, and the premise would be
+     * called refuted although the corpus states it outright.</p>
+     *
+     * <p><b>Why the SCOPE is read with the proposition.</b> The scope is part of the claim's
+     * statement (see {@link #read}), and a claim whose scope states the premise states it.
+     * A scope that DENIES is not a statement of the premise.</p>
+     *
+     * @param premise the premise
+     * @param claim the claim
+     * @return whether the claim states the premise
+     */
+    private static boolean statesThePremise(String premise, Claim claim) {
+        Set<String> premiseStems = distinctiveStems(premise);
+        if (premiseStems.isEmpty() || claim == null) {
+            return false;
+        }
+        for (String clause : fragmentsOf(claim.proposition())) {
+            if (statesIt(clause, premiseStems)) {
+                return true;
+            }
+        }
+        if (claim.scope() != null) {
+            for (String clause : fragmentsOf(claim.scope())) {
+                if (statesIt(clause, premiseStems)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Whether a clause states the premise.
+     *
+     * <p>The rule is the one {@link #sameAssertion} applies to a whole text: the clause
+     * carries every content term of the premise, and the clause does not deny. A clause
+     * that adds terms states the premise with a qualifier, and a clause that denies states
+     * the opposite of it — neither of them is a statement of the premise.</p>
+     *
+     * @param clause the clause
+     * @param premiseStems the premise's distinctive terms
+     * @return whether the clause states the premise
+     */
+    private static boolean statesIt(String clause, Set<String> premiseStems) {
+        if (clause == null || clause.isBlank() || denied(clause)) {
+            return false;
+        }
+        Set<String> clauseStems = distinctiveStems(clause);
+        if (clauseStems.size() < MINIMUM_SHARED_TERMS) {
+            return false;
+        }
+        return clauseStems.containsAll(premiseStems);
     }
 
     /**
@@ -885,7 +1236,7 @@ public final class PremiseAssessment {
      * @param sentence the sentence
      * @return its fragments
      */
-    private static List<String> fragmentsOf(String sentence) {
+    static List<String> fragmentsOf(String sentence) {
         List<String> fragments = new ArrayList<>();
         int start = 0;
         int i = 0;
@@ -1022,7 +1373,7 @@ public final class PremiseAssessment {
      * @param word the word
      * @return the stem
      */
-    private static String stem(String word) {
+    static String stem(String word) {
         String stem = word.toLowerCase(Locale.ROOT);
         if (stem.endsWith("'s")) {
             stem = stem.substring(0, stem.length() - 2);
@@ -1169,7 +1520,7 @@ public final class PremiseAssessment {
      * @param text the text
      * @return whether it carries a limitation marker
      */
-    private static boolean restricts(String text) {
+    static boolean restricts(String text) {
         if (text == null || text.isBlank()) {
             return false;
         }

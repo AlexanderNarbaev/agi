@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.epistemic.AdversarialProbeRound2Test" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:58:21.958Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="1.355">
+  <properties/>
+  <testcase name="probe 13: the two open defects" classname="io.matrix.knowledge.epistemic.AdversarialProbeRound2Test" time="0.128"/>
+  <testcase name="probe 9: the conflict detector on the logic package" classname="io.matrix.knowledge.epistemic.AdversarialProbeRound2Test" time="0.005"/>
+  <testcase name="probe 10: a genuine contradiction of the same assertion is still caught" classname="io.matrix.knowledge.epistemic.AdversarialProbeRound2Test" time="0.001"/>
+  <testcase name="probe 12: the frozen ambiguity cases surface the readings they name" classname="io.matrix.knowledge.epistemic.AdversarialProbeRound2Test" time="0.063"/>
+  <testcase name="probe 11: the frozen conflict case reaches the caller with both sides" classname="io.matrix.knowledge.epistemic.AdversarialProbeRound2Test" time="0.038"/>
+  <system-out><![CDATA[### PROBE 13 - the two open defects
+  (a) the photosynthesis premise the corpus states
+     answered=true disposition=UNSUPPORTED | conflicts=0 readings=0 | The workspace mentions the subject of this premise — claim cl-a9724c3d of "Photosynthesis (encyclopedia entry)" states "Oxygenic photosynthesis releases oxygen as a byproduct of splitting water." — but that claim does not bear on the premise, so the premise has no supporting evidence here. The absence of evidence is not a contradiction: the workspace neither confirms nor refutes this premise.
+     refusal=
+     limitation: Green plants in light.
+     limitation: An introductory account of the overall balance, not of the mechanism.
+     limitation: Aerobic respiration.
+     limitation: C3 plants.
+     limitation: Oxygenic phototrophs.
+     limitation: This workspace has no introductory account of RuBisCO; the answer uses the intermediate one.
+     limitation: The mechanisms as they occur naturally.
+     limitation: This workspace has no introductory account of CO2-concentrating mechanisms; the answer uses the advanced one.
+     limitation: Leaf gas exchange in vascular plants.
+     limitation: This workspace has no introductory account of Stomatal conductance; the answer uses the intermediate one.
+     limitation: Oxygenic phototrophs.
+     limitation: The 21% figure is an estimate for wheat.
+     limitation: This workspace has no introductory account of Light-dependent reactions; the answer uses the advanced one.
+     limitation: Supported but not independently verified: Oxygenic photosynthesis releases oxygen as a byproduct of splitting water.
+     limitation: Supported but not independently verified: Photorespiration lowers the efficiency of photosynthesis and may lower photosynthetic output by around a quarter in C3 plants.
+     limitation: Supported but not independently verified: Cellular respiration oxidizes biological fuels with an inorganic electron acceptor such as oxygen to drive ATP production.
+     limitation: 1 claim(s) of the workspace cover the question but are not established, and are therefore not cited as evidence.
+     limitation: The workspace holds a refuted claim about this, which is not evidence: The oxygen a plant releases comes from the carbon dioxide it absorbs.
+     limitation: Not covered by the workspace: since, day
+  (b) the paraphrase pairs of the frozen set
+     E-S01 answered=true status=SUPPORTED | Given that new crust is generated where the plates pull away from each other, what happens where Mid-Atlantic Ridge runs?
+     E-S02 answered=true status=AMBIGUOUS | Given that a subduction zone is where a sinking plate goes, what becomes of the crust there?
+     E-P01 answered=true status=SUPPORTED | Given that Mid-Atlantic Ridge is a divergent boundary, what takes place along it?
+     E-P02 answered=true status=UNSUPPORTED | Assuming that the plates pull apart where Mid-Atlantic Ridge runs, what happens there?
+### PROBE 9 - the logic package: claims=28 conflicts=5
+  reason: the two accounts are about the same subject and one of them denies what the other asserts: "The propositional variable q is false in the assignment under consideration."
+     side cl-4c64e0a7: The propositional variable q is true in the assignment under consideration.
+     side cl-1a5be63a: The propositional variable q is false in the assignment under consideration.
+  reason: the two accounts are about the same subject and one of them denies what the other asserts: "The propositional variable p is not true in the other assignment under consideration."
+     side cl-f6659258: The propositional variable p is true in the other assignment under consideration.
+     side cl-4851eb79: The propositional variable p is not true in the other assignment under consideration.
+  reason: the two accounts are about the same subject and one of them denies what the other asserts: "The propositional variable p is not true in the assignment under consideration."
+     side cl-66fde0a6: The propositional variable p is true in the assignment under consideration.
+     side cl-5512a80b: The propositional variable p is not true in the assignment under consideration.
+  reason: the two accounts are about the same subject and one of them denies what the other asserts: "The propositional variable p is false in the assignment under consideration."
+     side cl-66fde0a6: The propositional variable p is true in the assignment under consideration.
+     side cl-e7d42f45: The propositional variable p is false in the assignment under consideration.
+  reason: the two accounts are about the same subject and one of them denies what the other asserts: "A is a classical propositional consequence of B if on no assignment of values to the atoms occurring in A and B on which B evaluates as true does A evaluate as false."
+     side cl-d3fbf0ad: A and B are classical propositional equivalents if they evaluate as true on precisely the same assignments of values to the atoms.
+     side cl-67adc157: A is a classical propositional consequence of B if on no assignment of values to the atoms occurring in A and B on which B evaluates as true does A evaluate as false.
+### PROBE 10 - the same assertion, the opposite polarity
+  asserts: cl-66fde0a6
+  denies:  cl-e7d42f45
+  conflicts=1
+  reason: the two accounts are about the same subject and one of them denies what the other asserts: "The propositional variable p is false in the assignment under consideration."
+     side cl-66fde0a6: The propositional variable p is true in the assignment under consideration.
+     side cl-e7d42f45: The propositional variable p is false in the assignment under consideration.
+### PROBE 12 - E-A01 (AMBIGUOUS_READINGS)
+  disposition=AMBIGUOUS | conflicts=0 readings=4 | The question is ambiguous: the corpus holds accounts of its subject that disagree with each other, and it does not choose between them. Claim clm-4f725e0d of "wikipedia-plate-tectonics.md" states "Other plate boundary zones occur where the effects of the interactions are unclear, and the boundaries, usually occurring along a broad belt, are not well defined and may show various types of movements in different episodes.", and claim clm-8256d6fe of "usgs-this-dynamic-earth.md" states "Plate boundary zones -- broad belts in which boundaries are not well defined and the effects of plate interaction are unclear." — the two are about the same subject and cannot both hold. Both are reported with their provenance, the system does not decide between them, and none of them is chosen as the answer.
+  reading "the boundary is a narrow zone between two plates" -> span visible=true | Most movement occurs along narrow zones between plates where the results of plat
+  reading "the boundary is a broad belt in which the boundary is not well defined" -> span visible=true | Plate boundary zones -- broad belts in which boundaries are not well defined and
+  reading "the boundary is a broad belt in which the boundary is not well defined" -> span visible=true | In some regions, the boundaries are not well defined because the plate-movement 
+  readings NAMED=3 MATCHED=3 reported=4
+### PROBE 12 - E-A02 (AMBIGUOUS_READINGS)
+  disposition=AMBIGUOUS | conflicts=0 readings=4 | The question is ambiguous: the corpus holds accounts of its subject that disagree with each other, and it does not choose between them. Claim clm-f7ce046e of "wikipedia-plate-tectonics.md" states "It is thus thought that forces associated with the downgoing plate (slab pull and slab suction) are the driving forces which determine the motion of plates, except for those plates which are not being subducted.", and claim clm-ca57e24d of "wikipedia-plate-tectonics.md" states "This view however has been contradicted by a recent study which found that the actual motions of the Pacific plate and other plates associated with the East Pacific Rise do not correlate mainly with either slab pull or slab push, but rather with a mantle convection upwelling whose horizontal spreading along the bases of the various plates drives them along via viscosity-related traction forces." — the two are about the same subject and cannot both hold. Both are reported with their provenance, the system does not decide between them, and none of them is chosen as the answer.
+  reading "slab pull and slab suction" -> span visible=true | It is thus thought that forces associated with the downgoing plate (slab pull an
+  reading "tidal force" -> span visible=true | Possible tidal effect on plate tectonics Of the many forces discussed above, tid
+  reading "surge tectonics, in which the mantle flows in channels" -> span visible=false | Surge tectonics Another theory is that the mantle flows neither in cells nor lar
+  reading "mantle convection upwelling with basal traction" -> span visible=true | This view however has been contradicted by a recent study which found that the a
+  readings NAMED=4 MATCHED=3 reported=4
+### PROBE 11 - E-C01 (CONFLICTING_EVIDENCE)
+  answered=true disposition=CONTRADICTORY | conflicts=1 readings=4 | The evidence this answer rests on holds claims that cannot both hold (1 conflict(s)); both sides are reported with their provenance and the system does not decide between them: the two accounts are about the same subject and one of them denies what the other asserts: "This view however has been contradicted by a recent study which found that the actual motions of the Pacific plate and other plates associated with the East Pacific Rise do not correlate mainly with either slab pull or slab push, but rather with a mantle convection upwelling whose horizontal spreading along the bases of the various plates drives them along via viscosity-related traction forces.". The workspace contradicts this premise: claim clm-ca57e24d of "wikipedia-plate-tectonics.md" states "This view however has been contradicted by a recent study which found that the actual motions of the Pacific plate and other plates associated with the East Pacific Rise do not correlate mainly with either slab pull or slab push, but rather with a mantle convection upwelling whose horizontal spreading along the bases of the various plates drives them along via viscosity-related traction forces.", and the evidence behind that claim contradicts the premise rather than merely failing to support it. The relation was read from the text of the two sides - the terms they share and the negations they carry - so it is a lexical candidate and not a demonstration of meaning: a premise that shares terms with a claim is about the same subject whether or not the two mean the same thing.
+  gold clm-d5ae092b visible=true | It is thus thought that forces associated with the downgoing plate (slab pull and slab suc
+  gold clm-6de87b0 visible=true | This view however has been contradicted by a recent study which found that the actual moti
+  sides surfaced=2/2
+  limitation: Supported but not independently verified: This view however has been contradicted by a recent study which found that the actual motions of the Pacific plate and other plates associated with the East Pacific Rise do not correlate mainly with either slab pull or slab push, but rather with a mantle convection upwelling whose horizontal spreading along the bases of the various plates drives them along via viscosity-related traction forces.
+  limitation: Supported but not independently verified: In modern views, gravity is invoked as the major driving force, through slab pull along subduction zones.
+  limitation: Supported but not independently verified: It is thus thought that forces associated with the downgoing plate (slab pull and slab suction) are the driving forces which determine the motion of plates, except for those plates which are not being subducted.
+  limitation: Supported but not independently verified: The Pacific plate, for instance, is essentially surrounded by zones of subduction (the so-called Ring of Fire) and moves much faster than the plates of the Atlantic basin, which are attached (perhaps one could say 'welded') to adjacent continents instead of subducting plates.
+  limitation: Supported but not independently verified: The greater density of old lithosphere relative to the underlying asthenosphere allows it to sink into the deep mantle at subduction zones, providing most of the driving force for plate movement.
+  limitation: Supported but not independently verified: Slab pull is therefore most widely thought to be the greatest force acting on the plates.
+  limitation: Supported but not independently verified: Furthermore, slabs that are broken off and sink into the mantle can cause viscous mantle forces driving plates through slab suction.
+  limitation: Supported but not independently verified: This is due to the inflow of mantle material related to the downward pull on plates in subduction zones at ocean trenches.
+  limitation: Supported but not independently verified: Driving forces of plate motion Tectonic plates are able to move because of the relative density of oceanic lithosphere and the relative weakness of the asthenosphere.
+  limitation: Supported but not independently verified: Gravitational sliding away from a spreading ridge is one of the proposed driving forces: plate motion is driven by the higher elevation of plates at ocean ridges.
+  limitation: Supported but not independently verified: Relative significance of each driving force mechanism The vector of a plate's motion is a function of all the forces acting on the plate; however, therein lies the problem regarding the degree to which each process contributes to the overall motion of each tectonic plate.
+  limitation: Supported but not independently verified: The driving forces of plate motion continue to be active subjects of on-going research within geophysics and tectonophysics.
+  limitation: Supported but not independently verified: Most movement occurs along narrow zones between plates where the results of plate-tectonic forces are most evident.
+  limitation: Supported but not independently verified: As a consequence, a powerful source generating plate motion is the excess density of the oceanic lithosphere sinking in subduction zones.
+  limitation: Supported but not independently verified: Slab pull may occur in a geodynamic setting where basal tractions continue to act on the plate as it dives into the mantle (although perhaps to a greater extent acting on both the under and upper side of the slab).
+  limitation: Supported but not independently verified: Slab pull: Scientific opinion is that the asthenosphere is insufficiently competent or rigid to directly cause motion by friction along the base of the lithosphere.
+  limitation: 16 of the 16 cited claims carry no authored confidence: the support score is 0.0 for them, and the citation is not a probability.
+  limitation: Not covered by the workspace: corpus
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

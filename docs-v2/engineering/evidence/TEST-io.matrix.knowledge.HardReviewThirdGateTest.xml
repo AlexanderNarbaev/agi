@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.HardReviewThirdGateTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:52:13.928Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="1.083">
+  <properties/>
+  <testcase name="the negation gate, re-checked" classname="io.matrix.knowledge.HardReviewThirdGateTest" time="0.001"/>
+  <testcase name="the definitions of the third-gate rule on the seed corpus" classname="io.matrix.knowledge.HardReviewThirdGateTest" time="1.081"/>
+  <testcase name="the definitional-predicate gate, attacked with my own sentences" classname="io.matrix.knowledge.HardReviewThirdGateTest" time="0.001"/>
+  <system-out><![CDATA[### the negation gate
+  rejected :: the plain denial :: A trench is not a long narrow depression.
+  rejected :: the qualified denial :: A trench is largely not a long narrow depression.
+  rejected :: the adverbial denial :: A trench is sometimes not a deep-ocean trench.
+  rejected :: the negation after a multi-word copula :: A trench is defined as not a canyon.
+  rejected :: the negation after 'is called' :: A trench is called not a canyon.
+  rejected :: the negation after 'consists of' :: A trench consists of not two plates.
+  rejected :: the negation separated by an adverbial :: A trench is, in the strict sense, not a canyon.
+  rejected :: the double negation :: A trench is not not a canyon.
+  ACCEPTED :: the negation in the complement :: A trench is a feature that is not a canyon.
+  ACCEPTED :: the negation far away :: A trench is a long narrow depression that is not a canyon.
+  ACCEPTED :: a definition :: A trench is a long narrow depression.
+### the third gate - the seed corpus
+  concepts=326 definitions=4
+  [1] The trenches
+       -> The trenches are the key to understanding how island arcs such as the Marianas and the Aleutian Islands have formed and why they experience numerous strong earthquakes.
+  [2] The San Andreas
+       -> The San Andreas is one of the few transform faults exposed on land.
+  [3] Subduction zones
+       -> Subduction zones are of two types: ocean-to-continent subduction, where the dense oceanic lithosphere plunges beneath the less dense continent, or ocean-to-ocean subduction where older, cooler, denser oceanic crust slips beneath less dense oceanic crust.
+  [4] Trenches
+       -> Trenches are the deepest parts of the ocean floor and are created by subduction.
+### the definitional-predicate gate
+  ACCEPTED :: a definition (genus) :: A trench is a long narrow depression in the ocean floor.
+  ACCEPTED :: a definition (identity) :: A trench is one of the deepest parts of the ocean floor.
+  ACCEPTED :: a definition (classification) :: A trench is of two types: active and inactive.
+  ACCEPTED :: a definition (naming) :: A trench is called a deep-ocean trench.
+  ACCEPTED :: a definition (composition) :: A trench consists of two plates in contact.
+  rejected :: an action :: A trench is carved by subducting plates.
+  rejected :: a comparison :: A trench is deeper than a canyon.
+  rejected :: a measurement :: A trench is 100 km long.
+  rejected :: an origin :: A trench is formed at a subduction zone.
+  rejected :: a state :: A trench is still open.
+  rejected :: a reported belief :: A trench is thought to be a long narrow depression.
+  ACCEPTED :: a discourse :: A trench is the key to understanding island arcs.
+  rejected :: a discourse (the corpus's own fourth case) :: The trenches are the key to understanding how island arcs such as the Marianas and the Aleutian Islands have formed and why they experience numerous strong earthquakes.
+  rejected :: a definition with 'any' :: A trench is any long narrow depression at a boundary.
+  ACCEPTED :: a definition with 'each' :: A trench is each narrow depression at a boundary.
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

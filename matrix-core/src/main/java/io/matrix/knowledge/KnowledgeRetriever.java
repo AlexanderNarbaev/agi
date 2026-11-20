@@ -94,7 +94,26 @@ public final class KnowledgeRetriever {
     private final Map<String, Concept> conceptsById = new LinkedHashMap<>();
     private final Map<String, Claim> claimsById = new LinkedHashMap<>();
     private final Map<String, List<Representation>> representationsByConcept = new LinkedHashMap<>();
+    /** The terms of the claims, by claim identifier. */
     private final Map<String, Set<String>> claimTerms = new LinkedHashMap<>();
+
+    /**
+     * The indexed terms of every claim of the workspace.
+     *
+     * <p><b>Why the index is published.</b> The refutation scan asks whether a claim covers
+     * the premise's terms, and it used to tokenise every claim of the workspace to ask it —
+     * a second full read of the workspace for every question. The retrieval has already
+     * tokenised every claim (it does it to rank them), and a claim that shares no term with
+     * the premise cannot cover it. The index is handed over so that the scan reads the
+     * claims that can bear on the premise and leaves the rest alone; it holds the SAME
+     * tokens the retrieval ranked the claims by, and the verdict does not depend on it.</p>
+     *
+     * @return the terms of each claim, by claim identifier
+     */
+    Map<String, Set<String>> claimTerms() {
+        return claimTerms;
+    }
+
     private final Map<String, Set<String>> representationTerms = new LinkedHashMap<>();
     /**
      * The lemmas of the claims' words, by claim.

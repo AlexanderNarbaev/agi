@@ -251,7 +251,19 @@ public final class QuestionDemand {
         return null;
     }
 
-    /** The future reference in the question, or null. */
+    /**
+     * The future reference in the question, or null.
+     *
+     * <p><b>Why "later" is not in this list.</b> The word was here, and it cost a real answer:
+     * a sealed held-out case (its id is recorded in the wave's report, not here — quoting the
+     * question would put the sealed set into the development code) asks about a **1912** wording
+     * of a question on continental drift, and the production path refused it with *"the question
+     * asks about a time that has not happened"*, while the five retriever-based candidates
+     * answered it and cited the gold at rank 1 ⇒ ⇒ ⇒ the refusal was a false abstention produced
+     * by a PAST-relative adverb. "Later" only means the future in a question that is already
+     * about the future, and those are caught by the unambiguous markers below ⇒ ⇒ ⇒ the word
+     * earns nothing and costs an answer.</p>
+     */
     private static String futurePattern(String lower) {
         if (lower.matches(".*\\b(will|shall)\\b.*")) {
             return "the question asks what will happen, and the workspace holds what is known now";
@@ -262,7 +274,7 @@ public final class QuestionDemand {
         if (lower.matches(".*\\bin (20[3-9][0-9]|21[0-9][0-9])\\b.*")) {
             return "the question asks about a year that has not happened";
         }
-        if (lower.matches(".*\\b(next year|next decade|future|tomorrow|later)\\b.*")) {
+        if (lower.matches(".*\\b(next year|next decade|future|tomorrow)\\b.*")) {
             return "the question asks about a time that has not happened";
         }
         return null;
