@@ -602,8 +602,8 @@ The instrument: `matrix-core/src/main/java/io/matrix/knowledge/concept/research/
 | the id | changes? | why |
 |---|---|---|
 | the **claim id** | **NO** | it is a digest of the workspace, the content hash and the proposition — none of the three moves, so the claims, the evidence and the proposition-based golds survive |
-| the **concept id** (a referent) | **YES** | it is now `digest(workspace + "|referent|" + the referent key)` — the lemma, the source and the anchor |
-| the **concept id** (a claim-scoped record) | **YES** | it is `digest(workspace + "|claim|" + the claim id)` |
+| the **concept id** (a referent) | **YES** | it is now `digest(workspace + "\|referent\|" + the referent key)` — the lemma, the source and the anchor |
+| the **concept id** (a claim-scoped record) | **YES** | it is `digest(workspace + "\|claim\|" + the claim id)` |
 | the **representation id** | **YES, for the 93 whose concept changed** | `Ids.representation(workspace, conceptId, level, statement)` embeds the concept id; the other 242 keep their ids because their concept did not change |
 | the **source id**, the **evidence id**, the **workspace id** | NO | they do not embed the concept id |
 | the **old concept rows** | they stay | superseded, never removed; the lineage is what marks them |

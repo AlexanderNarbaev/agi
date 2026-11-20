@@ -190,8 +190,8 @@ derivation.
 
 | Route | Concept id | Definition | Concept → concept edges | Derivations |
 |---|---|---|---|---|
-| acquisition (documents) | `Ids.digest(ws+"|concept|"+name.lower())` (`DocumentImporter.java:338-341`) | **always `null`** (`:227-228`) | **none** | **none** |
-| package import | `Ids.concept(ws, name)` = `"c-"+slug(name)+"-"+digest(ws+"|"+name)` (`Ids.java:25-27`, `KnowledgeImporter.java:130`) | from the pack entry | `Prerequisite` rows (`KnowledgeImporter.java:254-258`); `Representation.prerequisiteConceptIds` (`:243-251`) | from the pack entry (`KnowledgeImporter.java:230`) |
+| acquisition (documents) | `Ids.digest(ws+"\|concept\|"+name.lower())` (`DocumentImporter.java:338-341`) | **always `null`** (`:227-228`) | **none** | **none** |
+| package import | `Ids.concept(ws, name)` = `"c-"+slug(name)+"-"+digest(ws+"\|"+name)` (`Ids.java:25-27`, `KnowledgeImporter.java:130`) | from the pack entry | `Prerequisite` rows (`KnowledgeImporter.java:254-258`); `Representation.prerequisiteConceptIds` (`:243-251`) | from the pack entry (`KnowledgeImporter.java:230`) |
 
 The two id schemes are **not the same function**: the package path digests the *raw* name, the
 acquisition path digests the *lower-cased* name. The same name therefore yields **two different

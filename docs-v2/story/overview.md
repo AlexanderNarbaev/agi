@@ -36,10 +36,10 @@ That is the project's constitution, and it is checked, not merely asserted
 | | |
 |---|---|
 | **No LLM on a decision path.** | The gate scans the runtime modules of both chains for legacy LLM imports and fails the build on a hit; the reproduced value is **0**. It runs as a blocking CI job ([`CAPABILITY-REGISTRY.yml`](../architecture/CAPABILITY-REGISTRY.yml), row `C-01b`) |
-| **Every runtime decision is a boolean chain**, auditable through the `x-matrix-trace` header and a hash chain (Article VIII) |
-| **The boolean artefacts are bounded**: K_MAX = 20 inputs, and raising it is an amendment to every compiler and backend (Article II) |
-| **Four prohibitions hold under any input content**: the system does not kill, does not torture, does not enslave, and does not reproduce without the operator's explicit consent. They are implemented in `EthicalFilter`, `StructuralSafetyGuard`, `LieDetector` and the frozen FROZEN-FNL guardian (Article IV) |
-| **The coverage gate** is ≥ 82 % METHOD on `matrix-core`, and lowering it takes an RFC (Article V) |
+| **Every runtime decision is a boolean chain**, auditable through the `x-matrix-trace` header and a hash chain | Article VIII |
+| **The boolean artefacts are bounded**: K_MAX = 20 inputs, and raising it is an amendment to every compiler and backend | Article II |
+| **Four prohibitions hold under any input content**: the system does not kill, does not torture, does not enslave, and does not reproduce without the operator's explicit consent. They are implemented in `EthicalFilter`, `StructuralSafetyGuard`, `LieDetector` and the frozen FROZEN-FNL guardian | Article IV |
+| **The coverage gate** is ≥ 82 % METHOD on `matrix-core`, and lowering it takes an RFC | Article V |
 
 **And what the constitution forbids in writing.** "AGI", "general artificial intelligence",
 "superintelligence"; claims of absolute safety such as "does not lie" or "cannot be used for

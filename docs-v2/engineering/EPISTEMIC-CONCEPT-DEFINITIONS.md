@@ -126,7 +126,7 @@ touched.
 | **A5** | the false positives | the unsupported-answer rate 0.3000; the abstention 6/6 | **unchanged** (0.3000; **6/6**) | the same row. Structurally: the definitions are not in the retriever's searchable text, so the retriever's input is unchanged. |
 | **A6** | the answer accuracy | not measurable on this corpus | not claimed | the research is explicit that this corpus cannot support it. |
 | **A7** | the cost | the mean retrieval 32 ms (the baseline path) / 10 ms (the retriever) | the **retriever** is unchanged: 715–934 µs with the definitions against 788–874 µs without, on the same corpus, the same 20 questions, the same method, two orders of measurement — **the difference is inside the noise**. The baseline path's mean retrieval in the harness moved 59 → 68 → 76 ms across three runs of the **same** code: it measures the machine, not the change. | the A/B test in `ConceptDefinitionAcceptanceTest`. |
-| **A8** | the id stability | — | **no concept id changed**: every id is still `digest(workspace + "|concept|" + name.toLowerCase())`, for all 326 concepts | asserted for every concept. A claim id is a digest of the workspace, the content hash and the proposition, and none of the three moved. |
+| **A8** | the id stability | — | **no concept id changed**: every id is still `digest(workspace + "\|concept\|" + name.toLowerCase())`, for all 326 concepts | asserted for every concept. A claim id is a digest of the workspace, the content hash and the proposition, and none of the three moved. |
 
 **The held-out evaluation.** The C2A held-out `BASELINE-PATH` is **17 / 25** before and after, with
 every content column identical (the recall@1 0.7368, the MRR 0.8596, the abstention 1.0000, the
