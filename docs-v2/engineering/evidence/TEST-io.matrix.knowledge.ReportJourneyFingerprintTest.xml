@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.ReportJourneyFingerprintTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-20T14:11:38.903Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.001">
+  <properties/>
+  <testcase name="the fingerprint moves when the claim's concept, scope, context or status moves" classname="io.matrix.knowledge.ReportJourneyFingerprintTest" time="0.001"/>
+  <testcase name="two claims cannot produce the same material by accident" classname="io.matrix.knowledge.ReportJourneyFingerprintTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

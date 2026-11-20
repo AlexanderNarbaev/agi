@@ -752,15 +752,28 @@ evidence is a suspicion, and it is marked as such.
   true only **within the gate's reach**. The two annotations the wave added are correctly placed
   on the right members, and the gate is green, but the gate would not have found a third read in
   those files.
-- **the fix**: not applied. The auditor's exemption must be **member-granular** — the annotation's
-  position must be recognised, and an `import` line must not arm it — and the three files must
-  then be re-scanned. Changing the gate changes the accepted baseline
-  (`docs-v2/quality/decision-path-baseline.txt`), which is a governance artefact ⇒ ⇒ ⇒ it needs the
-  owner's decision, and it is **not** decided by this release.
-- **owner**: the owner (the instrument's change is a governance decision) — the coordinator can
-  implement it once the decision is taken.
-- **status**: OPEN as a **gap in the instrument**, not as a defect in the wave's code. The wave's
-  two wall-clock reads are annotated and decide nothing.
+- **the fix**: **applied on 2026-11-20** under the owner's decision **OD-080**. The auditor's
+  exemption is now **member-granular** in two parts: an `import` line does not arm it
+  (`matrix-core/src/main/java/io/matrix/auditor/DecisionPathAuditor.java:310`), and the
+  annotated member's **declaration** line is part of the member
+  (`matrix-core/src/main/java/io/matrix/auditor/DecisionPathAuditor.java:351`) — without the
+  second part, a member written on one line (`public long stamp() { return
+  System.currentTimeMillis(); }`) fell outside its own annotation, and the repository's own
+  `DecisionPathAuditorTest.articleIPermittedAnnotationClearsASite()` caught exactly that.
+- **the governance consequence that did NOT happen**: the accepted baseline
+  (`docs-v2/quality/decision-path-baseline.txt`) is **unchanged**, and the gate stayed green.
+  The reason is that all three files' wall-clock reads are **adjudicated** — each sits inside a
+  properly annotated member — and a permitted finding does not block. The instrument's reach
+  grew; the exception list did not.
+- **owner**: the owner decided (OD-080); the coordinator implemented it.
+- **status**: **CLOSED** as a gap in the instrument (2026-11-20). The evidence is the negative
+  control `matrix-core/src/test/java/io/matrix/auditor/DecisionPathImportExemptionTest.java`
+  (a planted, unannotated wall-clock read in a class that merely **imports** the annotation is
+  found and **blocks**; the annotated member is still exempt), the retained XML
+  `docs-v2/engineering/evidence/TEST-io.matrix.auditor.DecisionPathImportExemptionTest.xml`,
+  and the green gate `docs-v2/engineering/evidence/TEST-io.matrix.auditor.DecisionPathGateTest.xml`.
+  The wave's wall-clock reads are annotated and decide nothing — that claim now holds **inside
+  the gate's true reach** rather than inside its reduced one.
 
 ### R-EPIS-11 — the wave's own probe family reports a measurement and asserts nothing
 
@@ -776,5 +789,16 @@ evidence is a suspicion, and it is marked as such.
   has a **mutation proof** (red with the guard disabled, green after the restoration).
 - **the fix**: the remaining probes are named, not fixed — converting a measurement probe into a
   gate is a **design decision** about what the probe is for, and it is the next wave's work.
+- **the measurement of 2026-11-20 (COG-02)**: the family was counted, class by class, over the
+  whole tree — `HardReview*` and `AdversarialProbe*` classes in the three test trees: **11
+  classes, 51 methods, 79 assertion calls, 213 print calls, and not one class that is a pure
+  gate**. Five classes are **measurement** (no assertion at all), six are **mix** (they assert,
+  and they also print). The per-class table is
+  `docs-v2/engineering/CRJ-01-RISK-VERDICT.md` §2.2. The sharpest reading of it: **the family
+  covered no idempotency probe at all** — the changed-payload defect in R-EPIS-10's sibling
+  (CRJ-01.1) had no adversarial probe, which is one reason it survived; the two probes written
+  for CRJ-01 (`ReportIdempotencyConflictTest`, `DecisionPathImportExemptionTest`) were written
+  as **gates** on purpose, and the first one was proven **red before** its fix.
 - **owner**: the coordinator (Level 1 — test-only changes), after the release.
-- **status**: OPEN as a **labelled gap**; the two false-success probes of this wave are CLOSED.
+- **status**: OPEN as a **labelled gap**, now with the classification measured rather than
+  asserted; the two false-success probes of this wave are CLOSED.
