@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="R-EPIS-10 — the Article I exemption is member-granular" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-20T14:17:25.519Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.01">
+  <properties/>
+  <testcase name="the annotation still exempts exactly its own member" classname="io.matrix.auditor.DecisionPathImportExemptionTest" time="0.008"/>
+  <testcase name="a class that merely IMPORTS the annotation is inside the gate's reach" classname="io.matrix.auditor.DecisionPathImportExemptionTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
