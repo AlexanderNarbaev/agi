@@ -775,6 +775,33 @@ evidence is a suspicion, and it is marked as such.
   The wave's wall-clock reads are annotated and decide nothing — that claim now holds **inside
   the gate's true reach** rather than inside its reduced one.
 
+### R-EPIS-12 — a full-suite run rewrites the retained C2A enrichment documents
+
+- **the finding**: the retained documents of the C2A wave are **written by the test suite**:
+  `matrix-core/src/test/java/io/matrix/knowledge/concept/ConceptEnrichmentExperimentTest.java`
+  and `HeldOutEvaluationTest.java` write `docs-v2/engineering/C2A-CONCEPT-ENRICHMENT-EXPERIMENT.md`,
+  `C2A-CONCEPT-ENRICHMENT-RESULTS.json`, `C2A-HELDOUT-EVALUATION.{json,md}` and
+  `C2A-LEARNING-EVIDENCE.json`. A run of the suite therefore **mutates the repository's own
+  evidence**: the preparation cost, the extraction times and the retained byte counts in those
+  documents change with every run, and the documents are committed artefacts.
+- **how it was found**: a full-suite run (`--tests "io.matrix.*"`, the scope the fast lane
+  derives when a changed file sits in the ROOT package) rewrote five of those documents while
+  the coordinator was working on another change; the coordinator restored them from `HEAD` and
+  the working tree was clean again.
+- **why it matters**: an artefact that a run rewrites is not **retained** evidence — it is a
+  measurement that changes every time somebody measures it again, and a reviewer cannot tell
+  whether the committed numbers are the ones the last run produced. This is the same class of
+  defect as R-EPIS-11, one level up: the probe family at least printed its numbers; these
+  tests **write them into the repository**.
+- **the fix**: not applied. The right fix is for the measurement to write into a **temporary
+  directory** and for the committed document to be copied out of it deliberately — the same
+  discipline the retained-evidence directory already follows for the JUnit XML. Changing those
+  tests is Level 1 (test-only), but it touches five documents' producers, so it is the next
+  wave's work rather than a change made in passing.
+- **owner**: the coordinator (Level 1 — test-only changes).
+- **status**: **OPEN as a labelled gap**. Until it is fixed, a full-suite run leaves the
+  working tree dirty, and the coordinator must check `git status` after such a run.
+
 ### R-EPIS-11 — the wave's own probe family reports a measurement and asserts nothing
 
 - **the finding**: the `HardReview*` and `AdversarialProbe*` classes of this wave (41 methods in 24
