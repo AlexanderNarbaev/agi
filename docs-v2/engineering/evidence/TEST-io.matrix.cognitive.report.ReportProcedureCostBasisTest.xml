@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.cognitive.report.ReportProcedureCostBasisTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-20T20:11:08.185Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.525">
+  <properties/>
+  <testcase name="the second selection of a promoted procedure rests on a MEASURED cost" classname="io.matrix.cognitive.report.ReportProcedureCostBasisTest" time="0.513"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
