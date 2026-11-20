@@ -804,6 +804,22 @@ than estimated:
 
 ## 10. The owner decisions this protocol depends on
 
+**THE DECISIONS ARE TAKEN (2026-11-20).** The owner answered D1–D4 and the CRJ.1.2 build item;
+the answers are recorded in `docs-v2/governance/DECISION-REGISTER.md` as **OD-081** and
+**OD-082**, and they are fixed in writing **before** the first arm runs, as
+`CRJ-01-ACCEPTANCE.md:61` requires. The options and the grounded recommendation are kept below
+because the register routes to them — a reader must be able to see what was chosen **and what
+was not**.
+
+| the decision | the owner's answer | the protocol's recommendation | the consequence that is now binding |
+|---|---|---|---|
+| **D1 — the domains** | **A** — a new third corpus (domain A) + the lamp world as it exists (domain B) | A | domain B tests **cost and retention**, not semantic generalisation — its input domain is 4 |
+| **D2 — the arms** | **B** — arm C reads promoted procedures **and** learned claims | A | the learned-claim path has **no** promotion-and-validation contract with a held-out-case rule ⇒ ⇒ ⇒ that contract is a **build item** (OD-082), not an implementation detail |
+| **D3 — the oracle** | **A** — a source-span oracle + an independently written truth table | A | the independence is **testable**: the truth table is cross-checked on all four assignments before the run, and a mismatch voids the run |
+| **D4 — δ_MI** | **A** — **2** additional sealed cases over both A and B | A | at n=18 the verdict of the pilot is expected to be **INCONCLUSIVE**; the interval is the primary outcome |
+| **CRJ.1.2 — what arm C builds** | **B** — a new `Procedure` family for domain A, beside the existing mechanism | A (reuse) | a larger surface, built **before** any measurement says it is needed — the held-out-case rule must be frozen with the sealed split, and the evaluation traffic stays quarantined |
+| **D5 — the freeze** | the contract decides it: a **third-party reviewer** freezes the sealed split; the hash record and the roles are published **before** the first arm run | A | **still OPEN as a procedure**: it needs a reviewer who is neither the case author nor a solver author — the freeze cannot be performed by the coordinator (the contract says so) |
+
 Each decision lists the options and a **grounded recommendation**. All five are owner-level
 (`docs-v2/engineering/CRJ-01-EXECUTION-PLAN.md:70`).
 

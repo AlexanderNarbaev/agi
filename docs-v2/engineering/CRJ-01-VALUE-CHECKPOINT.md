@@ -138,6 +138,22 @@ exists at all, and (c) the conversion of the measurement probes into gates, one 
 | the scope of the next executable slice | **reliability first, then the journey over the existing route** | the order this round actually executed |
 | the commit and the PR | **commit and open a PR** | the branch, the commits and the pull request; **no merge** — the merge stays the owner's |
 
+**The second question set (2026-11-20), the protocol's own scientific decisions.** The
+preregistration cannot be frozen until the owner fixes D1–D4, and the protocol's §10 named the
+options with the recommendations. The answers are **OD-081** and **OD-082**:
+
+| the decision | the answer | the note |
+|---|---|---|
+| D1 — the domains | **A** — a new third corpus + the lamp world as it exists | domain B tests cost and retention, not semantic generalisation |
+| D2 — the arms | **B** — arm C reads promoted procedures **and** learned claims | **above the protocol's recommendation**: the learned-claim path has no promotion-and-validation contract with a held-out-case rule, so that contract becomes a **build item** |
+| D3 — the oracle | **A** — a source-span oracle + an independently written truth table | as recommended |
+| D4 — δ_MI | **A** — **2** additional sealed cases over both A and B | the pilot's verdict is expected to be **INCONCLUSIVE**; the interval is the outcome |
+| CRJ.1.2 — what arm C builds | **B** — a new `Procedure` family for domain A, beside the existing mechanism | **above the protocol's recommendation**: a larger surface, built before any measurement says it is needed — the held-out-case rule must be frozen with the sealed split |
+
+**The freeze (D5) is the one procedure still open**, and the contract decides who may perform
+it: a reviewer who is neither the case author nor a solver author. The coordinator may not
+freeze the split.
+
 ---
 
 ## 8. The wave's files
