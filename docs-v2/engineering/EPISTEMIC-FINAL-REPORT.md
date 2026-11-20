@@ -703,9 +703,19 @@ changed**. The resolution: the consent given, the gate open, the server's root, 
 plan. The artifact: `report-b3c106428ed0.md`, sha256 `efe568902bf073cef8ade3b8adc49f31d590f6e4db92103e61224fd40dfca0c9`,
 5 084 bytes; the index holds one STAGED and one COMMITTED; the effect verified. The trace: seven steps
 (PLAN / PERMISSION / ACTION / OBSERVE / VERIFY / RESULT / RETAINED). **The latency:** the first run
-139–150 ms (JIT), the replay **8.3–10.0 ms** (five repetitions) against a baseline that writes the
-trace but does not read it at **11.5–13.3 ms** — a win of **3.2–3.3 ms, 25–28 %** (two consecutive
-runs). **The negative result is recorded too**: before the trace's append was batched, the trace cost
+139–150 ms (JIT). **The latency, measured correctly:** the two arms are measured **interleaved** —
+one journey of each arm per round, with the order of the arms swapped every round — so that neither
+arm pays the other's warm-up. The counterfactual arm (the replay against the same request with the
+reference forced): the replay **3.58 ms** against the forced **8.55 ms** — a win of **4.96 ms
+(58 %)**; the field arm (each arm with its own workbench, store and output root): the replay
+**5.36 ms** against the baseline **11.30 ms** — a win of **5.94 ms (53 %)**; both reproducible to the
+digit across runs. **The earlier figure, 3.2–3.3 ms (25–28 %), is superseded and was
+understated**: it came from a measurement in which one arm ran entirely before the other, so the
+first arm paid the warm-up of its own store and of the JVM — a bias against the effect, which on a
+loaded runner was larger than the effect itself (that is how the release lane failed a test that
+had passed on the same commit in the fast lane — §J-quattuordecim). The independent review's own
+interleaved measurement (the replay median 3 ms against the no-learning 8 ms → 5 ms) was the
+correct one. **The negative result is recorded too**: before the trace's append was batched, the trace cost
 43 ms per run and the win was **negative**; the mechanism was found and removed.
 
 **What the loop does not demonstrate.** The HTTP response contract was not extended (the trace is
@@ -1483,6 +1493,21 @@ retained XML at all — the same hole, reopened for the packages the first refre
 and neither had the packaging claim. The retained set is now **51 files, 234 tests, 0 failures, 0
 errors, 0 skipped**, and it carries the epistemic package, the packaging suite, the auditor's
 Article I gate, the wave's own probes, and the live-store counters.
+
+**And a fourth catch, which was a measurement's fault and not the code's.** The release lane failed
+`ClosedLoopReportJourneyMeasurementTest` — the test that measures the closed loop's win — on the
+same commit whose fast lane had passed it. The two arms were measured **one after the other**: the
+arm that ran first paid the warm-up of its own store and of the JVM, and the arm that ran second
+benefited from it, so the measurement was biased **against** the effect. Under the loaded runner the
+bias was larger than the effect itself, and the assertion failed for a reason that had nothing to
+do with the closed loop. The arms are now measured **interleaved** — one journey of each arm per
+round, the order of the two arms swapped every round, an even number of rounds — which is the
+method the independent review used. The effect is still asserted; only the bias is removed. And the
+corrected measurement is **stronger** than the one this report published: the replay **3.58 ms**
+against the forced **8.55 ms** — **4.96 ms, 58 %** — in the counterfactual arm, and **5.36 ms**
+against **11.30 ms** — **5.94 ms, 53 %** — in the field arm, reproducible to the digit. The
+published **3.2–3.3 ms (25–28 %)** was the order-biased figure, it is **superseded**, and the
+review's own interleaved measurement (3 ms against 8 ms → 5 ms) was the correct one all along.
 
 **What this release does not claim.** The trace of the closed loop carries **two**
 `Instant.now()` reads (`io.matrix.cognitive.report.ReportJourneyTrace`) — a package the decision-path

@@ -48,6 +48,17 @@ import org.junit.jupiter.api.io.TempDir;
  * own first journey. The two runs are reported separately because they answer different
  * questions: the laboratory asks what the replay saves inside one process, and the field
  * asks whether the saving survives when the arms cannot see each other at all.</p>
+ *
+ * <p><b>Why the arms are measured INTERLEAVED.</b> The first version measured one arm
+ * entirely and then the other. The arm that ran first paid the warm-up of its own store
+ * and of the JVM, and the arm that ran second benefited from it — so the measurement was
+ * biased AGAINST the effect, by an amount that has nothing to do with the closed loop. On a
+ * loaded runner that bias was larger than the effect itself, and the release lane failed a
+ * test that had passed on the same commit in the fast lane: the failure was in the
+ * measurement's ORDER, not in the code. The arms are now measured one journey each per
+ * round, with the order of the two arms swapped every round, over an even number of
+ * rounds — the same interleaved measurement the independent review used (40 interleaved
+ * rounds). The effect is still asserted; only the bias is removed.</p>
  */
 class ClosedLoopReportJourneyMeasurementTest {
 
@@ -60,8 +71,12 @@ class ClosedLoopReportJourneyMeasurementTest {
     /** The idempotency key the two runs of one journey share. */
     private static final String KEY = "measurement-key";
 
-    /** How many times the replayed journey is measured. */
-    private static final int REPETITIONS = 5;
+    /**
+     * How many rounds the INTERLEAVED measurement runs.
+     *
+     * <p>It is even, so that each arm runs first exactly as often as the other.</p>
+     */
+    private static final int INTERLEAVED_ROUNDS = 20;
 
     /** The permissions an authorized output root must have: nobody else may write to it. */
     private static final EnumSet<PosixFilePermission> OWNER_ONLY = EnumSet.of(
@@ -125,18 +140,6 @@ class ClosedLoopReportJourneyMeasurementTest {
                     + step.detail());
         }
 
-        // ── the second journey: the kernel consults the trace and chooses ─────────
-        long replayNanos = 0L;
-        for (int repetition = 0; repetition < REPETITIONS; repetition++) {
-            started = System.nanoTime();
-            Response second = route.report(WORKSPACE, request());
-            replayNanos += System.nanoTime() - started;
-            assertThat(second.getStatus()).isEqualTo(200);
-            assertThat(success(second).disposition()).isEqualTo("REPLAYED");
-        }
-        System.out.println("### the replayed journey: the mean " + (replayNanos / 1_000_000.0
-                / REPETITIONS) + " ms over " + REPETITIONS + " repetition(s)");
-
         // ── the no-learning baseline: the same journey, the trace consult disabled ─
         Path baselineRoot = root("baseline");
         ArtifactActionService baselineActions = new ArtifactActionService(true,
@@ -147,20 +150,29 @@ class ClosedLoopReportJourneyMeasurementTest {
         // retained journey is not read back, so the workspace is asked every time
         baseline.consultRetainedTrace = false;
         baseline.report(WORKSPACE, request());
-        long baselineNanos = 0L;
-        for (int repetition = 0; repetition < REPETITIONS; repetition++) {
-            started = System.nanoTime();
-            baseline.report(WORKSPACE, request());
-            baselineNanos += System.nanoTime() - started;
-        }
-        double baselineMean = baselineNanos / 1_000_000.0 / REPETITIONS;
-        double replayMean = replayNanos / 1_000_000.0 / REPETITIONS;
+
+        // ── the second journey: the kernel consults the trace and chooses ─────────
+        // The two arms are measured INTERLEAVED (see the class's javadoc): one journey of
+        // each arm per round, and the order of the two arms swaps every round, so neither
+        // arm pays the warm-up of the other's store.
+        double[] means = interleavedMeans(
+                () -> {
+                    Response second = route.report(WORKSPACE, request());
+                    assertThat(second.getStatus()).isEqualTo(200);
+                    assertThat(success(second).disposition()).isEqualTo("REPLAYED");
+                },
+                () -> baseline.report(WORKSPACE, request()),
+                INTERLEAVED_ROUNDS);
+        double replayMean = means[0];
+        double baselineMean = means[1];
+        System.out.println("### the replayed journey: the mean " + replayMean
+                + " ms over " + INTERLEAVED_ROUNDS + " interleaved repetition(s)");
         System.out.println("### the replayed journey chose: "
                 + detailOf(route.cognitive.store().events(
                         ReportJourneyTrace.episodeId(body.taskId())),
                         ReportJourneyTrace.PHASE_PLAN));
         System.out.println("### the baseline (the trace consult disabled): the mean " + baselineMean
-                + " ms over " + REPETITIONS + " repetition(s)");
+                + " ms over " + INTERLEAVED_ROUNDS + " interleaved repetition(s)");
         System.out.println("### the gain: the replayed journey costs " + (baselineMean - replayMean)
                 + " ms less than the baseline (" + (baselineMean == 0.0 ? 0.0
                         : Math.round(100.0 * (baselineMean - replayMean) / baselineMean)) + "%)");
@@ -182,34 +194,29 @@ class ClosedLoopReportJourneyMeasurementTest {
         // the first journey establishes the trace
         route.journey(WORKSPACE, request(), null);
 
-        // THE ARM THE EVIDENCE CHOICES: the replay
-        long replayNanos = 0L;
-        ArtifactReportResource.JourneyResult chosen = null;
-        for (int repetition = 0; repetition < REPETITIONS; repetition++) {
-            long started = System.nanoTime();
-            chosen = route.journey(WORKSPACE, request(), null);
-            replayNanos += System.nanoTime() - started;
-        }
-        double replayMean = replayNanos / 1_000_000.0 / REPETITIONS;
-
-        // THE COUNTERFACTUAL ARM: the same request, the reference forced
-        long forcedNanos = 0L;
-        ArtifactReportResource.JourneyResult forced = null;
-        for (int repetition = 0; repetition < REPETITIONS; repetition++) {
-            long started = System.nanoTime();
-            forced = route.journey(WORKSPACE, request(),
-                    io.matrix.cognitive.report.ReportJourneyMethod.REFERENCE_ID);
-            forcedNanos += System.nanoTime() - started;
-        }
-        double forcedMean = forcedNanos / 1_000_000.0 / REPETITIONS;
+        // THE TWO ARMS, MEASURED INTERLEAVED (see the class's javadoc): the arm the
+        // evidence chooses (the replay) against the same request with the reference forced.
+        ArtifactReportResource.JourneyResult[] chosen =
+                new ArtifactReportResource.JourneyResult[1];
+        ArtifactReportResource.JourneyResult[] forced =
+                new ArtifactReportResource.JourneyResult[1];
+        double[] means = interleavedMeans(
+                () -> chosen[0] = route.journey(WORKSPACE, request(), null),
+                () -> forced[0] = route.journey(WORKSPACE, request(),
+                        io.matrix.cognitive.report.ReportJourneyMethod.REFERENCE_ID),
+                INTERLEAVED_ROUNDS);
+        double replayMean = means[0];
+        double forcedMean = means[1];
 
         io.matrix.cognitive.report.ReportJourneyDiff diff =
-                io.matrix.cognitive.report.ReportJourneyDiff.between(chosen.outcome(),
-                        forced.outcome());
+                io.matrix.cognitive.report.ReportJourneyDiff.between(chosen[0].outcome(),
+                        forced[0].outcome());
         System.out.println("### the replay arm: the mean " + replayMean + " ms over "
-                + REPETITIONS + " repetition(s), the method " + chosen.outcome().methodId());
+                + INTERLEAVED_ROUNDS + " interleaved repetition(s), the method "
+                + chosen[0].outcome().methodId());
         System.out.println("### the forced arm: the mean " + forcedMean + " ms over "
-                + REPETITIONS + " repetition(s), the method " + forced.outcome().methodId());
+                + INTERLEAVED_ROUNDS + " interleaved repetition(s), the method "
+                + forced[0].outcome().methodId());
         System.out.println("### the forced arm costs " + (forcedMean - replayMean)
                 + " ms more than the replay");
         for (io.matrix.cognitive.report.ReportJourneyDiff.Aspect aspect : diff.aspects()) {
@@ -237,8 +244,26 @@ class ClosedLoopReportJourneyMeasurementTest {
     @DisplayName("the measured win with the arms' stores separated")
     void theMeasuredWinWithSeparateStores() throws Exception {
         // THE FIELD RUN: each arm has its own workbench, its own store and its own root.
-        double replayMean = armMean("field-replay", true);
-        double baselineMean = armMean("field-baseline", false);
+        Path replayRoot = root("field-replay");
+        ArtifactReportResource replayRoute = route(workbench("field-replay"),
+                new ArtifactActionService(true, replayRoot.toString()),
+                new ReportJourneyPlanner(), new CognitiveService());
+        replayRoute.consultRetainedTrace = true;
+        replayRoute.journey(WORKSPACE, request(), null);
+        Path baselineRoot = root("field-baseline");
+        ArtifactReportResource baselineRoute = route(workbench("field-baseline"),
+                new ArtifactActionService(true, baselineRoot.toString()),
+                new ReportJourneyPlanner(), new CognitiveService());
+        baselineRoute.consultRetainedTrace = false;
+        baselineRoute.journey(WORKSPACE, request(), null);
+        // The arms are measured INTERLEAVED (see the class's javadoc): each arm pays its
+        // own warm-up, and neither arm is measured on a store the other has warmed.
+        double[] means = interleavedMeans(
+                () -> replayRoute.journey(WORKSPACE, request(), null),
+                () -> baselineRoute.journey(WORKSPACE, request(), null),
+                INTERLEAVED_ROUNDS);
+        double replayMean = means[0];
+        double baselineMean = means[1];
         System.out.println("### the field run (the arms' stores separated): the replay "
                 + replayMean + " ms, the baseline " + baselineMean + " ms, the replay costs "
                 + (baselineMean - replayMean) + " ms less");
@@ -247,27 +272,44 @@ class ClosedLoopReportJourneyMeasurementTest {
                 .isLessThan(baselineMean);
     }
 
+    /** A call that may throw. */
+    private interface Call {
+        void run() throws Exception;
+    }
+
+    /** The cost of one call, in nanoseconds. */
+    private static long timed(Call call) throws Exception {
+        long started = System.nanoTime();
+        call.run();
+        return System.nanoTime() - started;
+    }
+
     /**
-     * One arm of the field run: its own workbench, its own store, its own root.
+     * Two arms, measured INTERLEAVED.
      *
-     * @param name      the arm's name
-     * @param consulting whether the arm consults the trace it left behind
-     * @return the mean cost of the arm's journeys, in milliseconds
+     * <p>One journey of each arm per round, and the order of the two arms swaps every
+     * round, so that neither arm is always the first to run and therefore neither arm pays
+     * the other's warm-up. The number of rounds is even for the same reason.</p>
+     *
+     * @param first  the first arm's journey
+     * @param second the second arm's journey
+     * @param rounds how many rounds
+     * @return the two means, in milliseconds, in the order of the arms
      */
-    private double armMean(String name, boolean consulting) throws Exception {
-        Path root = root(name);
-        ArtifactActionService actions = new ArtifactActionService(true, root.toString());
-        ArtifactReportResource route = route(workbench(name), actions, new ReportJourneyPlanner(),
-                new CognitiveService());
-        route.consultRetainedTrace = consulting;
-        route.journey(WORKSPACE, request(), null);
-        long nanos = 0L;
-        for (int repetition = 0; repetition < REPETITIONS; repetition++) {
-            long started = System.nanoTime();
-            route.journey(WORKSPACE, request(), null);
-            nanos += System.nanoTime() - started;
+    private static double[] interleavedMeans(Call first, Call second, int rounds) throws Exception {
+        long firstNanos = 0L;
+        long secondNanos = 0L;
+        for (int round = 0; round < rounds; round++) {
+            if (round % 2 == 0) {
+                firstNanos += timed(first);
+                secondNanos += timed(second);
+            } else {
+                secondNanos += timed(second);
+                firstNanos += timed(first);
+            }
         }
-        return nanos / 1_000_000.0 / REPETITIONS;
+        return new double[] {firstNanos / 1_000_000.0 / rounds,
+                secondNanos / 1_000_000.0 / rounds};
     }
 
     // ── the fixtures ────────────────────────────────────────────────────────
