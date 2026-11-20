@@ -44,7 +44,8 @@ import java.util.Set;
  * different facts, and the method believes the second one.</p>
  */
 public final class ReportJourneyMethod
-        implements AlgorithmMethod<ReportJourney.Problem, ReportJourney.Result> {
+        implements AlgorithmMethod<ReportJourney.Problem, ReportJourney.Result>,
+        ReportJourneyPlanner.JourneyMethod {
 
     /** The capability id of the reference method. */
     public static final String REFERENCE_ID = "report.journey.reference.v1";
