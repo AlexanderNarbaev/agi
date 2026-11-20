@@ -30,7 +30,7 @@ small for it to matter.
 | the **method** the kernel selects | `…/report/ReportProcedureMethod.java` | a member of the report-journey family: it asks the workspace **as the support set** and writes the artifact through the same writer and the same identity |
 | the **producer** | `…/report/ReportProcedureLearner.java` | observed episodes → a candidate → the held-out validation → the promotion, with **four gates** that can each refuse |
 | the **restricted reading** | `…/knowledge/KnowledgeWorkbench.java` | one asking path with an optional narrower snapshot; the three-argument overload behaves exactly as before |
-| the **producer's entry point** | `…/cli/LearnReportProcedureCommand.java` | the operator's command; it runs **alone** (its own `main`), so promoting a procedure does not boot the application or start the background trainers |
+| the **producer's entry point** | `…/cli/LearnReportProcedureCommand.java` | the operator's command; it runs **alone** (its own `main`), so promoting a procedure does not boot the application or start the background trainers. **It is deliberately not registered in the root command**: a changed file in the root `io.matrix` package makes the fast lane derive the scope `--tests io.matrix.*` — the WHOLE suite — which does not fit the lane's twenty-minute limit |
 | the **served path** | `…/knowledge/ArtifactReportResource.java` · `…/report/ReportJourneyPlanner.java` | the workspace's promoted procedures are offered to the kernel with the facts that establish their domain |
 
 **No new subsystem.** The procedure's durable home is the cognitive store's **existing**
@@ -128,6 +128,8 @@ contract, the epistemic package, the live-store journey, the whole algorithms pa
 | the selection rests on the procedure's **declared** cost, not on a measured one | **OPEN** | the coordinator: the promotion should record the measured cost, or the selector should prefer a measured cost when it has one |
 | the journey does not open an **episode row**, so a workspace's journeys cannot be enumerated from the store | **OPEN** | the coordinator: the journey's trace writes events; opening the episode would make the learning path discoverable without the operator naming the ids |
 | the **quarantine list** is the caller's | **OPEN** | the programme: chain A needs the same role/quarantine discipline chain B has, or the caller's list must be audited |
+| a **full-suite run rewrites the retained C2A enrichment documents** (`R-EPIS-12`) | **OPEN** | the coordinator: the measurement must write into a temporary directory and the committed document must be copied out deliberately. Found while running the suite the fast lane derives when a changed file sits in the root package: the run left five of the owner's documents modified, and they were restored from `HEAD` |
+| the learning command's **first entry point booted the whole application**, which started the background trainers and rewrote their state in `data/` | **FIXED in this slice** | the command now runs **alone** through its own `main`, so promoting a procedure touches nothing but the knowledge database it was pointed at |
 | the arm C **cost** claim rests on one measurement over a 17-claim workspace | **OPEN** | the programme: the protocol's instrumented run |
 | the learned-claims half of arm C | **OPEN** | the programme, after the oracle exists |
 
