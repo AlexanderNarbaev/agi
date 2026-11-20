@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="C2A — the held-out evaluation of the frozen candidates (H1, H2, H3)" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-11-20T19:41:00.345Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="14.913">
+  <properties/>
+  <testcase name="the MRR is the reciprocal rank of the topmost gold, and the misses count" classname="io.matrix.knowledge.concept.HeldOutEvaluationTest" time="0.0"/>
+  <testcase name="the calibration: the judge is unchanged and the migrated row is measured with it" classname="io.matrix.knowledge.concept.HeldOutEvaluationTest" time="0.0"/>
+  <testcase name="the claim-scoped records stay retrievable: the cases whose gold lives in one" classname="io.matrix.knowledge.concept.HeldOutEvaluationTest" time="0.001"/>
+  <testcase name="the freeze is the one the candidates were frozen against" classname="io.matrix.knowledge.concept.HeldOutEvaluationTest" time="0.004"/>
+  <testcase name="the extraction is grounded in the research pool" classname="io.matrix.knowledge.concept.HeldOutEvaluationTest" time="0.0"/>
+  <testcase name="the held-out set is the one the manifest describes" classname="io.matrix.knowledge.concept.HeldOutEvaluationTest" time="0.001"/>
+  <testcase name="every row is measured, and every metric is inside its bounds" classname="io.matrix.knowledge.concept.HeldOutEvaluationTest" time="0.0"/>
+  <system-out><![CDATA[[migration] the claim-scoped records: 322 of them, carrying 322 distinct texts
+[migration] the candidates measured on the MIGRATED copy: [BASELINE-PATH] (the unmigrated row carries 6 candidates; the other candidates are not measured on the migrated copy)
+[migration] the held-out set: the unmigrated row — passed 18/25, the failures [H-P05, H-P06, H-P08, H-P10, H-P11, H-P13, H-P17], the recall@1 0.5351, the MRR 0.8600, the abstention 1.0000, the unsupported 0.2800
+[migration] the held-out set: the MIGRATED row — passed 18/25, the failures [H-P05, H-P06, H-P08, H-P10, H-P11, H-P13, H-P17], the recall@1 0.5351, the MRR 0.8600, the abstention 1.0000, the unsupported 0.2800
+[migration] the held-out set: the migration: the referents=202, the claim-scoped records=322, the claims re-pointed=540, the representations re-pointed=216, the concepts inserted=524
+[migration] the held-out set: the gold availability 0.7895, the mean non-gold cited 5.2632 (the unmigrated), 4.7368 (the migrated)
+[migration] the claim-scoped records: 322 of them, 17 of the 17 affected cases still answer, the silent ones: []
+[migration] the case H-P02 (POSITIVE): the answered flag before: true, after: true (the passed flag before: true, after: true)
+[migration] the case H-P03 (POSITIVE): the answered flag before: true, after: true (the passed flag before: true, after: true)
+[migration] the case H-P05 (POSITIVE): the answered flag before: true, after: true (the passed flag before: false, after: false)
+[migration] the case H-P06 (POSITIVE): the answered flag before: true, after: true (the passed flag before: false, after: false)
+[migration] the case H-P07 (POSITIVE): the answered flag before: true, after: true (the passed flag before: true, after: true)
+[migration] the case H-P10 (POSITIVE): the answered flag before: true, after: true (the passed flag before: false, after: false)
+[migration] the case H-P13 (POSITIVE): the answered flag before: true, after: true (the passed flag before: false, after: false)
+[migration] the case H-P15 (POSITIVE): the answered flag before: true, after: true (the passed flag before: true, after: true)
+[migration] the case H-P19 (POSITIVE): the answered flag before: true, after: true (the passed flag before: true, after: true)
+[migration] the case H-U01 (UNSUPPORTED): the answered flag before: true, after: true (the passed flag before: false, after: false)
+[migration] the case H-U03 (UNSUPPORTED): the answered flag before: true, after: true (the passed flag before: false, after: false)
+[migration] the case H-U04 (UNSUPPORTED): the answered flag before: true, after: true (the passed flag before: false, after: false)
+[migration] the case H-U05 (UNSUPPORTED): the answered flag before: true, after: true (the passed flag before: false, after: false)
+[migration] the case H-U06 (UNSUPPORTED): the answered flag before: true, after: true (the passed flag before: false, after: false)
+[migration] the case H-A01 (AMBIGUOUS): the answered flag before: true, after: true (the passed flag before: false, after: false)
+[migration] the case H-C01 (CONTRADICTORY): the answered flag before: true, after: true (the passed flag before: true, after: true)
+[migration] the case H-C02 (CONTRADICTORY): the answered flag before: true, after: true (the passed flag before: false, after: false)
+[migration] the comparable cases: 38 of them, the answered flags that changed: 0 ([])
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

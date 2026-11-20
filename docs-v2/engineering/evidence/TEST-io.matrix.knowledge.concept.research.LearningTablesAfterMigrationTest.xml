@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="P2 — the learning tables after the identity migration" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-20T19:41:58.908Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.008">
+  <properties/>
+  <testcase name="every learning row points at a concept that exists, and the row counts are the published ones" classname="io.matrix.knowledge.concept.research.LearningTablesAfterMigrationTest" time="0.003"/>
+  <testcase name="the before/after targets of the learning tables, read from the backup and the live store" classname="io.matrix.knowledge.concept.research.LearningTablesAfterMigrationTest" time="0.003"/>
+  <testcase name="the learning rows still mean the same thing: the referent's own rows" classname="io.matrix.knowledge.concept.research.LearningTablesAfterMigrationTest" time="0.001"/>
+  <testcase name="the assessment items: eight concepts, eight items each — before and after" classname="io.matrix.knowledge.concept.research.LearningTablesAfterMigrationTest" time="0.001"/>
+  <system-out><![CDATA[[learning-tables] assessment_item        the rows 64    the dangling pointers 0
+[learning-tables] assessment_outcome     the rows 3     the dangling pointers 0
+[learning-tables] hebbian_binding        the rows 1     the dangling pointers 0
+[learning-tables] learning_error         the rows 1     the dangling pointers 0
+[learning-tables] learning_state         the rows 3     the dangling pointers 0
+[learning-tables] learning_transition    the rows 3     the dangling pointers 0
+[learning-tables] claim                  the rows 52    the dangling pointers 0
+[learning-tables] claim_scoped_record    the rows 23    the dangling pointers 0
+[learning-tables] prerequisite           the rows 9     the dangling pointers 0
+[learning-tables] representation         the rows 27    the dangling pointers 0
+[learning-tables] learning_state       the target before {Photosynthesis=1}, the target after {Photosynthetic organisms=1}
+[learning-tables] learning_transition  the target before {Photosynthesis=1}, the target after {Photosynthetic organisms=1}
+[learning-tables] learning_error       the target before {Photosynthesis=1}, the target after {Photosynthetic organisms=1}
+[learning-tables] hebbian_binding      the target before {Photosynthesis=1}, the target after {Photosynthetic organisms=1}
+[learning-tables] assessment_outcome   the target before {Photosynthesis=1}, the target after {Photosynthetic organisms=1}
+[learning-tables] the learning rows' concept: Photosynthetic organisms (2ad08ee)
+[learning-tables] the learning rows' targets: {Photosynthetic organisms=4}
+[learning-tables] the assessment items per concept: {It=8, CO2-concentrating mechanisms=8, Light-dependent reactions=8, The Calvin-Benson cycle=8, The Krebs cycle=8, Cellular respiration=8, Glycolysis=8, Oxidative phosphorylation=8}
+[learning-tables] the assessment items per concept: {Oxidative phosphorylation=8, C4 plants=8, Wheat, shade-to-sun transitions=8, It=8, The Krebs cycle=8, The Calvin-Benson cycle in oxygenic phototrophs=8, Glycolysis=8, Cellular respiration=8}
+[learning-tables] the assessment items' concepts before: {CO2-concentrating mechanisms=c-co2-concentrating-mechanisms-492c094d, Cellular respiration=dbe3c115, Glycolysis=e419c075, It=7578aec, Light-dependent reactions=c-light-dependent-reactions-405f2a01, Oxidative phosphorylation=f80fd94f, The Calvin-Benson cycle=c-the-calvin-benson-cycle-c8143681, The Krebs cycle=d192445}
+[learning-tables] the assessment items' concepts after: {C4 plants=41faac33, Cellular respiration=e901859, Glycolysis=e419c075, It=7578aec, Wheat, shade-to-sun transitions=670f6ed7, Oxidative phosphorylation=370c653d, The Calvin-Benson cycle in oxygenic phototrophs=bcb2e86b, The Krebs cycle=95cab081}
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
