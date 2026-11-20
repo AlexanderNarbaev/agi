@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.epistemic.PremiseCharacterizationTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:58:50.008Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.362">
+  <properties/>
+  <testcase name="a premise the workspace denies is refused, and the claim that denies it is named" classname="io.matrix.knowledge.epistemic.PremiseCharacterizationTest" time="0.059"/>
+  <testcase name="a premise the workspace supports is answered, and the answer is kept" classname="io.matrix.knowledge.epistemic.PremiseCharacterizationTest" time="0.057"/>
+  <testcase name="a question with no premise is answered exactly as before" classname="io.matrix.knowledge.epistemic.PremiseCharacterizationTest" time="0.061"/>
+  <testcase name="the disposition is deterministic: the same question gives the same disposition" classname="io.matrix.knowledge.epistemic.PremiseCharacterizationTest" time="0.067"/>
+  <testcase name="a premise the workspace knows nothing about is not a refusal of the premise" classname="io.matrix.knowledge.epistemic.PremiseCharacterizationTest" time="0.057"/>
+  <testcase name="the logic package's false premise is still refused" classname="io.matrix.knowledge.epistemic.PremiseCharacterizationTest" time="0.06"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

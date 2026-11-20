@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.HardReviewP1DefinitionsTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:52:10.638Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="2.426">
+  <properties/>
+  <testcase name="P1-c: the migration on a copy of the owner's store" classname="io.matrix.knowledge.HardReviewP1DefinitionsTest" time="0.009"/>
+  <testcase name="P1-a: the definitions the rule produced on the seed corpus" classname="io.matrix.knowledge.HardReviewP1DefinitionsTest" time="1.103"/>
+  <testcase name="P1-b: the re-import and the touched concepts" classname="io.matrix.knowledge.HardReviewP1DefinitionsTest" time="1.313"/>
+  <system-out><![CDATA[### P1-c - the copy of the owner's store
+  schema version after the first open=21
+  workspaces=2 concepts=67 claims=52
+  the second open: schema=21 concepts=67 claims=52
+  the copy's size before=1134592 after=1146880 (the original was not opened for writing)
+### P1-a - the seed corpus
+  concepts=326 definitions=4 claims=348 written=4
+  coverage=1.2269938650306749 %
+  [1] The trenches :: The trenches are the key to understanding how island arcs such as the Marianas and the Aleutian Islands have formed and why they experience numerous strong earthquakes.
+  [2] The San Andreas :: The San Andreas is one of the few transform faults exposed on land.
+  [3] Trenches :: Trenches are the deepest parts of the ocean floor and are created by subduction.
+  [4] Subduction zones :: Subduction zones are of two types: ocean-to-continent subduction, where the dense oceanic lithosphere plunges beneath the less dense continent, or ocean-to-ocean subduction where older, cooler, denser oceanic crust slips beneath less dense oceanic crust.
+### P1-b - the re-import
+  first import: definitionsWritten=3 stored=3
+  second import: definitionsWritten=0 stored=3
+  second document: definitionsWritten=1 conceptsCreated=249 definitionsStored=4
+  concepts that gained a definition=1
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

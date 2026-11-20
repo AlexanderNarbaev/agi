@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="P1 — the referent key: the migration rehearsal" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-19T19:58:21.261Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="40.16">
+<testsuite name="P1 — the referent key: the migration rehearsal" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:56:45.599Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="40.576">
   <properties/>
-  <testcase name="the rehearsal: the copy-forward, the lineage, the audit and the rollback" classname="io.matrix.knowledge.concept.research.ReferentKeyMigrationRehearsalTest" time="1.538"/>
-  <testcase name="the re-measurement on the migrated copy" classname="io.matrix.knowledge.concept.research.ReferentKeyMigrationRehearsalTest" time="38.621"/>
+  <testcase name="the rehearsal: the copy-forward, the lineage, the audit and the rollback" classname="io.matrix.knowledge.concept.research.ReferentKeyMigrationRehearsalTest" time="1.595"/>
+  <testcase name="the re-measurement on the migrated copy" classname="io.matrix.knowledge.concept.research.ReferentKeyMigrationRehearsalTest" time="38.98"/>
   <system-out><![CDATA[[rehearsal] the workspace: concepts=326 claims=348 sources=2 representations=335 prerequisites=0
-[rehearsal] the snapshot: id=snap-referent-key-rehearsal-1 kind=MANUAL concepts=326 claims=348 cost=34 ms, the database grew 1859584 bytes (1925120 -> 3784704)
+[rehearsal] the snapshot: id=snap-referent-key-rehearsal-1 kind=MANUAL concepts=326 claims=348 cost=33 ms, the database grew 1859584 bytes (1925120 -> 3784704)
 [rehearsal] the plan (STRICT): referents=90 claim-scoped records=255 rejected claims=255, the new concept rows=345, the lineage rows=93
-[rehearsal] the copy-forward: concepts inserted=345, claims re-pointed=348, representations re-pointed=93, refines carried=0, prerequisites re-pointed=0, other rows re-pointed=737, lineage rows=696, representation collisions=0, prerequisite collapses=0, prerequisite self-loops=0, cost=47 ms
+[rehearsal] the copy-forward: concepts inserted=345, claims re-pointed=348, representations re-pointed=93, refines carried=0, prerequisites re-pointed=0, other rows re-pointed=737, lineage rows=696, representation collisions=0, prerequisite collapses=0, prerequisite self-loops=0, cost=49 ms
 [rehearsal] the tables before: {asked_question=0, assessment_item=2654, assessment_outcome=0, claim=348, claim_lineage=0, claim_scoped_record=0, concept=326, concept_alias=0, concept_definition=4, concept_definition_merge=0, concept_lineage=0, contradiction=0, derivation=0, derivation_premise=0, dialogue_turn=0, epistemic_case=0, evidence=348, hebbian_binding=0, learning_error=0, learning_goal=0, learning_goal_subtask=0, learning_state=0, learning_transition=0, observation_adjudication=0, observation_disposition=0, observation_occurrence=0, prerequisite=0, representation=335, revision=0, schema_meta=1, source=2, workspace=1, workspace_snapshot=1}
 [rehearsal] the tables after:  {asked_question=0, assessment_item=2654, assessment_outcome=0, claim=348, claim_lineage=348, claim_scoped_record=255, concept=671, concept_alias=12, concept_definition=4, concept_definition_merge=0, concept_lineage=90, contradiction=0, derivation=0, derivation_premise=0, dialogue_turn=0, epistemic_case=0, evidence=348, hebbian_binding=0, learning_error=0, learning_goal=0, learning_goal_subtask=0, learning_state=0, learning_transition=0, observation_adjudication=0, observation_disposition=0, observation_occurrence=0, prerequisite=0, representation=335, revision=0, schema_meta=1, source=2, workspace=1, workspace_snapshot=1}
 [rehearsal] the lineage: 348 of the 348 claims now point at the concept the lineage names
@@ -17,7 +17,7 @@
 [rehearsal] the audit's per-table orphans: {assessment_item=0, assessment_outcome=0, claim=0, claim_scoped_record=0, concept_definition=0, epistemic_case=0, hebbian_binding=0, learning_error=0, learning_state=0, learning_transition=0, prerequisite=0, representation=0, prerequisite.requires_concept_id=0}
 [rehearsal] the audit's per-table stale: {assessment_item=0, assessment_outcome=0, claim=0, claim_scoped_record=0, concept_definition=0, epistemic_case=0, hebbian_binding=0, learning_error=0, learning_state=0, learning_transition=0, prerequisite=0, representation=0, prerequisite.requires_concept_id=0}
 [rehearsal] the audit (the broken copy): the orphans=6, the stale pointers=1, the tables that found them=[claim, claim_scoped_record]
-[rehearsal] the rollback: the snapshot=snap-referent-key-rehearsal-2, the concepts 671 -> 326, the claims 348 -> 348, the restore took 70 ms
+[rehearsal] the rollback: the snapshot=snap-referent-key-rehearsal-2, the concepts 671 -> 326, the claims 348 -> 348, the restore took 79 ms
 [rehearsal] the re-measurement (the migrated copy): the official ask cases 12/20, answered=14, abstentions=6, the unanswerable abstained=6/6, the failures=[A-02, A-04, A-05, A-06, P-01, P-02, M-01, M-03]
 [rehearsal] the frozen set (the migrated copy): 8/16 passed, answered=12, abstentions=4
 ]]></system-out>

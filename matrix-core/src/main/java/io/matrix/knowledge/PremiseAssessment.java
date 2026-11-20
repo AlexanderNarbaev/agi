@@ -587,13 +587,12 @@ public final class PremiseAssessment {
             // about the premise's subject. It does not say that the claim
             // denies THAT PROPOSITION.
             //
-            // The corpus holds "Subduction is the driving force behind plate
-            // tectonics, and without it, plate tectonics could not occur."
-            // The premise "subduction is the driving force behind plate
-            // tectonics" is that claim's own first clause, and the second
-            // clause's negation ("without it, plate tectonics could not
-            // occur") denies a CONSEQUENCE, not the premise. The subject-level
-            // test read the premise as REFUTED — a false contradiction of a
+            // The corpus holds one claim that says subduction drives plate
+            // tectonics AND, in the same sentence, that plate tectonics could
+            // not occur without it.
+            // The premise names that claim's FIRST clause, and the second
+            // clause's negation denies a CONSEQUENCE, not the premise. The
+            // subject-level test read the premise as REFUTED — a false contradiction of a
             // proposition the corpus states outright.
             //
             // The rule: the claim refutes the premise only when it asserts
@@ -895,10 +894,10 @@ public final class PremiseAssessment {
      * Whether the claim STATES the premise.
      *
      * <p><b>Why the claim's CLAUSES and not the claim.</b> A claim may say more than one
-     * thing, and a negation in one of them says nothing about the others. "Subduction is
-     * the driving force behind plate tectonics, and without it, plate tectonics could not
-     * occur" states the premise "subduction is the driving force behind plate tectonics"
-     * in its first clause and denies a consequence in its second one; a comparison with the
+     * thing, and a negation in one of them says nothing about the others. A corpus claim
+     * that asserts subduction drives plate tectonics and, in its second clause, denies
+     * that plate tectonics could occur without it, states the premise in its FIRST clause
+     * and denies a consequence in its second one; a comparison with the
      * whole claim would see the negation and miss the statement, and the premise would be
      * called refuted although the corpus states it outright.</p>
      *

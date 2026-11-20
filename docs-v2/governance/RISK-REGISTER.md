@@ -738,3 +738,43 @@ evidence is a suspicion, and it is marked as such.
   a determinism-gate violation) could only be caught by the release lane ⇒ ⇒ ⇒ the release lane must
   be watched before a merge, and the owner's release decision (OD-074) says exactly that ⇒ ⇒ ⇒
   widening the fast lane would cost it its speed and is **not** decided here.
+
+### R-EPIS-10 — the Article I exemption is file-granular, so a class that imports the annotation is outside the gate
+
+- **the finding**: the decision-path auditor arms its exemption when it finds the **text**
+  `ArticleIPermitted` on any line of a file — including the `import` statement ⇒ ⇒ ⇒ the exemption
+  then covers the **whole class body**, not the annotated member. Three production files that
+  import the annotation (`LiveStoreMigration`, `EpisodeQuarantineTool`, `ArtifactWriter`) are
+  therefore **outside the gate's reach**, whatever they contain: a synthetic, completely
+  unannotated `Instant.now()` in an unrelated method of such a class is classified **PERMITTED**
+  and does not block.
+- **why it matters**: the wave's own claim — "no wall-clock read remains in a decision path" — is
+  true only **within the gate's reach**. The two annotations the wave added are correctly placed
+  on the right members, and the gate is green, but the gate would not have found a third read in
+  those files.
+- **the fix**: not applied. The auditor's exemption must be **member-granular** — the annotation's
+  position must be recognised, and an `import` line must not arm it — and the three files must
+  then be re-scanned. Changing the gate changes the accepted baseline
+  (`docs-v2/quality/decision-path-baseline.txt`), which is a governance artefact ⇒ ⇒ ⇒ it needs the
+  owner's decision, and it is **not** decided by this release.
+- **owner**: the owner (the instrument's change is a governance decision) — the coordinator can
+  implement it once the decision is taken.
+- **status**: OPEN as a **gap in the instrument**, not as a defect in the wave's code. The wave's
+  two wall-clock reads are annotated and decide nothing.
+
+### R-EPIS-11 — the wave's own probe family reports a measurement and asserts nothing
+
+- **the finding**: the `HardReview*` and `AdversarialProbe*` classes of this wave (41 methods in 24
+  files) **print** their measurement and assert nothing. That is a legitimate **instrument** — a
+  probe that reports what it sees — but it is **not a gate**, and a reader who takes "the printed
+  numbers became assertions" (the phrase the wave's own hard review used) as covering the whole
+  family would be wrong: the phrase holds for the held-out evaluation, which does assert.
+- **the two that mattered, and are fixed**: the leakage probe's negative control only printed
+  whether the guard had caught the planted question (so it would have stayed green with a broken
+  guard), and the migration rehearsal counted zero concepts through a workspace id that does not
+  exist and printed the zeros as the store's contents. Both now **assert**, and the leakage probe
+  has a **mutation proof** (red with the guard disabled, green after the restoration).
+- **the fix**: the remaining probes are named, not fixed — converting a measurement probe into a
+  gate is a **design decision** about what the probe is for, and it is the next wave's work.
+- **owner**: the coordinator (Level 1 — test-only changes), after the release.
+- **status**: OPEN as a **labelled gap**; the two false-success probes of this wave are CLOSED.

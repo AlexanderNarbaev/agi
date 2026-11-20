@@ -21,12 +21,20 @@ One Gradle invocation, one filter per suite, and the XMLs are copied out **befor
 
 ```
 export JAVA_HOME=$HOME/jdk25; export PATH=$JAVA_HOME/bin:$PATH
+rm -rf matrix-core/build/test-results matrix-core/build/reports/tests
 flock /tmp/gradle-matrix.lock ./gradlew :matrix-core:test \
-  --tests "io.matrix.knowledge.concept.research.*" \
-  --tests "io.matrix.knowledge.concept.HeldOutEvaluationTest" \
+  --tests "io.matrix.knowledge.*" \
+  --tests "io.matrix.auditor.*" \
+  --tests "io.matrix.cognitive.report.*" \
+  --tests "io.matrix.packaging.*" \
   --offline --console=plain
 cp matrix-core/build/test-results/test/TEST-*.xml docs-v2/engineering/evidence/
 ```
+
+**The retained set is now 51 files, 234 tests, 0 failures, 0 errors, 0 skipped** (the refresh of
+2026-11-20). It closes the two holes the release's own adversarial review found: the
+`io.matrix.knowledge.epistemic.*` package — the class that measures the P0.3 metrics — had **no**
+retained XML at all, and the packaging claim had none either.
 
 ## What each file is
 
@@ -41,6 +49,12 @@ cp matrix-core/build/test-results/test/TEST-*.xml docs-v2/engineering/evidence/
 | `TEST-io.matrix.knowledge.concept.research.PrerequisiteMergeTest.xml` | the prerequisite merge | the collisions and the dropped self-loops |
 | `TEST-io.matrix.knowledge.concept.research.PrepositionalPhraseProbeTest.xml` | the prepositional rule | the false promotion and the controls that must stay accepted |
 | `TEST-io.matrix.knowledge.concept.research.ReferentKeyInstrumentTest.xml` | the identity instrument | the referents, the rejections, the definitions |
+| `TEST-io.matrix.knowledge.epistemic.EpistemicBaselineTest.xml` | the P0.3 baseline | the sealed EPISTEMIC set's freeze digest, the per-case dispositions and the five metrics |
+| `TEST-io.matrix.knowledge.epistemic.HardReviewLeakagePlantTest.xml` | the leakage guard's exemption | the clean copy passing and the planted question caught — an **assertion**, not a print |
+| `TEST-io.matrix.knowledge.HardReviewP1DefinitionsTest.xml` | the definition half | the migration rehearsed on a copy of the owner's live store, and its idempotence |
+| `TEST-io.matrix.packaging.PackagedSqliteNativeLibraryTest.xml` | the packaging | the packaged jar carries the SQLite native library for this platform |
+| `TEST-io.matrix.auditor.DecisionPathGateTest.xml` | Article I | the decision-path gate and its baseline groups |
+| `TEST-io.matrix.knowledge.concept.research.LiveStoreLauncherTest.xml` | the launcher's own contract | the backup-before-write order, the abort before the live file is touched, the atomic replace, **the live store's referent concepts (20), the claims on them (29) and the rejection split** |
 
 ## The rule
 

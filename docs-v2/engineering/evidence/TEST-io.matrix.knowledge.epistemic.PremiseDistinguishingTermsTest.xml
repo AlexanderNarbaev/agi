@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.epistemic.PremiseDistinguishingTermsTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:58:50.370Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.281">
+  <properties/>
+  <testcase name="T1: the misconception in other words is still the misconception" classname="io.matrix.knowledge.epistemic.PremiseDistinguishingTermsTest" time="0.058"/>
+  <testcase name="T1: the premise that repeats the misconception is refused" classname="io.matrix.knowledge.epistemic.PremiseDistinguishingTermsTest" time="0.056"/>
+  <testcase name="T1: a premise about the same subject that states another proposition is not false" classname="io.matrix.knowledge.epistemic.PremiseDistinguishingTermsTest" time="0.056"/>
+  <testcase name="T1: the misconception in another language is the same assertion" classname="io.matrix.knowledge.epistemic.PremiseDistinguishingTermsTest" time="0.056"/>
+  <testcase name="T1: a premise the corpus states is not the misconception the workspace holds false" classname="io.matrix.knowledge.epistemic.PremiseDistinguishingTermsTest" time="0.055"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="io.matrix.auditor.Exp188AuditCheckTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-19T19:57:13.541Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.079">
+<testsuite name="io.matrix.auditor.Exp188AuditCheckTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:51:55.075Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.065">
   <properties/>
-  <testcase name="realProjectAudit()" classname="io.matrix.auditor.Exp188AuditCheckTest" time="0.079"/>
+  <testcase name="realProjectAudit()" classname="io.matrix.auditor.Exp188AuditCheckTest" time="0.065"/>
   <system-out><![CDATA[[AUDIT-EXP] AuditCheck{ severity=PASS, files=1413, violations=106, onnx=0, random=63, wallClock=0 }
 ]]></system-out>
   <system-err><![CDATA[]]></system-err>

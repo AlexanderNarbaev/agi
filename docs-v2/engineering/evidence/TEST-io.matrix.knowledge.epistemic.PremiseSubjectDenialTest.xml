@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.epistemic.PremiseSubjectDenialTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:59:17.646Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.264">
+  <properties/>
+  <testcase name="T1: a premise about the same subject that states another proposition is not refused" classname="io.matrix.knowledge.epistemic.PremiseSubjectDenialTest" time="0.052"/>
+  <testcase name="T1: the premise the corpus states is not refused" classname="io.matrix.knowledge.epistemic.PremiseSubjectDenialTest" time="0.052"/>
+  <testcase name="T1: the refusal names the corpus's own account" classname="io.matrix.knowledge.epistemic.PremiseSubjectDenialTest" time="0.056"/>
+  <testcase name="T1: the same rule with two more words for the same two relations" classname="io.matrix.knowledge.epistemic.PremiseSubjectDenialTest" time="0.052"/>
+  <testcase name="T1: a premise the corpus denies in other words is refused" classname="io.matrix.knowledge.epistemic.PremiseSubjectDenialTest" time="0.052"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

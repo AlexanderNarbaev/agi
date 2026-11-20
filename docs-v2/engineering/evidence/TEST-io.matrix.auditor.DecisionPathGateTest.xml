@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="io.matrix.auditor.DecisionPathGateTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-19T19:57:13.304Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.152">
+<testsuite name="io.matrix.auditor.DecisionPathGateTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:51:54.850Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.146">
   <properties/>
   <testcase name="every production source root is covered or explicitly excluded" classname="io.matrix.auditor.DecisionPathGateTest" time="0.002"/>
-  <testcase name="no decision path introduces a nondeterministic decision" classname="io.matrix.auditor.DecisionPathGateTest" time="0.148"/>
+  <testcase name="no decision path introduces a nondeterministic decision" classname="io.matrix.auditor.DecisionPathGateTest" time="0.143"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

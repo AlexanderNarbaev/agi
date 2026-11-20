@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.epistemic.AdversarialProbeRound3Test" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:58:23.313Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="8.652">
+  <properties/>
+  <testcase name="R3-7: the latency of the served path" classname="io.matrix.knowledge.epistemic.AdversarialProbeRound3Test" time="2.271"/>
+  <testcase name="R3-2: the Mid-Atlantic Ridge premise on the research-pool corpus" classname="io.matrix.knowledge.epistemic.AdversarialProbeRound3Test" time="0.054"/>
+  <testcase name="R3-3: a claim the workspace marks REFUTED cannot refute another proposition" classname="io.matrix.knowledge.epistemic.AdversarialProbeRound3Test" time="0.012"/>
+  <testcase name="R3-5: is the ambiguity the corpus holds surfaced to the caller in any field" classname="io.matrix.knowledge.epistemic.AdversarialProbeRound3Test" time="0.062"/>
+  <testcase name="R3-4: the frozen conflict case is a conflict with both sides" classname="io.matrix.knowledge.epistemic.AdversarialProbeRound3Test" time="0.034"/>
+  <testcase name="R3-1: the conflict detector — different symbols are no conflict, the same thesis is" classname="io.matrix.knowledge.epistemic.AdversarialProbeRound3Test" time="0.004"/>
+  <testcase name="R3-6: does statesTheSame create false contradictions on other corpora" classname="io.matrix.knowledge.epistemic.AdversarialProbeRound3Test" time="0.252"/>
+  <system-out><![CDATA[### R3-7 - the latency of one ask
+  seed: mean 139.8 ms over 10 asks
+  pool: mean 64.9 ms over 10 asks
+### R3-2 - the research-pool corpus
+  answered=true status=AMBIGUOUS reason=The question is ambiguous: the corpus holds accounts of its subject that disagree with each other, and it does not choose between them. Claim clm-6d8afafe of "wikipedia-mid-ocean-ridge.md" states "The first discovered mid-ocean ridge was the Mid-Atlantic Ridge, which is a spreading center that bisects the North and South Atlantic basins; its location was the reason for the name "mid-ocean ridge".", and claim clm-70bfec96 of "wikipedia-mid-ocean-ridge.md" states "Most oceanic spreading centers are not in the middle of their hosting ocean basins, but are traditionally called mid-ocean ridges regardless." — the two are about the same subject and cannot both hold. Both are reported with their provenance, the system does not decide between them, and none of them is chosen as the answer.
+### R3-3 - the photosynthetic and logical premises
+  the plants premise: answered=true status=UNSUPPORTED
+     reason=The workspace mentions the subject of this premise — claim cl-a9724c3d of "Photosynthesis (encyclopedia entry)" states "Oxygenic photosynthesis releases oxygen as a byproduct of splitting water." — but that claim does not bear on the premise, so the premise has no supporting evidence here. The absence of evidence is not a contradiction: the workspace neither confirms nor refutes this premise.
+  the false photosynthesis premise: answered=false status=REFUTED
+  the false logic premise: answered=false status=REFUTED
+### R3-5 - E-A01: status=AMBIGUOUS readings=4 goldMatched=3/3 saysAmbiguous=true
+  reason=The question is ambiguous: the corpus holds accounts of its subject that disagree with each other, and it does not choose between them. Claim clm-359d217e of "usgs-this-dynamic-earth.md" states "In some regions, the boundaries are not well defined because the plate-movement deformation occurring there extends over a broad belt (called a plate-boundary zone ).", and claim clm-f868e5c5 of "usgs-this-dynamic-earth.md" states "Plate boundary zones -- broad belts in which boundaries are not well defined and the effects of plate interaction are unclear." — the two are about the same subject and cannot both hold. Both are reported with their provenance, the system does not decide between them, and none of them is chosen as the answer.
+### R3-5 - E-A02: status=AMBIGUOUS readings=4 goldMatched=3/4 saysAmbiguous=true
+  reason=The question is ambiguous: the corpus holds accounts of its subject that disagree with each other, and it does not choose between them. Claim clm-afb8dc8f of "wikipedia-plate-tectonics.md" states "It is thus thought that forces associated with the downgoing plate (slab pull and slab suction) are the driving forces which determine the motion of plates, except for those plates which are not being subducted.", and claim clm-85d5b5e4 of "wikipedia-plate-tectonics.md" states "This view however has been contradicted by a recent study which found that the actual motions of the Pacific plate and other plates associated with the East Pacific Rise do not correlate mainly with either slab pull or slab push, but rather with a mantle convection upwelling whose horizontal spreading along the bases of the various plates drives them along via viscosity-related traction forces." — the two are about the same subject and cannot both hold. Both are reported with their provenance, the system does not decide between them, and none of them is chosen as the answer.
+### R3-4 - E-C01: answered=true status=CONTRADICTORY
+  conflicts=1 readings=4
+  conflict: the two accounts are about the same subject and one of them denies what the other asserts: "This view however has been contradicted by a recent study which found that the actual motions of the Pacific plate and other plates associated with the East Pacific Rise do not correlate mainly with either slab pull or slab push, but rather with a mantle convection upwelling whose horizontal spreading along the bases of the various plates drives them along via viscosity-related traction forces."
+     side clm-afb8dc8f source=src-a93ddca3 | It is thus thought that forces associated with the downgoing plate (slab pull and slab suction) are the driving forces which determine the motion of plates, except for those plates which are not being subducted.
+     side clm-85d5b5e4 source=src-a93ddca3 | This view however has been contradicted by a recent study which found that the actual motions of the Pacific plate and other plates associated with the East Pacific Rise do not correlate mainly with either slab pull or slab push, but rather with a mantle convection upwelling whose horizontal spreading along the bases of the various plates drives them along via viscosity-related traction forces.
+  conflicts surfaced=1 (the set names 2 sides)
+### R3-1 - the logic package: claims=28
+  conflicts=5
+  reason: the two accounts are about the same subject and one of them denies what the other asserts: "The propositional variable q is false in the assignment under consideration."
+     side cl-4c64e0a7: The propositional variable q is true in the assignment under consideration.
+     side cl-1a5be63a: The propositional variable q is false in the assignment under consideration.
+  reason: the two accounts are about the same subject and one of them denies what the other asserts: "The propositional variable p is not true in the other assignment under consideration."
+     side cl-f6659258: The propositional variable p is true in the other assignment under consideration.
+     side cl-4851eb79: The propositional variable p is not true in the other assignment under consideration.
+  reason: the two accounts are about the same subject and one of them denies what the other asserts: "The propositional variable p is not true in the assignment under consideration."
+     side cl-66fde0a6: The propositional variable p is true in the assignment under consideration.
+     side cl-5512a80b: The propositional variable p is not true in the assignment under consideration.
+  reason: the two accounts are about the same subject and one of them denies what the other asserts: "The propositional variable p is false in the assignment under consideration."
+     side cl-66fde0a6: The propositional variable p is true in the assignment under consideration.
+     side cl-e7d42f45: The propositional variable p is false in the assignment under consideration.
+  reason: the two accounts are about the same subject and one of them denies what the other asserts: "A is a classical propositional consequence of B if on no assignment of values to the atoms occurring in A and B on which B evaluates as true does A evaluate as false."
+     side cl-d3fbf0ad: A and B are classical propositional equivalents if they evaluate as true on precisely the same assignments of values to the atoms.
+     side cl-67adc157: A is a classical propositional consequence of B if on no assignment of values to the atoms occurring in A and B on which B evaluates as true does A evaluate as false.
+  N1 p-vs-q conflicts=0 p-vs-r conflicts=0
+  N2 p-true-vs-p-false conflicts=1
+### R3-6 - premises the corpora STATE, asked as premises
+  status=UNSUPPORTED answered=true | Since photosynthesis stores energy in chemical bonds, what is the role of RuBisCO?
+  status=UNSUPPORTED answered=true | Since RuBisCO fixes carbon dioxide, what is the role of RuBisCO?
+  status=UNSUPPORTED answered=true | Since plants release oxygen during the day, what does a plant release during the day?
+  status=SUPPORTED answered=true | Since an argument of the modus ponens form is valid, what are the premises of modus ponens?
+  status=CONTRADICTORY answered=true | Since validity says nothing about whether the premises of an argument are true, what are the premises of modus ponens?
+  status=CONTRADICTORY answered=true | Since oceanic crust is created at spreading centers, what takes place along the Mid-Atlantic Ridge?
+  status=SUPPORTED answered=true | Since subduction is the driving force behind plate tectonics, what does the corpus say about the Pacific plate?
+  status=AMBIGUOUS answered=true | Given that Mid-Atlantic Ridge is a divergent boundary, what takes place along it?
+  status=SUPPORTED answered=true | Since divergent boundaries are where new crust is generated, what happens where Mid-Atlantic Ridge runs?
+  premises called refuted: 0 of 9
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

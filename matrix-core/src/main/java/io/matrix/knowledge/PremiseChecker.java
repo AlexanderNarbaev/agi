@@ -177,9 +177,9 @@ public final class PremiseChecker {
      *
      * <p><b>Why a second entry point is needed.</b> {@link #premiseOf(String)} finds the
      * premise a question INTRODUCES with a marker — "since X, ...". A question can also
-     * presuppose without a marker: "Did the continents plow through the ocean floor, as Wegener
-     * originally proposed?" asks under the premise that the continents plowed through the ocean
-     * floor, and the attribution is what says so. The measured defect was that the production
+     * presuppose without a marker: a question that asks whether a claim was "originally
+     * proposed", and that asks it about a process, presupposes that the process happened
+     * — the attribution is what says so. The measured defect was that the production
      * asking path named no premise at all in six of the six unsupported probes, and three of
      * those six presuppose in exactly this way.
      *

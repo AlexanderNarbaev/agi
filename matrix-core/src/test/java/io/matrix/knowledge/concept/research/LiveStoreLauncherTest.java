@@ -19,6 +19,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -173,6 +175,36 @@ class LiveStoreLauncherTest {
         assertThat(count(live, "concept_lineage")).as("the concept-lineage rows").isEqualTo(26);
         assertThat(count(live, "claim_lineage")).as("the claim-lineage rows").isEqualTo(52);
         assertThat(count(live, "concept_alias")).as("the alias rows").isZero();
+        // ── the referent layer, counted and PRINTED ────────────────────────────
+        // The report publishes "20 referent concepts carrying 29 claims and 23
+        // claim-scoped records". The two numbers were computed by hand from the live
+        // store and no retained artefact carried them, so the published claim had no
+        // evidence behind it. They are counted here, printed, and asserted — the
+        // retained JUnit XML now backs the number the report quotes.
+        int referents = scalar(live,
+                "SELECT COUNT(DISTINCT new_id) FROM concept_lineage");
+        int claimsOnReferents = scalar(live,
+                "SELECT COUNT(*) FROM claim WHERE concept_id IN (SELECT new_id FROM concept_lineage)");
+        System.out.println("[live-migration] the live store: the referent concepts " + referents
+                + ", the claims on them " + claimsOnReferents
+                + ", the claim-scoped records " + count(live, "claim_scoped_record"));
+        assertThat(referents).as("the referent concepts of the live store").isEqualTo(20);
+        assertThat(claimsOnReferents).as("the claims on the referent concepts").isEqualTo(29);
+        // The rejection split and the two integrity counts, printed and asserted: the report
+        // publishes the split, and a published number that no retained artefact carries is
+        // exactly the hole this wave was raised to close.
+        Map<String, Integer> rejections = rejectionSplit(live);
+        int selfRequires = scalar(live,
+                "SELECT COUNT(*) FROM prerequisite WHERE concept_id = requires_concept_id");
+        int claimsWithoutConcept = scalar(live,
+                "SELECT COUNT(*) FROM claim WHERE concept_id IS NULL OR concept_id = ''");
+        System.out.println("[live-migration] the live store: the rejections " + rejections
+                + ", the self-requires " + selfRequires
+                + ", the claims without a concept " + claimsWithoutConcept);
+        assertThat(rejections.values().stream().mapToInt(Integer::intValue).sum())
+                .as("the rejected claims of the live store").isEqualTo(23);
+        assertThat(selfRequires).as("the self-requires of the live store").isZero();
+        assertThat(claimsWithoutConcept).as("the claims without a concept").isZero();
         for (String workspace : List.of("logic", "photosynthesis")) {
             ReferentKeyMigration.OrphanAudit audit = ReferentKeyMigration.audit(live, workspace);
             assertThat(audit.totalOrphans()).as("the orphans of %s", workspace).isZero();
@@ -308,6 +340,43 @@ class LiveStoreLauncherTest {
         } catch (SQLException e) {
             return -1;
         }
+    }
+
+    /** The value of a single integer query on the store. */
+    private static int scalar(Path database, String sql) {
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + database);
+             Statement statement = connection.createStatement();
+             ResultSet rows = statement.executeQuery(sql)) {
+            return rows.next() ? rows.getInt(1) : -1;
+        } catch (SQLException e) {
+            return -1;
+        }
+    }
+
+    /**
+     * The split of the rejected claims by the label of the policy's reason.
+     *
+     * <p>The reason is stored in one sentence ("the policy rejected the surface form: no
+     * referent (PREPOSITIONAL_MODIFIER)"); the label is the parenthesis, so the split reads
+     * as the report publishes it.</p>
+     */
+    private static Map<String, Integer> rejectionSplit(Path database) {
+        Map<String, Integer> split = new TreeMap<>();
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + database);
+             Statement statement = connection.createStatement();
+             ResultSet rows = statement.executeQuery(
+                     "SELECT reason, COUNT(*) FROM claim_scoped_record GROUP BY reason")) {
+            while (rows.next()) {
+                String reason = rows.getString(1);
+                int open = reason.lastIndexOf('(');
+                String label = open >= 0 && reason.endsWith(")")
+                        ? reason.substring(open + 1, reason.length() - 1) : reason;
+                split.merge(label, rows.getInt(2), Integer::sum);
+            }
+        } catch (SQLException e) {
+            split.put("the query failed", -1);
+        }
+        return split;
     }
 
     /** The sha256 of a file's bytes. */

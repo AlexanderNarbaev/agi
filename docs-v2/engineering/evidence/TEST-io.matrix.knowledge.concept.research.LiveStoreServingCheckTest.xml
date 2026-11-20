@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="P1 — the owner's live store after the migration: the asking path still answers" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-19T19:57:32.563Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.033">
+<testsuite name="P1 — the owner's live store after the migration: the asking path still answers" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:55:56.897Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.028">
   <properties/>
-  <testcase name="both workspaces: the concepts, the claims and the answers" classname="io.matrix.knowledge.concept.research.LiveStoreServingCheckTest" time="0.018"/>
-  <testcase name="the two published answers: the question asked and the answer given" classname="io.matrix.knowledge.concept.research.LiveStoreServingCheckTest" time="0.015"/>
+  <testcase name="both workspaces: the concepts, the claims and the answers" classname="io.matrix.knowledge.concept.research.LiveStoreServingCheckTest" time="0.014"/>
+  <testcase name="the two published answers: the question asked and the answer given" classname="io.matrix.knowledge.concept.research.LiveStoreServingCheckTest" time="0.013"/>
   <system-out><![CDATA[[live-serving] the workspaces: [logic, photosynthesis]
 [live-serving] the workspace logic: the concepts 30, the claims 28, the representations 8
 [live-serving] the workspace logic: the question — What is A truth table assigns every combination of truth values to the propositional variables of a formula and computes the value of the formula on each combination.?

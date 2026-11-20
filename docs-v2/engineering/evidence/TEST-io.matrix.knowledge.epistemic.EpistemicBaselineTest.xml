@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.epistemic.EpistemicBaselineTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:58:44.599Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="4.19">
+  <properties/>
+  <testcase name="P0.3 — the baseline of the current production path on the frozen held-out set" classname="io.matrix.knowledge.epistemic.EpistemicBaselineTest" time="1.82"/>
+  <testcase name="P0.3 — the names of the classes the directive names are the names of the set" classname="io.matrix.knowledge.epistemic.EpistemicBaselineTest" time="0.001"/>
+  <testcase name="P0.3 — the licence of every document the set draws on is recorded in the manifest" classname="io.matrix.knowledge.epistemic.EpistemicBaselineTest" time="0.001"/>
+  <testcase name="P0.3 — the set carries no gold string that the development code already holds" classname="io.matrix.knowledge.epistemic.EpistemicBaselineTest" time="0.13"/>
+  <testcase name="P0.3 — the measurement is repeatable: the same case read twice gives the same verdict" classname="io.matrix.knowledge.epistemic.EpistemicBaselineTest" time="2.237"/>
+  <system-out><![CDATA[[P0.3-baseline] freeze sha256 2f4347da61b67df5f039f4dc72c985a8187f5c211e91faf7cd4a7ae2e791acbe
+[P0.3-baseline] E-S01 | SUPPORTED_PREMISE | expected=ANSWERED observed=SUPPORTED answered=true conflicts=0 readings=4 evidence=5 | 41 ms
+[P0.3-baseline] E-S02 | SUPPORTED_PREMISE | expected=ANSWERED observed=AMBIGUOUS answered=true conflicts=0 readings=4 evidence=5 | 35 ms   << NOT AS EXPECTED
+[P0.3-baseline] E-R01 | REFUTED_PREMISE | expected=REFUTED observed=REFUTED answered=false conflicts=0 readings=4 evidence=5 | 34 ms
+[P0.3-baseline] E-R02 | REFUTED_PREMISE | expected=REFUTED observed=CONTRADICTORY answered=true conflicts=1 readings=4 evidence=6 | 33 ms   << NOT AS EXPECTED
+[P0.3-baseline] E-U01 | UNSUPPORTED_PREMISE | expected=UNSUPPORTED observed=UNSUPPORTED answered=false conflicts=0 readings=0 evidence=1 | 24 ms
+[P0.3-baseline] E-U02 | UNSUPPORTED_PREMISE | expected=UNSUPPORTED observed=UNSUPPORTED answered=false conflicts=0 readings=0 evidence=0 | 24 ms
+[P0.3-baseline] E-I01 | IRRELEVANT_REFUTATION | expected=NOT_REFUTED observed=UNSUPPORTED answered=true conflicts=0 readings=4 evidence=5 | 33 ms
+[P0.3-baseline] E-C01 | conflict: named 2 sides, shown 2 sides, matched 2
+[P0.3-baseline] E-C01 | CONFLICTING_EVIDENCE | expected=CONFLICT_SURFACED observed=CONTRADICTORY answered=true conflicts=1 readings=4 evidence=5 | 34 ms
+[P0.3-baseline] E-A01 | ambiguity: named 3 spans, shown 4 readings, matched 2 spans
+[P0.3-baseline] E-A01 | gold spans: [clm-1a356023 :: Most movement occurs along narrow zones between plates where the re..., clm-4f207811 :: Plate boundary zones -- broad belts in which boundaries are not wel..., clm-de861fd2 :: In some regions, the boundaries are not well defined because the pl...]
+[P0.3-baseline] E-A01 | reported: [The location where two plates meet is called a plate boundary., clm-295b1b87, Tuzo Wilson, who proposed that these large faults or fracture zones connect two spreading centers (divergent plate boundaries) or, less commonly, trenches (convergent plate boundaries)., clm-49bd150f, Convergent boundaries (destructive boundaries or active margins) occur where two plates slide toward each other to form either a subduction zone (one plate moving underneath the other) or a continental collision., clm-bf553c7, The descending plate also provides a source of stress as the two plates interact, leading to frequent moderate to strong earthquakes., clm-13dcc654, Convergent boundaries -- where crust is destroyed as one plate dives under another., clm-1cf8f909, Other plate boundary zones occur where the effects of the interactions are unclear, and the boundaries, usually occurring along a broad belt, are not well defined and may show various types of movements in different episodes., clm-392ee492, Plate boundary zones -- broad belts in which boundaries are not well defined and the effects of plate interaction are unclear., clm-ac16a02f, Most movement occurs along narrow zones between plates where the results of plate-tectonic forces are most evident., clm-68fd6a8d]
+[P0.3-baseline] E-A01 | AMBIGUOUS_READINGS | expected=AMBIGUITY_SURFACED observed=AMBIGUOUS answered=true conflicts=0 readings=4 evidence=5 | 32 ms
+[P0.3-baseline] E-A02 | ambiguity: named 4 spans, shown 4 readings, matched 3 spans
+[P0.3-baseline] E-A02 | gold spans: [clm-d5ae092b :: It is thus thought that forces associated with the downgoing plate ..., clm-b9cf3eea :: Possible tidal effect on plate tectonics Of the many forces discuss..., clm-6c105b94 :: Surge tectonics Another theory is that the mantle flows neither in ..., clm-6de87b0 :: This view however has been contradicted by a recent study which fou...]
+[P0.3-baseline] E-A02 | reported: [It is thus thought that forces associated with the downgoing plate (slab pull and slab suction) are the driving forces which determine the motion of plates, except for those plates which are not being subducted., clm-815929bd, This view however has been contradicted by a recent study which found that the actual motions of the Pacific plate and other plates associated with the East Pacific Rise do not correlate mainly with either slab pull or slab push, but rather with a mantle convection upwelling whose horizontal spreading along the bases of the various plates drives them along via viscosity-related traction forces., clm-2db8f2de, Possible tidal effect on plate tectonics Of the many forces discussed above, tidal force is still highly debated and defended as a possible principal driving force of plate tectonics., clm-4f804180, Gravitational sliding away from a spreading ridge is one of the proposed driving forces: plate motion is driven by the higher elevation of plates at ocean ridges., clm-7893f2]
+[P0.3-baseline] E-A02 | AMBIGUOUS_READINGS | expected=AMBIGUITY_SURFACED observed=AMBIGUOUS answered=true conflicts=0 readings=4 evidence=0 | 29 ms
+[P0.3-baseline] E-L01 | LEXICAL_NEGATION | expected=REFUTED observed=CONTRADICTORY answered=true conflicts=0 readings=4 evidence=5 | 38 ms   << NOT AS EXPECTED
+[P0.3-baseline] E-L02 | LEXICAL_NEGATION | expected=UNSUPPORTED observed=UNSUPPORTED answered=false conflicts=0 readings=0 evidence=0 | 26 ms
+[P0.3-baseline] E-P01 | PARAPHRASE | expected=ANSWERED observed=SUPPORTED answered=true conflicts=0 readings=4 evidence=5 | 29 ms
+[P0.3-baseline] E-P02 | PARAPHRASE | expected=ANSWERED observed=UNSUPPORTED answered=true conflicts=0 readings=4 evidence=3 | 29 ms   << NOT AS EXPECTED
+[P0.3-baseline] E-N01 | NO_PREMISE | expected=ANSWERED observed=NO_PREMISE answered=true conflicts=0 readings=4 evidence=0 | 25 ms
+[P0.3-baseline] E-N02 | NO_PREMISE | expected=ANSWERED observed=NO_PREMISE answered=true conflicts=0 readings=4 evidence=0 | 36 ms
+[P0.3-baseline] class | cases | answered | refused | status not as expected
+[P0.3-baseline] SUPPORTED_PREMISE | 2 | 2 | 0 | 1 | mean 38 ms, max 41 ms
+[P0.3-baseline] REFUTED_PREMISE | 2 | 1 | 1 | 1 | mean 33 ms, max 34 ms
+[P0.3-baseline] UNSUPPORTED_PREMISE | 2 | 0 | 2 | 0 | mean 24 ms, max 24 ms
+[P0.3-baseline] IRRELEVANT_REFUTATION | 1 | 1 | 0 | 0 | mean 33 ms, max 33 ms
+[P0.3-baseline] CONFLICTING_EVIDENCE | 1 | 1 | 0 | 0 | mean 34 ms, max 34 ms
+[P0.3-baseline] AMBIGUOUS_READINGS | 2 | 2 | 0 | 0 | mean 30 ms, max 32 ms
+[P0.3-baseline] LEXICAL_NEGATION | 2 | 1 | 1 | 1 | mean 32 ms, max 38 ms
+[P0.3-baseline] PARAPHRASE | 2 | 2 | 0 | 1 | mean 29 ms, max 29 ms
+[P0.3-baseline] NO_PREMISE | 2 | 2 | 0 | 0 | mean 30 ms, max 36 ms
+[P0.3-baseline] false refusals 0
+[P0.3-baseline] false contradictions 0
+[P0.3-baseline] unsupported answering 2
+[P0.3-baseline] ambiguity: named 7 spans, shown 8 readings, matched 5 spans (coverage 5/7)
+[P0.3-baseline] conflict: named 2 sides, shown 2, matched 2 (coverage 2/2)
+[P0.3-baseline] production matrix-core/src/main/java/io/matrix/knowledge/KnowledgeWorkbench.java sha256 d90368d5988c0d8f8990b750757e1612ced92559394fa14a86e2325cfe5254f5
+[P0.3-baseline] production matrix-core/src/main/java/io/matrix/knowledge/PremiseChecker.java sha256 1c5cf58bf376344cd890223ad4d9dc6a73461dcffd3c8529fad1daae893c7cdd
+[P0.3-baseline] production matrix-core/src/main/java/io/matrix/knowledge/PremiseAssessment.java sha256 0153b7677538bcab2fad0dd05cf362ade0a8df359a60509a5dcbc8ffee96ca7c
+[P0.3-baseline] production matrix-core/src/main/java/io/matrix/knowledge/PremiseSemantics.java sha256 e0132754021e42fbd1b730c65e0539796d926f91f78a186da53e7e98f44f6f40
+[P0.3-baseline] classes declared 9
+[P0.3-baseline] documents 2
+[P0.3-baseline] gold propositions 17, production references to the set 0
+[P0.3-baseline] repeatable verdicts 16
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

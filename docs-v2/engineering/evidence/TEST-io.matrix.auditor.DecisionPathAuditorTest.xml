@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="io.matrix.auditor.DecisionPathAuditorTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-11-19T19:57:13.290Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.014">
+<testsuite name="io.matrix.auditor.DecisionPathAuditorTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:51:54.837Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.013">
   <properties/>
-  <testcase name="distillOnnxTeacherImportInDecisionPathFlagsViolation()" classname="io.matrix.auditor.DecisionPathAuditorTest" time="0.003"/>
-  <testcase name="onnxRuntimeApiImportOutsideDecisionPathNotFlagged()" classname="io.matrix.auditor.DecisionPathAuditorTest" time="0.0"/>
+  <testcase name="distillOnnxTeacherImportInDecisionPathFlagsViolation()" classname="io.matrix.auditor.DecisionPathAuditorTest" time="0.004"/>
+  <testcase name="onnxRuntimeApiImportOutsideDecisionPathNotFlagged()" classname="io.matrix.auditor.DecisionPathAuditorTest" time="0.001"/>
   <testcase name="cleanDecisionPathFilePasses()" classname="io.matrix.auditor.DecisionPathAuditorTest" time="0.001"/>
-  <testcase name="mathRandomInDecisionPathFlagged()" classname="io.matrix.auditor.DecisionPathAuditorTest" time="0.001"/>
-  <testcase name="onnxImportOutsideDecisionPathNotFlagged()" classname="io.matrix.auditor.DecisionPathAuditorTest" time="0.0"/>
-  <testcase name="violationRecord()" classname="io.matrix.auditor.DecisionPathAuditorTest" time="0.001"/>
+  <testcase name="mathRandomInDecisionPathFlagged()" classname="io.matrix.auditor.DecisionPathAuditorTest" time="0.0"/>
+  <testcase name="onnxImportOutsideDecisionPathNotFlagged()" classname="io.matrix.auditor.DecisionPathAuditorTest" time="0.001"/>
+  <testcase name="violationRecord()" classname="io.matrix.auditor.DecisionPathAuditorTest" time="0.0"/>
   <testcase name="unclassifiedWallClockBlocks()" classname="io.matrix.auditor.DecisionPathAuditorTest" time="0.001"/>
   <testcase name="onnxRuntimeApiImportInDecisionPathFlagsViolation()" classname="io.matrix.auditor.DecisionPathAuditorTest" time="0.001"/>
-  <testcase name="emptyTreeReportsPassed()" classname="io.matrix.auditor.DecisionPathAuditorTest" time="0.0"/>
-  <testcase name="articleIPermittedAnnotationClearsASite()" classname="io.matrix.auditor.DecisionPathAuditorTest" time="0.001"/>
+  <testcase name="emptyTreeReportsPassed()" classname="io.matrix.auditor.DecisionPathAuditorTest" time="0.001"/>
+  <testcase name="articleIPermittedAnnotationClearsASite()" classname="io.matrix.auditor.DecisionPathAuditorTest" time="0.0"/>
   <testcase name="formatReportIncludesSummary()" classname="io.matrix.auditor.DecisionPathAuditorTest" time="0.002"/>
   <testcase name="onnxImportInDecisionPathFlagsViolation()" classname="io.matrix.auditor.DecisionPathAuditorTest" time="0.001"/>
   <testcase name="auditReportViolationCount()" classname="io.matrix.auditor.DecisionPathAuditorTest" time="0.0"/>

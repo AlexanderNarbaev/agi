@@ -28,16 +28,18 @@ behind it; the ledger in `EPISTEMIC-EXECUTION-PLAN.md` holds the commands.
 | **P0.1** explicit premise semantics in the real asking path | **delivered** (re-review in flight) | the five dispositions in the production path; the frozen set's metrics |
 | **P0.2** the conflicts and the ambiguities visible in the served response | **delivered** | `ArtifactReportResource` carries `PremiseStatus`, `ConflictReport`, `ReadingReport` |
 | **P0.3** a NEW independently held-out set with positive and adversarial negative controls | **delivered** | 16 cases, 9 classes, freeze sha256 `2f4347da…`, a measured baseline of the current path |
-| **P0.4** the evaluation records isolated from the durable organic learning | **delivered and re-reviewed** | 209 of 226 records quarantined, the log byte-identical, the gate fails closed |
+| **P0.4** the evaluation records isolated from the durable organic learning | **delivered and re-reviewed** | 212 of 226 records quarantined, the log byte-identical, the gate fails closed |
 | **P0.5** the packaged SQLite native-library loading | **delivered** | the packaged app opens the store with no property, from outside the repository |
-| **P0.6** the post-release `main`/`develop` divergence reconciled | **done** | the live diff: four documentation files, no code |
+| **P0.6** the post-release `main`/`develop` divergence reconciled | **done** | at the wave's start the live diff was four documentation files and no code; the divergence is now the programme's own work — the release pull request #63 carries 563 commits and 198 files |
 | **Gate 1** the CI RFC and the branch hygiene | **delivered with the owner's approval** | 108.6 min → 4-8 min on the ordinary path; 7 branches deleted with a proven recovery |
 
 **The optimization target moved, and the evidence shows it.** Before this programme the asking path
 **refused 0 of 6** unsupported probes and reported a contradiction for **1 of 6**; contradictory
 evidence was identified in **0 of 3** explicit cases; ambiguous readings were represented in **0 of 4**.
 Now: the premise's disposition is explicit in the served response, the ambiguity's readings are
-**7 of 7** (from 0), the conflicts are surfaced conservatively (see §B for the price), and the
+represented in **5 of the 7** frozen cases (from **0 of 4** on the wave's own probes — the two
+unmatched readings are the named gap of §B), the conflicts are surfaced conservatively (see §B for
+the price), and the
 refusal names the claim and source ids that do the refuting.
 
 ---
@@ -74,7 +76,10 @@ refusal names the claim and source ids that do the refuting.
 byte-identical, the same eleven failures (`A-02, A-04, A-05, A-06, F-02, M-01, M-03, P-01, P-02,
 R-04, R-05`); the unanswerable abstention **6/6**, accuracy 1.0000, no case lost; the C2A
 `BASELINE-PATH` **18/25** (it was 17/25 until the false abstention was fixed — §J-terdecem). The scope
-`io.matrix.knowledge.*`: **731 tests, 0 failures**.
+`io.matrix.knowledge.*`: **731 tests, 0 failures** — the CI console's count of that wave's scope run;
+**its JUnit XML was not retained** (the wave's evidence rule came later — R-EPIS-07), so this number
+is a console reading, not a retained artefact. The release's own scope row names the retained
+evidence.
 
 **The price, measured — and corrected twice.** The implementer's own before/after claimed the path got
 *faster* (the seed corpus 28.67/25.83 ms → 22.92/23.39 ms), because the refutation scan now reads the
@@ -115,7 +120,8 @@ and the cross-lingual case is bridged explicitly (the Russian formulation of the
 refuted again). The ambiguity is now the corpus's **accounts about the subject**, and when those
 accounts disagree the status is `AMBIGUOUS` and the reason **names both sides**. The measurements:
 the nine corpus-stated premises → **0 of 9** `REFUTED` (was 3), the plants premise → `UNSUPPORTED`,
-the ambiguity coverage **3/7 → 5/7**, and the whole scope **119 classes / 750 tests / 0 failures**.
+the ambiguity coverage **3/7 → 5/7**, and the whole scope **119 classes / 750 tests / 0 failures**
+(a CI-console scope run of that round; its JUnit XML was not retained — R-EPIS-07).
 
 **The fifth round and the last fix.** The independent reviewer reproduced every pinned number and
 called the work **mergeable**, with two limitations to record. The first was a **false negative** in
@@ -124,7 +130,7 @@ was not recognised as a refutation (the same root cause as the two cases the met
 "unsupported answering"). The fix is one rule, reusing the subject test the conflict detector already
 has: a claim whose statement (proposition **and** scope) is about the premise's subject and denies it
 is read even without the distinguishing term. The reviewer's probe is green, the scope is **123 classes
-/ 770 tests / 0 failures**, and the interleaved A/B shows the change inside the noise (±1 ms). The
+/ 770 tests / 0 failures** (a CI-console scope run; its JUnit XML was not retained — R-EPIS-07), and the interleaved A/B shows the change inside the noise (±1 ms). The
 second limitation is the **latency plateau** — recorded as an accepted cost, not as a fix.
 
 **What remains open, and why.** Two defects are **measured limitations, not silences**:
@@ -1047,7 +1053,10 @@ baseline rows carry **38** cases each, and the measured result is **the answered
 0** ⇒ ⇒ ⇒ "no case is gained, none is lost" is pinned over the **whole** comparable set and not over
 the affected subset (`assertEquals(List.of(), flagDifferences)`). And the two numbers of the table
 above are **assertions**, not prints: the unsupported-answer rate (`assertEquals(..., 1e-9)`) and the
-mean non-gold claims cited (`assertTrue(migrated <= unmigrated)`) ⇒ ⇒ ⇒ if the migration ever moved
+mean non-gold claims cited (`assertTrue(migrated <= unmigrated)`) ⇒ ⇒ ⇒ the first is pinned to its
+value, the second is pinned as a **bound** — the migrated figure itself (4.7368 against 5.2632) is
+**printed** by the test and carried by the retained XML, not asserted as a constant ⇒ ⇒ ⇒ if the
+migration ever moved
 the unsupported rate or made the citation precision worse, the suite would go **red** instead of the
 report quietly becoming false ⇒ ⇒ ⇒ the calibration is pinned too: the migrated copy must be judged by
 the **baseline candidate alone** and on the **same number of cases** ⇒ ⇒ ⇒ and the other five
@@ -1086,6 +1095,7 @@ about the past is not.
 | the affected cases that answer | 16 of 17 | **17 of 17** |
 | the claim-scoped golds that do not answer | H-P02 | **none** |
 | the mean non-gold claims cited (unmigrated → migrated) | 5.2105 → 4.6842 | 5.2632 → 4.7368 |
+| the evidence of that row | the console of the run before the false abstention was fixed; its XML was not retained (R-EPIS-07) | the retained JUnit XML `TEST-io.matrix.knowledge.concept.HeldOutEvaluationTest.xml` |
 | the unsupported-answer rate | 0.2800 | 0.2800 |
 | the abstention accuracy | 1.0000 | 1.0000 |
 
@@ -1214,7 +1224,9 @@ returns nothing ⇒ ⇒ ⇒ the residual owner item is the publication, not the 
 **§J-undecem — the hard review of the wave, and what it changed.**
 
 The wave was reviewed by an **independent** reviewer who did not write it: the scope was the
-programme's own **81** commits (`d0aea6e6..develop`, 119 files, +24 756/−1 099), the verdict was
+programme's own commits — the wave is the range `1194f918..develop` (**111 commits**; `1194f918` is
+the last commit whose tree equals `main`'s, so the wave owns **100 %** of the release diff —
+**149 files**, +27 034/−1 111 measured from `d0aea6e6`, the report's first commit), the verdict was
 **MERGEABLE WITH FINDINGS**, and the findings are recorded here **with their fixes** — not as a
 praise, and not hidden.
 
@@ -1236,10 +1248,21 @@ praise, and not hidden.
 wave; **seven** of them existed **nowhere** — the build tree is gitignored and a Gradle run wipes it.
 The claims were true (the review verified the numbers against the store and the code), but the
 **artefacts** could not be opened ⇒ ⇒ ⇒ the wave's targeted suites are now run in **one** invocation
-and their XMLs are copied into the tracked directory `docs-v2/engineering/evidence/` (**25** files,
-**97** tests, **0** failures, **0** errors, **0** skipped), and the ledger's rows point at **those**
+and their XMLs are copied into the tracked directory `docs-v2/engineering/evidence/` (**51** files,
+**234** tests, **0** failures, **0** errors, **0** skipped), and the ledger's rows point at **those**
 files ⇒ ⇒ ⇒ the risk is recorded as **R-EPIS-07**, and the two holes it could not close (the P0
 close-out's packaging XML and the launcher's console log) are named there rather than hidden.
+
+**The evidence set was refreshed on 2026-11-20, and it closed two more holes.** The release's own
+adversarial review found that the class that measures the **P0.3** metrics
+(`io.matrix.knowledge.epistemic.EpistemicBaselineTest`) had **no** retained XML at all, and that
+the packaging claim had none either — the same hole, reopened for the packages the first refresh
+did not cover. The refreshed set now holds the epistemic package, the packaging suite, the
+auditor's Article I gate and the wave's own probes, and the **live store's published numbers** —
+the referent concepts (20), the claims on them (29) and the rejection split
+(`PREPOSITIONAL_MODIFIER` 10, `CLAUSE_PARTICIPLE` 6, `FUNCTION_HEAD` 3, `CONCATENATION` 2,
+`GENERIC_HEAD` 1, `BARE_PLURAL` 1) — are **printed and asserted** by the launcher test, so the
+numbers the report quotes now name a retained artefact instead of a recollection.
 
 **The findings that turned printed numbers into assertions.** The review found that several numbers
 the report publishes were **printed** by the tests and **never asserted** — so a regression would
@@ -1313,8 +1336,10 @@ programme's own claims, not as verified facts.
 The owner's decision (**OD-074**, 2026-11-18, option C): open the pull request `develop` → `main`,
 **wait for the full release lane** (`ci.yml`) to go green, then merge it as a **squash**, using the
 ruleset's **admin bypass** — which is logged. The pull request is **#63**; it carries the accumulated
-divergence of `develop` since the CONCEPT-TO-ACTION release (`26c549c4`): **559 commits, 182 files**,
-+43 482/−2 531, of which the last **81** commits are this programme's wave.
+divergence of `develop` since the CONCEPT-TO-ACTION release (`26c549c4`): **563 commits, 198 files**,
++43 942/−2 522, of which the wave's own **111 commits** (`1194f918..develop`) are this programme's work
+— the range that owns 100 % of the diff, since `1194f918` is the last commit whose tree equals
+`main`'s.
 
 **Why the bypass, stated plainly.** The protected-`main` ruleset (20469548) requires the FAST PR
 lane's six status contexts — **all green** on every commit of the wave — and **one code-owner
@@ -1402,6 +1427,69 @@ python3 scripts/docs-link-check.py --root . --strict
 3. **The open defects of §J**, each with its reproduction, and the inherited reds of §J that need the
    owner's action (the Docker Hub credentials) rather than the coordinator's.
 
+**§J-quattuordecim — the release stabilization: the lane's third catch, the sealed set's de-leak, and the evidence set's second refresh.**
+
+The release lane failed on the wave's head with **one** test, and the test was the wave's own.
+`HardReviewLeakagePlantTest` — the probe that proves the leakage guard's exemption cannot hide the
+sealed set's content — read the engineering documents through
+`System.getProperty("user.home")/Projects/agi/...`. It therefore passed **on the developer's
+machine** and failed on **every clean runner** (the CI run `44604266005`: *NoSuchFileException* at
+line 83; 864 tests, 1 failed, 12 skipped — and the release lane's own `44604284130`: 9 789 tests,
+1 failed, 165 skipped — the same test). Two defects, not one: the path was **not portable**, and
+the probe's negative control only **printed** whether the guard had caught the planted question
+instead of **asserting** it — so the probe would have stayed green even if the guard had stopped
+working. Both are fixed: the root comes from `io.matrix.testsupport.RepositoryPaths.root()` (the
+property the build sets, or the marker file walked up to), the plant lives in a temporary copy with
+the exact fixture scope, the clean copy must **pass** and the planted copy must **fail** with the
+complaint naming the planted file, and the original frozen set's digest is taken before and after so
+the probe proves it did not contaminate the artefact. **The mutation proof**: with the guard's
+content check disabled the probe turns **RED** (`BUILD FAILED`, the probe's own assertion), and it
+is **GREEN** again after the restoration (`BUILD SUCCESSFUL`) — the guard is proved, not assumed.
+
+**The same audit found two more false-success tests in the wave's own files.** The P1-c rehearsal
+read the store through the **empty** workspace id — a workspace that does not exist — so it counted
+**0** concepts, printed the zeros as if they were the store's contents, and passed; and it pointed
+at `data/knowledge/workbench.sqlite`, a **different** store from the one the release migrates. The
+rehearsal now reads the **live** store (the path the build's `liveStoreMigration` task uses),
+counts its rows with plain SQL, and **asserts** that a second open changes neither the schema
+version nor the content.
+
+**The release's own adversarial review found three more, and they are the ones that matter.** (1)
+The sealed **C2A** set's questions and golds were quoted **verbatim in the production code** — the
+false abstention of §J-terdecem was fixed *with H-P02's question visible*, and the same set's
+other cases appeared in `PremiseChecker` and `PremiseAssessment`. By the repository's own rule
+(`EpistemicBaselineTest`: a probe that quotes a question of the set puts the set into the
+development code), **H-P02 is no longer held out**: the 18/25 must be read with that caveat, and
+the case is named here rather than quietly forgotten. The verbatim text is removed from the three
+production files; the tests that quote the set's cases remain, and the **sealed-set guard still
+covers only the EPISTEMIC set** — extending it to the C2A set, and making it separator-tolerant
+(a literal split across two Java strings defeats `text.contains`), is **open work**, not a claim
+this release makes. (2) The published live-store numbers — the **20** referent concepts, the **29**
+claims on them, the rejection split `PREPOSITIONAL_MODIFIER` 10 / `CLAUSE_PARTICIPLE` 6 /
+`FUNCTION_HEAD` 3 / `CONCATENATION` 2 / `GENERIC_HEAD` 1 / `BARE_PLURAL` 1 — named **no artefact**:
+they were computed by hand from a store that is gitignored, so a clone could not check them. The
+launcher test now **prints and asserts** them, and the retained XML carries them. (3) The
+evaluation artefact named a **branch and a commit** that were not the ones it was measured on; the
+branch is now read from git at run time and the commit is the tree the measurement ran on.
+
+**The evidence set was refreshed, and it closed the holes the review found.** The class that
+measures the **P0.3** metrics (`io.matrix.knowledge.epistemic.EpistemicBaselineTest`) had **no**
+retained XML at all — the same hole, reopened for the packages the first refresh did not cover —
+and neither had the packaging claim. The retained set is now **51 files, 234 tests, 0 failures, 0
+errors, 0 skipped**, and it carries the epistemic package, the packaging suite, the auditor's
+Article I gate, the wave's own probes, and the live-store counters.
+
+**What this release does not claim.** The Article I gate's exemption is **file-granular**: the
+auditor matches the text `ArticleIPermitted` on any line, including the `import`, which arms the
+exemption for the whole class body — so `LiveStoreMigration`, `EpisodeQuarantineTool` and
+`ArtifactWriter` are currently **outside** the gate's reach. The wave's two annotations are placed
+on the right members, and the gate is green, but "no wall-clock read remains in a decision path" is
+true only **within the gate's reach**; this is recorded as **R-EPIS-10**. The wave's own
+`HardReview*` and `AdversarialProbe*` families are **print-only measurement probes** — they report
+a measurement and assert nothing, which is a legitimate instrument but is **not** a gate, and the
+report's phrase "the printed numbers became assertions" holds for the held-out evaluation, not for
+that family (**R-EPIS-11**).
+
 **The cold-start resume prompt** (Gate 6 of the directive asks for one; copy it into a fresh session):
 
 > Continue the MATRIX EPISTEMIC-INTEGRITY programme in `/home/alexandr-narbaev/Projects/agi` (branch
@@ -1410,10 +1498,10 @@ python3 scripts/docs-link-check.py --root . --strict
 > `/home/alexandr-narbaev/.dsh/attachments/v1/files/fa/fad9aeb5d7f1dae77e7070e73c9d9e4e6cfde6cf7537ad95b9a4cc098ec78584/MATRIX_AUTONOMOUS_DEVELOPMENT_MANDATE_2026-11-15.md`.
 > Read first, in this order: `docs-v2/engineering/EPISTEMIC-FINAL-REPORT.md` (§A–J, the state of every
 > workstream, §J-bis/§J-ter/§J-quater/§J-quinque/§J-sext/§J-sept/§J-novem/§J-decem/**§J-undecem**/
-> **§J-duodecim**/**§J-terdecem** the last sections, and the open items),
+> **§J-duodecim**/**§J-terdecem**/**§J-quattuordecim** the last sections, and the open items),
 > `docs-v2/engineering/EPISTEMIC-EXECUTION-PLAN.md` (the task graph and the append-only evidence
-> ledger), `docs-v2/governance/DECISION-REGISTER.md` (**OD-053 … OD-077**), `docs-v2/governance/RISK-REGISTER.md`
-> (**R-EPIS-02 … R-EPIS-09**), and `docs-v2/engineering/evidence/README.md` (the retained JUnit XML
+> ledger), `docs-v2/governance/DECISION-REGISTER.md` (**OD-053 … OD-078**), `docs-v2/governance/RISK-REGISTER.md`
+> (**R-EPIS-02 … R-EPIS-11**), and `docs-v2/engineering/evidence/README.md` (the retained JUnit XML
 > and the rule that keeps it).
 >
 > **The wave was hard-reviewed and the review's findings are fixed** (§J-undecem, OD-073): an

@@ -182,6 +182,7 @@ class HeldOutEvaluationTest {
     private static String datasetSha256;
     private static String developmentSha256;
     private static String commit = "unknown";
+    private static String branch = "unknown";
     private static String date = "unknown";
 
     // ── the data of the held-out dataset ─────────────────────────────────────
@@ -259,6 +260,7 @@ class HeldOutEvaluationTest {
         manifest = readManifest();
         date = text(manifest, "date");
         commit = headCommit();
+        branch = headBranch();
 
         try (KnowledgeWorkbench workbench = KnowledgeWorkbench.at(database.toString())) {
             // ── the workspace, exactly as the dataset's manifest says ─────────
@@ -1539,7 +1541,7 @@ class HeldOutEvaluationTest {
         Map<String, Object> json = new LinkedHashMap<>();
         json.put("record", "C2A-HELDOUT-EVALUATION");
         json.put("date", date);
-        json.put("branch", "feature/concept-to-action");
+        json.put("branch", branch);
         json.put("commit", commit);
         json.put("status", "MEASURED — the held-out evaluation of the frozen candidates");
         json.put("freeze", Map.of("path", FREEZE_PATH, "sha256", freezeSha256,
@@ -2490,8 +2492,27 @@ class HeldOutEvaluationTest {
     }
 
     private static String headCommit() {
+        return git("rev-parse", "HEAD");
+    }
+
+    /**
+     * The branch the measurement ran on.
+     *
+     * <p>The artefact must name the tree it measures: a hardcoded branch name outlives the
+     * branch it was written for, and an artefact that misstates its own provenance cannot
+     * be checked.</p>
+     */
+    private static String headBranch() {
+        return git("rev-parse", "--abbrev-ref", "HEAD");
+    }
+
+    /** A git answer, or "unknown" when git cannot be asked. */
+    private static String git(String... arguments) {
         try {
-            Process process = new ProcessBuilder("git", "rev-parse", "HEAD")
+            String[] command = new String[arguments.length + 1];
+            command[0] = "git";
+            System.arraycopy(arguments, 0, command, 1, arguments.length);
+            Process process = new ProcessBuilder(command)
                     .directory(RepositoryPaths.root().toFile())
                     .redirectErrorStream(true)
                     .start();

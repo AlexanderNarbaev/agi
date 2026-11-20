@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.epistemic.PremiseSemanticsTest" tests="14" skipped="0" failures="0" errors="0" timestamp="2026-11-20T07:59:07.189Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="10.456">
+  <properties/>
+  <testcase name="a paraphrase is not refused and is not labelled false" classname="io.matrix.knowledge.epistemic.PremiseSemanticsTest" time="0.052"/>
+  <testcase name="a supported premise is answered, and the answer is kept" classname="io.matrix.knowledge.epistemic.PremiseSemanticsTest" time="0.052"/>
+  <testcase name="a claim that only shares the field's vocabulary with another is not a conflict" classname="io.matrix.knowledge.epistemic.PremiseSemanticsTest" time="0.055"/>
+  <testcase name="an unsupported premise is reported as unsupported and never labelled false" classname="io.matrix.knowledge.epistemic.PremiseSemanticsTest" time="0.051"/>
+  <testcase name="no premise the workspace supports costs the user the answer" classname="io.matrix.knowledge.epistemic.PremiseSemanticsTest" time="0.066"/>
+  <testcase name="a corpus that holds claims which cannot both hold is surfaced as a conflict" classname="io.matrix.knowledge.epistemic.PremiseSemanticsTest" time="0.051"/>
+  <testcase name="a question that admits several readings is reported with its readings" classname="io.matrix.knowledge.epistemic.PremiseSemanticsTest" time="4.883"/>
+  <testcase name="a question with no premise says so, and is answered as before" classname="io.matrix.knowledge.epistemic.PremiseSemanticsTest" time="0.053"/>
+  <testcase name="a paraphrase and its original get the same disposition" classname="io.matrix.knowledge.epistemic.PremiseSemanticsTest" time="4.925"/>
+  <testcase name="a refuted premise is rejected, and the claim and source that refute it are named" classname="io.matrix.knowledge.epistemic.PremiseSemanticsTest" time="0.052"/>
+  <testcase name="two accounts of different variables are not a conflict" classname="io.matrix.knowledge.epistemic.PremiseSemanticsTest" time="0.048"/>
+  <testcase name="the lexical negation pitfall is read: a negated premise is not a supported one" classname="io.matrix.knowledge.epistemic.PremiseSemanticsTest" time="0.053"/>
+  <testcase name="a premise that is irrelevant to the corpus is unsupported, not refuted" classname="io.matrix.knowledge.epistemic.PremiseSemanticsTest" time="0.053"/>
+  <testcase name="the Russian negation pitfall is read too" classname="io.matrix.knowledge.epistemic.PremiseSemanticsTest" time="0.056"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
