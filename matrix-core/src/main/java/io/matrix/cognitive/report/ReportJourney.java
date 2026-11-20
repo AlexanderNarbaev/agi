@@ -72,7 +72,18 @@ public final class ReportJourney {
      * the retained evidence instead of from the workspace, and so that the reply can say
      * that it was replayed.</p>
      *
+     * <p>The QUESTION and the LEVEL are part of it because the replay's applicability domain
+     * is the REQUEST, not the identity. An answer retrieved for one question may only serve
+     * that question, and an answer retrieved at one level may only serve that level: the
+     * identity names the action, and the action's content is the answer to a specific
+     * question. A retained journey that does not name its question — a record written before
+     * this rule existed — names no question, and the replay refuses it rather than guessing
+     * which question it answers.</p>
+     *
      * @param methodId            the method that produced the retained journey
+     * @param question            the question that was asked, or null when the record does not name it
+     * @param level               the abstraction level the answer was retrieved at, or null when
+     *                            the record does not name it
      * @param workspaceFingerprint the fingerprint of the workspace the answer came from
      * @param sha256              the digest of the committed artifact
      * @param fileName            the artifact's plain file name
@@ -80,6 +91,8 @@ public final class ReportJourney {
      */
     public record Retained(
             String methodId,
+            String question,
+            String level,
             String workspaceFingerprint,
             String sha256,
             String fileName,
