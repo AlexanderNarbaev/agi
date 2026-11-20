@@ -31,7 +31,7 @@ flock /tmp/gradle-matrix.lock ./gradlew :matrix-core:test \
 cp matrix-core/build/test-results/test/TEST-*.xml docs-v2/engineering/evidence/
 ```
 
-**The retained set is now 51 files, 234 tests, 0 failures, 0 errors, 0 skipped** (the refresh of
+**The retained set is now 52 files, 237 tests, 0 failures, 0 errors, 0 skipped** (the refresh of
 2026-11-20). It closes the two holes the release's own adversarial review found: the
 `io.matrix.knowledge.epistemic.*` package — the class that measures the P0.3 metrics — had **no**
 retained XML at all, and the packaging claim had none either.
@@ -53,6 +53,7 @@ retained XML at all, and the packaging claim had none either.
 | `TEST-io.matrix.knowledge.epistemic.HardReviewLeakagePlantTest.xml` | the leakage guard's exemption | the clean copy passing and the planted question caught — an **assertion**, not a print |
 | `TEST-io.matrix.knowledge.HardReviewP1DefinitionsTest.xml` | the definition half | the migration rehearsed on a copy of the owner's live store, and its idempotence |
 | `TEST-io.matrix.packaging.PackagedSqliteNativeLibraryTest.xml` | the packaging | the packaged jar carries the SQLite native library for this platform |
+| `TEST-io.matrix.knowledge.ClosedLoopReportJourneyMeasurementTest.xml` | the closed loop's win | the two arms measured **interleaved**, the difference the method choice makes |
 | `TEST-io.matrix.auditor.DecisionPathGateTest.xml` | Article I | the decision-path gate and its baseline groups |
 | `TEST-io.matrix.knowledge.concept.research.LiveStoreLauncherTest.xml` | the launcher's own contract | the backup-before-write order, the abort before the live file is touched, the atomic replace, **the live store's referent concepts (20), the claims on them (29) and the rejection split** |
 

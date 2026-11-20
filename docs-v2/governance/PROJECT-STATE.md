@@ -17,8 +17,8 @@ answer be measured on data the development cases never saw?* — is complete on 
 (**OD-074**), and it uses the ruleset's own logged admin bypass, because the repository's sole
 collaborator cannot approve their own pull request. The wave's report is
 `docs-v2/engineering/EPISTEMIC-FINAL-REPORT.md`, its task graph and append-only evidence ledger
-are `docs-v2/engineering/EPISTEMIC-EXECUTION-PLAN.md`, and its **retained evidence** — **51** JUnit
-XML files, **234** tests, **0** failures — is tracked in `docs-v2/engineering/evidence/`.
+are `docs-v2/engineering/EPISTEMIC-EXECUTION-PLAN.md`, and its **retained evidence** — **52** JUnit
+XML files, **237** tests, **0** failures — is tracked in `docs-v2/engineering/evidence/`.
 **What it delivered, measured**: the asking path **states** the premise's disposition instead of
 conflating "unsupported" with "false", and a refusal names the claim and the source that deny the
 premise; the corpus's conflicts and ambiguous readings reach the caller; the concept identity layer
@@ -207,7 +207,7 @@ of **scopes**, each verified on a named commit.
 | the end-to-end demonstration | `./gradlew :matrix-core:w51Demonstration` | **15 of 15 acceptance points**; the trace is `docs-v2/engineering/W51-DEMONSTRATION.json` | `83fa911c` | JVM |
 | the W50 epistemic evaluation, before and after the W51 fixes | `python3 scripts/w51-epistemic-eval.py` | **12/29 → 18/29**, the baseline reproduced first on the same runner in a clean worktree at `a098f283` | `83fa911c` | evaluation — 29 cases, per-case report |
 | the quality gate, after the wave | `bash scripts/quality-gate.sh` | **271 literal candidates at the baseline of 271** | `83fa911c` | gate |
-| the EPISTEMIC-INTEGRITY wave's retained evidence | `flock /tmp/gradle-matrix.lock ./gradlew :matrix-core:test --tests "io.matrix.knowledge.*" --tests "io.matrix.auditor.*" --tests "io.matrix.cognitive.report.*" --tests "io.matrix.packaging.*" --offline` | **51 XML files, 234 tests, 0 failures, 0 errors, 0 skipped** — the copies are tracked in `docs-v2/engineering/evidence/`, because a Gradle run wipes the build tree | `7d39fe81` | JVM, OpenJDK 25.0.4.1 |
+| the EPISTEMIC-INTEGRITY wave's retained evidence | `flock /tmp/gradle-matrix.lock ./gradlew :matrix-core:test --tests "io.matrix.knowledge.*" --tests "io.matrix.auditor.*" --tests "io.matrix.cognitive.report.*" --tests "io.matrix.packaging.*" --offline` | **52 XML files, 237 tests, 0 failures, 0 errors, 0 skipped** — the copies are tracked in `docs-v2/engineering/evidence/`, because a Gradle run wipes the build tree | `7d39fe81` | JVM, OpenJDK 25.0.4.1 |
 | the release lane's own scope, on the release head | the CI job "Build & Test (Java)" of `.github/workflows/ci.yml` | **9 789 tests, 1 failed, 165 skipped** — the one failure was the wave's own non-portable probe, now fixed | `7d39fe81` | the GitHub runner |
 
 **The four W48 rows are quoted from the wave's own committed records**, not re-run here:

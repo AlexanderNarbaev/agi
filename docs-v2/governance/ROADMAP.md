@@ -59,7 +59,7 @@ saw?*
 | the packaging | the packaged application opens the SQLite store with no manual property, from a directory outside the repository — and the earlier diagnosis (the driver) was **wrong**: the failure was its write into the application's scratch directory under an exhausted tmpfs quota | `docs-v2/engineering/EPISTEMIC-SQLITE-PACKAGING.md`; the retained XML `…PackagedSqliteNativeLibraryTest.xml` |
 | the closed loop | the kernel's plan → the permission → the action → the effect verified by a reader that did not write it → the append-only trace; the next analogous task reads the trace and chooses differently | `docs-v2/engineering/EPISTEMIC-CLOSED-LOOP-DESIGN.md`; the retained XML `…LiveStoreKernelJourneyTest.xml` |
 | the CI and the branches | the CI is narrowed to four lanes and the FAST PR lane's checks are **required** on `develop`; the lane runs on every push, and the seven owner-approved branches were deleted after a restoration proven in an independent clone | `docs-v2/engineering/CI-SIMPLIFICATION-RFC.md`; `docs-v2/engineering/BRANCH-INVENTORY.md`; OD-053 … OD-058 |
-| the evidence chain | every published number names a retained JUnit XML: **51** files, **234** tests, **0** failures, tracked in `docs-v2/engineering/evidence/` | `docs-v2/engineering/evidence/README.md`; R-EPIS-07 |
+| the evidence chain | every published number names a retained JUnit XML: **52** files, **237** tests, **0** failures, tracked in `docs-v2/engineering/evidence/` | `docs-v2/engineering/evidence/README.md`; R-EPIS-07 |
 
 **What it left open, for the owner:** the fold replacement (ADR-REP-SUBSTRATE-01 §4.4, options
 A/B/C — **OPEN**); the peer's durable payload contract (**OPEN**); the Exp324 threshold (**2 ms,

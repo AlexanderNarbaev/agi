@@ -1258,8 +1258,8 @@ praise, and not hidden.
 wave; **seven** of them existed **nowhere** — the build tree is gitignored and a Gradle run wipes it.
 The claims were true (the review verified the numbers against the store and the code), but the
 **artefacts** could not be opened ⇒ ⇒ ⇒ the wave's targeted suites are now run in **one** invocation
-and their XMLs are copied into the tracked directory `docs-v2/engineering/evidence/` (**51** files,
-**234** tests, **0** failures, **0** errors, **0** skipped), and the ledger's rows point at **those**
+and their XMLs are copied into the tracked directory `docs-v2/engineering/evidence/` (**52** files,
+**237** tests, **0** failures, **0** errors, **0** skipped), and the ledger's rows point at **those**
 files ⇒ ⇒ ⇒ the risk is recorded as **R-EPIS-07**, and the two holes it could not close (the P0
 close-out's packaging XML and the launcher's console log) are named there rather than hidden.
 
