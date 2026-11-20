@@ -15,8 +15,11 @@ import io.matrix.cognitive.report.ArtifactObserver;
 import io.matrix.cognitive.report.ReportJourney;
 import io.matrix.cognitive.report.ReportJourneyOutcome;
 import io.matrix.cognitive.report.WorkspaceFingerprint;
+import io.matrix.cognitive.algorithms.Procedure;
 import io.matrix.cognitive.report.ReportJourneyMethod;
 import io.matrix.cognitive.report.ReportJourneyPlanner;
+import io.matrix.cognitive.report.ReportProcedure;
+import io.matrix.cognitive.report.ReportProcedureMethod;
 import io.matrix.cognitive.report.ReportJourneyTrace;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -311,15 +314,22 @@ public class ArtifactReportResource {
         CognitiveStore traceStore = traceStore();
         ReportJourney.Retained retained = traceStore == null || !consultRetainedTrace ? null
                 : ReportJourneyTrace.retained(traceStore, episodeId);
-        String fingerprint = workspaceFingerprint(workspaceId);
+        // the workspace is read ONCE: the fingerprint is computed from the snapshot, and the
+        // snapshot also says which sources are present — which is what a procedure's
+        // applicability domain is checked against
+        KnowledgeSnapshot snapshot = workbench.workspace(workspaceId);
+        String fingerprint = WorkspaceFingerprint.of(snapshot);
         Set<String> facts = journeyFacts(identity, retained, fingerprint, reportName,
                 request.question(), level);
+        List<Procedure> procedures = proceduresOf(workspaceId);
+        facts.addAll(procedureFacts(procedures, snapshot));
 
         ReportJourney.Problem problem = new ReportJourney.Problem(workspaceId, request.question(),
                 identity, reportName, level, workbench, actions.writer(), retained, fingerprint);
         ProblemRequest planRequest = new ProblemRequest(AlgorithmFamilies.KNOWLEDGE_REPORT, problem,
                 facts, ComputeBudget.unbounded());
-        ReportJourneyPlanner.Plan plan = planner.plan(planRequest, forcedMethodId);
+        ReportJourneyPlanner.Plan plan = planner.plan(planRequest, forcedMethodId,
+                procedureMethods(procedures));
         if (plan.refused()) {
             return refused(422, "no_method_for_request", plan.reason());
         }
@@ -603,6 +613,70 @@ public class ArtifactReportResource {
      * @param reportName  the requested report name
      * @return the facts
      */
+    /**
+     * The workspace's promoted procedures of the report family.
+     *
+     * <p>A procedure is offered to the kernel only when it is ACTIVE and when it belongs to
+     * the family this route serves. The store is the procedure's own durable home, so a
+     * procedure that was promoted before a restart is offered again after it.</p>
+     *
+     * @param workspaceId the workspace the request addresses
+     * @return the procedures
+     */
+    private List<Procedure> proceduresOf(String workspaceId) {
+        CognitiveStore store = traceStore();
+        if (store == null) {
+            return List.of();
+        }
+        List<Procedure> procedures = new ArrayList<>();
+        for (Procedure procedure : store.procedures(workspaceId)) {
+            if (procedure.active() && ReportProcedure.FAMILY.equals(procedure.problemFamily())) {
+                procedures.add(procedure);
+            }
+        }
+        return procedures;
+    }
+
+    /**
+     * The facts the procedures' applicability domains establish.
+     *
+     * <p>A procedure may be used only inside its verified domain, and its domain is the set
+     * of sources its validation covered. The fact is established HERE, against the workspace
+     * as it is now: a procedure whose sources are gone is not admissible, and the reference
+     * method answers instead.</p>
+     *
+     * @param procedures the workspace's procedures
+     * @param snapshot   the workspace as it is now
+     * @return the facts
+     */
+    private Set<String> procedureFacts(List<Procedure> procedures, KnowledgeSnapshot snapshot) {
+        Set<String> facts = new LinkedHashSet<>();
+        Set<String> present = snapshot.sources().stream()
+                .map(Source::id)
+                .collect(java.util.stream.Collectors.toSet());
+        for (Procedure procedure : procedures) {
+            Set<String> support = ReportProcedure.supportOf(procedure);
+            if (!support.isEmpty() && present.containsAll(support)) {
+                facts.add(ReportProcedure.supportPresentFact(procedure.id()));
+            }
+        }
+        return facts;
+    }
+
+    /**
+     * The methods the procedures are offered as.
+     *
+     * @param procedures the workspace's procedures
+     * @return the methods
+     */
+    private List<ReportJourneyPlanner.JourneyMethod> procedureMethods(List<Procedure> procedures) {
+        List<ReportJourneyPlanner.JourneyMethod> methods = new ArrayList<>();
+        for (Procedure procedure : procedures) {
+            methods.add(new ReportProcedureMethod(procedure));
+        }
+        return methods;
+    }
+
     private Set<String> journeyFacts(String identity, ReportJourney.Retained retained,
             String fingerprint, String reportName, String question, AbstractionLevel level) {
         Set<String> facts = new LinkedHashSet<>();
