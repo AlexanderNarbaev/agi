@@ -29,6 +29,10 @@
 
 | тема | документ |
 |---|---|
+| current proposed scientific program | [governance/COGNITIVE-DEVELOPMENT-PROGRAM.md](governance/COGNITIVE-DEVELOPMENT-PROGRAM.md) |
+| mission-to-code reconciliation | [engineering/COGNITIVE-MISSION-RECONCILIATION.md](engineering/COGNITIVE-MISSION-RECONCILIATION.md) |
+| CRJ-01 reproducible acceptance | [engineering/CRJ-01-ACCEPTANCE.md](engineering/CRJ-01-ACCEPTANCE.md) |
+| English agent execution commission | [engineering/AGENT-COMMISSION-COGNITIVE-PROGRAM.md](engineering/AGENT-COMMISSION-COGNITIVE-PROGRAM.md) |
 | текущее состояние проекта | [governance/PROJECT-STATE.md](governance/PROJECT-STATE.md) |
 | дорожная карта и задачи | [governance/ROADMAP.md](governance/ROADMAP.md) |
 | принятые решения | [governance/DECISION-REGISTER.md](governance/DECISION-REGISTER.md) |
