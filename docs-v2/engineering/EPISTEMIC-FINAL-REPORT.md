@@ -1398,6 +1398,28 @@ native build (OOM, red since 2026-10-31), the PR-event TruffleHog findings, and 
 flaky timing assertions (`CognitiveKernelRemoteTest`, `PortfolioBenchmarkTest`) — **recorded with
 their reproduction, never silenced**; they stay in the lane that runs them.
 
+**The release, in fact.** Pull request **#63** was **merged** on 2026-11-20 at 09:32:44 UTC as the
+squash **`188d756e`** on `main`, with the ruleset's administrator bypass — and the bypass covered
+**only** the requirement that cannot be satisfied (one approving review from a code owner, in a
+repository whose sole collaborator is the author of the work). Everything else was green on the head
+that was merged, **`5c7e2e2c`**: the FAST PR lane's six required contexts (the run `44706302593`:
+Scope, the CONSTITUTION and frozen-boundary gate, the documentation consistency, the secret scan,
+and the compile-and-targeted-tests aggregator) and the **full release lane** (the run `44706309984`:
+"Build & Test (Java)" — the whole suite, 27 min; "Quality gates (can fail)"; "Container Images
+(build + smoke)"; "Security Scan"). The `Formal Specs (TLA+)` run (`44706309724`) passed. The one
+red is the **inherited** GraalVM native build (out of memory on this host, R-W49-01), and it is
+named in the release's own commit message rather than represented as success. `main` was then
+**synchronised back into `develop`** (the merge `72c09e2f`), and the two trees are **identical**
+(`03e4829be935e125cebb2ad05ecd72e2318d0d1a`).
+
+**What the release lane was worth.** It caught **four** defects of this wave that the fast lane
+could not see: the packaged application that could not be built (the CDI wiring), the two
+wall-clock findings in the decision path, the non-portable probe that passed on one machine and
+failed on every runner, and the closed loop's **order-biased measurement** — which was not a defect
+of the code but of the measurement, and which had **understated** the effect this release claims.
+Four catches in one release is the lane's argument for itself, and the gap behind them
+(**R-EPIS-09**) stays open.
+
 **The executable handoff — how to continue without re-deriving anything.**
 
 ```bash
@@ -1555,6 +1577,19 @@ bundles it names are the owner's, and the recipe says so.
 > by the owner's decision (**OD-075**: `VACUUM INTO`) and pinned by a regression test; the release lane
 > caught a **CDI defect that made the packaged application unbuildable** (**R-EPIS-09**) and that is fixed
 > too.
+>
+> **The release is DONE** (2026-11-20): pull request **#63** was merged as the squash **`188d756e`**
+> on `main` (09:32:44 UTC), the bypass covered **only** the impossible self-review requirement, the
+> head that was merged (`5c7e2e2c`) was green on the fast lane and on the **full** release lane,
+> and `main` was synchronised back into `develop` (the merge `72c09e2f`, the trees identical). The
+> release lane caught **four** defects of this wave, the last of which was the closed loop's
+> **order-biased measurement** — and the corrected measurement is **stronger** than the published one
+> (**4.96 ms, 58 %** in the counterfactual arm; **5.94 ms, 53 %** in the field arm). **What is left**
+> is the next probe, and it is measured: the **seven remaining POSITIVE failures** of the sealed set
+> — four have their gold **retrieved but not cited** (the citation selection) and three have their
+> gold **not retrieved** (the retrieval) — plus the two instrument gaps (**R-EPIS-10**, the Article I
+> exemption's file granularity; **R-EPIS-11**, the print-only probe family), and the owner's items
+> (**OD-065** provisional, the publication credentials, the fold, the peer's payload).
 >
 > **Where the programme stands (2026-11-18, end of the day).** P0, P1, P2 and P3 are closed with
 > published evidence. The **owner's live store is migrated** (D1-LIVE-STORE-MIGRATION-019, option A;
