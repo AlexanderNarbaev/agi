@@ -358,6 +358,19 @@ re-run of the first.
 `matrix-core/src/test/java/io/matrix/crj/evidence/SourceSpanOracleTest.java`.
 The class does **not** exist at the baseline; its sha256 is a mandatory freeze field (§5.5).
 
+> **STATUS: BUILT.** The class and its test exist as of **2026-11-20**, on the branch
+> `feature/crj-01-arm-c`, with **7 tests, 0 failures**. The instrument's own control (§7.6) is
+> among them: a gold proposition corrupted by a single character is reported as
+> `GOLD_NOT_IN_CORPUS` — **loudly**, not as an ungrounded answer — and a corrupted case can
+> never score as grounded. The oracle reads the corpus file's **bytes** and re-computes their
+> sha256; it never calls the retriever, the workbench, the kernel selector or the session, and
+> it takes the served answer as **data** (`ServedAnswer`), so the harness that reads the
+> response and the oracle that scores it are two pieces of code that meet at one record.
+> Its sha256 at the moment of writing is
+> `2f1f5579717272ee10cccbf32bcd82aab7d73d62adbd23087bdee0a980c65d9d` — **the freeze records
+> the digest of the file the reviewer re-derives, not this one**: the file may still change
+> before the freeze, and the freeze's digest is the one that counts.
+
 **Why a test-tree class and not production code:** the oracle is an *instrument of the
 experiment*, not a product feature. Putting it in `src/test` keeps it out of the serving path
 and out of the packaged application, which is exactly what the contract wants. The negative
@@ -384,6 +397,20 @@ from the private method.
 **Where the logic lives (proposed, does not exist at `b7bd1be4`):**
 `matrix-core/src/test/java/io/matrix/crj/microworld/LampTruthOracle.java`
 (class `LampTruthOracle`, package `io.matrix.crj.microworld`).
+
+> **STATUS: BUILT.** The class and its test exist as of **2026-11-20**, on the branch
+> `feature/crj-01-arm-c`, with **4 tests, 0 failures**. The truth table is **four literal
+> rows**, written out one by one from the specification — not an expression that could have
+> been copied from the world's private method — and the class does **not import the lamp
+> environment at all**: it does not name its type and cannot ask it anything. The two meet in
+> exactly one place, the cross-check, and the world is read there **as data**. The cross-check
+> has been **executed**: on all four assignments the oracle and the world agree, and the record
+> is `instrument_crosscheck: {assignments: 4, agreements: 4}`. A disagreement — and an
+> assignment the world did not answer — makes the run **VOID** with the reason
+> `INSTRUMENT_MISMATCH`, and both cases are tested. The oracle's sha256 at the moment of
+> writing is
+> `c669dfb70825796bec3cc4e58d39cb8f997871175593d736906d3ae5565cff52` — **the freeze records
+> the digest of the file the reviewer re-derives, not this one**.
 
 **The instrument cross-check (binding, before any measurement).** Before the first arm runs, the
 oracle and the world are compared on **all four** assignments of the domain. The result is
