@@ -1461,10 +1461,15 @@ other cases appeared in `PremiseChecker` and `PremiseAssessment`. By the reposit
 (`EpistemicBaselineTest`: a probe that quotes a question of the set puts the set into the
 development code), **H-P02 is no longer held out**: the 18/25 must be read with that caveat, and
 the case is named here rather than quietly forgotten. The verbatim text is removed from the three
-production files; the tests that quote the set's cases remain, and the **sealed-set guard still
-covers only the EPISTEMIC set** — extending it to the C2A set, and making it separator-tolerant
-(a literal split across two Java strings defeats `text.contains`), is **open work**, not a claim
-this release makes. (2) The published live-store numbers — the **20** referent concepts, the **29**
+production files. **Measured after the removal**: the production trees
+(`matrix-core/src/main/java`, `matrix-brain-runtime/src/main/java`,
+`matrix-api-gateway/src/main/java`) carry **0** of the set's questions and **0** of its golds — and
+the scan is separator-tolerant, so a literal split across two Java strings cannot hide one. **Two**
+test classes still carry a sealed question verbatim: `QuestionDemandTest` (H-P02) and
+`PremiseSemanticsTest` (H-U06) — they are the **regression guards for the very defects this
+release fixed**, so they are kept, and the two cases are named here as **not held out**. The
+**sealed-set guard still covers only the EPISTEMIC set**, and it is not separator-tolerant — the
+two are **open work**, not claims this release makes. (2) The published live-store numbers — the **20** referent concepts, the **29**
 claims on them, the rejection split `PREPOSITIONAL_MODIFIER` 10 / `CLAUSE_PARTICIPLE` 6 /
 `FUNCTION_HEAD` 3 / `CONCATENATION` 2 / `GENERIC_HEAD` 1 / `BARE_PLURAL` 1 — named **no artefact**:
 they were computed by hand from a store that is gitignored, so a clone could not check them. The
@@ -1479,7 +1484,13 @@ and neither had the packaging claim. The retained set is now **51 files, 234 tes
 errors, 0 skipped**, and it carries the epistemic package, the packaging suite, the auditor's
 Article I gate, the wave's own probes, and the live-store counters.
 
-**What this release does not claim.** The Article I gate's exemption is **file-granular**: the
+**What this release does not claim.** The trace of the closed loop carries **two**
+`Instant.now()` reads (`io.matrix.cognitive.report.ReportJourneyTrace`) — a package the decision-path
+auditor does **not** scan (`io/matrix/consciousness|brain|mediator|reasoning|actions|ethics|imports|neuron|knowledge/`),
+so the gate cannot see them. On the evidence they **record** the event's time and do not decide:
+the replay decision compares the **workspace fingerprint**, not the timestamp — but "the gate cannot
+see them" is the honest statement, and the two reads are not annotated. The Article I gate's
+exemption is **file-granular**: the
 auditor matches the text `ArticleIPermitted` on any line, including the `import`, which arms the
 exemption for the whole class body — so `LiveStoreMigration`, `EpisodeQuarantineTool` and
 `ArtifactWriter` are currently **outside** the gate's reach. The wave's two annotations are placed
@@ -1488,7 +1499,13 @@ true only **within the gate's reach**; this is recorded as **R-EPIS-10**. The wa
 `HardReview*` and `AdversarialProbe*` families are **print-only measurement probes** — they report
 a measurement and assert nothing, which is a legitimate instrument but is **not** a gate, and the
 report's phrase "the printed numbers became assertions" holds for the held-out evaluation, not for
-that family (**R-EPIS-11**).
+that family (**R-EPIS-11**). The release also **drops two CI protections** and replaces neither:
+the **direct-push-to-`main` guard** (the deleted `branch-validation.yml`) and the **RU/EN
+ecosystem-parity documentation check** (self-declared in `CI-SIMPLIFICATION-RFC.md` §11.4); the
+ruleset's own branch protection remains in force, and the second loss is the RFC's own statement.
+And the branch-recovery recipe in `BRANCH-INVENTORY.md` / `BRANCH-INVENTORY.json` names an
+**absolute path on the owner's machine**, so it is **not executable on another machine** — the
+bundles it names are the owner's, and the recipe says so.
 
 **The cold-start resume prompt** (Gate 6 of the directive asks for one; copy it into a fresh session):
 
