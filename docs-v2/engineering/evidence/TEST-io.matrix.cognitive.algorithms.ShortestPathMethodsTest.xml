@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.cognitive.algorithms.ShortestPathMethodsTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-11-20T15:25:44.551Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.004">
+  <properties/>
+  <testcase name="bothExactMethodsProduceTheSamePaths()" classname="io.matrix.cognitive.algorithms.ShortestPathMethodsTest" time="0.001"/>
+  <testcase name="bellmanFordRefusesANegativeCycleRatherThanReturningAFiniteDistance()" classname="io.matrix.cognitive.algorithms.ShortestPathMethodsTest" time="0.0"/>
+  <testcase name="theCorpusHasExactlyAsManyCasesAsTheCapabilitiesDeclare()" classname="io.matrix.cognitive.algorithms.ShortestPathMethodsTest" time="0.001"/>
+  <testcase name="aShortcutIsPreferredOverTheLongWayRound()" classname="io.matrix.cognitive.algorithms.ShortestPathMethodsTest" time="0.0"/>
+  <testcase name="bellmanFordHandlesANegativeWeightWhereDijkstraCannot()" classname="io.matrix.cognitive.algorithms.ShortestPathMethodsTest" time="0.0"/>
+  <testcase name="theSelectorNeverSelectsDijkstraOutsideItsPrecondition()" classname="io.matrix.cognitive.algorithms.ShortestPathMethodsTest" time="0.0"/>
+  <testcase name="bothExactMethodsFindTheSameDistancesAsTheKnownAnswer()" classname="io.matrix.cognitive.algorithms.ShortestPathMethodsTest" time="0.001"/>
+  <testcase name="theSelectorRefusesDijkstraEvenWhenTheCallerLiesAboutThePrecondition()" classname="io.matrix.cognitive.algorithms.ShortestPathMethodsTest" time="0.0"/>
+  <testcase name="dijkstraRefusesAGraphWithANegativeWeight()" classname="io.matrix.cognitive.algorithms.ShortestPathMethodsTest" time="0.001"/>
+  <testcase name="theCapabilitiesNameTheFallbackInTheRightDirection()" classname="io.matrix.cognitive.algorithms.ShortestPathMethodsTest" time="0.0"/>
+  <testcase name="dijkstraStillRefusesANegativeWeightWhenTheCallerClaimsOtherwise()" classname="io.matrix.cognitive.algorithms.ShortestPathMethodsTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

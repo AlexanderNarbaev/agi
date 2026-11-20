@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.cognitive.algorithms.BoundedUniformCostSearchMethodTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-11-20T15:25:44.199Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.007">
+  <properties/>
+  <testcase name="aSearchThatRunsOutOfBudgetRefusesToPresentItsResultAsProven()" classname="io.matrix.cognitive.algorithms.BoundedUniformCostSearchMethodTest" time="0.002"/>
+  <testcase name="theBoundedMethodNamesTheExactMethodAsItsFallback()" classname="io.matrix.cognitive.algorithms.BoundedUniformCostSearchMethodTest" time="0.0"/>
+  <testcase name="aSearchInsideItsBudgetAgreesWithTheExactMethod()" classname="io.matrix.cognitive.algorithms.BoundedUniformCostSearchMethodTest" time="0.002"/>
+  <testcase name="theMethodRefusesAGraphWithANegativeWeight()" classname="io.matrix.cognitive.algorithms.BoundedUniformCostSearchMethodTest" time="0.0"/>
+  <testcase name="theSelectorWillNotOfferTheBoundedMethodWithoutTheBoundedResultFact()" classname="io.matrix.cognitive.algorithms.BoundedUniformCostSearchMethodTest" time="0.001"/>
+  <testcase name="theResourceLimitMapsToTheResourceLimitedStatus()" classname="io.matrix.cognitive.algorithms.BoundedUniformCostSearchMethodTest" time="0.0"/>
+  <testcase name="theSelectorOffersTheBoundedMethodWhenTheCallerAcceptsABoundedResult()" classname="io.matrix.cognitive.algorithms.BoundedUniformCostSearchMethodTest" time="0.0"/>
+  <testcase name="theCorpusHasExactlyAsManyCasesAsTheCapabilityDeclares()" classname="io.matrix.cognitive.algorithms.BoundedUniformCostSearchMethodTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="CRJ-01 / OD-082 — a validated domain-A procedure" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-11-20T15:25:44.557Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="1.47">
+  <properties/>
+  <testcase name="the procedure reads FEWER claims than the reference: the saving's mechanism" classname="io.matrix.cognitive.report.ReportProcedureLearningTest" time="0.504"/>
+  <testcase name="the learner refuses to promote on fewer cases than the named minimum" classname="io.matrix.cognitive.report.ReportProcedureLearningTest" time="0.111"/>
+  <testcase name="the learner fails closed when the quarantine list is absent" classname="io.matrix.cognitive.report.ReportProcedureLearningTest" time="0.106"/>
+  <testcase name="a later, DIFFERENT question is answered by the promoted procedure" classname="io.matrix.cognitive.report.ReportProcedureLearningTest" time="0.169"/>
+  <testcase name="the learner refuses a validation case that was one of the observed episodes" classname="io.matrix.cognitive.report.ReportProcedureLearningTest" time="0.098"/>
+  <testcase name="a candidate that agrees on every held-out case is promoted, with its provenance" classname="io.matrix.cognitive.report.ReportProcedureLearningTest" time="0.143"/>
+  <testcase name="the learner refuses an episode that is quarantined" classname="io.matrix.cognitive.report.ReportProcedureLearningTest" time="0.097"/>
+  <testcase name="a procedure whose support set is absent is not offered: the reference answers" classname="io.matrix.cognitive.report.ReportProcedureLearningTest" time="0.111"/>
+  <testcase name="the promoted procedure is durable: a store opened later still holds it" classname="io.matrix.cognitive.report.ReportProcedureLearningTest" time="0.13"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

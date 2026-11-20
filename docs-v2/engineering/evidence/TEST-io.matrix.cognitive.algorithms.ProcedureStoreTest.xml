@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.cognitive.algorithms.ProcedureStoreTest" tests="18" skipped="0" failures="0" errors="0" timestamp="2026-11-20T15:25:44.541Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.01">
+  <properties/>
+  <testcase name="aProcedureMethodReplaysTheCheapComputationWhileItIsAlive()" classname="io.matrix.cognitive.algorithms.ProcedureStoreTest" time="0.001"/>
+  <testcase name="aCandidateValidatedOnTooFewCasesIsNotPromoted()" classname="io.matrix.cognitive.algorithms.ProcedureStoreTest" time="0.002"/>
+  <testcase name="theStoreHoldsWhatItPromoted()" classname="io.matrix.cognitive.algorithms.ProcedureStoreTest" time="0.001"/>
+  <testcase name="aProcedureWhoseAgreementFallsIsRetiredAndTheReferenceTakesOverAgain()" classname="io.matrix.cognitive.algorithms.ProcedureStoreTest" time="0.0"/>
+  <testcase name="aProcedureWhoseAgreementHoldsKeepsRunningAndCountsItsUses()" classname="io.matrix.cognitive.algorithms.ProcedureStoreTest" time="0.0"/>
+  <testcase name="aCandidateThatDisagreesAnywhereIsNotPromotedAndTheCaseIsNamed()" classname="io.matrix.cognitive.algorithms.ProcedureStoreTest" time="0.0"/>
+  <testcase name="theSelectorFallsBackToTheReferenceWhenTheDomainDoesNotHold()" classname="io.matrix.cognitive.algorithms.ProcedureStoreTest" time="0.0"/>
+  <testcase name="aProcedureAppliesOnlyInsideItsApplicabilityDomain()" classname="io.matrix.cognitive.algorithms.ProcedureStoreTest" time="0.001"/>
+  <testcase name="aProcedureMethodWithoutAnExecutorIsRefused()" classname="io.matrix.cognitive.algorithms.ProcedureStoreTest" time="0.0"/>
+  <testcase name="theSelectorReusesAProcedureAndSaysSoInTheStatus()" classname="io.matrix.cognitive.algorithms.ProcedureStoreTest" time="0.0"/>
+  <testcase name="aValidationCaseReportsWhetherItAgrees()" classname="io.matrix.cognitive.algorithms.ProcedureStoreTest" time="0.001"/>
+  <testcase name="aRetiredProcedureIsNoLongerOfferedByItsMethod()" classname="io.matrix.cognitive.algorithms.ProcedureStoreTest" time="0.0"/>
+  <testcase name="aProcedureCanBeRetiredExplicitly()" classname="io.matrix.cognitive.algorithms.ProcedureStoreTest" time="0.0"/>
+  <testcase name="anUnknownProcedureCannotBeUsedOrRetired()" classname="io.matrix.cognitive.algorithms.ProcedureStoreTest" time="0.001"/>
+  <testcase name="aProcedureMethodCarriesItsDomainAsItsPreconditions()" classname="io.matrix.cognitive.algorithms.ProcedureStoreTest" time="0.001"/>
+  <testcase name="aCandidateThatAgreesWithTheReferenceOnEveryHeldOutCaseIsPromoted()" classname="io.matrix.cognitive.algorithms.ProcedureStoreTest" time="0.0"/>
+  <testcase name="theValidatorReportsWhatItMeasured()" classname="io.matrix.cognitive.algorithms.ProcedureStoreTest" time="0.001"/>
+  <testcase name="aProcedureWithoutAReferenceIsRefusedAtConstruction()" classname="io.matrix.cognitive.algorithms.ProcedureStoreTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

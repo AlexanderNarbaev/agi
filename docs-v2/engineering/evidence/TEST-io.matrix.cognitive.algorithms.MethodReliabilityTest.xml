@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.cognitive.algorithms.MethodReliabilityTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-11-20T15:25:44.414Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.078">
+  <properties/>
+  <testcase name="twenty-seven of thirty decided trials give a narrow interval that may be acted on" classname="io.matrix.cognitive.algorithms.MethodReliabilityTest" time="0.005"/>
+  <testcase name="the verdicts outlive the process" classname="io.matrix.cognitive.algorithms.MethodReliabilityTest" time="0.047"/>
+  <testcase name="one decided trial gives the interval the research published, and it cannot be acted on" classname="io.matrix.cognitive.algorithms.MethodReliabilityTest" time="0.001"/>
+  <testcase name="the verdicts of a method are counted by kind" classname="io.matrix.cognitive.algorithms.MethodReliabilityTest" time="0.022"/>
+  <testcase name="the abstentions and the technical outcomes stay out of the denominator" classname="io.matrix.cognitive.algorithms.MethodReliabilityTest" time="0.001"/>
+  <testcase name="the measured bound replaces the declared accuracy once the evidence bears it" classname="io.matrix.cognitive.algorithms.MethodReliabilityTest" time="0.001"/>
+  <testcase name="a verdict recorded without a stratum is not evidence for a request" classname="io.matrix.cognitive.algorithms.MethodReliabilityTest" time="0.001"/>
+  <testcase name="a method that was never observed has no evidence at all" classname="io.matrix.cognitive.algorithms.MethodReliabilityTest" time="0.0"/>
+  <testcase name="a pooled rate does not move the score — the refusal to pool" classname="io.matrix.cognitive.algorithms.MethodReliabilityTest" time="0.0"/>
+  <testcase name="the score keeps the declared accuracy while there is no evidence" classname="io.matrix.cognitive.algorithms.MethodReliabilityTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
