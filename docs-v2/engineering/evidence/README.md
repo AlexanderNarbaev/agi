@@ -31,10 +31,29 @@ flock /tmp/gradle-matrix.lock ./gradlew :matrix-core:test \
 cp matrix-core/build/test-results/test/TEST-*.xml docs-v2/engineering/evidence/
 ```
 
-**The retained set is now 52 files, 237 tests, 0 failures, 0 errors, 0 skipped** (the refresh of
-2026-11-20). It closes the two holes the release's own adversarial review found: the
-`io.matrix.knowledge.epistemic.*` package — the class that measures the P0.3 metrics — had **no**
-retained XML at all, and the packaging claim had none either.
+**The retained set is now 54 files: 51 suites, 297 tests, 0 failures, 0 errors, 0 skipped** (the
+refresh of 2026-11-20, after CRJ-01's arm C). It closes the two holes the release's own adversarial
+review found: the `io.matrix.knowledge.epistemic.*` package — the class that measures the P0.3
+metrics — had **no** retained XML at all, and the packaging claim had none either.
+
+### The FULL suite, and what is NOT retained of it
+
+The full `matrix-core` suite was run as well — **1359 suites, 9808 test methods, 0 failures,
+0 errors, 23 skipped**, in **29 minutes 35 seconds** on the measuring machine. **Its XMLs are
+not all retained here**, and the reason is the directory's own rule: the retained set is the
+suites the conclusions **rest on**, and the full suite's 1359 XMLs are 5.5 MB of files whose
+content the conclusions do not rest on — they rest on the **count**, and the count is recorded
+here and in `docs-v2/engineering/CRJ-01-ARM-C.md`.
+
+What the full run **found** is retained, because it rests on it:
+
+| the file | what it holds |
+|---|---|
+| `CRJ-01-REPRODUCTION-concurrent-journey-sqlite-busy.xml` | the **RED** of the concurrency defect: one test, one failure — the journey refused a request because the database was busy and called it a broken output root |
+| `TEST-io.matrix.knowledge.ConcurrentReportJourneyTest.xml` | the **GREEN** of the same gate: two concurrent requests with the same identity, 40 rounds, not one refusal |
+
+The full suite's XMLs can be reproduced with the command above and `--tests "io.matrix.*"`; they
+are not committed because a number that names 1359 files is a number a reviewer cannot open.
 
 ## What each file is
 
