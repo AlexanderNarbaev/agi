@@ -7,9 +7,29 @@ here.
 
 ---
 
+## Current strategic direction — Cognitive Development Program (proposed)
+
+**Scientific mission:** measurable development of grounded cognitive competence through perception, concept formation, explicit epistemic and hierarchical memory, world-model revision, method selection, authorized action, validated learning and locally sovereign federation. **Program proposal:** [COGNITIVE-DEVELOPMENT-PROGRAM.md](COGNITIVE-DEVELOPMENT-PROGRAM.md). **Acceptance criteria:** [CRJ-01-ACCEPTANCE.md](../engineering/CRJ-01-ACCEPTANCE.md). **Source-to-mission reconciliation:** [COGNITIVE-MISSION-RECONCILIATION.md](../engineering/COGNITIVE-MISSION-RECONCILIATION.md). **Agent operating commission:** [AGENT-COMMISSION-COGNITIVE-PROGRAM.md](../engineering/AGENT-COMMISSION-COGNITIVE-PROGRAM.md).
+
+This section is a **proposed direction awaiting owner review**, not evidence that the cognitive capability exists or authorization for a protected operation. The historical W46 objectives, tasks, and delivered EPISTEMIC-INTEGRITY results below remain evidence and are not rewritten retroactively. The full cognitive development program begins with source-grounded C0 assessment, then frozen CRJ-01 evaluation and a minimum approved real served journey; it does not begin by installing tools or creating a new cognitive runtime.
+
+| Program task | Dependency and work product | Acceptance / governing rule | Current state |
+|---|---|---|---|
+| COG-00 — source-grounded reachability | Read live callers, owners, Chain A/B Bridge and capability statuses; publish intended/implemented/served/verified map | No invented paths; existing `CAPABILITY-REGISTRY.yml` remains sole status registry | PROPOSED / not started |
+| COG-01 — preregister CRJ-01 | Two independent domains, A/B/C arms, oracle, frozen novel cases, resource and stopping budgets | No use of developer-inspected evaluations as new held-out data | PROPOSED / not started |
+| COG-02 — reliability and epistemic boundary | Reproduce idempotency changed-payload case; evaluate R-EPIS-10 and R-EPIS-11 | Failing negative control before remediation; owner RFC for frozen gate changes | PROPOSED / not started |
+| COG-03 — minimum served cognitive journey | Existing workbench/kernel/permissioned writer/observation/trace/restart | Real packaged request/response, independent effect and durable trace | BLOCKED pending design and authorization |
+| COG-04 — learning beyond exact replay | Versioned candidate rules/procedures compared against no-memory and cache baselines on different tasks | Independently measured gain or honest falsification; never call replay generalization | BLOCKED by COG-01 and COG-03 |
+| COG-05 — federated cognitive journey | Two local-first nodes with approved Bridge contracts and independent evaluation | Owner-authorized network boundary, conflict/revocation/duplicate tests | CONDITIONAL; do not activate yet |
+| COG-06 — measured substrate optimization | CPU reference, measured workload, candidate native/GPU/FPGA path | End-to-end improvement without quality regression | CONDITIONAL on demonstrated bottleneck |
+
+**Documentation hygiene stays mandatory but subordinate:** English-language tasks, reports and active revisions; reproducible commands with SHA/data hashes; one canonical register per subject; retained negative results; bounded multi-agent costs and VALUE_CHECKPOINT before every major continuation.
+
+---
+
 ## 1. The strategic objectives
 
-Three objectives, in priority order. Everything in the task list below serves one of them.
+The following three objectives were the **W46 engineering-consolidation goals**, not the complete scientific mission. Their historical detail is preserved to avoid rewriting accepted evidence; the proposed current direction is above.
 
 | the objective | what it means | how it is measured |
 |---|---|---|
@@ -17,7 +37,7 @@ Three objectives, in priority order. Everything in the task list below serves on
 | **O2 — the truth is one document per subject** | no subject has two documents that claim it, and every capability claim is tied to executed evidence | the number of superseded registries and the number of claims with no evidence |
 | **O3 — the work is reproducible** | a session's verification is a command with an exact denominator, and the machine's limits are written down | every claim of "passing" is backed by a JUnit XML or a gate's exit code |
 
-**What is deliberately NOT an objective:** adding a cognitive capability. The waves that
+**Historical W46 scope exclusion (NOT a constraint on subsequent owner-approved cognitive work):** adding a cognitive capability. The waves that
 changed the system's behaviour are done (W45.0–W45.2); this wave makes the project
 maintainable. A new kernel, a new memory store, a new conductor or an agent framework is out
 of scope until a concrete end-to-end use case and a safety contract exist for it.
@@ -26,7 +46,7 @@ of scope until a concrete end-to-end use case and a safety contract exist for it
 
 ## 2. The current milestone
 
-**M1 — the project can explain its own state.** From: a repository whose documentation
+**Historical W46/M1 engineering milestone — the project can explain its own state.** From: a repository whose documentation
 described the seventies of the project, whose architecture overview named no chain and no
 cycle, and whose current state existed in four documents of four different ages.
 
