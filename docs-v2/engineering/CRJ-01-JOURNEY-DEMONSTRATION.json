@@ -1,7 +1,7 @@
 {
   "record": "CRJ-01-JOURNEY-DEMONSTRATION",
   "date": "2026-11-20",
-  "commit": "b7bd1be4c38f7d51f0eb2462af695af148d729c1",
+  "commit": "6fc34218c04da0c189d2e82e20a01b95e9461920",
   "route": "POST /v1/workbench/workspaces/{id}/reports",
   "baseUrl": "http://127.0.0.1:9098",
   "workspace": "crj01-demo",
@@ -10,8 +10,8 @@
   "idempotencyKey": "crj01-reused-key",
   "milestone": "the CRJ-01 LOCAL milestone (ending after RESTART); the developmental milestone (arm C on different, unseen tasks) is NOT demonstrated here",
   "checks": {
-    "total": 16,
-    "passed": 16,
+    "total": 20,
+    "passed": 20,
     "failed": 0,
     "detail": [
       {
@@ -144,6 +144,14 @@
         }
       },
       {
+        "check": "the operator's command promotes the procedure from the observed journeys",
+        "passed": true,
+        "detail": {
+          "exitCode": 0,
+          "output": "promoted: true\nreason: the candidate agreed with the reference on all 5 held-out case(s) and was promoted\nprocedure: report.procedure.faca1d3b.23d63528 version 1.0.0\nvalidated on: 5 held-out case(s), agreement 1.0, kind INDEPENDENT\nlearned in episode(s): report-c2a.report.v1.b3ebd243c2bb5afb45bdc555,report-c2a.report.v1.695498a8f1fef9754009a9ea,report-c2a.report.v1.d4430fbb6093149f0596358c\nsupport"
+        }
+      },
+      {
         "check": "after a restart the repeated request is still a replay of the same artifact",
         "passed": true,
         "detail": {
@@ -158,6 +166,33 @@
         "detail": {
           "status": 409,
           "error": "REFUSED_IDENTITY"
+        }
+      },
+      {
+        "check": "the later question is answered by the served route",
+        "passed": true,
+        "detail": {
+          "status": 201
+        }
+      },
+      {
+        "check": "the kernel chose the PROMOTED PROCEDURE for the later question",
+        "passed": true,
+        "detail": {
+          "episode": "report-c2a.report.v1.d0b5422dc4022308b2fc5370",
+          "plan": "procedure.report.procedure.faca1d3b.23d63528: selected procedure.report.procedure.faca1d3b.23d63528@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 5 case(s); the cost came from DECLARED_COMPLEXITY and was weighed with a cost weight of 1.0;"
+        }
+      },
+      {
+        "check": "the answer cites evidence",
+        "passed": true,
+        "detail": {
+          "citedSources": [
+            "s-publication-540a1d14",
+            "s-secondary-report-b9f5c6f1",
+            "s-secondary-report-e1722b7b",
+            "s-secondary-report-f1e9a555"
+          ]
         }
       }
     ]
@@ -652,6 +687,32 @@
     }
   },
   "artifacts": [
-    "report-20c2f4420d15.md"
-  ]
+    "report-149f0596358c.md",
+    "report-20c2f4420d15.md",
+    "report-2308b2fc5370.md",
+    "report-5afb45bdc555.md",
+    "report-f9754009a9ea.md"
+  ],
+  "armC": {
+    "milestone": "the governed learned competence (arm C)",
+    "load": {
+      "status": 200
+    },
+    "observedEpisodes": 3,
+    "command": "matrix-core/build/quarkus-app/app/*:matrix-core/build/quarkus-app/lib/main/*:matrix-core/build/quarkus-app/lib/boot/* io.matrix.cli.LearnReportProcedureCommand --workspace photosynthesis --episodes report-c2a.report.v1.b3ebd243c2bb5afb45bdc555,report-c2a.report.v1.695498a8f1fef9754009a9ea,report-c2a.report.v1.d4430fbb6093149f0596358c --cases /home/alexandr-narbaev/Projects/agi/data/crj01-demo/arm-c-cases.tsv --quarantine /home/alexandr-narbaev/Projects/agi/data/crj01-demo/arm-c-quarantine.txt --knowledge-path /home/alexandr-narbaev/Projects/agi/data/crj01-demo/workbench.sqlite",
+    "exitCode": 0,
+    "output": "promoted: true\nreason: the candidate agreed with the reference on all 5 held-out case(s) and was promoted\nprocedure: report.procedure.faca1d3b.23d63528 version 1.0.0\nvalidated on: 5 held-out case(s), agreement 1.0, kind INDEPENDENT\nlearned in episode(s): report-c2a.report.v1.b3ebd243c2bb5afb45bdc555,report-c2a.report.v1.695498a8f1fef9754009a9ea,report-c2a.report.v1.d4430fbb6093149f0596358c\nsupport: 4 source(s), 15 of the workspace's 17 claim(s)\none measurement of the two readings of 'What is the role of water in photosynthesis?': full 5.319553 ms, restricted 5.176083 ms",
+    "stderr": "WARNING: A restricted method in java.lang.System has been called\nWARNING: java.lang.System::load has been called by org.sqlite.SQLiteJDBCLoader in an unnamed module (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/quarkus-app/lib/main/org.xerial.sqlite-jdbc-3.43.0.0.jar)\nWARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module\nWARNING: Restricted methods will be blocked in a future release unless native access is enabled",
+    "laterQuestion": {
+      "status": 201,
+      "disposition": "WRITTEN"
+    },
+    "plan": "procedure.report.procedure.faca1d3b.23d63528: selected procedure.report.procedure.faca1d3b.23d63528@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 5 case(s); the cost came from DECLARED_COMPLEXITY and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — no measured reliability for this method in this stratum; the reliability evidence was no measured reliability for this method in this stratum",
+    "citedSources": [
+      "s-publication-540a1d14",
+      "s-secondary-report-b9f5c6f1",
+      "s-secondary-report-e1722b7b",
+      "s-secondary-report-f1e9a555"
+    ]
+  }
 }

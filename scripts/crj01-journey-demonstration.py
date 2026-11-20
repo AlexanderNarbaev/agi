@@ -72,6 +72,23 @@ OTHER_QUESTION = "How does the lithosphere move beneath the plates?"
 KEY = "crj01-reused-key"
 READY_TIMEOUT_SECONDS = 600
 
+# the arm C leg — the workspace with four sources, the questions it is observed on, and the
+# questions the candidate must survive
+ARM_C_WORKSPACE = "photosynthesis"
+ARM_C_OBSERVED = [
+    "What is photosynthesis?",
+    "How do plants convert light into chemical energy?",
+    "What does oxygenic photosynthesis release?",
+]
+ARM_C_HELD_OUT = [
+    "What is the role of water in photosynthesis?",
+    "Which organisms perform oxygenic photosynthesis?",
+    "What is the Calvin-Benson cycle?",
+    "How does RuBisCO compete with oxygenation?",
+    "What limits photosynthetic output in angiosperms?",
+]
+ARM_C_LATER_QUESTION = "What are the light-dependent reactions?" 
+
 CHECKS: list[dict] = []
 
 
@@ -215,6 +232,8 @@ def main() -> int:
         "notVerified": [],
     }
 
+    arm_c: dict = {"milestone": "the governed learned competence (arm C)"}
+    episodes: list[str] = []
     server = start_server("one")
     try:
         # ── PERCEIVE / RESTORE ───────────────────────────────────────────────
@@ -317,8 +336,61 @@ def main() -> int:
               artifact.is_file() and sha256_of(artifact) == reported_digest,
               {"observed": sha256_of(artifact) if artifact.is_file() else None,
                "reported": reported_digest})
+
+        # ── ARM C, first beat — the serving process OBSERVES three journeys ──
+        status, loaded = request("POST", f"/v1/workbench/workspaces/{ARM_C_WORKSPACE}/load")
+        arm_c["load"] = {"status": status}
+        for question in ARM_C_OBSERVED:
+            status, observed = request("POST",
+                                       f"/v1/workbench/workspaces/{ARM_C_WORKSPACE}/reports",
+                                       {"question": question, "consent": True,
+                                        "idempotencyKey": "arm-c-observed-" + str(len(episodes))})
+            if status != 201:
+                arm_c["observations"] = {"status": status,
+                                         "error": (observed or {}).get("error")}
+                break
+            episodes.append("report-" + (observed or {}).get("taskId", ""))
+        arm_c["observedEpisodes"] = len(episodes)
     finally:
         stop_server(server)
+
+    # ── ARM C — the governed learned competence ─────────────────────────────
+    #
+    # The leg runs in three beats, and the order is the point:
+    #   1. the serving process OBSERVES three journeys and writes their traces;
+    #   2. the serving process STOPS, and the operator's command learns the procedure from
+    #      those traces — the store has one writer, and the command is that writer;
+    #   3. the serving process starts again and is asked a DIFFERENT question, which the
+    #      promoted procedure answers.
+    if len(episodes) == len(ARM_C_OBSERVED):
+        cases_file = DEMO / "arm-c-cases.tsv"
+        cases_file.write_text("\n".join(f"case-{index}\t{question}" for index, question
+                                          in enumerate(ARM_C_HELD_OUT)), encoding="utf-8")
+        quarantine_file = DEMO / "arm-c-quarantine.txt"
+        quarantine_file.write_text("", encoding="utf-8")
+        # the command runs ALONE, with the application's own jars on the classpath: booting
+        # the whole application would start the background trainers and write their state,
+        # which is not what an operator who asks for a promotion asked for
+        command = ["java", "-cp",
+                   "matrix-core/build/quarkus-app/app/*"
+                   ":matrix-core/build/quarkus-app/lib/main/*"
+                   ":matrix-core/build/quarkus-app/lib/boot/*",
+                   "io.matrix.cli.LearnReportProcedureCommand",
+                   "--workspace", ARM_C_WORKSPACE,
+                   "--episodes", ",".join(episodes),
+                   "--cases", str(cases_file),
+                   "--quarantine", str(quarantine_file),
+                   "--knowledge-path", str(STORE)]
+        learned = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
+        arm_c["command"] = " ".join(command[2:])
+        arm_c["exitCode"] = learned.returncode
+        arm_c["output"] = learned.stdout.strip()
+        if learned.stderr.strip():
+            arm_c["stderr"] = learned.stderr.strip()[-2000:]
+        check("the operator's command promotes the procedure from the observed journeys",
+              learned.returncode == 0 and "promoted: true" in learned.stdout,
+              {"exitCode": learned.returncode,
+               "output": learned.stdout.strip()[:400]})
 
     # ── RESTART — the trace and the artifact are durable ─────────────────────
     server = start_server("two")
@@ -338,6 +410,29 @@ def main() -> int:
         check("after a restart the changed-question conflict is still refused",
               status == 409 and (conflict or {}).get("error") == "REFUSED_IDENTITY",
               {"status": status, "error": (conflict or {}).get("error")})
+
+        # ── ARM C, after the restart — a DIFFERENT question, answered by the
+        #    procedure that was learned before the restart ────────────────────
+        status, later = request("POST", f"/v1/workbench/workspaces/{ARM_C_WORKSPACE}/reports",
+                                {"question": ARM_C_LATER_QUESTION, "consent": True,
+                                 "idempotencyKey": "arm-c-later-question"})
+        arm_c["laterQuestion"] = {"status": status,
+                                  "disposition": (later or {}).get("disposition")}
+        check("the later question is answered by the served route",
+              status == 201, {"status": status})
+        if status == 201:
+            episode = "report-" + str((later or {}).get("taskId", ""))
+            status, steps = request("GET", f"/v1/cognitive/trace/{episode}")
+            plan = next((step.get("detail") for step in (steps or [])
+                         if step.get("phase") == "PLAN"), "")
+            arm_c["plan"] = plan
+            check("the kernel chose the PROMOTED PROCEDURE for the later question",
+                  "procedure." in str(plan),
+                  {"episode": episode, "plan": str(plan)[:300]})
+            cited = [item.get("sourceId") for item in ((later or {}).get("evidence") or [])]
+            arm_c["citedSources"] = sorted(set(s for s in cited if s))
+            check("the answer cites evidence", len(arm_c["citedSources"]) > 0,
+                  {"citedSources": arm_c["citedSources"][:8]})
     finally:
         stop_server(server)
 
@@ -349,6 +444,7 @@ def main() -> int:
                         "failed": sum(1 for c in CHECKS if not c["passed"]),
                         "detail": CHECKS}
     report["artifacts"] = artifacts()
+    report["armC"] = arm_c
     report["notVerified"] = [
         "that the answer is TRUE — the report is a record of what the workspace said",
         "transfer to a DIFFERENT task: the reuse demonstrated here is the exact replay "
