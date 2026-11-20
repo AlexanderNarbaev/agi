@@ -775,6 +775,35 @@ evidence is a suspicion, and it is marked as such.
   The wave's wall-clock reads are annotated and decide nothing — that claim now holds **inside
   the gate's true reach** rather than inside its reduced one.
 
+### R-EPIS-13 — the asked-question write could not be upgraded, and the journey reported it as a broken output root
+
+- **the finding**: `KnowledgeStore.recordAskedQuestion` did a **read-then-write** in autocommit mode: it read the
+  record's count with a `SELECT` and wrote back one more with an `UPDATE`, and the `ResultSet` of the first was
+  still open when the second ran. The connection therefore held a **read snapshot** across the write. This store
+  shares its file with the cognitive store — which writes the journey's **trace** into it — so another connection can
+  commit between the read and the write. A snapshot another commit has invalidated cannot be **upgraded** to a write:
+  SQLite answers `SQLITE_BUSY` at once, and the **busy timeout does not apply** to that case, because waiting cannot
+  make a stale snapshot fresh. The store's own W51 doctrine says exactly this — and this method did not follow it.
+- **how it surfaced**: the report journey caught the store's `IllegalStateException` and answered **HTTP 503
+  `output_root_unavailable`** — a wrong name for a database that was busy. The refusal body carried
+  `detail=Failed to read the asked question`, and the cause chain behind it was
+  `SQLiteException :: [SQLITE_BUSY] The database file is locked`.
+- **the measurement**: the defect is **NOT** caused by CRJ-01's arm C. The **control** tree (the commit before arm C)
+  fails the same probe at the same rate: **32 of 40 rounds refused** on the control against **33 of 40** on the arm C
+  tree. It is a **pre-existing** defect of the served path, found because the full suite was run.
+- **the reproduction** (the retained RED artefact):
+  `docs-v2/engineering/evidence/CRJ-01-REPRODUCTION-concurrent-journey-sqlite-busy.xml` — one test, **one failure**.
+  The gate is `matrix-core/src/test/java/io/matrix/knowledge/ConcurrentReportJourneyTest.java`: two concurrent requests
+  with the same identity, **40 rounds**, and **not one refusal** is allowed. A single round proves nothing, because the
+  failure depends on the timing.
+- **the fix**: the read and the write are now **one transaction**. The transaction takes the write lock when it
+  **begins**, so the wait for it is a wait, the read that follows sees a database nobody else can change under it, and
+  the write that closes it needs no upgrade at all. It is IMMEDIATE because the connection is configured that way — the
+  same reason the store's other write paths use one.
+- **owner**: the coordinator (Level 2 — a change that reaches a persistent store).
+- **status**: **FIXED and PROVEN** — RED without the fix (one failure, the retained XML), GREEN with it, and the
+  journey's concurrent test in the route's own suite is green again.
+
 ### R-EPIS-12 — a full-suite run rewrites the retained C2A enrichment documents
 
 - **the finding**: the retained documents of the C2A wave are **written by the test suite**:

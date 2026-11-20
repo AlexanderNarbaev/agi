@@ -108,6 +108,25 @@ loop and its measurement, the counterfactual, the restart, the fingerprint, the 
 contract, the epistemic package, the live-store journey, the whole algorithms package (including
 `ProcedureStoreTest`) and the whole auditor package. Every XML is retained.
 
+### 3.4 What the FULL suite found, and what it cost to find it
+
+The narrow scope was green, so the **full** suite was run — 1358 suites, 9803 test methods. It
+failed **twice**, and neither failure was in the code this slice wrote. Both are recorded here
+because they are what the measurement actually found:
+
+| the failure | the attribution | the evidence |
+|---|---|---|
+| `ArtifactReportResourceTest > two concurrent requests with the same identity write one artifact` — HTTP **503** where 200/201 was expected | **A PRE-EXISTING DEFECT of the served path**, found because the full suite was run. The store's read-then-write held a read snapshot across the write, and the trace's own write into the **same SQLite file** invalidated it; SQLite cannot upgrade a stale snapshot and answers `SQLITE_BUSY` at once. The route then reported it as `output_root_unavailable` — a wrong name for a busy database | the **control tree** (the commit before arm C) fails the same probe at the same rate: **32 of 40 rounds** refused against **33 of 40** on the arm C tree. Fixed and proven: **RED** (`CRJ-01-REPRODUCTION-concurrent-journey-sqlite-busy.xml`, one test, one failure) → **GREEN** (`ConcurrentReportJourneyTest`, 40 rounds, not one refusal) |
+| `Exp324EndToEndForwardPassTest > endToEndForwardPassLatency` — the chain-forward median measured **2184 µs** against a **2000 µs** bound | **A LOAD-SENSITIVE WALL-CLOCK ASSERTION**, not a property of the code: the same test measures **1434 µs** in isolation, and the assertion is on the median of 50 passes — a statistic the test's own comment says is the right one for exactly this reason. The suite that failed it was running the model-heavy research suites concurrently | the isolated run's own output: `chain_forward distribution: median=1434.66 us p95=1907.99 us max=1980.52 us` |
+
+**The cost of the measurement:** the full suite is **32 minutes** on this machine (the control's
+14 minutes are not comparable — the control worktree had no model checkpoints, so it **skipped**
+the five heaviest research suites and did **not** run the latency test at all). It has to run
+**alone**: the two earlier failures of this session were produced by a run that overlapped
+another Gradle JVM, and a control run that overlapped one failed for the same reason and was
+discarded. **One heavy JVM at a time** is not a convenience here — it is the difference between a
+measurement and an anecdote.
+
 ---
 
 ## 4. What is NOT claimed, and the measured null
@@ -128,6 +147,7 @@ contract, the epistemic package, the live-store journey, the whole algorithms pa
 | the selection rests on the procedure's **declared** cost, not on a measured one | **OPEN** | the coordinator: the promotion should record the measured cost, or the selector should prefer a measured cost when it has one |
 | the journey does not open an **episode row**, so a workspace's journeys cannot be enumerated from the store | **OPEN** | the coordinator: the journey's trace writes events; opening the episode would make the learning path discoverable without the operator naming the ids |
 | the **quarantine list** is the caller's | **OPEN** | the programme: chain A needs the same role/quarantine discipline chain B has, or the caller's list must be audited |
+| the report journey could refuse a request with **HTTP 503 `output_root_unavailable`** because the **database was busy** — a wrong name for the cause, and a **pre-existing** defect of the served path (`R-EPIS-13`) | **FIXED and PROVEN** | the coordinator: the knowledge store's read-then-write is now one IMMEDIATE transaction. RED without the fix (the retained XML), GREEN with it. The control tree — the commit before arm C — fails the same probe at the same rate (32 of 40 rounds against 33 of 40), so arm C did not cause it |
 | a **full-suite run rewrites the retained C2A enrichment documents** (`R-EPIS-12`) | **OPEN** | the coordinator: the measurement must write into a temporary directory and the committed document must be copied out deliberately. Found while running the suite the fast lane derives when a changed file sits in the root package: the run left five of the owner's documents modified, and they were restored from `HEAD` |
 | the learning command's **first entry point booted the whole application**, which started the background trainers and rewrote their state in `data/` | **FIXED in this slice** | the command now runs **alone** through its own `main`, so promoting a procedure touches nothing but the knowledge database it was pointed at |
 | the arm C **cost** claim rests on one measurement over a 17-claim workspace | **OPEN** | the programme: the protocol's instrumented run |
@@ -143,7 +163,12 @@ is real and the benefit is not yet**. The next step is therefore **not** more of
 2. the **learned-claims** half of arm C, validated against that oracle rather than against the
    reference — which is what could make arm C **more correct** rather than merely cheaper;
 3. the two defects above (the declared cost, the episode row), which are cheap and make the
-   promotion's own evidence honest.
+   promotion's own evidence honest;
+4. the **load-sensitive latency assertions** of the research suite (`Exp324` among them): they
+   measure the machine and not the code, and they go red whenever the full suite runs the
+   model-heavy suites next to them. They are the suite's own known class (`CI-SIMPLIFICATION-RFC`
+   §7.1) and they are **not** silenced here — but the owner may want them to assert on a
+   property of the code rather than on a wall-clock bound.
 
 **Nothing here is pushed past the owner:** the merge, the review and the freeze's reviewer stay
 the owner's.

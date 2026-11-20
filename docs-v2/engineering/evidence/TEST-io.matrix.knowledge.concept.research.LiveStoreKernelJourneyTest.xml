@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="P2 — the closed loop on the owner's migrated live store" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-20T19:41:58.916Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.018">
+  <properties/>
+  <testcase name="the journey plans, acts, verifies, traces — and the next task reuses the trace" classname="io.matrix.knowledge.concept.research.LiveStoreKernelJourneyTest" time="0.018"/>
+  <system-out><![CDATA[[kernel-journey] the store: /home/alexandr-narbaev/Projects/agi/matrix-core/data/knowledge/workbench.sqlite — the workspaces [logic, photosynthesis]
+[kernel-journey] the first journey: the disposition WRITTEN, the artifact report-5dc15d596dd4.md, the steps 7
+[kernel-journey] the identity: c2a.report.v1.8aa09de685ef5dc15d596dd4
+[kernel-journey] the report name: report-5dc15d596dd4.md
+[kernel-journey] the retained: report-5dc15d596dd4.md over the fingerprint e22c275498616ed2479a637ed8eb626860728d7dca0e181148a6003962b0d1aa
+[kernel-journey] the fingerprint now: e22c275498616ed2479a637ed8eb626860728d7dca0e181148a6003962b0d1aa
+[kernel-journey] the second plan: report.journey.replay.v1: selected report.journey.replay.v1@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 3 case(s); the cost came from DECLARED_COMPLEXITY and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — no measured reliability for this method in this stratum; the reliability evidence was no measured reliability for this method in this stratum
+[kernel-journey] the second journey: the steps 14
+[kernel-journey] the second journey: the disposition REPLAYED, the method report.journey.replay.v1
+[kernel-journey] the store after: the concepts 37, the claims 24
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
