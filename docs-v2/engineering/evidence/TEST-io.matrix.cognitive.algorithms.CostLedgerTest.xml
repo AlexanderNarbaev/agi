@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.cognitive.algorithms.CostLedgerTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-11-20T15:25:44.206Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.006">
+  <properties/>
+  <testcase name="measureRecordsAFailureAndRethrows()" classname="io.matrix.cognitive.algorithms.CostLedgerTest" time="0.0"/>
+  <testcase name="measureReturnsWhatTheBodyProducedAndRecordsTheCost()" classname="io.matrix.cognitive.algorithms.CostLedgerTest" time="0.001"/>
+  <testcase name="aFailedCallIsCountedAsAFailureAndStillCostsWhatItCost()" classname="io.matrix.cognitive.algorithms.CostLedgerTest" time="0.0"/>
+  <testcase name="theVoidOverloadOfMeasureRecordsTheCostToo()" classname="io.matrix.cognitive.algorithms.CostLedgerTest" time="0.001"/>
+  <testcase name="anUnmeasuredMethodReportsTheUnmeasuredSentinel()" classname="io.matrix.cognitive.algorithms.CostLedgerTest" time="0.0"/>
+  <testcase name="aBlankMethodIdIsRefused()" classname="io.matrix.cognitive.algorithms.CostLedgerTest" time="0.0"/>
+  <testcase name="theMeanIsAlsoReportedInMilliseconds()" classname="io.matrix.cognitive.algorithms.CostLedgerTest" time="0.0"/>
+  <testcase name="theMeasuredValueIsTheMeanOverTheRecordedCalls()" classname="io.matrix.cognitive.algorithms.CostLedgerTest" time="0.0"/>
+  <testcase name="clearingForgetsEveryMeasurement()" classname="io.matrix.cognitive.algorithms.CostLedgerTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.cognitive.algorithms.MethodProfileDurabilityTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-11-20T15:25:44.234Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.176">
+  <properties/>
+  <testcase name="the profile of the methods is read back after the store is reopened" classname="io.matrix.cognitive.algorithms.MethodProfileDurabilityTest" time="0.109"/>
+  <testcase name="a process-local ledger still works, and says that it is process-local" classname="io.matrix.cognitive.algorithms.MethodProfileDurabilityTest" time="0.0"/>
+  <testcase name="the selector weighs the restored measurement, and the decision says so" classname="io.matrix.cognitive.algorithms.MethodProfileDurabilityTest" time="0.023"/>
+  <testcase name="a method that was never measured is still unmeasured after a restart" classname="io.matrix.cognitive.algorithms.MethodProfileDurabilityTest" time="0.021"/>
+  <testcase name="the measurement of one workspace does not leak into another" classname="io.matrix.cognitive.algorithms.MethodProfileDurabilityTest" time="0.021"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

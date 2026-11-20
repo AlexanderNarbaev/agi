@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.cognitive.algorithms.MembershipLookupTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-11-20T15:25:44.221Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.013">
+  <properties/>
+  <testcase name="theCorpusHasExactlyAsManyQueriesAsTheCapabilitiesDeclare()" classname="io.matrix.cognitive.algorithms.MembershipLookupTest" time="0.0"/>
+  <testcase name="theIndexedMethodsRefuseToRunWithoutAnIndex()" classname="io.matrix.cognitive.algorithms.MembershipLookupTest" time="0.002"/>
+  <testcase name="theSelectorWillNotOfferTheIndexedMethodsWhenTheIndexWasNotBuilt()" classname="io.matrix.cognitive.algorithms.MembershipLookupTest" time="0.001"/>
+  <testcase name="theSelectorOffersTheIndexedMethodsWhenTheIndexWasBuilt()" classname="io.matrix.cognitive.algorithms.MembershipLookupTest" time="0.004"/>
+  <testcase name="aProblemWithoutAnIndexCanBeBuiltWithoutOne()" classname="io.matrix.cognitive.algorithms.MembershipLookupTest" time="0.0"/>
+  <testcase name="theScanAndTheTrieAgreeOnEveryQuery()" classname="io.matrix.cognitive.algorithms.MembershipLookupTest" time="0.001"/>
+  <testcase name="theIndexMethodsNameTheScanAsTheirFallback()" classname="io.matrix.cognitive.algorithms.MembershipLookupTest" time="0.0"/>
+  <testcase name="theIndexedMethodsRefuseAnIndexOfTheWrongKind()" classname="io.matrix.cognitive.algorithms.MembershipLookupTest" time="0.002"/>
+  <testcase name="theBloomFilterNeverSaysAbsentForSomethingThatIsPresent()" classname="io.matrix.cognitive.algorithms.MembershipLookupTest" time="0.001"/>
+  <testcase name="theBloomFilterClearsTheAccuracyFloorItDeclares()" classname="io.matrix.cognitive.algorithms.MembershipLookupTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
