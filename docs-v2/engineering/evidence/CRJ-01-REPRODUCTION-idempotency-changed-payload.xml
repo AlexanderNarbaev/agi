@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.ReportIdempotencyConflictTest" tests="3" skipped="0" failures="1" errors="0" timestamp="2026-11-20T14:10:33.667Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.852">
+  <properties/>
+  <testcase name="a reused key with a different report name does not serve the earlier report" classname="io.matrix.knowledge.ReportIdempotencyConflictTest" time="0.618"/>
+  <testcase name="a reused key with a different question is never answered with the earlier report" classname="io.matrix.knowledge.ReportIdempotencyConflictTest" time="0.12">
+    <failure message="java.lang.AssertionError: [the answer to a different question is not the earlier journey's report] &#10;Expecting actual:&#10;  &quot;efe568902bf073cef8ade3b8adc49f31d590f6e4db92103e61224fd40dfca0c9&quot;&#10;not to be equal to:&#10;  &quot;efe568902bf073cef8ade3b8adc49f31d590f6e4db92103e61224fd40dfca0c9&quot;&#10;" type="java.lang.AssertionError">java.lang.AssertionError: [the answer to a different question is not the earlier journey's report] 
+Expecting actual:
+  &quot;efe568902bf073cef8ade3b8adc49f31d590f6e4db92103e61224fd40dfca0c9&quot;
+not to be equal to:
+  &quot;efe568902bf073cef8ade3b8adc49f31d590f6e4db92103e61224fd40dfca0c9&quot;
+
+	at io.matrix.knowledge.ReportIdempotencyConflictTest.aReusedKeyWithADifferentQuestionIsNeverAStaleSuccess(ReportIdempotencyConflictTest.java:151)
+</failure>
+  </testcase>
+  <testcase name="the exact replay of a request stays a correct replay" classname="io.matrix.knowledge.ReportIdempotencyConflictTest" time="0.102"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

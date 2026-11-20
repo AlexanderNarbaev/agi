@@ -33,6 +33,12 @@
 | mission-to-code reconciliation | [engineering/COGNITIVE-MISSION-RECONCILIATION.md](engineering/COGNITIVE-MISSION-RECONCILIATION.md) |
 | CRJ-01 reproducible acceptance | [engineering/CRJ-01-ACCEPTANCE.md](engineering/CRJ-01-ACCEPTANCE.md) |
 | English agent execution commission | [engineering/AGENT-COMMISSION-COGNITIVE-PROGRAM.md](engineering/AGENT-COMMISSION-COGNITIVE-PROGRAM.md) |
+| CRJ-01 execution plan, task DAG and budget | [engineering/CRJ-01-EXECUTION-PLAN.md](engineering/CRJ-01-EXECUTION-PLAN.md) |
+| CRJ-01 value checkpoint (the wave's result) | [engineering/CRJ-01-VALUE-CHECKPOINT.md](engineering/CRJ-01-VALUE-CHECKPOINT.md) |
+| CRJ-01 source-grounded reachability map (COG-00) | [engineering/CRJ-01-REACHABILITY.md](engineering/CRJ-01-REACHABILITY.md) |
+| CRJ-01 risk verdict: idempotency and the false-green instruments (COG-02) | [engineering/CRJ-01-RISK-VERDICT.md](engineering/CRJ-01-RISK-VERDICT.md) |
+| CRJ-01 preregistration draft, NOT frozen (COG-01) | [engineering/CRJ-01-PROTOCOL.md](engineering/CRJ-01-PROTOCOL.md) |
+| CRJ-01 packaged journey demonstration (the local milestone) | [engineering/CRJ-01-JOURNEY-DEMONSTRATION.json](engineering/CRJ-01-JOURNEY-DEMONSTRATION.json) |
 | текущее состояние проекта | [governance/PROJECT-STATE.md](governance/PROJECT-STATE.md) |
 | дорожная карта и задачи | [governance/ROADMAP.md](governance/ROADMAP.md) |
 | принятые решения | [governance/DECISION-REGISTER.md](governance/DECISION-REGISTER.md) |

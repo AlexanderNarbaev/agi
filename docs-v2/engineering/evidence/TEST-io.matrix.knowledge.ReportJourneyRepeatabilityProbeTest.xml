@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.ReportJourneyRepeatabilityProbeTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-20T14:11:38.904Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.194">
+  <properties/>
+  <testcase name="the read-only probe shows that the path repeats, and repeats itself unchanged" classname="io.matrix.knowledge.ReportJourneyRepeatabilityProbeTest" time="0.194"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
