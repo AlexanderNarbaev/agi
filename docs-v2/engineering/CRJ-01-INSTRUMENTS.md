@@ -155,6 +155,48 @@ paraphrase. The measurement is a property of the package.
 — three tests, zero failures: the paraphrase measurement, the production-id measurement, and the
 positive control.
 
+### 4.1 The second measurement — a corpus imported through the PRODUCTION path
+
+A conclusion that says "you need a new corpus" is only useful if the case author can tell
+whether the shape they are asked for **works**. So the opposite measurement was run: the
+repository's research pool — the corpus the C2A set was built from — imported through the
+**production acquisition path**, and the same oracle scored against the documents' **raw
+bytes**.
+
+| | |
+|---|---|
+| the claims the production importer derived | **540** |
+| the oracle **grounded** | **483** (89.4 %) |
+| the exceptions | **57** (10.6 %) |
+
+**What the exceptions are.** The importer builds a proposition from a document's **segment**,
+and a segment is sometimes **a heading and the paragraph that follows it**, a **flattened
+list**, or **boilerplate**:
+
+> *"Isothermal remanent magnetization Remanence that is acquired at a fixed temperature is
+> called isothermal remanent magnetization (IRM)."* — a heading and its paragraph.
+
+> *"See also Geodynamics – Study of dynamics of the Earth Compatibility (geochemistry) –
+> Distribution of trace elements in melt References"* — boilerplate.
+
+Those propositions are true of the document and are **not literal substrings** of its bytes.
+
+**So the corpus condition is satisfiable — but PER CASE, not per corpus.** The production path
+gives a corpus whose claims are **89 % literal spans**, and the case author must **select a
+gold that IS a span** and the builder must **prove it**, exactly as the repository's own
+held-out builder does for the claims it selects
+(`HeldOutSetBuilderTest`: "THE PROPOSITION IS VERBATIM IN ITS SOURCE"). The two measurements
+together give the case author a **recipe and a proven one**:
+
+| the corpus | the claims | the oracle |
+|---|---|---|
+| the bundled photosynthesis package | paraphrases | grounds **0** of 7 cited — **unusable** |
+| the production-imported research pool | **483 of 540 literal spans** | grounds the spans — **usable**, case by case |
+
+**The evidence:** `docs-v2/engineering/evidence/TEST-io.matrix.crj.evidence.ImportedCorpusSpanMeasurementTest.xml`
+— one test, zero failures: the oracle grounds the production path's claims, the great majority
+of them are literal spans, and every refusal is exactly a containment failure.
+
 ## 5. The freeze fields this closes, and the ones it does not
 
 | the field of §5.5 | the state |

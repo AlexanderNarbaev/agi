@@ -910,6 +910,14 @@ evidence is a suspicion, and it is marked as such.
 - **the evidence**: `docs-v2/engineering/evidence/TEST-io.matrix.crj.evidence.BundledCorpusSpanMeasurementTest.xml`
   — three tests, zero failures (the measurement, the production ids, the positive control). The
   analysis is in `docs-v2/engineering/CRJ-01-INSTRUMENTS.md` §4.
+- **the refinement, and it is per CASE rather than per corpus**: the production acquisition path
+  does **not** make every claim a literal span. Of the **540** claims it derived from the
+  research pool, the oracle grounded **483** and refused **57** — the propositions built from a
+  **heading and the paragraph that follows it**, a **flattened list**, or **boilerplate**. So the
+  corpus condition is satisfiable, but the case author must **select a gold that IS a span** and
+  the builder must **prove** it, exactly as the repository's own held-out builder does for the
+  claims it selects. The evidence is
+  `docs-v2/engineering/evidence/TEST-io.matrix.crj.evidence.ImportedCorpusSpanMeasurementTest.xml`.
 - **owner**: the programme — the **case author** must be given this before they start, and the
   corpus they build must carry the documents' text such that the claims' propositions are spans
   of it.
