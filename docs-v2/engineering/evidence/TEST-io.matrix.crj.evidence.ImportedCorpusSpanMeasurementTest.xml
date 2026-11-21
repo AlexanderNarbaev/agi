@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.crj.evidence.ImportedCorpusSpanMeasurementTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-21T10:21:01.138Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="5.432">
+  <properties/>
+  <testcase name="a claim the production importer derives is a verbatim span of its document" classname="io.matrix.crj.evidence.ImportedCorpusSpanMeasurementTest" time="5.431"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
