@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="io.matrix.crj.runner.Crj01ArmRunnerTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-21T13:29:03.069Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="19.765">
+<testsuite name="io.matrix.crj.runner.Crj01ArmRunnerTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-21T13:59:16.876Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="17.878">
   <properties/>
-  <testcase name="every case produces a row for every arm, and the evidence is written" classname="io.matrix.crj.runner.Crj01ArmRunnerTest" time="19.753"/>
+  <testcase name="every case produces a row for every arm, and the evidence is written" classname="io.matrix.crj.runner.Crj01ArmRunnerTest" time="17.878"/>
   <system-out><![CDATA[[CRJ-01] the evidence /home/alexandr-narbaev/Projects/agi/docs-v2/engineering/CRJ-01-EVIDENCE.json (36 rows)
-[CRJ-01] A/measured {cases=9, grounded=6, inapplicable=0, crashed=0, wallNanos=962773942, cpuNanos=849393261}
-[CRJ-01] B/novel {cases=9, grounded=0, inapplicable=9, crashed=0, wallNanos=79732679, cpuNanos=72483259}
-[CRJ-01] B/repeat {cases=9, grounded=6, inapplicable=0, crashed=0, wallNanos=112000224, cpuNanos=99824207}
-[CRJ-01] C/measured {cases=9, grounded=6, inapplicable=0, crashed=0, wallNanos=639038993, cpuNanos=558977719}
+[CRJ-01] A/measured {cases=9, grounded=6, inapplicable=0, crashed=0, wallNanos=536707243, cpuNanos=489312660}
+[CRJ-01] B/novel {cases=9, grounded=0, inapplicable=9, crashed=0, wallNanos=72174650, cpuNanos=64943921}
+[CRJ-01] B/repeat {cases=9, grounded=6, inapplicable=0, crashed=0, wallNanos=83711988, cpuNanos=73818029}
+[CRJ-01] C/measured {cases=9, grounded=6, inapplicable=0, crashed=0, wallNanos=567347020, cpuNanos=528280549}
 ]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

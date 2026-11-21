@@ -31,17 +31,25 @@ flock /tmp/gradle-matrix.lock ./gradlew :matrix-core:test \
 cp matrix-core/build/test-results/test/TEST-*.xml docs-v2/engineering/evidence/
 ```
 
-**The retained set is now 54 files: 51 suites, 297 tests, 0 failures, 0 errors, 0 skipped** (the
-refresh of 2026-11-20, after CRJ-01's arm C). It closes the two holes the release's own adversarial
+**The retained set is now 74 files: 71 GREEN suites, 352 tests, 0 failures, 0 errors, 0
+skipped** (the refresh of 2026-11-21, after CRJ-01's arm runner: the corpus report, the dev
+split's validator, the arm runner, the cost curve and the measured cost join the set). The
+remaining **3 files are the deliberate RED reproductions** — 6 tests, **4 of which fail on
+purpose**, because they are the record of a defect that was found: a concurrent journey
+refused for a busy database, an idempotency key reused with a different question, and a
+journey whose trace episode was not a real episode. **They are supposed to fail**; the GREEN
+file beside each one is the proof that the defect was fixed. It closes the two holes the release's own adversarial
 review found: the `io.matrix.knowledge.epistemic.*` package — the class that measures the P0.3
 metrics — had **no** retained XML at all, and the packaging claim had none either.
 
 ### The FULL suite, and what is NOT retained of it
 
-The full `matrix-core` suite was run as well — **1359 suites, 9808 test methods, 0 failures,
-0 errors, 23 skipped**, in **29 minutes 35 seconds** on the measuring machine. **Its XMLs are
-not all retained here**, and the reason is the directory's own rule: the retained set is the
-suites the conclusions **rest on**, and the full suite's 1359 XMLs are 5.5 MB of files whose
+The full `matrix-core` suite was run as well — **1373 suites, 9845 test methods, 0 failures,
+0 errors, 23 skipped**, in **33 minutes 14 seconds** on the measuring machine (the refresh of
+2026-11-21, after CRJ-01's arm runner; the previous refresh read **1359 suites, 9808 test
+methods, 0 failures, 0 errors, 23 skipped** in 29 minutes 35 seconds). **Its XMLs are not all
+retained here**, and the reason is the directory's own rule: the retained set is the suites the
+conclusions **rest on**, and the full suite's 1373 XMLs are 5.5 MB of files whose
 content the conclusions do not rest on — they rest on the **count**, and the count is recorded
 here and in `docs-v2/engineering/CRJ-01-ARM-C.md`.
 
@@ -53,7 +61,7 @@ What the full run **found** is retained, because it rests on it:
 | `TEST-io.matrix.knowledge.ConcurrentReportJourneyTest.xml` | the **GREEN** of the same gate: two concurrent requests with the same identity, 40 rounds, not one refusal |
 
 The full suite's XMLs can be reproduced with the command above and `--tests "io.matrix.*"`; they
-are not committed because a number that names 1359 files is a number a reviewer cannot open.
+are not committed because a number that names 1373 files is a number a reviewer cannot open.
 
 ## What each file is
 
@@ -69,6 +77,11 @@ are not committed because a number that names 1359 files is a number a reviewer 
 | `TEST-io.matrix.knowledge.concept.research.PrepositionalPhraseProbeTest.xml` | the prepositional rule | the false promotion and the controls that must stay accepted |
 | `TEST-io.matrix.knowledge.concept.research.ReferentKeyInstrumentTest.xml` | the identity instrument | the referents, the rejections, the definitions |
 | `TEST-io.matrix.knowledge.epistemic.EpistemicBaselineTest.xml` | the P0.3 baseline | the sealed EPISTEMIC set's freeze digest, the per-case dispositions and the five metrics |
+| `TEST-io.matrix.crj.corpus.Crj01CorpusReportBuilder.xml` | the corpus report | the pool's usable remainder: **540 claims, 483 verbatim spans, 470 fresh, 413 both** — and the builder's own assertion that it read the regression sets at all |
+| `TEST-io.matrix.crj.corpus.Crj01DevSplitValidatorTest.xml` | the dev split's validator | every rule of the protocol's §5.4 on the split: the gold verbatim in its document, the gold a production claim, no four-token question overlap with the three regression sets, no regression gold, the classes present, the keys fresh |
+| `TEST-io.matrix.crj.runner.Crj01ArmRunnerTest.xml` | the arm runner | **36 rows** — one per (case, arm) — the arms' groundings and their wall and CPU times, and the evidence artefact's byte-for-byte reproduction |
+| `TEST-io.matrix.cognitive.report.ArmCCostMeasurementTest.xml` | the cost curve | the saving against the support's fraction of the workspace: **78 %** at a sixth of a 540-claim corpus, **≈0 %** at all of it |
+| `TEST-io.matrix.cognitive.report.ReportProcedureMeasuredCostTest.xml` | the measured cost | the promotion records the cost it measured, the method declares it, and the decision's own reason names the basis `MEASURED_COMPLEXITY` |
 | `TEST-io.matrix.knowledge.epistemic.HardReviewLeakagePlantTest.xml` | the leakage guard's exemption | the clean copy passing and the planted question caught — an **assertion**, not a print |
 | `TEST-io.matrix.knowledge.HardReviewP1DefinitionsTest.xml` | the definition half | the migration rehearsed on a copy of the owner's live store, and its idempotence |
 | `TEST-io.matrix.packaging.PackagedSqliteNativeLibraryTest.xml` | the packaging | the packaged jar carries the SQLite native library for this platform |

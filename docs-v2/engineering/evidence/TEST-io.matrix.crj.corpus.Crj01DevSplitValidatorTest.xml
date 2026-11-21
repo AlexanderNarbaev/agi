@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.crj.corpus.Crj01DevSplitValidatorTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-21T13:59:06.731Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="5.002">
+  <properties/>
+  <testcase name="the dev split holds every rule the protocol names, and the oracle grounds it" classname="io.matrix.crj.corpus.Crj01DevSplitValidatorTest" time="5.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
