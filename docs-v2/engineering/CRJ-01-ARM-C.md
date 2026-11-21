@@ -815,3 +815,47 @@ which is exactly the order §5.6 prescribes.
 `docs-v2/engineering/CRJ-01-FREEZE-RECORD.json`.
 
 ---
+
+## 15. The learned claim's contribution, SCORED (2026-11-21)
+
+**The gap this closes.** The learned claim reaches the served answer — proven by
+`LearnedClaimServingTest` — but its contribution was **not scored**: nothing measured
+whether the claim the system adds to the evidence is a claim that **grounds**, nor whether
+adding it ever makes an answer **wrong**. A learned claim that is cited but ungrounded is a
+citation the reader cannot check, and one that makes an answer wrong is worse than none.
+
+**The measurement.** Over the research pool (seven documents, **one learned claim per
+document**, each a claim whose proposition occurs **verbatim** in its document's text — the
+containment gate the learner enforces), **thirteen** questions asked through the served
+route, and every citation scored by the **source-span oracle's own rule**: the cited
+proposition is **byte-identical** to the proposition of the claim in its **own** document,
+and that document literally contains it — the same rule the domain-A arms are scored by.
+
+| | |
+|---|---|
+| the learned claims cited | **20** |
+| **grounded** | **20** — every one, by the oracle's rule |
+| **ungrounded** | **0** |
+| cited **out of scope** (the claim's document not among the answer's sources) | **0** |
+| **ADDED** by the learned claim — the reference **alone** did not carry it | **14** of 20 |
+
+**What that says.** The learned claim's contribution is **grounded every time it is
+cited**, and the narrowed scope rule (R-EPIS-16) **holds on the served path**: no citation
+was made for a claim whose document the answer never drew on.
+
+**And the capability is real and measured.** **14 of the 20 citations are evidence the
+reference alone did not carry** — the learned claim added claims to the evidence of a
+question the reference answered without them. That is the contract's **REUSE** row, which
+asks for "a **different related task** that retrieves the accepted knowledge and **changes
+the result**", stated as a number rather than as a claim: **70 %** of the citations the
+learned claim contributed were ones the reference did not make.
+
+**What it does not say.** This is the **research pool**, not the sealed set: the questions
+are the pool's own, and the split is not an author's. The **precision** of the serving rule
+on a *sealed* set — how often a learned claim is cited where it should not have been — is
+what the owner's commission still has to say. What is established here is that the
+mechanism's contribution **grounds** and that it **changes** the evidence.
+
+**The evidence:** `docs-v2/engineering/evidence/TEST-io.matrix.cognitive.report.LearnedClaimOracleScoringTest.xml`.
+
+---
