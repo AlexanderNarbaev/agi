@@ -1032,3 +1032,31 @@ evidence is a suspicion, and it is marked as such.
 - **owner**: the programme — the wider class of load-sensitive assertions is unchanged and
   is the owner's decision whether to re-specify it.
 - **status**: **CLOSED** for this test; the wider class is open and already on the register.
+
+### R-EPIS-20 — arm C's restricted support changes the ANSWER's epistemic disposition
+
+- **the finding**: the dev run's metrics (M-A2 = 0/6, M-A4 = 0/8) exposed something the
+  grounding counts alone could not: **arm A and arm C report a DIFFERENT epistemic
+  disposition for the SAME case**. D-A06 — a premise the corpus does not support — is
+  **AMBIGUOUS / ANSWERED** on arm A and **REFUTED / ABSTAINED** on arm C.
+- **the mechanism**: the premise semantics judges a premise against the accounts the
+  workspace holds about the question's subject, and arm C's answer is read from a **narrower
+  support set** — so the premise checker sees a **different account set**. Arm C is not
+  merely a cheaper way to produce the same answer; on a premise-bearing question it
+  **believes differently**.
+- **the consequence for the programme**: the hypothesis arm C is built on is that a narrower
+  reading answers the same question **for less**. If the narrower reading changes the
+  disposition, then a comparison that scores **grounding alone** compares two different
+  systems, and any advantage could be an artefact of the narrow support rather than of the
+  learned competence. **The sealed comparison must score the DISPOSITION as well as the
+  grounding** — which is what M-A2 and M-A4 are for.
+- **the second finding, and it is about the DEV SPLIT, not the product**: the split's three
+  premise-bearing subjects are classified **AMBIGUOUS**, because the corpus's accounts of
+  plate tectonics disagree with each other — which is the premise semantics' designed
+  behaviour for a question about a subject whose accounts disagree. The dev split's cases
+  must choose subjects whose accounts do NOT disagree, and the **sealed** split's author
+  must do the same before the freeze. The reviewer's §5.4 corpus-containment check is where
+  that is caught.
+- **the owner**: the case author and the freezing reviewer.
+- **status**: **OPEN as a measurement constraint**; the metrics that expose it are built and
+  the constraint is written into the report.

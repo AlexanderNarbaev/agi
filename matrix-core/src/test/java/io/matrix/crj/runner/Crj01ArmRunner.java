@@ -102,13 +102,20 @@ final class Crj01ArmRunner {
                String methodId,
                String disposition,
                String epistemicDisposition,
+               String premiseStatus,
                boolean grounded,
                String oracleOutcome,
                String oracleReason,
                List<String> citedClaimIds,
+               int citations,
+               int goldPropositionsMatched,
                long wallNanos,
                long cpuNanos,
                boolean inapplicable,
+               boolean effectVerified,
+               String artifactSha256,
+               String traceRef,
+               int conflictCount,
                String reason,
                String error) {
         Row {
@@ -430,9 +437,9 @@ final class Crj01ArmRunner {
             long wall = System.nanoTime() - wallStart;
             long cpu = CPU.getCurrentThreadCpuTime() - cpuBefore;
             // a CRASH is a ROW, not a missing row: the protocol retains it with its error
-            return new Row(testCase.id(), arm.name(), variant, methodId, "", "", false,
-                    "CRASHED", failure.getMessage(), List.of(), wall, cpu, true,
-                    "the arm threw", failure.toString());
+            return new Row(testCase.id(), arm.name(), variant, methodId, "", "", "", false,
+                    "CRASHED", failure.getMessage(), List.of(), 0, 0, wall, cpu, true, false,
+                    "", "", 0, "the arm threw", failure.toString());
         }
         long wall = System.nanoTime() - wallStart;
         long cpu = CPU.getCurrentThreadCpuTime() - cpuBefore;
@@ -457,9 +464,11 @@ final class Crj01ArmRunner {
                     + "refused: " + String.join("; ", outcome.refusalReasons());
         }
         return new Row(testCase.id(), arm.name(), variant, outcome.methodId(),
-                outcome.disposition(), outcome.epistemicDisposition(), verdict.grounded(),
-                verdict.outcome().name(), verdict.reason(),
-                outcome.evidenceClaimIds(), wall, cpu, inapplicable, reason, null);
+                outcome.disposition(), outcome.epistemicDisposition(), outcome.premiseStatus(),
+                verdict.grounded(), verdict.outcome().name(), verdict.reason(),
+                outcome.evidenceClaimIds(), cited.size(), matchedGoldPropositions(testCase, cited),
+                wall, cpu, inapplicable, outcome.effectVerified(), outcome.sha256(),
+                String.join(",", outcome.tracePhases()), outcome.conflictCount(), reason, null);
     }
 
     /**
@@ -500,6 +509,31 @@ final class Crj01ArmRunner {
         var outcome = result.outcome();
         return armOracle.score(gold, new SourceSpanOracle.ServedAnswer(outcome.disposition(),
                 outcome.epistemicDisposition(), outcome.premiseStatus(), cited, List.of()));
+    }
+
+    /**
+     * How many of the case's gold propositions the answer cited, byte-identically.
+     *
+     * <p>This is the numerator of the protocol's M-A1 and the denominator of M-A3, and it is
+     * counted here, against the ANSWER's own cited claims — not against the oracle's
+     * verdict, so that a row carries the number a reader can check.</p>
+     *
+     * @param testCase the case
+     * @param cited    the claims the answer cited
+     * @return the count
+     */
+    private static int matchedGoldPropositions(Case testCase,
+                                               List<SourceSpanOracle.CitedClaim> cited) {
+        int matched = 0;
+        for (SourceSpanOracle.CitedClaim claim : cited) {
+            for (String gold : testCase.goldPropositions()) {
+                if (gold.equals(claim.proposition())) {
+                    matched++;
+                    break;
+                }
+            }
+        }
+        return matched;
     }
 
     /**

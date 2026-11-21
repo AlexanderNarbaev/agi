@@ -522,3 +522,90 @@ provenance. **Without this, the protocol's own comparison could not have been ma
 — one test, zero failures; the rows are in `docs-v2/engineering/CRJ-01-EVIDENCE.json`.
 
 ---
+
+## 11. The metrics — the protocol's verdicts, and what they found (2026-11-21)
+
+**A run that produces rows nobody turns into a verdict is not a measurement.** The protocol
+defines its metrics with their numerators, their denominators and the exact population each
+denominator counts (§6), the row schema the evidence artefact must carry (§6.3), and the
+uncertainty treatment for a small sample (§6.4). `Crj01Metrics` computes all of it from the
+evidence artefact — so the same code reads the dev run's rows and the sealed run's rows.
+
+### 11.1 What it computes
+
+- the **paired outcome format** (§6.3): one row per (case, arm) with `outcome` ∈ {CORRECT,
+  INCORRECT, REFUSED, INAPPLICABLE, ERROR} and `oracle_verdict` ∈ {GROUNDED,
+  REFUSED_CORRECTLY, DISPOSITION_MISMATCH, UNGROUNDED, N/A}. **No row is deleted**: a crash
+  is a row with `outcome = ERROR` and the exception text;
+- the **domain-A metrics** M-A1 … M-A6, each with its numerator and its denominator, and
+  **no metric reported without its denominator** (§6.4.3);
+- the **paired difference** Δ with a **seeded bootstrap percentile interval** (B = 10000
+  resamples, the [2.5, 97.5] percentiles) for Δ(C − A) and for Δ(C − B) on the **novel**
+  subset, with the repeat subset reported separately (§6.4.1);
+- the **exact McNemar test** with its **power limitation printed next to the p-value**: at
+  n = 18 the test reaches p ≤ 0.05 only with at least 6 discordant pairs and **all** of them
+  favouring one arm (§6.4.2).
+
+**The machinery reproduces the protocol's own worked examples**: 6/6 discordant pairs → p =
+0.03125, 5/6 → p = 0.21875 — and the dev run's Δ(C − B) on the novel subset **is** a 6/0
+case, so the test returns **0.031250** on its own.
+
+### 11.2 The dev run's metrics
+
+| metric | numerator / denominator | what it says |
+|---|---|---|
+| **M-A1** grounded answer rate | **12/18** | arm A grounded 6 of 9 and arm C grounded 6 of 9 — the mechanism does not cost correctness |
+| **M-A2** abstention correctness | **0/6** | the premise-bearing negative classes were **not** refused |
+| **M-A3** unsupported-answer rate | **0/18** | every measured answer cited at least one gold |
+| **M-A4** premise-disposition accuracy | **0/8** | no premise-bearing case carried the expected disposition |
+| **M-A5** conflict-surfacing rate | **0/0** | the dev split holds no CONTRADICTORY case — the denominator is right |
+| **M-A6** effect-verification rate | **18/18** | every written artifact was independently verified |
+
+| the paired difference | n | wins | losses | Δ | the bootstrap interval | McNemar |
+|---|---|---|---|---|---|---|
+| **C − A** (all cases) | 9 | 0 | 0 | **0.000** | [0.000, 0.000] | — (no discordant pairs) |
+| **C − B** (the **novel** subset) | 9 | 6 | 0 | **0.667** | [0.333, 1.000] | **0.031250** |
+| **C − B** (the **repeat** subset) | 9 | 0 | 0 | 0.000 | [0.000, 0.000] | — |
+
+**The C − A row is the honest one**: on the dev split the two arms are **indistinguishable**,
+there are **no discordant pairs**, and the exact test has **no power at all** — which the
+row says in words, because a p-value that is not significant with no discordant pairs says
+nothing.
+
+### 11.3 The finding the metrics found — and it is a confound, not a win
+
+**Arm A and arm C report DIFFERENT epistemic dispositions for the SAME case.**
+
+| case | arm A | arm C |
+|---|---|---|
+| **D-A06** (an UNSUPPORTED premise) | premise **AMBIGUOUS**, epistemic ANSWERED | premise **REFUTED**, epistemic **ABSTAINED** |
+| D-A05, D-A07, D-A08 | premise AMBIGUOUS | premise AMBIGUOUS |
+
+**The mechanism is the restricted support.** The premise semantics judges a premise against
+the accounts the workspace holds about the question's subject — and arm C's answer is read
+from a **narrower** support set, so the premise checker sees a **different account set**.
+That is not a cost optimisation with the same answer: the arm C path is **not merely
+cheaper, it believes differently**.
+
+**Why this matters to the programme.** The hypothesis arm C is built on is that a narrower
+reading answers the same question *for less*. If the narrower reading changes the
+**epistemic disposition**, then a comparison of the two arms on **grounding alone** is
+measuring two different systems, and any advantage arm C shows could be an artefact of the
+narrower support rather than of the learned competence. **The sealed comparison must
+therefore score the DISPOSITION as well as the grounding** — which is exactly what M-A2 and
+M-A4 are for, and exactly why the protocol put them there.
+
+**And the dev split's own negative cases are not passing**: M-A2 = 0/6 and M-A4 = 0/8,
+because the premise semantics classifies all three premise-bearing subjects as **AMBIGUOUS**
+(the corpus's accounts of plate tectonics disagree with each other, which is the semantics'
+designed behaviour for a question about a subject whose accounts disagree). **That is a
+property of the DEV SPLIT's authoring, not of the product**: the split's premise-bearing
+cases need subjects whose accounts do NOT disagree. The sealed split's author must choose
+subjects accordingly — and the split's classes must be checked against the corpus's
+behaviour before the freeze, which is what the reviewer's §5.4 corpus-containment check is
+for.
+
+**The evidence:** `docs-v2/engineering/evidence/TEST-io.matrix.crj.runner.Crj01MetricsTest.xml`
+— two tests, zero failures; the numbers are in `docs-v2/engineering/CRJ-01-METRICS.json`.
+
+---
