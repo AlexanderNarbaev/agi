@@ -1,0 +1,211 @@
+{
+  "split": "crj-01-dev-split",
+  "version": "1.0",
+  "date": "2026-11-21",
+  "domain": "A",
+  "author": "the solver's author - the CRJ-01 protocol's §5.1 dev-split author, NOT the sealed split's author",
+  "corpus": "research-pool/plate-tectonics",
+  "acquisitionPath": "the PRODUCTION import path: workbench.importDocument(workspace, path, file, language)",
+  "purpose": "the DEV split: arm development, procedure validation and threshold-free debugging. It is NOT the sealed split and is never evidence of arm C's advantage - the protocol's §5.1 names an author who implements no arm for that",
+  "note": "the golds are PRODUCTION claim ids of the imported documents, and every gold proposition occurs VERBATIM in its document's bytes - the property the source-span oracle grounds a positive case on. Every gold was checked to be FRESH: its proposition is not the gold proposition of the 29-case development set, the C2A 38-case set or the EPISTEMIC 16-case set",
+  "cases": [
+    {
+      "id": "D-A01",
+      "class": "POSITIVE",
+      "level": "INTRODUCTORY",
+      "question": "Who first proposed in 1915 that the continents had once been joined together and had since moved apart?",
+      "expectedDisposition": "ANSWERED",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedProvenance": null,
+      "corpusFile": "wikipedia-paleomagnetism.md",
+      "corpusSha256": "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+      "goldClaims": [
+        {
+          "claimId": "clm-31692810",
+          "proposition": "Alfred Wegener first proposed in 1915 that continents had once been joined together and had since moved apart.",
+          "sourceId": "src-15e8ee0d",
+          "corpusFile": "wikipedia-paleomagnetism.md",
+          "corpusSha256": "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00"
+        }
+      ],
+      "idempotencyKey": "crj01-dev-D-A01-023ec4d19916"
+    },
+    {
+      "id": "D-A02",
+      "class": "POSITIVE",
+      "level": "INTRODUCTORY",
+      "question": "What did Morley, Vine and Matthews show in 1963 about marine magnetic anomalies?",
+      "expectedDisposition": "ANSWERED",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedProvenance": null,
+      "corpusFile": "wikipedia-paleomagnetism.md",
+      "corpusSha256": "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+      "goldClaims": [
+        {
+          "claimId": "clm-42557d4a",
+          "proposition": "Then in 1963, Morley, Vine and Matthews showed that marine magnetic anomalies provided evidence for seafloor spreading.",
+          "sourceId": "src-15e8ee0d",
+          "corpusFile": "wikipedia-paleomagnetism.md",
+          "corpusSha256": "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00"
+        }
+      ],
+      "idempotencyKey": "crj01-dev-D-A02-df98f910cd6e"
+    },
+    {
+      "id": "D-A03",
+      "class": "POSITIVE",
+      "level": "INTRODUCTORY",
+      "question": "Which geophysical record first demonstrated the movement of continents, and which demonstrated the spreading of the seafloor?",
+      "expectedDisposition": "ANSWERED",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedProvenance": null,
+      "corpusFile": "wikipedia-paleomagnetism.md",
+      "corpusSha256": "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+      "goldClaims": [
+        {
+          "claimId": "clm-5325ffd8",
+          "proposition": "Apparent polar wander paths provided the first clear geophysical evidence for continental drift, while marine magnetic anomalies did the same for seafloor spreading.",
+          "sourceId": "src-15e8ee0d",
+          "corpusFile": "wikipedia-paleomagnetism.md",
+          "corpusSha256": "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00"
+        }
+      ],
+      "idempotencyKey": "crj01-dev-D-A03-64cec9aa2d29"
+    },
+    {
+      "id": "D-A04",
+      "class": "POSITIVE",
+      "level": "INTRODUCTORY",
+      "question": "How does magnetostratigraphy determine the age of rocks?",
+      "expectedDisposition": "ANSWERED",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedProvenance": null,
+      "corpusFile": "wikipedia-paleomagnetism.md",
+      "corpusSha256": "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+      "goldClaims": [
+        {
+          "claimId": "clm-b095bbc0",
+          "proposition": "Magnetostratigraphy uses the polarity reversal history of Earth's magnetic field recorded in rocks to determine the age of those rocks.",
+          "sourceId": "src-15e8ee0d",
+          "corpusFile": "wikipedia-paleomagnetism.md",
+          "corpusSha256": "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00"
+        }
+      ],
+      "idempotencyKey": "crj01-dev-D-A04-b42f564d4392"
+    },
+    {
+      "id": "D-A05",
+      "class": "POSITIVE",
+      "level": "INTRODUCTORY",
+      "question": "Which two processes are thought to be responsible for spreading at mid-ocean ridges?",
+      "expectedDisposition": "ANSWERED",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedProvenance": null,
+      "corpusFile": "wikipedia-mid-ocean-ridge.md",
+      "corpusSha256": "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+      "goldClaims": [
+        {
+          "claimId": "clm-108a2420",
+          "proposition": "Two processes, ridge-push and slab pull, are thought to be responsible for spreading at mid-ocean ridges.",
+          "sourceId": "src-1fa1d2e1",
+          "corpusFile": "wikipedia-mid-ocean-ridge.md",
+          "corpusSha256": "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd"
+        }
+      ],
+      "idempotencyKey": "crj01-dev-D-A05-7e08bff798bb"
+    },
+    {
+      "id": "D-A06",
+      "class": "UNSUPPORTED_PREMISE",
+      "level": "INTRODUCTORY",
+      "question": "Given that the Earth's magnetic field reverses on a fixed two-thousand-year cycle, what is known about the Brunhes-Matuyama reversal?",
+      "expectedDisposition": "UNSUPPORTED",
+      "positive": false,
+      "expectedField": "PREMISE",
+      "expectedProvenance": null,
+      "corpusFile": "wikipedia-paleomagnetism.md",
+      "corpusSha256": "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+      "goldClaims": [
+        {
+          "claimId": "clm-2c356bef",
+          "proposition": "Japanese geophysicist Motonori Matuyama showed in the late 1920s that Earth's magnetic field reversed in the mid-Quaternary, a reversal now known as the Brunhes–Matuyama reversal.",
+          "sourceId": "src-15e8ee0d",
+          "corpusFile": "wikipedia-paleomagnetism.md",
+          "corpusSha256": "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00"
+        }
+      ],
+      "idempotencyKey": "crj01-dev-D-A06-f16406ba6408"
+    },
+    {
+      "id": "D-A07",
+      "class": "REFUTED_PREMISE",
+      "level": "INTRODUCTORY",
+      "question": "Since plate motion is entirely driven by the weight of cold, dense plates sinking into the mantle at oceanic trenches, what drives the spreading at mid-ocean ridges?",
+      "expectedDisposition": "REFUTED",
+      "positive": false,
+      "expectedField": "PREMISE",
+      "expectedProvenance": "src-da805ddd",
+      "corpusFile": "wikipedia-slab-pull.md",
+      "corpusSha256": "3bddce4afba68cf2bf424083acad6f92bc048de755df0b172468503a3111bc30",
+      "goldClaims": [
+        {
+          "claimId": "clm-9d036297",
+          "proposition": "Plate motion is partly driven by the weight of cold, dense plates sinking into the mantle at oceanic trenches.",
+          "sourceId": "src-da805ddd",
+          "corpusFile": "wikipedia-slab-pull.md",
+          "corpusSha256": "3bddce4afba68cf2bf424083acad6f92bc048de755df0b172468503a3111bc30"
+        }
+      ],
+      "idempotencyKey": "crj01-dev-D-A07-d27a0031be6d"
+    },
+    {
+      "id": "D-A08",
+      "class": "UNSUPPORTED_PREMISE",
+      "level": "INTRODUCTORY",
+      "question": "Given that every rock on Earth preserves at least three magnetic polarity reversals, what does the record of geomagnetic reversals provide?",
+      "expectedDisposition": "UNSUPPORTED",
+      "positive": false,
+      "expectedField": "PREMISE",
+      "expectedProvenance": null,
+      "corpusFile": "wikipedia-paleomagnetism.md",
+      "corpusSha256": "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+      "goldClaims": [
+        {
+          "claimId": "clm-630c72e8",
+          "proposition": "The record of geomagnetic reversals preserved in volcanic and sedimentary rock sequences (magnetostratigraphy) provides a time-scale that is used as a geochronologic tool.",
+          "sourceId": "src-15e8ee0d",
+          "corpusFile": "wikipedia-paleomagnetism.md",
+          "corpusSha256": "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00"
+        }
+      ],
+      "idempotencyKey": "crj01-dev-D-A08-94dd5957b499"
+    },
+    {
+      "id": "D-A09",
+      "class": "PARAPHRASE",
+      "level": "INTRODUCTORY",
+      "question": "The continents were once joined together and have since moved apart - who first proposed this, and in what year?",
+      "expectedDisposition": "ANSWERED",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedProvenance": null,
+      "corpusFile": "wikipedia-paleomagnetism.md",
+      "corpusSha256": "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+      "goldClaims": [
+        {
+          "claimId": "clm-31692810",
+          "proposition": "Alfred Wegener first proposed in 1915 that continents had once been joined together and had since moved apart.",
+          "sourceId": "src-15e8ee0d",
+          "corpusFile": "wikipedia-paleomagnetism.md",
+          "corpusSha256": "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00"
+        }
+      ],
+      "idempotencyKey": "crj01-dev-D-A09-71c02160d449"
+    }
+  ]
+}

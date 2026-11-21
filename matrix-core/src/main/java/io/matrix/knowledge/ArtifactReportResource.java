@@ -83,6 +83,22 @@ public class ArtifactReportResource {
     public ArtifactActionService actions;
 
     /**
+     * The budget the journey runs under.
+     *
+     * <p><b>Why this is a field and not a constant.</b> The shipped route runs unbounded:
+     * a report is a local write and the server's own limits govern it. But the CRJ-01
+     * protocol requires that every arm of a comparison runs under an <b>identical and
+     * explicit</b> budget, so that a difference between the arms is a difference between the
+     * arms and not between their budgets. An unbounded run cannot be compared with an
+     * unbounded run and still answer "what would this have cost".</p>
+     *
+     * <p>The default is unbounded, so the shipped behaviour is unchanged; a caller that
+     * measures sets it before the journey runs. The field is public for the same reason as
+     * {@link #workbench}.</p>
+     */
+    public ComputeBudget budget = ComputeBudget.unbounded();
+
+    /**
      * The kernel's plan for the journey.
      *
      * <p>P2 — the route does not decide how the report is produced. It asks the kernel's
@@ -333,7 +349,7 @@ public class ArtifactReportResource {
                 identity, reportName, level, workbench, actions.writer(), retained, fingerprint,
                 learnedClaims);
         ProblemRequest planRequest = new ProblemRequest(AlgorithmFamilies.KNOWLEDGE_REPORT, problem,
-                facts, ComputeBudget.unbounded());
+                facts, budget);
         ReportJourneyPlanner.Plan plan = planner.plan(planRequest, forcedMethodId,
                 procedureMethods(workspaceId, procedures));
         if (plan.refused()) {
@@ -344,7 +360,7 @@ public class ArtifactReportResource {
         ReportJourney.Result result;
         try {
             result = planner.measure(plan.method().capability().id(),
-                    () -> plan.method().execute(problem, ComputeBudget.unbounded()));
+                    () -> plan.method().execute(problem, budget));
         } catch (AlgorithmRefusalException refused) {
             // the method refused: its own preconditions do not hold for this request. A
             // forced method is refused exactly like a chosen one — forcing chooses what

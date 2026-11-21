@@ -49,6 +49,9 @@ class PortfolioBenchmarkTest {
     /** How many times each measurement is repeated. */
     private static final int REPETITIONS = 30;
 
+    /** The warmup passes, whose times are discarded. */
+    private static final int WARMUP = 5;
+
     /** The median quantile. */
     private static final double P50 = 0.50;
 
@@ -85,8 +88,18 @@ class PortfolioBenchmarkTest {
     private record Timing(String what, long p50Nanos, long p95Nanos, double meanNanos) {
     }
 
-    /** Measures a body {@value #REPETITIONS} times and reports its percentiles. */
+    /**
+     * Measures a body {@value #REPETITIONS} times and reports its percentiles.
+     *
+     * <p><b>Why there is a WARMUP.</b> The first execution of a body pays the JIT's
+     * warmup — the interpretation, the compilation, the first-touch of the data. A
+     * measurement that includes it measures the compiler, not the code. The warmup is not
+     * recorded and not asserted on.</p>
+     */
     private static Timing measure(String what, Runnable body) {
+        for (int i = 0; i < WARMUP; i++) {
+            body.run();
+        }
         long[] samples = new long[REPETITIONS];
         for (int i = 0; i < REPETITIONS; i++) {
             long startedAt = System.nanoTime();
@@ -188,14 +201,24 @@ class PortfolioBenchmarkTest {
                 bloom.execute(new MembershipProblem(corpus, queries, builtFilter), ComputeBudget.unbounded()));
 
         // The break-even point: how many queries make the index cheaper than the scan.
-        double scanPerQuery = scanTiming.meanNanos() / QUERY_COUNT;
-        double triePerQuery = trieLookupTiming.meanNanos() / QUERY_COUNT;
+        // ── the PER-QUERY cost is compared on the MEDIAN, not on the mean ──────
+        //
+        // The mean of a timing distribution on a shared machine is not the cost of the
+        // work: one garbage collection or one scheduling hiccup among thirty samples
+        // moves the mean by more than the difference the comparison is about. This
+        // happened here: the trie's p50 is 10.1 us against the scan's 19.8 us - the index
+        // is TWICE as fast - while the trie's p95 is 39.4 us and its MEAN 21.4 us, so a
+        // mean-based assertion read the index as slower than the scan it beats by half.
+        // The median is the statistic the repository's own latency assertion already
+        // uses, and the same one the CRJ-01 cost curve uses.
+        double scanPerQuery = scanTiming.p50Nanos() / (double) QUERY_COUNT;
+        double triePerQuery = trieLookupTiming.p50Nanos() / (double) QUERY_COUNT;
         double savingPerQuery = scanPerQuery - triePerQuery;
         long breakEvenQueries = savingPerQuery <= 0
                 ? Long.MAX_VALUE
-                : (long) Math.ceil(trieBuildTiming.meanNanos() / savingPerQuery);
-        double scanEndToEnd = scanTiming.meanNanos();
-        double trieEndToEnd = trieBuildTiming.meanNanos() + trieLookupTiming.meanNanos();
+                : (long) Math.ceil(trieBuildTiming.p50Nanos() / savingPerQuery);
+        double scanEndToEnd = scanTiming.p50Nanos();
+        double trieEndToEnd = trieBuildTiming.p50Nanos() + trieLookupTiming.p50Nanos();
 
         System.out.println("--- membership: a scan against a prebuilt index ---");
         System.out.printf("%-42s p50=%8d ns  p95=%8d ns  mean=%10.1f ns%n",
@@ -213,16 +236,20 @@ class PortfolioBenchmarkTest {
                 bloomLookupTiming.what(), bloomLookupTiming.p50Nanos(), bloomLookupTiming.p95Nanos(),
                 bloomLookupTiming.meanNanos());
         System.out.printf("the scan costs %.1f ns/query; the trie costs %.1f ns/query after a build "
-                        + "of %.1f ns, so it repays the build after %d queries (this corpus asks %d)%n",
-                scanPerQuery, triePerQuery, trieBuildTiming.meanNanos(), breakEvenQueries, QUERY_COUNT);
+                        + "of %.1f ns, so it repays the build after %d queries (this corpus asks %d)"
+                        + " - the per-query figures are the MEDIANS of %d passes%n",
+                scanPerQuery, triePerQuery, (double) trieBuildTiming.p50Nanos(), breakEvenQueries,
+                QUERY_COUNT, REPETITIONS);
         System.out.printf("end to end over %d queries: the scan costs %.1f ns and the trie %.1f ns%n",
                 QUERY_COUNT, scanEndToEnd, trieEndToEnd);
 
         // The selector sees the MEASURED per-call costs, not the declared ones.
         CostLedger ledger = new CostLedger();
-        ledger.record(scan.capability().id(), (long) scanTiming.meanNanos(), true);
-        ledger.record(trie.capability().id(), (long) trieLookupTiming.meanNanos(), true);
-        ledger.record(bloom.capability().id(), (long) bloomLookupTiming.meanNanos(), true);
+        // the ledger records the SAME statistic the comparison uses, so the selector and
+        // the assertion cannot disagree about which method was cheaper
+        ledger.record(scan.capability().id(), scanTiming.p50Nanos(), true);
+        ledger.record(trie.capability().id(), trieLookupTiming.p50Nanos(), true);
+        ledger.record(bloom.capability().id(), bloomLookupTiming.p50Nanos(), true);
 
         AlgorithmSelector selector = new AlgorithmSelector(
                 new AlgorithmRegistry().register(scan).register(trie).register(bloom), ledger);
@@ -237,7 +264,7 @@ class PortfolioBenchmarkTest {
                 + decision.reason());
 
         // The scan and the trie declare the SAME accuracy, so the cheaper one must win.
-        String cheaper = trieLookupTiming.meanNanos() <= scanTiming.meanNanos()
+        String cheaper = trieLookupTiming.p50Nanos() <= scanTiming.p50Nanos()
                 ? TrieMembershipMethod.ID : LinearScanMembershipMethod.ID;
         assertThat(decision.selectedAlgorithmId()).isEqualTo(cheaper);
 
@@ -251,7 +278,11 @@ class PortfolioBenchmarkTest {
         // The break-even point is a real number: the index is only worth building once the
         // number of queries clears it.
         assertThat(breakEvenQueries).isPositive();
-        assertThat(triePerQuery).isLessThan(scanPerQuery);
+        assertThat(triePerQuery)
+                .as("the prebuilt index is cheaper PER QUERY than the scan it replaces: "
+                        + "the scan costs %.1f ns/query and the index %.1f ns/query (the "
+                        + "medians of %d passes)", scanPerQuery, triePerQuery, REPETITIONS)
+                .isLessThan(scanPerQuery);
     }
 
     @Test
