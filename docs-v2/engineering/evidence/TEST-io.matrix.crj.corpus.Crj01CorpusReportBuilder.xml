@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.crj.corpus.Crj01CorpusReportBuilder" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-21T13:59:01.683Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="5.047">
+  <properties/>
+  <testcase name="the research pool's usable remainder is counted, and the artefact is written" classname="io.matrix.crj.corpus.Crj01CorpusReportBuilder" time="5.047"/>
+  <system-out><![CDATA[[CRJ-01] the corpus report /home/alexandr-narbaev/Projects/agi/docs-v2/engineering/CRJ-01-CORPUS-REPORT.json
+[CRJ-01] claims 540 spans 483 fresh 470 fresh-and-span 413
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

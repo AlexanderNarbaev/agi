@@ -5,6 +5,8 @@ import io.matrix.knowledge.AbstractionLevel;
 import io.matrix.knowledge.Answer;
 import io.matrix.knowledge.KnowledgeWorkbench;
 
+import java.util.List;
+
 /**
  * P2 — the closed loop's problem and its result.
  *
@@ -51,7 +53,8 @@ public final class ReportJourney {
             KnowledgeWorkbench workbench,
             ArtifactWriter writer,
             Retained retained,
-            String workspaceFingerprint) {
+            String workspaceFingerprint,
+            List<LearnedClaim> learnedClaims) {
 
         public Problem {
             if (workspaceId == null || workspaceId.isBlank()) {
@@ -60,6 +63,15 @@ public final class ReportJourney {
             if (identity == null || identity.isBlank()) {
                 throw new IllegalArgumentException("the action identity must not be blank");
             }
+            learnedClaims = List.copyOf(learnedClaims == null ? List.of() : learnedClaims);
+        }
+
+        /** A problem without any learned claim — the shape a caller that knows of none uses. */
+        public Problem(String workspaceId, String question, String identity, String reportName,
+                       AbstractionLevel level, KnowledgeWorkbench workbench, ArtifactWriter writer,
+                       Retained retained, String workspaceFingerprint) {
+            this(workspaceId, question, identity, reportName, level, workbench, writer, retained,
+                    workspaceFingerprint, List.of());
         }
     }
 

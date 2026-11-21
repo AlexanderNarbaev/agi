@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.cognitive.algorithms.PortfolioBenchmarkTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-20T15:25:44.492Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.048">
+  <properties/>
+  <testcase name="aScanAndAPrebuiltIndexAreComparedOnTheSameCorpus()" classname="io.matrix.cognitive.algorithms.PortfolioBenchmarkTest" time="0.011"/>
+  <testcase name="aBoundedSearchIsComparedWithTheExactSearchItStandsInFor()" classname="io.matrix.cognitive.algorithms.PortfolioBenchmarkTest" time="0.023"/>
+  <testcase name="theTwoExactShortestPathMethodsAreComparedOnTheSameGraph()" classname="io.matrix.cognitive.algorithms.PortfolioBenchmarkTest" time="0.013"/>
+  <system-out><![CDATA[--- membership: a scan against a prebuilt index ---
+linear scan of 64 queries                  p50=   78648 ns  p95=   87205 ns  mean=   76472.6 ns
+building the trie                          p50=   63410 ns  p95=  126308 ns  mean=   80420.2 ns
+trie lookup of 64 queries                  p50=    9969 ns  p95=   39154 ns  mean=   19738.9 ns
+building the Bloom filter                  p50=   32191 ns  p95=   39685 ns  mean=   33185.0 ns
+Bloom lookup of 64 queries                 p50=    9327 ns  p95=   17974 ns  mean=   11841.9 ns
+the scan costs 1194.9 ns/query; the trie costs 308.4 ns/query after a build of 80420.2 ns, so it repays the build after 91 queries (this corpus asks 64)
+end to end over 64 queries: the scan costs 76472.6 ns and the trie 100159.1 ns
+the selector chose collection.membership.trie-index because selected collection.membership.trie-index@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 64 case(s); the cost came from MEASURED and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — the observations are pooled over the strata, and a pooled rate is not evidence for this request; the reliability evidence was the observations are pooled over the strata, and a pooled rate is not evidence for this request
+--- shortest path: the bounded search against the exact one ---
+the exact search                           p50=  133942 ns  p95=  207321 ns  mean=  156011.1 ns
+the bounded search inside a generous budget p50=  314092 ns  p95= 2281329 ns  mean=  485899.0 ns
+the bounded search under the node budget   p50=   21540 ns  p95=   30979 ns  mean=   24558.0 ns
+with the bounded-result fact the selector chose graph.shortest-path.bounded-uniform-cost because selected graph.shortest-path.bounded-uniform-cost@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 12 case(s); the cost came from MEASURED and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — the observations are pooled over the strata, and a pooled rate is not evidence for this request; the reliability evidence was the observations are pooled over the strata, and a pooled rate is not evidence for this request
+--- shortest path: the two exact methods ---
+Dijkstra on 120 vertices                   p50=  109266 ns  p95=  121819 ns  mean=  110813.9 ns
+Bellman-Ford on 120 vertices               p50=  226728 ns  p95=  255922 ns  mean=  278509.2 ns
+the selector chose graph.shortest-path.dijkstra because selected graph.shortest-path.dijkstra@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 12 case(s); the cost came from MEASURED and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — the observations are pooled over the strata, and a pooled rate is not evidence for this request; the reliability evidence was the observations are pooled over the strata, and a pooled rate is not evidence for this request
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.crj.runner.Crj01DomainBRunnerTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-21T14:57:59.670Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.039">
+  <properties/>
+  <testcase name="the lamp world's three arms run side by side, and the truth table scores them" classname="io.matrix.crj.runner.Crj01DomainBRunnerTest" time="0.038"/>
+  <system-out><![CDATA[[CRJ-01] the domain-B evidence /home/alexandr-narbaev/Projects/agi/docs-v2/engineering/CRJ-01-EVIDENCE-DOMAIN-B.json (27 rows)
+[CRJ-01] A {episodes=9, correct=36, novelQueries=0, probes=36, settled=9, inapplicable=0, wallNanos=10547056}
+[CRJ-01] B {episodes=9, correct=36, novelQueries=0, probes=0, settled=9, inapplicable=0, wallNanos=4600051}
+[CRJ-01] C {episodes=9, correct=36, novelQueries=0, probes=0, settled=9, inapplicable=0, wallNanos=10547056}
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

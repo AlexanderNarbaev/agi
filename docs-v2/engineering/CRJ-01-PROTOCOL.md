@@ -155,12 +155,34 @@ requirements on the *dataset*, not on any candidate.
    revision, access date and the **sha256 of the imported bytes**. The importer verifies the
    hash before it reads the file — a file whose bytes differ is reported, not silently imported
    (`matrix-core/src/main/resources/corpus/corpus-manifest.json`, `/theLicensing`).
+   > **MEASURED, NOT ASSUMED (2026-11-21).** The oracle was run against the **real served
+   > path** — the report journey over the bundled photosynthesis package — over a corpus built
+   > from that package's own source documents. The journey cited **7** claims and the oracle
+   > grounded **0** of them; **17 of the 18** evidence excerpts **are** spans of their
+   > document, and the oracle **does** ground such a span (the positive control). The bundled
+   > package is therefore a **paraphrase corpus**: its claims' propositions are paraphrases of
+   > the documents, and a verbatim-span instrument has nothing to match. **This rule is a hard
+   > condition, not a formality** — a sealed set built over the bundled package would be scored
+   > UNGROUNDED on every case, and the run would look like a failure of the arms rather than a
+   > property of the corpus. The evidence is
+   > `docs-v2/engineering/evidence/TEST-io.matrix.crj.evidence.BundledCorpusSpanMeasurementTest.xml`
+   > (three tests, zero failures); the analysis is in
+   > `docs-v2/engineering/CRJ-01-INSTRUMENTS.md` §4.
 2. **The documents must be imported through the production acquisition path**, not through a
    test-only loader, so the claims, sources and ids in the gold are the production ones
    (the convention of `docs-v2/engineering/EPISTEMIC-HELDOUT-SET.md` §2).
 3. **The gold is the source's own text**: every gold proposition must occur **verbatim** in its
    source document, and the builder must prove it before the case is written out
    (`docs-v2/engineering/C2A-HELDOUT-SET.json`, `/manifest/method`).
+   > **MEASURED, PER CASE (2026-11-21).** The production acquisition path does **not** make every
+   > claim a literal span: of the **540** claims it derived from the research pool, the oracle
+   > grounded **483** and refused **57** — the propositions built from a **heading and the
+   > paragraph that follows it**, a **flattened list**, or **boilerplate**. The corpus condition
+   > is therefore satisfiable **per case, not per corpus**: the case author must **select a gold
+   > that IS a span** and the builder must **prove** it, exactly as the repository's own held-out
+   > builder does for the claims it selects. The evidence is
+   > `docs-v2/engineering/evidence/TEST-io.matrix.crj.evidence.ImportedCorpusSpanMeasurementTest.xml`
+   > (one test, zero failures); the analysis is in `docs-v2/engineering/CRJ-01-INSTRUMENTS.md` §4.1.
 4. **No hand-written identifiers**: every claim id in the dataset is the production claim id
    introduced by that document's source (`.../C2A-HELDOUT-SET.json`, `/manifest/verifications`).
 5. **Class coverage**: the set must contain at least one case of each class in §7
@@ -358,6 +380,19 @@ re-run of the first.
 `matrix-core/src/test/java/io/matrix/crj/evidence/SourceSpanOracleTest.java`.
 The class does **not** exist at the baseline; its sha256 is a mandatory freeze field (§5.5).
 
+> **STATUS: BUILT.** The class and its test exist as of **2026-11-20**, on the branch
+> `feature/crj-01-arm-c`, with **7 tests, 0 failures**. The instrument's own control (§7.6) is
+> among them: a gold proposition corrupted by a single character is reported as
+> `GOLD_NOT_IN_CORPUS` — **loudly**, not as an ungrounded answer — and a corrupted case can
+> never score as grounded. The oracle reads the corpus file's **bytes** and re-computes their
+> sha256; it never calls the retriever, the workbench, the kernel selector or the session, and
+> it takes the served answer as **data** (`ServedAnswer`), so the harness that reads the
+> response and the oracle that scores it are two pieces of code that meet at one record.
+> Its sha256 at the moment of writing is
+> `2f1f5579717272ee10cccbf32bcd82aab7d73d62adbd23087bdee0a980c65d9d` — **the freeze records
+> the digest of the file the reviewer re-derives, not this one**: the file may still change
+> before the freeze, and the freeze's digest is the one that counts.
+
 **Why a test-tree class and not production code:** the oracle is an *instrument of the
 experiment*, not a product feature. Putting it in `src/test` keeps it out of the serving path
 and out of the packaged application, which is exactly what the contract wants. The negative
@@ -384,6 +419,20 @@ from the private method.
 **Where the logic lives (proposed, does not exist at `b7bd1be4`):**
 `matrix-core/src/test/java/io/matrix/crj/microworld/LampTruthOracle.java`
 (class `LampTruthOracle`, package `io.matrix.crj.microworld`).
+
+> **STATUS: BUILT.** The class and its test exist as of **2026-11-20**, on the branch
+> `feature/crj-01-arm-c`, with **4 tests, 0 failures**. The truth table is **four literal
+> rows**, written out one by one from the specification — not an expression that could have
+> been copied from the world's private method — and the class does **not import the lamp
+> environment at all**: it does not name its type and cannot ask it anything. The two meet in
+> exactly one place, the cross-check, and the world is read there **as data**. The cross-check
+> has been **executed**: on all four assignments the oracle and the world agree, and the record
+> is `instrument_crosscheck: {assignments: 4, agreements: 4}`. A disagreement — and an
+> assignment the world did not answer — makes the run **VOID** with the reason
+> `INSTRUMENT_MISMATCH`, and both cases are tested. The oracle's sha256 at the moment of
+> writing is
+> `c669dfb70825796bec3cc4e58d39cb8f997871175593d736906d3ae5565cff52` — **the freeze records
+> the digest of the file the reviewer re-derives, not this one**.
 
 **The instrument cross-check (binding, before any measurement).** Before the first arm runs, the
 oracle and the world are compared on **all four** assignments of the domain. The result is

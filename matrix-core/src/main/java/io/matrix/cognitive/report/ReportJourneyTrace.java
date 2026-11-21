@@ -94,6 +94,35 @@ public final class ReportJourneyTrace {
     }
 
     /**
+     * Makes sure the journey's episode is a REAL episode of the workspace.
+     *
+     * <p><b>Why this exists.</b> The trace's steps live in an episode, and an episode is a row
+     * in the store's own table of episodes — a container with an account of what it was, a
+     * workspace it belongs to and an instant it started. Writing the steps alone left the
+     * episode in the event table and nowhere else: the store's listing of a workspace's
+     * episodes did not contain it, and a reader who followed a provenance to the episode a
+     * competence was learned in found nothing there.</p>
+     *
+     * <p><b>Why it is opened and not replaced.</b> The episode is keyed by the action
+     * identity, so the same request always names the same episode — and a later journey
+     * continues it. The account of what the episode was belongs to the first journey that
+     * opened it, and a later one does not rewrite it. The episode is opened once and stays
+     * open, because the identity's record keeps growing: the trace of an identity is an
+     * ongoing record, not a bounded cycle.</p>
+     *
+     * @param store      the kernel's store
+     * @param episodeId  the episode the journey belongs to
+     * @param workspaceId the workspace the journey served
+     * @param identity   the action identity the episode is derived from
+     * @return whether this call opened the episode
+     */
+    public static boolean ensureEpisode(CognitiveStore store, String episodeId, String workspaceId,
+                                         String identity) {
+        return store.ensureEpisode(episodeId, workspaceId, "the report journey of " + identity,
+                Instant.now().toString());
+    }
+
+    /**
      * Appends several steps of one journey in one durable write.
      *
      * <p>The steps are appended in order, in one transaction: a trace is wholly there or

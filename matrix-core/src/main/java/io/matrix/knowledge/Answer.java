@@ -47,6 +47,38 @@ public record Answer(
     }
 
     /**
+     * This answer with more claims in its evidence.
+     *
+     * <p><b>Why the evidence may grow.</b> The retrieval decides which claims the question's
+     * words point at; a <b>learned claim</b> is a claim the system has already validated, and
+     * it belongs in the evidence of a question about its concept even when the words did not
+     * point at it. The claims already present are kept, and a claim that is already there is
+     * not added twice.</p>
+     *
+     * <p>The rest of the answer is untouched: the statement is the retrieval's own, and the
+     * learned claim joins the <b>evidence</b>, not the prose.</p>
+     *
+     * @param additional the claims to add
+     * @return the answer with them
+     */
+    public Answer withAdditionalClaims(List<Claim> additional) {
+        if (additional == null || additional.isEmpty()) {
+            return this;
+        }
+        List<Claim> merged = new java.util.ArrayList<>(claims);
+        for (Claim claim : additional) {
+            if (claim != null && merged.stream().noneMatch(c -> c.id().equals(claim.id()))) {
+                merged.add(claim);
+            }
+        }
+        if (merged.size() == claims.size()) {
+            return this;
+        }
+        return new Answer(question, level, answered, abstentionReason, statement, supportScore,
+                support, concepts, merged, sources, limitations, gaps, unmatchedTerms, premise);
+    }
+
+    /**
      * The answer of a path that does not assess a premise.
      *
      * <p>The disposition is a field of its own, and a caller that builds an answer without

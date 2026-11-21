@@ -39,6 +39,8 @@
 | CRJ-01 risk verdict: idempotency and the false-green instruments (COG-02) | [engineering/CRJ-01-RISK-VERDICT.md](engineering/CRJ-01-RISK-VERDICT.md) |
 | CRJ-01 preregistration draft, NOT frozen (COG-01) | [engineering/CRJ-01-PROTOCOL.md](engineering/CRJ-01-PROTOCOL.md) |
 | CRJ-01 packaged journey demonstration (the local milestone) | [engineering/CRJ-01-JOURNEY-DEMONSTRATION.json](engineering/CRJ-01-JOURNEY-DEMONSTRATION.json) |
+| CRJ-01 arm C: the governed learned competence, built and measured | [engineering/CRJ-01-ARM-C.md](engineering/CRJ-01-ARM-C.md) |
+| CRJ-01 the instruments: the two oracles, built and proven | [engineering/CRJ-01-INSTRUMENTS.md](engineering/CRJ-01-INSTRUMENTS.md) |
 | текущее состояние проекта | [governance/PROJECT-STATE.md](governance/PROJECT-STATE.md) |
 | дорожная карта и задачи | [governance/ROADMAP.md](governance/ROADMAP.md) |
 | принятые решения | [governance/DECISION-REGISTER.md](governance/DECISION-REGISTER.md) |

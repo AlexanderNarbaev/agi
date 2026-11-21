@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.cognitive.algorithms.IntegerArithmeticMethodTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-11-20T15:25:44.217Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.004">
+  <properties/>
+  <testcase name="theCapabilityDeclaresTheFamilyThePreconditionAndNoFallback()" classname="io.matrix.cognitive.algorithms.IntegerArithmeticMethodTest" time="0.0"/>
+  <testcase name="everyCorpusCaseHoldsItsOwnPrecondition()" classname="io.matrix.cognitive.algorithms.IntegerArithmeticMethodTest" time="0.001"/>
+  <testcase name="anOverlongExpressionIsRefusedRatherThanParsed()" classname="io.matrix.cognitive.algorithms.IntegerArithmeticMethodTest" time="0.0"/>
+  <testcase name="aRequestForTheArithmeticFamilyIsAnsweredByTheArithmeticMethod()" classname="io.matrix.cognitive.algorithms.IntegerArithmeticMethodTest" time="0.001"/>
+  <testcase name="theSameExpressionAlwaysProducesTheSameValue()" classname="io.matrix.cognitive.algorithms.IntegerArithmeticMethodTest" time="0.0"/>
+  <testcase name="aDivisionByZeroIsRefusedRatherThanInfinite()" classname="io.matrix.cognitive.algorithms.IntegerArithmeticMethodTest" time="0.001"/>
+  <testcase name="theCorpusHasExactlyAsManyCasesAsTheCapabilityDeclares()" classname="io.matrix.cognitive.algorithms.IntegerArithmeticMethodTest" time="0.0"/>
+  <testcase name="aMalformedExpressionIsRefusedRatherThanGuessed()" classname="io.matrix.cognitive.algorithms.IntegerArithmeticMethodTest" time="0.0"/>
+  <testcase name="everyCorpusCaseEvaluatesToItsExactValue()" classname="io.matrix.cognitive.algorithms.IntegerArithmeticMethodTest" time="0.0"/>
+  <testcase name="theRegistryOffersTheMethodToItsOwnFamilyOnly()" classname="io.matrix.cognitive.algorithms.IntegerArithmeticMethodTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

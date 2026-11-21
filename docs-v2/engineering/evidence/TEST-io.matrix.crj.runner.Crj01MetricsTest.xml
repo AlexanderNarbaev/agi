@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.crj.runner.Crj01MetricsTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-21T14:57:59.725Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.037">
+  <properties/>
+  <testcase name="the exact McNemar test agrees with the protocol's own worked examples" classname="io.matrix.crj.runner.Crj01MetricsTest" time="0.001"/>
+  <testcase name="the protocol's verdicts are computed from the rows, with their denominators" classname="io.matrix.crj.runner.Crj01MetricsTest" time="0.031"/>
+  <testcase name="the domain-B metrics are computed, and the transfer's empty denominator is reported" classname="io.matrix.crj.runner.Crj01MetricsTest" time="0.004"/>
+  <system-out><![CDATA[[CRJ-01] the metrics /home/alexandr-narbaev/Projects/agi/docs-v2/engineering/CRJ-01-METRICS.json
+[CRJ-01] M-A1 grounded answer rate = 12/18
+[CRJ-01] M-A2 abstention correctness = 0/6
+[CRJ-01] M-A3 unsupported-answer rate = 0/18
+[CRJ-01] M-A4 premise-disposition accuracy = 0/8
+[CRJ-01] M-A5 conflict-surfacing rate = 0/0
+[CRJ-01] M-A6 effect-verification rate = 18/18
+[CRJ-01] C - A (all cases) n=9 wins=0 losses=0 delta=0.0 [0.0, 0.0] mcnemar=null
+[CRJ-01] C - B (the NOVEL subset) n=9 wins=6 losses=0 delta=0.6666666666666666 [0.3333333333333333, 1.0] mcnemar=0.031250
+[CRJ-01] C - B (the REPEAT subset, reported separately) n=9 wins=0 losses=0 delta=0.0 [0.0, 0.0] mcnemar=null
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

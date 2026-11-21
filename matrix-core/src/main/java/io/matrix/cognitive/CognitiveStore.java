@@ -233,6 +233,29 @@ public final class CognitiveStore
         try (Statement st = connection.createStatement()) {
             st.execute("CREATE TABLE IF NOT EXISTS cognitive_schema_meta ("
                     + "key TEXT PRIMARY KEY, value TEXT NOT NULL)");
+            // OD-082's second half: the LEARNED CLAIM - a workspace claim the system
+            // checked, with the provenance of that check. It is keyed by the PAIR
+            // (id, version) for the same reason the procedure is: a re-validation is a new
+            // version beside the old one, never an edit of it.
+            st.execute("""
+                    CREATE TABLE IF NOT EXISTS cognitive_learned_claim (
+                        id TEXT NOT NULL,
+                        version TEXT NOT NULL,
+                        workspace_id TEXT NOT NULL,
+                        claim_id TEXT NOT NULL,
+                        proposition TEXT NOT NULL,
+                        concept_id TEXT NOT NULL,
+                        source_id TEXT NOT NULL,
+                        support TEXT NOT NULL,
+                        validation_cases INTEGER NOT NULL,
+                        validation_agreement REAL NOT NULL,
+                        validation_kind TEXT,
+                        learned_in_episode TEXT,
+                        validation_note TEXT,
+                        promoted_at TEXT NOT NULL,
+                        PRIMARY KEY (id, version)
+                    )""");
+
             st.execute("""
                     CREATE TABLE IF NOT EXISTS cognitive_episode (
                         id TEXT PRIMARY KEY,
@@ -492,6 +515,10 @@ public final class CognitiveStore
             try (Statement st = connection.createStatement()) {
                 addColumnIfMissing(st, "cognitive_procedure", "learned_in_episode", "TEXT");
                 addColumnIfMissing(st, "cognitive_procedure", "validation_note", "TEXT");
+                // OD-082: the cost the promotion's OWN validation measured. It is a
+                // MEASUREMENT and not part of the procedure's definition, so it is not
+                // compared by the immutability check and a re-measurement never rewrites it.
+                addColumnIfMissing(st, "cognitive_procedure", "measured_cost_nanos", "INTEGER");
             }
             return;
         }
@@ -516,6 +543,7 @@ public final class CognitiveStore
                         validation_kind TEXT,
                         learned_in_episode TEXT,
                         validation_note TEXT,
+                        measured_cost_nanos INTEGER,
                         PRIMARY KEY (id, version)
                     )""");
             // A table written before the validation kind existed carries no such column,
@@ -556,6 +584,7 @@ public final class CognitiveStore
                         validation_kind TEXT,
                         learned_in_episode TEXT,
                         validation_note TEXT,
+                        measured_cost_nanos INTEGER,
                         PRIMARY KEY (id, version)
                     )""");
         }
@@ -780,6 +809,48 @@ public final class CognitiveStore
                         "episode " + episodeId + " already exists");
             }
             throw new IllegalStateException("failed to record the episode", e);
+        }
+    }
+
+    /**
+     * Opens an episode unless it is already there.
+     *
+     * <p><b>This is the operation a container that outlives one run needs.</b> An episode is
+     * OPENED and later CLOSED, and {@link #startEpisode} is the open — but a caller whose
+     * container is keyed by something that repeats (an action identity, a request key) meets
+     * the open twice, and the second meeting is not a second episode: it is the same episode,
+     * still there, still holding what the first run left in it.</p>
+     *
+     * <p>So this call opens the episode only when it is ABSENT, and never rewrites one that is
+     * already there. The account of what an episode was — its workspace, its summary and the
+     * instant it started — belongs to the first writer, and a later caller that disagrees with
+     * it does not get to replace it: the episode stands as it was opened. That is the same
+     * rule {@link #startEpisode} follows, applied to the case {@code startEpisode} refuses
+     * rather than accepts.</p>
+     *
+     * <p><b>Concurrent callers.</b> Two callers that meet for the first time can both find the
+     * episode absent, and both can try to open it. The loser of that race is not an error: the
+     * episode is there, and its content is the winner's. The loser is told it did not open
+     * anything.</p>
+     *
+     * @param episodeId  the episode
+     * @param workspaceId the workspace the episode belongs to
+     * @param summary    what the episode is about
+     * @param startedAt  the instant the episode started
+     * @return whether THIS call opened the episode; false when it was already there
+     */
+    public synchronized boolean ensureEpisode(String episodeId, String workspaceId, String summary,
+                                               String startedAt) {
+        if (episodeContent(episodeId) != null) {
+            return false;
+        }
+        try {
+            startEpisode(episodeId, workspaceId, summary, startedAt);
+            return true;
+        } catch (CognitiveConflictException alreadyThere) {
+            // another writer opened the episode between the check and the insert; the episode
+            // exists, and its account is not this caller's to rewrite
+            return false;
         }
     }
 
@@ -1119,6 +1190,30 @@ public final class CognitiveStore
      * @param procedure   the version
      */
     public synchronized void recordProcedure(String workspaceId, Procedure procedure) {
+        recordProcedure(workspaceId, procedure, null);
+    }
+
+    /**
+     * Records a procedure with the cost its promotion MEASURED.
+     *
+     * <p><b>Why the measured cost is separate from the definition.</b> The cost is a
+     * MEASUREMENT of this version, like the counters and the promotion instant: it is not
+     * part of what the procedure IS, so the immutability check does not compare it, and a
+     * later re-measurement never rewrites the one the promotion was made with.</p>
+     *
+     * <p><b>Why the promotion measures it at all.</b> A procedure's first selection is made
+     * before it has ever run, so the selector weighs it by its <b>declared</b> cost — a
+     * promise. The promotion has already run the restricted reading on its held-out cases,
+     * so it knows what the reading actually costs, and a promotion that carries that
+     * measurement makes the FIRST decision rest on a measurement too.</p>
+     *
+     * @param workspaceId     the workspace the procedure belongs to
+     * @param procedure       the version
+     * @param measuredCostNanos the cost the promotion measured, in nanoseconds; null when
+     *                        nothing was measured
+     */
+    public synchronized void recordProcedure(String workspaceId, Procedure procedure,
+                                            Long measuredCostNanos) {
         List<String> existing = procedureContent(procedure.id(), procedure.version());
         if (existing != null) {
             if (existing.equals(procedureDefinitionOf(procedure))) {
@@ -1135,8 +1230,8 @@ public final class CognitiveStore
                         + "version, applicability, required_facts, reference_algorithm_id, "
                         + "validation_cases, validation_agreement, use_count, failure_count, "
                         + "promoted_at, invalidated_at, validation_kind, learned_in_episode, "
-                        + "validation_note) "
-                        + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
+                        + "validation_note, measured_cost_nanos) "
+                        + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
             ps.setString(1, procedure.id());
             ps.setString(2, workspaceId);
             ps.setString(3, procedure.name());
@@ -1155,6 +1250,11 @@ public final class CognitiveStore
                     ? ValidationKind.IN_SAMPLE.name() : procedure.validationKind().name());
             ps.setString(16, procedure.learnedInEpisode());
             ps.setString(17, procedure.validationNote());
+            if (measuredCostNanos == null) {
+                ps.setNull(18, java.sql.Types.INTEGER);
+            } else {
+                ps.setLong(18, measuredCostNanos);
+            }
             ps.executeUpdate();
         } catch (SQLException e) {
             if (isConstraintViolation(e)) {
@@ -1259,6 +1359,186 @@ public final class CognitiveStore
             throw new IllegalStateException("failed to read the procedures", e);
         }
         return out;
+    }
+
+    // ── the learned claims ───────────────────────────────────────────────────
+
+    /**
+     * Records a learned claim.
+     *
+     * <p><b>The same rule as a procedure's version.</b> The identity of a learned claim is
+     * the PAIR (id, version): a re-validation is a new row beside the old one, and the
+     * predecessor survives. Writing the same pair again with the same definition is a no-op;
+     * writing it with a DIFFERENT definition is a conflict, because a version of a learned
+     * claim is never rewritten.</p>
+     *
+     * @param workspaceId the workspace the claim belongs to
+     * @param claim       the learned claim
+     */
+    public synchronized void recordLearnedClaim(String workspaceId,
+                                                io.matrix.cognitive.report.LearnedClaim claim) {
+        List<String> existing = learnedClaimContent(claim.id(), claim.version());
+        List<String> definition = learnedClaimDefinitionOf(claim);
+        if (existing != null) {
+            if (existing.equals(definition)) {
+                return;
+            }
+            throw new CognitiveConflictException(
+                    CognitiveConflictException.Kind.IMMUTABLE_RECORD,
+                    "learned claim " + claim.id() + " version " + claim.version()
+                            + " already exists with a different definition; a version of a "
+                            + "learned claim is never rewritten");
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO cognitive_learned_claim(id, version, workspace_id, claim_id, "
+                        + "proposition, concept_id, source_id, support, validation_cases, "
+                        + "validation_agreement, validation_kind, learned_in_episode, "
+                        + "validation_note, promoted_at) "
+                        + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, claim.id());
+            ps.setString(2, claim.version());
+            ps.setString(3, workspaceId);
+            ps.setString(4, claim.claimId());
+            ps.setString(5, claim.proposition());
+            ps.setString(6, claim.conceptId());
+            ps.setString(7, claim.sourceId());
+            ps.setString(8, String.join(",", claim.support()));
+            ps.setInt(9, claim.validationCases());
+            ps.setDouble(10, claim.agreement());
+            ps.setString(11, claim.validationKind().name());
+            ps.setString(12, claim.learnedInEpisode());
+            ps.setString(13, claim.validationNote());
+            ps.setString(14, claim.promotedAt());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            if (isConstraintViolation(e)) {
+                throw new CognitiveConflictException(
+                        CognitiveConflictException.Kind.IMMUTABLE_RECORD,
+                        "learned claim " + claim.id() + " version " + claim.version()
+                                + " already exists");
+            }
+            throw new IllegalStateException("failed to record the learned claim", e);
+        }
+    }
+
+    /**
+     * The cost a promotion measured for a procedure version.
+     *
+     * @param workspaceId the workspace
+     * @param procedureId the procedure
+     * @param version     the version
+     * @return the measured cost in nanoseconds, or null when the promotion measured nothing
+     */
+    public synchronized Long procedureMeasuredCostNanos(String workspaceId, String procedureId,
+                                                         String version) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT measured_cost_nanos FROM cognitive_procedure WHERE workspace_id = ? "
+                        + "AND id = ? AND version = ?")) {
+            ps.setString(1, workspaceId);
+            ps.setString(2, procedureId);
+            ps.setString(3, version);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    return null;
+                }
+                long value = rs.getLong(1);
+                return rs.wasNull() ? null : value;
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the procedure's measured cost", e);
+        }
+    }
+
+    /**
+     * The learned claims of a workspace, newest first.
+     *
+     * @param workspaceId the workspace
+     * @return the learned claims
+     */
+    public synchronized List<io.matrix.cognitive.report.LearnedClaim> learnedClaims(
+            String workspaceId) {
+        List<io.matrix.cognitive.report.LearnedClaim> out = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT id, version, workspace_id, claim_id, proposition, concept_id, source_id, "
+                        + "support, validation_cases, validation_agreement, validation_kind, "
+                        + "learned_in_episode, validation_note, promoted_at "
+                        + "FROM cognitive_learned_claim WHERE workspace_id = ? "
+                        + "ORDER BY promoted_at DESC, id, version DESC")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String kind = rs.getString("validation_kind");
+                    out.add(new io.matrix.cognitive.report.LearnedClaim(
+                            rs.getString("id"), rs.getString("version"),
+                            rs.getString("workspace_id"), rs.getString("claim_id"),
+                            rs.getString("proposition"), rs.getString("concept_id"),
+                            rs.getString("source_id"), splitSet(rs.getString("support")),
+                            rs.getInt("validation_cases"),
+                            rs.getDouble("validation_agreement"),
+                            kind == null ? ValidationKind.INDEPENDENT
+                                    : ValidationKind.valueOf(kind),
+                            rs.getString("learned_in_episode"),
+                            rs.getString("validation_note"),
+                            rs.getString("promoted_at")));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the learned claims", e);
+        }
+        return out;
+    }
+
+    /** The stored content of a learned claim, or null when it does not exist. */
+    private List<String> learnedClaimContent(String id, String version) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT workspace_id, claim_id, proposition, concept_id, source_id, support, "
+                        + "validation_cases, validation_agreement, validation_kind, "
+                        + "learned_in_episode, validation_note, promoted_at "
+                        + "FROM cognitive_learned_claim WHERE id = ? AND version = ?")) {
+            ps.setString(1, id);
+            ps.setString(2, version);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    return null;
+                }
+                List<String> content = new ArrayList<>();
+                content.add(rs.getString(1));
+                content.add(rs.getString(2));
+                content.add(rs.getString(3));
+                content.add(rs.getString(4));
+                content.add(rs.getString(5));
+                content.add(rs.getString(6));
+                content.add(rs.getString(7));
+                content.add(rs.getString(8));
+                content.add(rs.getString(9));
+                content.add(rs.getString(10));
+                content.add(rs.getString(11));
+                content.add(rs.getString(12));
+                content.add(rs.getString(13));
+                return content;
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the learned claim", e);
+        }
+    }
+
+    /** The definition of a learned claim, in the order the content is read. */
+    private List<String> learnedClaimDefinitionOf(
+            io.matrix.cognitive.report.LearnedClaim claim) {
+        List<String> content = new ArrayList<>();
+        content.add(claim.workspaceId());
+        content.add(claim.claimId());
+        content.add(claim.proposition());
+        content.add(claim.conceptId());
+        content.add(claim.sourceId());
+        content.add(String.join(",", claim.support()));
+        content.add(String.valueOf(claim.validationCases()));
+        content.add(String.valueOf(claim.agreement()));
+        content.add(claim.validationKind().name());
+        content.add(claim.learnedInEpisode());
+        content.add(claim.validationNote());
+        content.add(claim.promotedAt());
+        return content;
     }
 
     // ── the durable profile of the methods ───────────────────────────────────
