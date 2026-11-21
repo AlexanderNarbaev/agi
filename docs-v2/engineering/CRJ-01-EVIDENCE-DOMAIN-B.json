@@ -29,7 +29,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 2048761,
+    "wallNanos" : 1749166,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -52,7 +52,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 173708,
+    "wallNanos" : 187694,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -75,7 +75,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 2048761,
+    "wallNanos" : 1749166,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -98,7 +98,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 148911,
+    "wallNanos" : 173266,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -121,7 +121,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 131388,
+    "wallNanos" : 139903,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -144,7 +144,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 148911,
+    "wallNanos" : 173266,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -167,7 +167,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 124404,
+    "wallNanos" : 137579,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -190,7 +190,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 123453,
+    "wallNanos" : 128392,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -213,7 +213,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 124404,
+    "wallNanos" : 137579,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -236,7 +236,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 121429,
+    "wallNanos" : 131227,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -259,7 +259,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 129895,
+    "wallNanos" : 144853,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -282,7 +282,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 121429,
+    "wallNanos" : 131227,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -305,7 +305,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 129714,
+    "wallNanos" : 160252,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -328,7 +328,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 135415,
+    "wallNanos" : 196490,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -351,7 +351,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 129714,
+    "wallNanos" : 160252,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -374,7 +374,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 137810,
+    "wallNanos" : 124063,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -397,7 +397,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 138010,
+    "wallNanos" : 129163,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -420,7 +420,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 137810,
+    "wallNanos" : 124063,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -443,7 +443,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 137169,
+    "wallNanos" : 124314,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -466,7 +466,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 126899,
+    "wallNanos" : 143300,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -489,7 +489,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 137169,
+    "wallNanos" : 124314,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -512,7 +512,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 138892,
+    "wallNanos" : 152387,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -535,7 +535,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 212160,
+    "wallNanos" : 135084,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -558,7 +558,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 138892,
+    "wallNanos" : 152387,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -581,7 +581,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 147438,
+    "wallNanos" : 125606,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -604,7 +604,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 127851,
+    "wallNanos" : 221387,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -627,7 +627,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 147438,
+    "wallNanos" : 125606,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -640,7 +640,7 @@
       "probes" : 36,
       "settled" : 9,
       "inapplicable" : 0,
-      "wallNanos" : 3134528
+      "wallNanos" : 2877860
     },
     "B" : {
       "episodes" : 9,
@@ -649,7 +649,7 @@
       "probes" : 0,
       "settled" : 9,
       "inapplicable" : 0,
-      "wallNanos" : 1298779
+      "wallNanos" : 1426266
     },
     "C" : {
       "episodes" : 9,
@@ -658,7 +658,7 @@
       "probes" : 0,
       "settled" : 9,
       "inapplicable" : 0,
-      "wallNanos" : 3134528
+      "wallNanos" : 2877860
     }
   }
 }

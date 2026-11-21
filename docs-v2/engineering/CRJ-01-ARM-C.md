@@ -748,3 +748,70 @@ one from a shared document **does**, and the rule fails closed) and
 and still proven by `…LearnedClaimServingTest.xml`.
 
 ---
+
+## 14. The freeze record — computed, re-derivable, and refusing to be written without its roles (2026-11-21)
+
+**§5.5 requires the freeze record to carry nine things**, and §5.6 binds the order: "the
+reviewer publishes the freeze record and the manifest hash **before** the first arm run". A
+freeze record is therefore a thing a reader who **was not there** must be able to **check** —
+otherwise it is a claim, not a record. There was no mechanism that computed it: the record
+would have been a hand-written list of digests, and a hand-written list of digests is a list
+nobody can re-derive.
+
+### 14.1 What the record now is
+
+`Crj01FreezeRecord` computes every field **from the artefacts** — the split, the builder
+source, the two oracle sources, the corpus manifest, the repository's HEAD — so a reader can
+re-derive each one and compare it. The test proves the re-derivation **independently**: it
+recomputes the dataset's digest from the compact JSON of the cases array, recomputes the
+generator's digest from the file's bytes, and resolves the branch SHA with `git rev-parse
+HEAD` — three independent derivations that must agree with the record.
+
+| the field | the value, and how it is derived |
+|---|---|
+| `dataset.sha256` | `56779f8ade0e…` — the UTF-8 bytes of the **compact** JSON `cases` array **+ one line feed** (the protocol's exact scope) |
+| `dataset.fullFileSha256` | `ddb0c602a90d…` — the file as it stands, recorded **separately** so a re-serialised file and the file on disk are both traceable |
+| `generator.sourceSha256` | `4dfb5491bd1d…` — the builder's bytes |
+| `oracle.sourceSha256` | `dda2e3e8a3a5…` (domain A) and `c669dfb70825…` (domain B) — **separately**, because they are different instruments |
+| `seeds` | the generator's seed `20261121` and the **27** pre-committed domain-B episode seeds |
+| `corpusManifestSha256` | `fa7ba16e9bad…` — the corpus manifest's digest, which **matches the value the protocol records** |
+| `branchSha` | the freeze's **own** commit — resolved from `.git/HEAD` and that branch's ref (loose or packed) |
+| `instrumentCrosscheck` | the domain-B truth table against the world: **4 assignments, 4 agreements, 0 disagreements** |
+| `roles` | the case author, the freezing reviewer, and the statement that they are different people and neither wrote a solver |
+
+**The branch SHA is the freeze's OWN commit, not a named branch's.** The protocol says the
+freeze records "the exact commit the freeze was taken on" and that it is "normally **not**
+`b7bd1be4`" — the protocol's baseline. Reading a **named** branch would have been wrong
+twice over: the local `develop` ref is **stale** until it is updated (the first run of this
+mechanism recorded `b7bd1be4` — the baseline — and was therefore wrong), and the freeze may
+legitimately be taken on a feature branch. So the record resolves `.git/HEAD`, and records the
+protocol's baseline **beside** it, under `baselineSha`.
+
+### 14.2 The roles are BINDING — and a machine cannot fill them
+
+The record **refuses to be written** without its roles, and refuses when one person holds
+both: *a freeze record that does not say who froze what is not a freeze record.*
+
+**And the publisher writes PLACEHOLDERS, deliberately.** `Crj01FreezeRecordPublisherTest`
+writes the record with the two role fields marked `UNNAMED` and the status
+`DIGEST RECORD — … the record is NOT a valid freeze until the reviewer fills them and
+publishes it`. A machine cannot name a person, and a record that names a person it invented
+would be **worse than no record**. The protocol's requirement is a fact about **people**, and
+the programme is the one that must assert it.
+
+**So the sealed freeze is two steps**: the publisher writes the **digest record** (final and
+re-derivable), and the **reviewer** fills the two role fields and publishes it. The digests
+are ready; the names are the owner's commission.
+
+**One property worth stating.** The record names the commit the freeze was taken on, which is
+the commit **before** the record itself is committed — so the record's own commit is always
+one step ahead of the SHA it carries. That is inherent to a record that names a commit: the
+**sealed** freeze must therefore be taken on a commit and published as a **later** commit,
+which is exactly the order §5.6 prescribes.
+
+**The evidence:** `docs-v2/engineering/evidence/TEST-io.matrix.crj.runner.Crj01FreezeRecordTest.xml`
+(the record is complete, the digests are re-derivable, the roles are binding) and
+`…Crj01FreezeRecordPublisherTest.xml` (the publication). The record itself is
+`docs-v2/engineering/CRJ-01-FREEZE-RECORD.json`.
+
+---
