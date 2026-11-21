@@ -132,12 +132,12 @@ measurement and an anecdote.
 
 ---
 
-## 4. What is NOT claimed, and the measured null
+## 4. What is NOT claimed, and the measured null (characterised in §8)
 
 | the claim | the state |
 |---|---|
 | **transfer to a different task** | **DEMONSTRATED, in one domain**: a question the procedure was neither proposed from nor validated on was answered by it. It is a **same-domain** transfer over a **17-claim** workspace |
-| **the saving is worth anything** | **MEASURED NULL**: one measurement, **5.32 ms → 5.18 ms** (**2.7 %**), because the support covers **15 of the workspace's 17 claims**. The mechanism is right; the workload is too small for it to matter. A benchmark on a larger workspace is `NOT_INSTRUMENTED` |
+| **the saving is worth anything** | **CHARACTERISED, NOT NULL** (§8): the saving is a function of the support set's **fraction** of the workspace — on a **540-claim** corpus at a fraction of **1/6** it is **78 %** of the reading (**20 ms against 92 ms**), and the bundled 17-claim workspace at its own fraction of **0.88** measures **−0.6 % to 2.8 %**, which is exactly the earlier "2.7 % null". **The null was the workload, not the mechanism** |
 | **the kernel chose the procedure for a measured reason** | **MEASURED, and the first one was not**: the decision used the procedure's **DECLARED** complexity (1 ms against the reference's 25 ms), because the procedure had never run before and the ledger had no measurement of it. The first decision therefore rests on a **promise**; the second rests on the measurement — and that transition is now **pinned by a test** (`ReportProcedureCostBasisTest`): the decision's own stated basis changes from `DECLARED_COMPLEXITY` to `MEASURED` after the procedure has run once, and the trace says so. The remaining defect is the one below |
 | **the CRJ-01 developmental milestone** | **NOT DONE**: no sealed set, no independent oracle, no three-arm comparison, no `δ_MI = 2` measurement. The protocol's D5 — the freeze by a reviewer who is neither the case author nor a solver author — is still open |
 | **the learned-claims half of arm C** (OD-082's second half) | **NOT DONE**: this slice builds the **procedures**. The learned claims need their own promotion-and-validation contract with a held-out-case rule, and the oracle (OD-081's D3) must exist before a claim can be validated against anything but the reference |
@@ -257,5 +257,80 @@ own traces.
   journey — every claim the reference carried on all five held-out questions. That is the
   mechanism working, and it is also a surface: with **one** observed episode, "the claims every
   journey cited" is every claim that episode cited.
+
+---
+
+## 8. WHERE the mechanism pays off — the cost curve (2026-11-21)
+
+**The "measured null" of §4 was a property of the WORKLOAD, and this measurement says so.**
+
+The arm C report carried one number: the procedure saves **2.7 %** of the reading time,
+because its support set covered **15 of the workspace's 17 claims**. A null on one workload
+does not say whether the mechanism is worthless or merely mis-applied — the mechanism's
+premise is that a **narrower reading is cheaper**, so the saving must grow with the ratio of
+the support set to the workspace.
+
+**The instrument.** The same two readings — the full one and the restricted one — over
+workspaces of different sizes and support sets of different fractions, each timed **30 times
+after a 10-pair warmup**, **interleaved** (full, restricted, full, restricted, …) so that a
+drift in the machine hits both sides equally. The reported statistic is the **median**, not the
+mean: the distribution of a reading on a shared machine has a long tail, and the repository's
+own latency assertion uses the median of 50 passes for exactly this reason. The test asserts
+only what is **not** a matter of timing — the restricted reading cites a **subset** of the
+full reading's claims and answers whenever the full one answers — so no load-sensitive
+assertion is introduced.
+
+### 8.1 The curve — three runs, two workspaces
+
+| the workspace | the support's fraction of the claims | the full reading (median ms) | the restricted reading (median ms) | the saving |
+|---|---|---|---|---|
+| **research pool — 540 claims** | 0.167 (90 claims) | 92.6 / 93.4 | 20.1 / 20.3 | **78.25 % / 78.22 %** |
+| | 0.337 (182 claims) | 92.0 / 92.3 | 29.8 / 29.8 | **67.59 % / 67.75 %** |
+| | 0.770 (416 claims) | 93.9 / 92.2 | 69.0 / 67.6 | **26.58 % / 26.65 %** |
+| | 1.000 (540 claims) | 91.6 / 93.3 | 91.7 / 93.6 | **−0.08 % / −0.32 %** |
+| **bundled photosynthesis — 17 claims** | 0.059 (1 claim) | 3.90 / 3.76 | 2.90 / 2.82 | **25.69 % / 24.97 %** |
+| | 0.294 (5 claims) | 3.18 / 3.29 | 2.46 / 2.51 | **22.69 % / 23.62 %** |
+| | 0.412 (7 claims) | 3.14 / 3.00 | 2.70 / 2.58 | **14.07 % / 14.21 %** |
+| | 0.882 (15 claims) | 3.14 / 3.07 | 3.16 / 2.98 | **−0.60 % / 2.79 %** |
+
+(The two numbers per cell are **two consecutive runs**; a third, earlier run — taken while the
+machine was busier, its full reading a 143 ms median — gave 85.46 %, 77.83 %, 44.36 % and
+0.02 % on the pool's four fractions, and is quoted here rather than hidden: **the spread of
+this measurement on a loaded machine is real**, and the owner should read the two-run figures
+as the stable ones.)
+
+### 8.2 What the curve says — three findings
+
+1. **The saving grows as the support fraction shrinks**, on both workspaces, and the shape is
+   the same: ~0 % at the whole workspace, ~27 % at three quarters, ~68 % at a third, ~78 % at
+   a sixth.
+2. **The ABSOLUTE saving scales with the workspace.** The pool's full reading is ~92 ms; the
+   bundled one is ~3.1 ms. The same fraction therefore buys a saving of tens of milliseconds
+   on one workspace and of about one on the other. **A percentage alone hides this**, and the
+   percentage is what the earlier report quoted.
+3. **The "null" is fully explained.** The bundled support covered **15 of 17 claims** — a
+   fraction of **0.88** — and the curve at that fraction measures **−0.60 % and 2.79 %**,
+   which is exactly the 2.7 % the earlier report quoted. **The null was the workload, not the
+   mechanism.**
+
+### 8.3 What it means for the programme — a decision the owner can act on
+
+- **The sealed split's corpus must be a LARGE workspace.** A corpus of a few dozen claims
+  cannot show this mechanism's value at **any** support fraction: the best the bundled
+  workspace offers is ~25 % of a 3 ms reading. The research pool's **540 claims** is the
+  shape that can.
+- **The arm C support set must be a SMALL FRACTION of that corpus** — about a sixth — or the
+  mechanism has nothing to save. A support set that covers most of the corpus is the case the
+  mechanism was built for and does not help.
+- **The programme may therefore expect a real cost advantage**, and it should not be
+  surprised by one: on the pool at a sixth, the restricted reading is **~20 ms against
+  ~92 ms**. What is still unmeasured is the **correctness** side — the `δ_MI` the protocol
+  asks for — and that still needs the sealed set and the oracle's verdict on every answer.
+- **The measurement is the reading, not the journey.** The artifact write is excluded, and it
+  is common to both paths — but a journey's total cost would be a smaller difference. The
+  saving quoted here is the reading's, and it is what the mechanism changes.
+
+**The evidence:** `docs-v2/engineering/evidence/TEST-io.matrix.cognitive.report.ArmCCostMeasurementTest.xml`
+— 3 tests, 0 failures: the curve, the small workspace's curve, and the subset invariant.
 
 ---

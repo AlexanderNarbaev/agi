@@ -942,3 +942,28 @@ evidence is a suspicion, and it is marked as such.
   because the oracle scores the cited evidence of every answer.
 - **status**: **OPEN as a labelled limit** — the mechanism is bounded on the side of WHAT a claim may say (the
   containment gate) and coarse on the side of WHERE (the concept).
+
+### R-EPIS-17 — the arm C cost claim rested on one measurement over a 17-claim workspace
+
+- **the finding**: the report's cost claim was **one measurement** — the procedure saves
+  **2.7 %** of the reading — over a workspace of **17 claims** whose support covered **15** of
+  them. A single measurement over a workload that small cannot say whether the mechanism is
+  worthless or merely mis-applied.
+- **the measurement** (2026-11-21, `ArmCCostMeasurementTest`): the same two readings, timed 30
+  times after a 10-pair warmup and **interleaved**, reported as the **median**, over two
+  workspaces and four support fractions each. On the **540-claim** research pool the saving is
+  **78 %** at a fraction of **1/6**, **68 %** at a third, **27 %** at three quarters and
+  **≈0 %** at the whole workspace; on the **17-claim** bundled workspace it is **25 %** at a
+  fraction of **0.06** and **≈0 %** at its own fraction of **0.88**.
+- **the attribution**: the bundled support's fraction was **0.88**, and the curve at that
+  fraction measures **−0.6 % to 2.8 %** — the "2.7 % null". **The null was the workload, not
+  the mechanism**, and the mechanism's premise — a narrower reading is cheaper — holds where
+  the workspace is large enough for the per-claim cost to dominate.
+- **the consequence for the programme**: the sealed split's corpus must be a **large** workspace
+  and the arm C support set a **small fraction** of it, or the mechanism has nothing to save.
+- **the evidence**: `docs-v2/engineering/evidence/TEST-io.matrix.cognitive.report.ArmCCostMeasurementTest.xml`
+  — 3 tests, 0 failures. The analysis is `docs-v2/engineering/CRJ-01-ARM-C.md` §8.
+- **owner**: the programme — the corpus commission carries this constraint.
+- **status**: **CLOSED as a measurement**; the claim it replaces is characterised, and the
+  **correctness** side (`δ_MI`) remains unmeasured for the reason every other measurement here
+  remains unmeasured: the sealed set does not exist.
