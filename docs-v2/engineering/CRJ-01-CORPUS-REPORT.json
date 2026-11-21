@@ -11,6 +11,8 @@
     "claimsThatAreVerbatimSpans" : 483,
     "claimsThatAreFresh" : 470,
     "claimsThatAreFreshAndSpans" : 413,
+    "claimsWhoseSpanTheLearnerCanSee" : 483,
+    "freshAndSpanCandidatesTheLearnerCanSee" : 413,
     "regressionGoldPropositions" : 101
   },
   "claimsPerDocument" : {

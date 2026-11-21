@@ -31,7 +31,7 @@ flock /tmp/gradle-matrix.lock ./gradlew :matrix-core:test \
 cp matrix-core/build/test-results/test/TEST-*.xml docs-v2/engineering/evidence/
 ```
 
-**The retained set is now 82 files: 79 GREEN suites, 365 tests, 0 failures, 0 errors, 0
+**The retained set is now 84 files: 81 GREEN suites, 367 tests, 0 failures, 0 errors, 0
 skipped** (the refresh of 2026-11-21, after CRJ-01's arm runner and the round-16 additions:
 the corpus report, the dev split's validator, the arm runner, the cost curve and the measured
 cost, then the domain-B runner and the lamp world's structure, the learned claim's scope and
