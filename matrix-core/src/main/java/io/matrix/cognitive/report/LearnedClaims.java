@@ -28,6 +28,26 @@ import java.util.List;
  * workspace: a learned claim is a fact about <b>this</b> workspace, and a claim whose
  * document is gone is a claim about nothing. And it may not add a claim the answer already
  * carries.</p>
+ *
+ * <p><b>And the applicability is not the concept ALONE (R-EPIS-16).</b> A concept match
+ * alone is too coarse: it gave a question about a concept <b>every</b> learned claim of that
+ * concept, from <b>any</b> document — including a claim validated against a document the
+ * question's evidence never touches, and therefore about a different part of the concept
+ * altogether. The rule now requires the concept match <b>and</b> a common document: the
+ * answer's evidence must draw on one of the sources the claim was <b>validated against</b>
+ * (its own source, and the sources observed with it).</p>
+ *
+ * <p><b>Why that is the right scope and not a weaker one.</b> The learner's agreement gate
+ * established that the reference carried the claim on <b>every</b> held-out question, and
+ * those questions' evidence came from exactly those sources. So the claim's validated scope
+ * IS "what the workspace says about this concept, drawn from these documents", and the
+ * narrowed rule applies the claim exactly where that validation speaks. It can only
+ * <b>extend</b> the coverage of a body of evidence the answer already rests on; it can never
+ * import a document's subject into a question that never touched it.</p>
+ *
+ * <p><b>And it fails CLOSED.</b> An answer with no sources, or a claim with no support, has
+ * no common document — so nothing is added. The rule may not be defeated by missing
+ * data.</p>
  */
 public final class LearnedClaims {
 
@@ -52,9 +72,35 @@ public final class LearnedClaims {
         if (conceptIds.isEmpty()) {
             return List.of();
         }
+        List<String> sourceIds = new ArrayList<>();
+        for (io.matrix.knowledge.Source source : answer.sources()) {
+            sourceIds.add(source.id());
+        }
         return learned.stream()
                 .filter(claim -> conceptIds.contains(claim.conceptId()))
+                .filter(claim -> sharesADocument(claim, sourceIds))
                 .toList();
+    }
+
+    /**
+     * Whether the answer's evidence and the claim's validated support draw on a COMMON
+     * document.
+     *
+     * @param claim         the learned claim
+     * @param answerSources the sources the answer's evidence comes from
+     * @return true when they share at least one document
+     */
+    private static boolean sharesADocument(LearnedClaim claim, List<String> answerSources) {
+        if (claim.support().isEmpty() || answerSources.isEmpty()) {
+            // nothing to compare, so nothing is shown to be in scope: the rule fails closed
+            return false;
+        }
+        for (String sourceId : claim.support()) {
+            if (answerSources.contains(sourceId)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

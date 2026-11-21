@@ -696,3 +696,55 @@ and `…Crj01DomainBStructureMeasurementTest.xml` — the rows are in
 `docs-v2/engineering/CRJ-01-EVIDENCE-DOMAIN-B.json`.
 
 ---
+
+## 13. The learned claim's scope — the concept alone was too coarse (2026-11-21)
+
+**R-EPIS-16 is closed.** The learned claim's serving rule was: it applies when the answer's
+**concepts** include the claim's concept, and nothing else. The concept is the right anchor
+— a token rule would be the retriever's own rule, and the protocol names that confound
+exactly (A3, "the gain is retrieval by overlap") — but the anchor was **coarse**: a question
+about a concept received **every** learned claim of that concept, from **any** document,
+including a claim validated against a document the question's evidence never touches, and
+therefore about a different part of the concept altogether.
+
+### 13.1 The rule now: the concept AND a common document
+
+**A learned claim applies only when the answer's evidence draws on one of the sources the
+claim was VALIDATED AGAINST** — its own source, and the sources observed with it.
+
+**Why that is the right scope and not a weaker one.** The learner's **agreement gate**
+established that the reference carried the claim on **every** held-out question, and those
+questions' evidence came from exactly those sources. So the claim's validated scope IS "what
+the workspace says about this concept, drawn from these documents", and the narrowed rule
+applies the claim **exactly where that validation speaks**. It can only **extend** the
+coverage of a body of evidence the answer already rests on; it can never import a document's
+subject into a question that never touched it.
+
+**And it fails CLOSED**: an answer with no sources, or a claim with no support, adds nothing.
+The rule may not be defeated by missing data.
+
+### 13.2 What the coarse rule cost — measured
+
+Over the research pool (seven real documents, **one learned claim per document**, each a
+verbatim span of its document) and **thirteen** questions:
+
+| | |
+|---|---|
+| the coarse rule would add | **22** claims |
+| the narrowed rule adds | **20** |
+| the coarse rule **over-applied** | **2** claims — every one from a document the answer **never drew on** |
+
+**The honest reading: 9 % is a real over-application and not a dramatic one**, and the reason
+is visible in the corpus — the pool's seven documents are all about plate tectonics, so a
+question about any of them draws on most of them, and **the concept genuinely is most of the
+scope**. **The coarse rule's error is bounded by how topically homogeneous the corpus is.**
+The defect grows with a corpus of unrelated documents, and the research pool is close to the
+best case for the coarse rule.
+
+**The evidence:** `docs-v2/engineering/evidence/TEST-io.matrix.cognitive.report.LearnedClaimScopeTest.xml`
+(the rule: the claim of the same concept from an unrelated document does **not** apply, the
+one from a shared document **does**, and the rule fails closed) and
+`…LearnedClaimScopeMeasurementTest.xml` (the measurement). The serving path is unchanged
+and still proven by `…LearnedClaimServingTest.xml`.
+
+---

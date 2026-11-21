@@ -940,6 +940,29 @@ evidence is a suspicion, and it is marked as such.
   many held-out cases it was validated.
 - **owner**: the programme — the **sealed set** is what would say whether the coarse applicability costs accuracy,
   because the oracle scores the cited evidence of every answer.
+- **CLOSED (2026-11-21) — the applicability is the concept AND a common document.** The claim now applies only when
+  the answer's evidence draws on one of the sources the claim was **validated against** (its own source, and the
+  sources observed with it). The reason is the learner's own **agreement gate**: it established that the reference
+  carried the claim on every held-out question, and those questions' evidence came from exactly those sources — so
+  the claim's validated scope IS "what the workspace says about this concept, drawn from these documents". The
+  narrowed rule applies the claim exactly where that validation speaks: it can only **extend** the coverage of a
+  body of evidence the answer already rests on, and it can never import a document's subject into a question that
+  never touched it. And it **fails closed**: an answer with no sources, or a claim with no support, adds nothing.
+- **the measurement of what the coarse rule cost** (`LearnedClaimScopeMeasurementTest`): over the research pool —
+  seven real documents, one learned claim per document, each a verbatim span of its document — and thirteen
+  questions, the coarse rule would have added **22** claims and the narrowed rule adds **20**: the coarse rule
+  **over-applied 2** claims, and every one of them was a claim of the same concept from a document the answer
+  **never drew on**.
+- **the honest reading of that number**: **9 %** is a real over-application and not a dramatic one, and the reason
+  is visible in the corpus: the pool's seven documents are all about plate tectonics, so a question about any of
+  them draws on most of them and the concept genuinely is most of the scope. **The coarse rule's error is bounded
+  by how topically homogeneous the corpus is** — the defect grows with a corpus of unrelated documents, and the
+  research pool is close to the best case for the coarse rule.
+- **the evidence**: `docs-v2/engineering/evidence/TEST-io.matrix.cognitive.report.LearnedClaimScopeTest.xml` (the
+  rule: the claim of the same concept from an unrelated document does not apply, the one from a shared document
+  does, and the rule fails closed) and
+  `…LearnedClaimScopeMeasurementTest.xml` (the measurement). The serving path is unchanged and still proven by
+  `…LearnedClaimServingTest.xml`.
 - **status**: **OPEN as a labelled limit** — the mechanism is bounded on the side of WHAT a claim may say (the
   containment gate) and coarse on the side of WHERE (the concept).
 
