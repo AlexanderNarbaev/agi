@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.cognitive.report.ReportJourneyEpisodeTest" tests="2" skipped="0" failures="2" errors="0" timestamp="2026-11-21T10:01:53.369Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.738">
+  <properties/>
+  <testcase name="the journey's trace episode is a real episode of the workspace" classname="io.matrix.cognitive.report.ReportJourneyEpisodeTest" time="0.599">
+    <failure message="java.lang.AssertionError: [the journey's episode is one of the workspace's episodes] &#10;Expecting ArrayList:&#10;  []&#10;to contain:&#10;  [&quot;report-c2a.report.v1.bf1736df1554cf9948f00043&quot;]&#10;but could not find the following element(s):&#10;  [&quot;report-c2a.report.v1.bf1736df1554cf9948f00043&quot;]&#10;" type="java.lang.AssertionError">java.lang.AssertionError: [the journey's episode is one of the workspace's episodes] 
+Expecting ArrayList:
+  []
+to contain:
+  [&quot;report-c2a.report.v1.bf1736df1554cf9948f00043&quot;]
+but could not find the following element(s):
+  [&quot;report-c2a.report.v1.bf1736df1554cf9948f00043&quot;]
+
+	at io.matrix.cognitive.report.ReportJourneyEpisodeTest.theJourneyOpensItsEpisode(ReportJourneyEpisodeTest.java:68)
+</failure>
+  </testcase>
+  <testcase name="a replayed journey continues the SAME episode rather than opening a second one" classname="io.matrix.cognitive.report.ReportJourneyEpisodeTest" time="0.129">
+    <failure message="org.opentest4j.AssertionFailedError: [the replay did not open a second episode for the same identity] &#10;Expecting actual:&#10;  []&#10;to contain exactly (and in same order):&#10;  [&quot;report-c2a.report.v1.03d0976af1641c1703c316f3&quot;]&#10;but could not find the following elements:&#10;  [&quot;report-c2a.report.v1.03d0976af1641c1703c316f3&quot;]&#10;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: [the replay did not open a second episode for the same identity] 
+Expecting actual:
+  []
+to contain exactly (and in same order):
+  [&quot;report-c2a.report.v1.03d0976af1641c1703c316f3&quot;]
+but could not find the following elements:
+  [&quot;report-c2a.report.v1.03d0976af1641c1703c316f3&quot;]
+
+	at io.matrix.cognitive.report.ReportJourneyEpisodeTest.theReplayedJourneyContinuesTheEpisode(ReportJourneyEpisodeTest.java:109)
+</failure>
+  </testcase>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
