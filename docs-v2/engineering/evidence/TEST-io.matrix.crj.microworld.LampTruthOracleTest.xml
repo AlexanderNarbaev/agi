@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="io.matrix.crj.microworld.LampTruthOracleTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-21T10:14:36.970Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.005">
+<testsuite name="io.matrix.crj.microworld.LampTruthOracleTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-21T10:46:50.730Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.002">
   <properties/>
-  <testcase name="the cross-check against the world agrees on all four assignments" classname="io.matrix.crj.microworld.LampTruthOracleTest" time="0.003"/>
-  <testcase name="the oracle's table is the conjunction the specification describes" classname="io.matrix.crj.microworld.LampTruthOracleTest" time="0.001"/>
+  <testcase name="the cross-check against the world agrees on all four assignments" classname="io.matrix.crj.microworld.LampTruthOracleTest" time="0.0"/>
+  <testcase name="the oracle's table is the conjunction the specification describes" classname="io.matrix.crj.microworld.LampTruthOracleTest" time="0.0"/>
   <testcase name="an assignment the world did not answer is a disagreement, not a pass" classname="io.matrix.crj.microworld.LampTruthOracleTest" time="0.0"/>
   <testcase name="a disagreement makes the run VOID with INSTRUMENT_MISMATCH" classname="io.matrix.crj.microworld.LampTruthOracleTest" time="0.001"/>
   <system-out><![CDATA[]]></system-out>
