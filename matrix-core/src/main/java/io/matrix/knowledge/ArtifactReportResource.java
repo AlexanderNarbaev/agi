@@ -12,6 +12,7 @@ import io.matrix.cognitive.algorithms.AlgorithmRefusalException;
 import io.matrix.cognitive.algorithms.ComputeBudget;
 import io.matrix.cognitive.algorithms.ProblemRequest;
 import io.matrix.cognitive.report.ArtifactObserver;
+import io.matrix.cognitive.report.LearnedClaim;
 import io.matrix.cognitive.report.ReportJourney;
 import io.matrix.cognitive.report.ReportJourneyOutcome;
 import io.matrix.cognitive.report.WorkspaceFingerprint;
@@ -323,9 +324,14 @@ public class ArtifactReportResource {
                 request.question(), level);
         List<Procedure> procedures = proceduresOf(workspaceId);
         facts.addAll(procedureFacts(procedures, snapshot));
+        // the LEARNED CLAIMS of the workspace: claims the system has validated, with their
+        // provenance. They are evidence, not authority: a claim that is not applicable to
+        // the question's concept is not added, and a claim whose source is gone is not added.
+        List<LearnedClaim> learnedClaims = learnedClaimsOf(workspaceId);
 
         ReportJourney.Problem problem = new ReportJourney.Problem(workspaceId, request.question(),
-                identity, reportName, level, workbench, actions.writer(), retained, fingerprint);
+                identity, reportName, level, workbench, actions.writer(), retained, fingerprint,
+                learnedClaims);
         ProblemRequest planRequest = new ProblemRequest(AlgorithmFamilies.KNOWLEDGE_REPORT, problem,
                 facts, ComputeBudget.unbounded());
         ReportJourneyPlanner.Plan plan = planner.plan(planRequest, forcedMethodId,
@@ -422,7 +428,7 @@ public class ArtifactReportResource {
         try {
             response = result.replayed()
                     ? replayedResponse(retained, written, traceFailures)
-                    : response(result, written, traceFailures);
+                    : response(workspaceId, result, written, traceFailures);
         } catch (IllegalStateException unreadable) {
             return refused(503, "output_root_unavailable", unreadable.getMessage());
         }
@@ -533,8 +539,8 @@ public class ArtifactReportResource {
      * @param written     the writer's own result
      * @return the response
      */
-    private ReportResponse response(ReportJourney.Result result, ArtifactWriter.Result written,
-            List<String> traceFailures) {
+    private ReportResponse response(String workspaceId, ReportJourney.Result result,
+            ArtifactWriter.Result written, List<String> traceFailures) {
         Answer answer = result.answer();
         List<EvidenceReference> evidence = new ArrayList<>();
         Map<String, String> sourceTitles = new LinkedHashMap<>();
@@ -550,6 +556,17 @@ public class ArtifactReportResource {
         List<String> limitations = new ArrayList<>(answer.limitations());
         limitations.add("a written report is a record of what the workspace said; it is not "
                 + "independent evidence for the propositions it repeats");
+        // the LEARNED CLAIMS that contributed are named: a caller that reads the evidence
+        // has to be able to tell which of it the retrieval found and which of it the system
+        // learned and validated
+        for (LearnedClaim learned : learnedClaimsOf(workspaceId)) {
+            if (answer.claims().stream().anyMatch(claim -> claim.id().equals(learned.claimId()))) {
+                limitations.add("the evidence includes the learned claim " + learned.claimId()
+                        + ", which the system validated on " + learned.validationCases()
+                        + " held-out case(s) against the reference; it is a claim about this "
+                        + "workspace, not about the world");
+            }
+        }
         limitations.addAll(traceFailures);
         if (!answer.answered()) {
             limitations.add("the question was not answered; the absence of an answer is the "
@@ -637,6 +654,26 @@ public class ArtifactReportResource {
      * @param workspaceId the workspace the request addresses
      * @return the procedures
      */
+    /**
+     * The workspace's learned claims.
+     *
+     * <p>A learned claim is a claim the system validated — its proposition checked to be a
+     * span of its source's text, and the reference checked to carry it on held-out questions.
+     * The journey may cite one inside its applicability, and the applicability is checked
+     * against the workspace as it is now: a claim whose document is gone is a claim about
+     * nothing, and it is not offered.</p>
+     *
+     * @param workspaceId the workspace
+     * @return the learned claims
+     */
+    private List<LearnedClaim> learnedClaimsOf(String workspaceId) {
+        CognitiveStore store = traceStore();
+        if (store == null) {
+            return List.of();
+        }
+        return new ArrayList<>(store.learnedClaims(workspaceId));
+    }
+
     private List<Procedure> proceduresOf(String workspaceId) {
         CognitiveStore store = traceStore();
         if (store == null) {

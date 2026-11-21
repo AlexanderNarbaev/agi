@@ -160,6 +160,11 @@ public final class ReportProcedureMethod
         }
         AbstractionLevel level = input.level();
         Answer answer = input.workbench().ask(input.workspaceId(), input.question(), level, support);
+        // the learned claims of the workspace join the evidence, exactly as they do on the
+        // reference path: a validated claim is evidence of the question's concept, and the
+        // path that answered does not change that
+        answer = LearnedClaims.apply(input.workbench(), input.workspaceId(), answer,
+                input.learnedClaims());
         byte[] content = ReportBuilder.markdown(input.workspaceId(), input.question(), answer)
                 .getBytes(java.nio.charset.StandardCharsets.UTF_8);
         var write = input.writer().write(input.identity(), input.reportName(), content);
