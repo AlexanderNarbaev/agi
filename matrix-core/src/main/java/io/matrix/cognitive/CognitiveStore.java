@@ -233,6 +233,29 @@ public final class CognitiveStore
         try (Statement st = connection.createStatement()) {
             st.execute("CREATE TABLE IF NOT EXISTS cognitive_schema_meta ("
                     + "key TEXT PRIMARY KEY, value TEXT NOT NULL)");
+            // OD-082's second half: the LEARNED CLAIM - a workspace claim the system
+            // checked, with the provenance of that check. It is keyed by the PAIR
+            // (id, version) for the same reason the procedure is: a re-validation is a new
+            // version beside the old one, never an edit of it.
+            st.execute("""
+                    CREATE TABLE IF NOT EXISTS cognitive_learned_claim (
+                        id TEXT NOT NULL,
+                        version TEXT NOT NULL,
+                        workspace_id TEXT NOT NULL,
+                        claim_id TEXT NOT NULL,
+                        proposition TEXT NOT NULL,
+                        concept_id TEXT NOT NULL,
+                        source_id TEXT NOT NULL,
+                        support TEXT NOT NULL,
+                        validation_cases INTEGER NOT NULL,
+                        validation_agreement REAL NOT NULL,
+                        validation_kind TEXT,
+                        learned_in_episode TEXT,
+                        validation_note TEXT,
+                        promoted_at TEXT NOT NULL,
+                        PRIMARY KEY (id, version)
+                    )""");
+
             st.execute("""
                     CREATE TABLE IF NOT EXISTS cognitive_episode (
                         id TEXT PRIMARY KEY,
@@ -1301,6 +1324,158 @@ public final class CognitiveStore
             throw new IllegalStateException("failed to read the procedures", e);
         }
         return out;
+    }
+
+    // ── the learned claims ───────────────────────────────────────────────────
+
+    /**
+     * Records a learned claim.
+     *
+     * <p><b>The same rule as a procedure's version.</b> The identity of a learned claim is
+     * the PAIR (id, version): a re-validation is a new row beside the old one, and the
+     * predecessor survives. Writing the same pair again with the same definition is a no-op;
+     * writing it with a DIFFERENT definition is a conflict, because a version of a learned
+     * claim is never rewritten.</p>
+     *
+     * @param workspaceId the workspace the claim belongs to
+     * @param claim       the learned claim
+     */
+    public synchronized void recordLearnedClaim(String workspaceId,
+                                                io.matrix.cognitive.report.LearnedClaim claim) {
+        List<String> existing = learnedClaimContent(claim.id(), claim.version());
+        List<String> definition = learnedClaimDefinitionOf(claim);
+        if (existing != null) {
+            if (existing.equals(definition)) {
+                return;
+            }
+            throw new CognitiveConflictException(
+                    CognitiveConflictException.Kind.IMMUTABLE_RECORD,
+                    "learned claim " + claim.id() + " version " + claim.version()
+                            + " already exists with a different definition; a version of a "
+                            + "learned claim is never rewritten");
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO cognitive_learned_claim(id, version, workspace_id, claim_id, "
+                        + "proposition, concept_id, source_id, support, validation_cases, "
+                        + "validation_agreement, validation_kind, learned_in_episode, "
+                        + "validation_note, promoted_at) "
+                        + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, claim.id());
+            ps.setString(2, claim.version());
+            ps.setString(3, workspaceId);
+            ps.setString(4, claim.claimId());
+            ps.setString(5, claim.proposition());
+            ps.setString(6, claim.conceptId());
+            ps.setString(7, claim.sourceId());
+            ps.setString(8, String.join(",", claim.support()));
+            ps.setInt(9, claim.validationCases());
+            ps.setDouble(10, claim.agreement());
+            ps.setString(11, claim.validationKind().name());
+            ps.setString(12, claim.learnedInEpisode());
+            ps.setString(13, claim.validationNote());
+            ps.setString(14, claim.promotedAt());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            if (isConstraintViolation(e)) {
+                throw new CognitiveConflictException(
+                        CognitiveConflictException.Kind.IMMUTABLE_RECORD,
+                        "learned claim " + claim.id() + " version " + claim.version()
+                                + " already exists");
+            }
+            throw new IllegalStateException("failed to record the learned claim", e);
+        }
+    }
+
+    /**
+     * The learned claims of a workspace, newest first.
+     *
+     * @param workspaceId the workspace
+     * @return the learned claims
+     */
+    public synchronized List<io.matrix.cognitive.report.LearnedClaim> learnedClaims(
+            String workspaceId) {
+        List<io.matrix.cognitive.report.LearnedClaim> out = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT id, version, workspace_id, claim_id, proposition, concept_id, source_id, "
+                        + "support, validation_cases, validation_agreement, validation_kind, "
+                        + "learned_in_episode, validation_note, promoted_at "
+                        + "FROM cognitive_learned_claim WHERE workspace_id = ? "
+                        + "ORDER BY promoted_at DESC, id, version DESC")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String kind = rs.getString("validation_kind");
+                    out.add(new io.matrix.cognitive.report.LearnedClaim(
+                            rs.getString("id"), rs.getString("version"),
+                            rs.getString("workspace_id"), rs.getString("claim_id"),
+                            rs.getString("proposition"), rs.getString("concept_id"),
+                            rs.getString("source_id"), splitSet(rs.getString("support")),
+                            rs.getInt("validation_cases"),
+                            rs.getDouble("validation_agreement"),
+                            kind == null ? ValidationKind.INDEPENDENT
+                                    : ValidationKind.valueOf(kind),
+                            rs.getString("learned_in_episode"),
+                            rs.getString("validation_note"),
+                            rs.getString("promoted_at")));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the learned claims", e);
+        }
+        return out;
+    }
+
+    /** The stored content of a learned claim, or null when it does not exist. */
+    private List<String> learnedClaimContent(String id, String version) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT workspace_id, claim_id, proposition, concept_id, source_id, support, "
+                        + "validation_cases, validation_agreement, validation_kind, "
+                        + "learned_in_episode, validation_note, promoted_at "
+                        + "FROM cognitive_learned_claim WHERE id = ? AND version = ?")) {
+            ps.setString(1, id);
+            ps.setString(2, version);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    return null;
+                }
+                List<String> content = new ArrayList<>();
+                content.add(rs.getString(1));
+                content.add(rs.getString(2));
+                content.add(rs.getString(3));
+                content.add(rs.getString(4));
+                content.add(rs.getString(5));
+                content.add(rs.getString(6));
+                content.add(rs.getString(7));
+                content.add(rs.getString(8));
+                content.add(rs.getString(9));
+                content.add(rs.getString(10));
+                content.add(rs.getString(11));
+                content.add(rs.getString(12));
+                content.add(rs.getString(13));
+                return content;
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the learned claim", e);
+        }
+    }
+
+    /** The definition of a learned claim, in the order the content is read. */
+    private List<String> learnedClaimDefinitionOf(
+            io.matrix.cognitive.report.LearnedClaim claim) {
+        List<String> content = new ArrayList<>();
+        content.add(claim.workspaceId());
+        content.add(claim.claimId());
+        content.add(claim.proposition());
+        content.add(claim.conceptId());
+        content.add(claim.sourceId());
+        content.add(String.join(",", claim.support()));
+        content.add(String.valueOf(claim.validationCases()));
+        content.add(String.valueOf(claim.agreement()));
+        content.add(claim.validationKind().name());
+        content.add(claim.learnedInEpisode());
+        content.add(claim.validationNote());
+        content.add(claim.promotedAt());
+        return content;
     }
 
     // ── the durable profile of the methods ───────────────────────────────────
