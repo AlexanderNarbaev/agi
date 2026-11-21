@@ -58,8 +58,24 @@ class PortfolioBenchmarkTest {
     /** The ninety-fifth percentile quantile. */
     private static final double P95 = 0.95;
 
-    /** How many entries the membership corpus holds. */
-    private static final int CORPUS_SIZE = 256;
+    /**
+     * How many entries the membership corpus holds.
+     *
+     * <p><b>Why the corpus is large enough for the asymptotics to show.</b> The claim this
+     * test makes is that a prebuilt index is <b>cheaper per query</b> than the scan it
+     * replaces — and that claim is an <b>asymptotic</b> one: the index's lookup does not
+     * grow with the corpus, the scan's does. At a corpus of a couple of hundred short
+     * strings the whole corpus fits in the CPU's cache, the scan's linear pass is
+     * cache-resident and almost free, and the comparison measures the MACHINE's cache
+     * rather than the ALGORITHM. That is not a theoretical worry: at 256 entries the
+     * comparison flipped between runs on the same machine (the index measured 10.1 us
+     * against the scan's 19.8 us in isolation and 31.6 us against 21.1 us under the
+     * suite's load), and the break-even it computed overflowed to a nonsense number.</p>
+     *
+     * <p>So the corpus is big enough that the scan's linear pass is real work. The
+     * comparison is then about the code, and it is stable.</p>
+     */
+    private static final int CORPUS_SIZE = 4096;
 
     /** How many queries are asked of the membership corpus. */
     private static final int QUERY_COUNT = 64;

@@ -364,3 +364,161 @@ the decision's own reason names the basis.
 — 3 tests, 0 failures: the curve, the small workspace's curve, and the subset invariant.
 
 ---
+
+## 9. The corpus report — how much of the research pool is LEFT (2026-11-21)
+
+**The corpus question was settled only partly, and the part that was left is the part the
+sealed split turns on.**
+
+Two measurements had already settled the corpus's *shape*: the bundled photosynthesis package
+is a **paraphrase** corpus (0 of 7 cited claims are spans), and a corpus imported through the
+**production acquisition path** serves **verbatim spans** (483 of 540). But the sealed split
+needs **fresh** evidence, and freshness was unmeasured: the three regression sets — the
+29-case development set, the C2A 38-case set and the EPISTEMIC 16-case set — have all drawn
+their gold from this pool or its seed corpus, and a claim that is one of their gold is **not
+held-out proof** by the protocol's own §5.2.
+
+**The instrument.** `Crj01CorpusReportBuilder` imports the research pool through the
+**production import path** (`workbench.importDocument(...)`), reads the documents' **bytes**,
+and classifies every claim the importer derives. It writes a byte-reproducible artefact,
+`docs-v2/engineering/CRJ-01-CORPUS-REPORT.json`, and reads it back and compares it
+byte-for-byte.
+
+**The numbers.**
+
+| | |
+|---|---|
+| documents in the pool | **7** |
+| claims the production path derives | **540** |
+| claims that are **verbatim spans** of their document | **483** (89.4 %) |
+| claims that are **fresh** — no regression set has taken their proposition | **470** (87.0 %) |
+| claims that are **both** | **413** (76.5 %) |
+| gold propositions the three regression sets hold | 101 (31 + 59 + 11) |
+
+**The verdict for the commission: the corpus is SUFFICIENT.** The sealed split needs **18**
+domain-A cases; the pool offers **413** claims that are fresh and literal spans — a factor of
+**23** over the requirement. The corpus does **not** need to be replaced, and the recipe the
+earlier measurements gave the case author ("import through the production path, pick a gold
+that IS a span") is **sufficient**.
+
+**And the support fractions the cost curve needs are here.** The pool's seven documents hold
+90, 45, 82, 14, 90, 152 and 65 claims, so a support set of **one** document is **0.1667** of
+the corpus — **exactly** the fraction at which the cost curve measured a **78 %** saving. The
+corpus reproduces the measurement's conditions without adjustment.
+
+### 9.1 The instrument's own honesty — a defect it caught in itself
+
+The first run of the builder reported **"540 of 540 claims are fresh"** — a number that
+looked like excellent news and was **false**. The cause: the builder read the sets with
+Jackson's `readTree`, which returns a `JsonNode` and **not** a `Map`, so the shape test was
+always false and **no set was read at all**. An instrument that reads nothing reports
+everything as fresh.
+
+Two things were changed, and both are in the artefact:
+
+1. the read is `readValue(..., Map.class)`, so the sets are actually read;
+2. the builder now **asserts that it read something** — that the discovery found the sets and
+   that each set's gold is non-empty. An instrument that cannot report a broken read is not an
+   instrument.
+
+**And the governance.** The repository holds that a held-out set "is referenced by its own
+builder and its own reader, and by nothing else in the production or research code", and the
+check is enforced on every file. So the corpus report **does not name** the held-out sets:
+it **discovers** them by **shape** — a JSON file whose cases carry gold claims with
+propositions is a held-out set — which needs no list to maintain and names none. The
+instrument carries **no gold proposition and no question** of any set: it reads the sets at
+run time, exactly as the repository's own adversarial probes do. The artefact was checked
+against the three sets: the overlap between the report's 412 candidates and the sets' 101 gold
+propositions is **zero**.
+
+**The evidence:** `docs-v2/engineering/evidence/TEST-io.matrix.crj.corpus.Crj01CorpusReportBuilder.xml`
+— one test, zero failures.
+
+---
+
+## 10. The arm runner — the FIRST three-arm comparison on the served path (2026-11-21)
+
+**Until now the arms had been measured one at a time, by hand, and no run could produce the
+evidence a measurement is made of.** The protocol requires that "every run produces
+`CRJ-01-EVIDENCE.json` with **one row per (case, arm)**, including the rows that crashed,
+were refused, were inapplicable, or timed out", that the arms run on "identical inputs"
+under an "identical and explicit" budget, and that "each arm runs against its **own**
+workspace id and its **own** output root". `Crj01ArmRunner` is that instrument.
+
+### 10.1 What it does
+
+For each arm, in the pre-registered order **A, B, C**: it builds the arm's **own** workspace,
+imports the corpus through the **production** path, runs every case against the arm's
+**forced** method, scores the served answer with the **source-span oracle**, and measures
+the **wall** and the **CPU** time — the two G5 metrics that were `NOT_INSTRUMENTED` at the
+baseline. Every row is kept, whatever happened.
+
+**Arm B is measured twice**, and the two readings are kept apart: once on a **novel** task,
+where the replay's precondition cannot hold, and once on an exact **repeat**, where it can.
+The contract requires the replay advantage to be "reported separately from the genuinely-new-task
+subset", and the two variants are what make that separation possible.
+
+**Arm C promotes a procedure** before it runs — the promotion is what makes the arm an arm.
+Its support is the **union of the sources the reference drew on** for the five held-out
+questions, and the five questions are the ones whose union is the **narrowest** available,
+because the mechanism's premise is that a narrower support suffices.
+
+### 10.2 The dev run — 9 cases, 36 rows
+
+**This is a DEV run on the solver's own split: a DEBUGGING measurement, never evidence.**
+
+| arm | variant | n | grounded | wall median | wall total | CPU median |
+|---|---|---|---|---|---|---|
+| **A** — the reference | measured | 9 | **6** | **79.41 ms** | 962.8 ms | 74.27 ms |
+| **B** — the replay | **novel** | 9 | **0** | 7.61 ms | 79.7 ms | 7.62 ms |
+| **B** — the replay | **repeat** | 9 | **6** | **10.97 ms** | 112.0 ms | 9.71 ms |
+| **C** — the promoted procedure | measured | 9 | **6** | **58.70 ms** | 639.0 ms | 54.54 ms |
+
+**Three things this says.**
+
+1. **The arms are EQUAL in correctness on the dev split: 6 of 9 each.** Arm C has not yet
+   earned an advantage — and on the dev split it is not supposed to have one. What the run
+   shows is that the mechanism **does not cost correctness**: the same six cases are
+   grounded by the reference and by the procedure.
+2. **Arm C is CHEAPER on the served path: 26.1 % by the median (58.70 ms against 79.41 ms),
+   33.6 % by the total.** This is the first arm-vs-arm cost comparison on the served path,
+   and it is consistent with the cost curve of §8: the procedure's support is a narrow
+   fraction of the corpus, and the narrower reading is cheaper.
+3. **Arm B is 7.2× cheaper on an exact repeat — and answers 0 of 9 novel tasks.** That is
+   precisely the contract's requirement ("cached identical queries must be scored
+   separately"), and the runner now makes the separation measurable rather than asserted.
+
+### 10.3 Four defects the runner found in ITSELF — and one it found in the protocol
+
+The runner was wrong four times before it was right, and each failure was a defect the
+instrument had to be fixed for:
+
+1. **the record's argument order.** `ReportRequest(question, reportName, consent,
+   idempotencyKey, level)` — the runner passed the level and the idempotency key swapped, so
+   every case shared the key "INTRODUCTORY" and the route refused all but the first with
+   "the report name is already bound to another action identity". **The dev split's fresh
+   idempotency keys are what exposed it.**
+2. **the report name.** A name binds to ONE action identity, so a name shared by cases with
+   fresh keys is refused. The name must come from the identity.
+3. **the replay cannot prime itself.** Arm B's replay precondition is that the identity was
+   ALREADY retained, so a replay that primed itself would refuse every time. The priming run
+   uses the **reference**.
+4. **a closed store.** The runner closed the kernel's store after arm C's promotion, and the
+   route then failed every journey with "failed to read the events" — the trace is read from
+   that store.
+
+**And the one the runner found in the PROTOCOL — the important one.** The production claim id
+embeds the **workspace id** (`DocumentImporter.claimId`: `"clm-" + digest(workspaceId + "|" +
+contentHash + "|" + proposition)`), and the protocol requires that "each arm runs against its
+**own** workspace id". **So the same document imported into three workspaces yields three
+different claim ids**, and a sealed split that froze a gold claim id could be groundable by
+at most **one** of the three arms: the other two would read as ungrounded for a reason that
+has nothing to do with the arms. The oracle now **resolves the gold in the workspace under
+test** — the gold is the source's claim *in the workspace the answer came from*, checked by
+its byte-identical proposition and by its id there — and the recorded id remains the set's
+provenance. **Without this, the protocol's own comparison could not have been made.**
+
+**The evidence:** `docs-v2/engineering/evidence/TEST-io.matrix.crj.runner.Crj01ArmRunnerTest.xml`
+— one test, zero failures; the rows are in `docs-v2/engineering/CRJ-01-EVIDENCE.json`.
+
+---
