@@ -859,3 +859,90 @@ mechanism's contribution **grounds** and that it **changes** the evidence.
 **The evidence:** `docs-v2/engineering/evidence/TEST-io.matrix.cognitive.report.LearnedClaimOracleScoringTest.xml`.
 
 ---
+
+## 16. The excerpt's cut hid 44 % of the corpus's real spans (2026-11-21)
+
+**R-EPIS-22 is closed.** The learner's **containment gate** admits a candidate only when
+the claim's proposition "occurs verbatim in the text of" its source — and it checks that
+against the source's stored **excerpt**. But the excerpt is not the document:
+`DocumentImporter` kept only the **first 8000 characters** of the text.
+
+**So a claim whose proposition is a genuine verbatim span of the document, but which lies
+PAST the cut, was refused** — and refused with the sentence *"it is a paraphrase of the
+document rather than a span of it"*. **That sentence is false for those claims: they are
+spans.**
+
+### 16.1 The measurement
+
+Over the research pool:
+
+| | |
+|---|---|
+| the claims | **540** |
+| a **verbatim span** of the document's text | **483** |
+| found in the stored **excerpt** | **270** — was |
+| a span but **BEYOND THE CUT** (refused, wrongly) | **213** — **44 %** of the corpus's real spans** |
+| not a span at all | **57** |
+
+**The learner could only ever see 270 of the 483 real spans** — and every one of the 213
+it could not see was refused with a reason that was **false**. This is not a nuance: the
+learner's reach was bounded by a **storage** decision, not by the evidence, and a claim
+past the cut was not *rejected on the evidence* — it was **never examined**.
+
+### 16.2 The fix: the excerpt must cover every claim the workspace asserts
+
+The importer now **computes the proposals before it writes the source**, and sizes the
+excerpt to the **highest claim span end** — the floor stays 8 000 characters, and the
+excerpt grows to cover the claims. The span's offsets are in **code points** of the
+extracted text, so the cut is measured in the same unit.
+
+**After the fix: 483 of 483** spans visible, **0** beyond the cut. The corpus's highest
+claim end is **29 455** characters.
+
+**And this restores the design the importer itself declares.** Its own comment reads
+*"THE EXCERPT IS THE TEXT OF THE SOURCE"*, and the instruments' document says the import
+"is what makes the document's text the source's excerpt **and** the claim's proposition a
+span of it". The 8 000-character cut silently broke that for 44 % of the corpus. **The
+excerpt now holds 105 771 of the pool's 105 778 characters — it is the document's text.**
+
+**The refusal reason is now TRUE.** It distinguishes the two cases by the claim's **own
+span**: *"the workspace cannot show the text this claim points at … that is a gap in the
+stored evidence, not a paraphrase"* from *"the document does not contain this wording"*.
+A workspace imported before the change still holds such claims, and its reason must say
+what is actually the case.
+
+**The storage cost, measured**: the pool's excerpts hold **105 771** characters against
+**51 246** under the old floor — **2.06×**, about **53 KB** more over seven documents.
+That is the price of the workspace's evidence being complete, and it is the owner's
+number to weigh against the alternative.
+
+### 16.3 The learner's precision — measured, and it REFUTES an earlier assumption
+
+The earlier rounds recorded "the learner promotes **every** candidate (**23** from one
+journey)" as an open concern. **Over this corpus that is not what happens**, and the
+measurement says so:
+
+| | |
+|---|---|
+| the questions | **26** |
+| the observation triples whose intersection is carried by **five or more** questions | **108** of 2 600 — **4.2 %** |
+| the candidate set | **3** |
+| **promoted** | **2** — the third failed a gate |
+| distinct **propositions** | **2** |
+| distinct **concepts** | **2** |
+| distinct **supports** | **1** — so they all become applicable **together** |
+| **redundant** promotions (the same proposition twice) | **0** |
+
+**So the "23 promotions" figure is NOT reproduced**: the learner promotes what passes the
+gates, the promotions are **distinct facts**, and there is **no redundancy** here. What the
+measurement *does* show is that the **agreement gate is demanding**: over 26 questions,
+only **4.2 %** of the observation triples make it satisfiable at all — the gate needs five
+held-out questions that **all** carry the candidate, and the corpus's questions share
+claims too narrowly for that to be common. That is a property of **the corpus**, and it is
+a constraint the sealed split's author must know.
+
+**The evidence:** `docs-v2/engineering/evidence/TEST-io.matrix.cognitive.report.ClaimSpanBeyondExcerptTest.xml`
+(the measurement, the fix and the storage cost) and
+`…ReportClaimLearnerPrecisionTest.xml` (the precision).
+
+---

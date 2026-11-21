@@ -311,6 +311,52 @@ public final class ReportClaimLearner {
         return common == null ? List.of() : common;
     }
 
+    /**
+     * Why a candidate failed the CONTAINMENT gate — and the reason must be TRUE.
+     *
+     * <p><b>The defect this reason used to carry.</b> The gate checks the claim's
+     * proposition against the source's stored <b>excerpt</b>, and the excerpt used to be cut
+     * at 8 000 characters — so a claim whose span lay <b>past the cut</b> was refused with
+     * the sentence "it is a paraphrase of the document rather than a span of it". That
+     * sentence is <b>false</b> for those claims: they <b>are</b> spans of the document, and
+     * the measurement showed <b>213</b> of them — <b>44 %</b> of the research pool's real
+     * spans — being refused for that reason. The importer now sizes the excerpt to cover
+     * every claim the workspace asserts, so the cut no longer hides a span; but a
+     * workspace imported <b>before</b> that change still holds such claims, and the reason
+     * it gives must say what is actually the case.</p>
+     *
+     * <p>So the reason distinguishes the two cases, and it says which one it is by the
+     * claim's own <b>span</b> — the claim carries the exact place in the document, so the
+     * gate can tell "the workspace does not hold the text this claim points at" from "the
+     * document does not contain this wording".</p>
+     *
+     * @param candidate the claim that failed the gate
+     * @param source    the claim's source
+     * @return the reason
+     */
+    private static String refusalForAContainmentMiss(Claim candidate, Source source) {
+        io.matrix.contract.Provenance.Span span =
+                io.matrix.knowledge.ClaimSpan.parse(candidate.context());
+        if (span != null && span.end() != null) {
+            long end = span.end();
+            int stored = source.excerpt() == null ? 0 : source.excerpt().length();
+            if (end > stored) {
+                return "the claim " + candidate.id() + " points at characters "
+                        + span.start() + "-" + end + " of " + source.id() + ", and the "
+                        + "workspace stores only its first " + stored + " characters, so the "
+                        + "workspace cannot show the text this claim points at. That is a gap "
+                        + "in the stored evidence, not a paraphrase: the proposition may well "
+                        + "be a span of the document, and the workspace does not hold the "
+                        + "part of the document it would have to be checked against";
+            }
+        }
+        return "the proposition of the claim " + candidate.id()
+                + " does not occur verbatim in the text of " + source.id() + ", so it "
+                + "is a paraphrase of the document rather than a span of it, and a "
+                + "learned claim may assert only what the document literally "
+                + "contains";
+    }
+
     /** The workspace's claim with that id, or null. */
     private Claim claimById(String workspaceId, String claimId) {
         for (Claim claim : workbench.workspace(workspaceId).claims()) {
