@@ -222,7 +222,20 @@ what the system learned.
 | `…/evidence/TEST-io.matrix.cognitive.report.LearnedClaimServingTest.xml` | **1 test, 0 failures** — a validated learned claim **in the served evidence** of a different question, with its provenance named |
 | the regression | **227 suites / 1395 tests / 0 failures** over `io.matrix.knowledge.*`, `io.matrix.cognitive.*` and `io.matrix.crj.*` |
 
-### 7.4 What it is NOT, and what the owner must know
+### 7.4 The operator's path
+
+The claim learner has its own command, `matrix learn-report-claim`, on the same footing as the
+procedure learner's: it has **its own `main`**, so promoting a claim does not boot the
+application and start the background trainers, and it refuses **without the quarantine file** —
+the gate fails closed, so a missing list is not an empty one. The one-writer rule is kept the
+way the procedure's command keeps it: the operator runs it while the serving process is not
+holding the database.
+
+**The evidence:** `…/evidence/TEST-io.matrix.cli.LearnReportClaimCommandTest.xml` — 3 tests, 0
+failures: the two refusals and the promotion, driven through the command against the journeys'
+own traces.
+
+### 7.5 What it is NOT, and what the owner must know
 
 - **The workspace the tests use is imported from the research pool, not the bundled package** —
   and that is not a convenience: the bundled package's claims are **paraphrases** (measured:
@@ -238,8 +251,11 @@ what the system learned.
   questions is exactly the `δ_MI` the protocol asks for, and it is **not** claimed.
 - **The applicability is the concept alone.** Two claims of the same concept are both
   applicable; the system's own machinery for a narrower class does not exist yet.
-- The **promotion path** is the producer only: the operator's command that drives the
-  procedure learner does not yet drive the claim learner. The learned claim is therefore
-  promoted **programmatically**, and the operator's path for it is **OPEN**.
+- The **learner promotes EVERY candidate that survives the gates**, not one: the journeys
+  usually agreed on more than one claim, and each is a separate candidate with its own
+  provenance. The operator's command against the research pool promoted **23** claims from one
+  journey — every claim the reference carried on all five held-out questions. That is the
+  mechanism working, and it is also a surface: with **one** observed episode, "the claims every
+  journey cited" is every claim that episode cited.
 
 ---

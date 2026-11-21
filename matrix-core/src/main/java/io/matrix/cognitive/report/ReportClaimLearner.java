@@ -9,9 +9,14 @@ import io.matrix.knowledge.Claim;
 import io.matrix.knowledge.KnowledgeWorkbench;
 import io.matrix.knowledge.Source;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -56,6 +61,8 @@ import java.util.Set;
  */
 public final class ReportClaimLearner {
 
+    private static final ObjectMapper JSON = new ObjectMapper();
+
     /** The minimum number of held-out cases a promotion may be decided on. */
     public static final int MINIMUM_CASES = ProcedureValidator.MINIMUM_VALIDATION_CASES;
 
@@ -85,14 +92,27 @@ public final class ReportClaimLearner {
     /**
      * The outcome of a learning attempt.
      *
-     * @param promoted whether the claim entered the store
+     * <p><b>Why it carries a LIST.</b> The observed journeys usually agreed on more than one
+     * claim, and each of them is a separate candidate: each is checked against the source's
+     * text and against the reference's own answers, and each that survives is promoted with
+     * its own provenance. A learner that looked at only the first candidate would report a
+     * refusal that says nothing about the others — and the others may be exactly the claims
+     * the system can use.</p>
+     *
+     * @param promoted whether at least one claim entered the store
      * @param reason   why, in words a reader can act on
-     * @param claim    the stored claim, or null when the attempt was refused
+     * @param claims   the stored claims; empty when the attempt was refused
      */
-    public record Outcome(boolean promoted, String reason, LearnedClaim claim) {
+    public record Outcome(boolean promoted, String reason, List<LearnedClaim> claims) {
 
         public Outcome {
             reason = reason == null ? "" : reason;
+            claims = List.copyOf(claims == null ? List.of() : claims);
+        }
+
+        /** The first promoted claim, or null when nothing was promoted. */
+        public LearnedClaim claim() {
+            return claims.isEmpty() ? null : claims.get(0);
         }
     }
 
@@ -136,13 +156,13 @@ public final class ReportClaimLearner {
         List<Case> heldOut = cases == null ? List.of() : cases;
         if (observed.isEmpty()) {
             return new Outcome(false, "no episode was observed, so there is nothing to learn from",
-                    null);
+                    List.of());
         }
         for (Observation observation : observed) {
             if (observation.episodeId() != null && quarantinedIds.contains(observation.episodeId())) {
                 return new Outcome(false, "the episode " + observation.episodeId()
                         + " is quarantined, so it is not learning-eligible and was not admitted",
-                        null);
+                        List.of());
             }
         }
         for (Case heldOutCase : heldOut) {
@@ -155,7 +175,7 @@ public final class ReportClaimLearner {
                 if (observation.episodeId() != null
                         && observation.episodeId().equals(heldOutCase.caseId())) {
                     return new Outcome(false, "the validation case " + heldOutCase.caseId()
-                            + " is one of the observed episodes, so it is not held out", null);
+                            + " is one of the observed episodes, so it is not held out", List.of());
                 }
                 if (observation.question() != null
                         && observation.question().equals(heldOutCase.question())) {
@@ -168,59 +188,30 @@ public final class ReportClaimLearner {
         if (heldOut.size() < MINIMUM_CASES) {
             return new Outcome(false, "the candidate was validated on " + heldOut.size()
                     + " held-out case(s) and at least " + MINIMUM_CASES
-                    + " are required before a promotion can be decided", null);
+                    + " are required before a promotion can be decided", List.of());
         }
 
         List<String> common = commonClaims(observed);
         if (common.isEmpty()) {
             return new Outcome(false,
                     "the observed episodes cited no claim in common, so there is nothing they "
-                            + "consistently relied on to learn", null);
+                            + "consistently relied on to learn", List.of());
         }
 
-        Answer first = workbench.ask(workspaceId, heldOut.get(0).question(),
-                heldOut.get(0).level());
-        Claim candidate = claimById(workspaceId, common.get(0));
-        if (candidate == null) {
-            return new Outcome(false, "the workspace does not hold the claim " + common.get(0)
-                    + ", so there is no production claim to validate", null);
-        }
-
-        // ── the containment gate: the source must LITERALLY contain the proposition ──
-        Source source = sourceById(workspaceId, candidate.introducedBySourceId());
-        if (source == null) {
-            return new Outcome(false, "the source " + candidate.introducedBySourceId()
-                    + " of the claim " + candidate.id() + " is not in the workspace, so the "
-                    + "proposition cannot be checked against the text", null);
-        }
-        String text = source.excerpt() == null ? "" : source.excerpt();
-        if (!text.contains(candidate.proposition())) {
-            return new Outcome(false, "the proposition of the claim " + candidate.id()
-                    + " does not occur verbatim in the text of " + source.id() + ", so it is a "
-                    + "paraphrase of the document rather than a span of it, and a learned "
-                    + "claim may assert only what the document literally contains", null);
-        }
-
-        // ── the agreement gate: the reference must carry it on EVERY case ──────────
-        int agreements = 0;
+        // the reference's own answers, read ONCE: every candidate is checked against the
+        // same reading, and reading the workspace five times per candidate would measure the
+        // reading rather than the candidate
+        List<Answer> references = new ArrayList<>();
         for (Case heldOutCase : heldOut) {
             Answer reference = workbench.ask(workspaceId, heldOutCase.question(),
                     heldOutCase.level());
             if (!reference.answered()) {
                 return new Outcome(false, "the reference did not answer the held-out case '"
-                        + heldOutCase.caseId() + "', so the candidate could not be checked "
-                        + "against it", null);
+                        + heldOutCase.caseId() + "', so a candidate could not be checked "
+                        + "against it", List.of());
             }
-            boolean carries = reference.claims().stream()
-                    .anyMatch(claim -> claim.id().equals(candidate.id()));
-            if (!carries) {
-                return new Outcome(false, "the candidate was not among the claims the reference "
-                        + "cited on the held-out case '" + heldOutCase.caseId() + "', so it "
-                        + "does not answer that question and was not promoted", null);
-            }
-            agreements++;
+            references.add(reference);
         }
-        double agreement = (double) agreements / (double) heldOut.size();
 
         Set<String> support = new LinkedHashSet<>();
         for (Observation observation : observed) {
@@ -228,17 +219,77 @@ public final class ReportClaimLearner {
                 support.addAll(observation.sourceIds());
             }
         }
-        support.add(source.id());
 
-        LearnedClaim learned = LearnedClaim.of(workspaceId, candidate.id(),
-                candidate.proposition(), candidate.conceptId(), source.id(), support,
-                heldOut.size(), agreement, episodeIds(observed),
-                "validated on " + heldOut.size() + " held-out case(s) against the reference, "
-                        + "and its proposition occurs verbatim in the text of " + source.id(),
-                promotedAt);
-        store.recordLearnedClaim(workspaceId, learned);
-        return new Outcome(true, "the candidate was carried by the reference on all "
-                + heldOut.size() + " held-out case(s) and was promoted", learned);
+        List<LearnedClaim> promoted = new ArrayList<>();
+        String firstRefusal = "";
+        for (String claimId : common) {
+            Claim candidate = claimById(workspaceId, claimId);
+            if (candidate == null) {
+                if (firstRefusal.isEmpty()) {
+                    firstRefusal = "the workspace does not hold the claim " + claimId
+                            + ", so there is no production claim to validate";
+                }
+                continue;
+            }
+            // ── the containment gate: the source must LITERALLY contain it ─────────
+            Source source = sourceById(workspaceId, candidate.introducedBySourceId());
+            if (source == null) {
+                if (firstRefusal.isEmpty()) {
+                    firstRefusal = "the source " + candidate.introducedBySourceId()
+                            + " of the claim " + candidate.id() + " is not in the workspace, so "
+                            + "the proposition cannot be checked against the text";
+                }
+                continue;
+            }
+            String text = source.excerpt() == null ? "" : source.excerpt();
+            if (!text.contains(candidate.proposition())) {
+                if (firstRefusal.isEmpty()) {
+                    firstRefusal = "the proposition of the claim " + candidate.id()
+                            + " does not occur verbatim in the text of " + source.id() + ", so it "
+                            + "is a paraphrase of the document rather than a span of it, and a "
+                            + "learned claim may assert only what the document literally "
+                            + "contains";
+                }
+                continue;
+            }
+            // ── the agreement gate: the reference must carry it on EVERY case ──────
+            String disagreement = "";
+            for (int index = 0; index < heldOut.size(); index++) {
+                boolean carries = references.get(index).claims().stream()
+                        .anyMatch(claim -> claim.id().equals(candidate.id()));
+                if (!carries) {
+                    disagreement = "the candidate was not among the claims the reference cited "
+                            + "on the held-out case '" + heldOut.get(index).caseId() + "', so it "
+                            + "does not answer that question and was not promoted";
+                    break;
+                }
+            }
+            if (!disagreement.isEmpty()) {
+                if (firstRefusal.isEmpty()) {
+                    firstRefusal = disagreement;
+                }
+                continue;
+            }
+
+            Set<String> claimSupport = new LinkedHashSet<>(support);
+            claimSupport.add(source.id());
+            LearnedClaim learned = LearnedClaim.of(workspaceId, candidate.id(),
+                    candidate.proposition(), candidate.conceptId(), source.id(), claimSupport,
+                    heldOut.size(), 1.0, episodeIds(observed),
+                    "validated on " + heldOut.size() + " held-out case(s) against the reference, "
+                            + "and its proposition occurs verbatim in the text of " + source.id(),
+                    promotedAt);
+            store.recordLearnedClaim(workspaceId, learned);
+            promoted.add(learned);
+        }
+
+        if (promoted.isEmpty()) {
+            return new Outcome(false, firstRefusal.isEmpty()
+                    ? "no candidate survived the gates"
+                    : firstRefusal, List.of());
+        }
+        return new Outcome(true, promoted.size() + " candidate(s) were carried by the reference "
+                + "on all " + heldOut.size() + " held-out case(s) and were promoted", promoted);
     }
 
     /**
@@ -297,5 +348,60 @@ public final class ReportClaimLearner {
     /** The validation kind a learned claim carries. */
     public static ValidationKind kind() {
         return ValidationKind.INDEPENDENT;
+    }
+
+    /**
+     * The observations of the episodes of a workspace, read from the journeys' own traces.
+     *
+     * <p>What is read is the RETAINED payload of each episode: the question the journey
+     * answered and the evidence its response carried. A journey that left no retained payload
+     * is not an observation — nothing was retained, so nothing was learned from.</p>
+     *
+     * @param store      the store the journeys' traces are in
+     * @param episodeIds the episodes to read
+     * @return the observations
+     */
+    public static List<Observation> observationsFrom(CognitiveStore store, List<String> episodeIds) {
+        List<Observation> observations = new ArrayList<>();
+        if (episodeIds == null) {
+            return observations;
+        }
+        for (String episodeId : episodeIds) {
+            ReportJourney.Retained retained = ReportJourneyTrace.retained(store, episodeId);
+            if (retained == null || retained.responseJson() == null) {
+                continue;
+            }
+            List<String> claimIds = new ArrayList<>();
+            List<String> sourceIds = new ArrayList<>();
+            try {
+                Map<String, Object> response = JSON.readValue(retained.responseJson(),
+                        new TypeReference<Map<String, Object>>() {
+                        });
+                Object evidence = response.get("evidence");
+                if (evidence instanceof List<?> references) {
+                    for (Object reference : references) {
+                        if (!(reference instanceof Map<?, ?> fields)) {
+                            continue;
+                        }
+                        Object claimId = fields.get("claimId");
+                        Object sourceId = fields.get("sourceId");
+                        if (claimId instanceof String claim && !claim.isBlank()) {
+                            claimIds.add(claim);
+                        }
+                        if (sourceId instanceof String source && !source.isBlank()
+                                && !sourceIds.contains(source)) {
+                            sourceIds.add(source);
+                        }
+                    }
+                }
+            } catch (IOException unreadable) {
+                continue;
+            }
+            observations.add(new Observation(episodeId, retained.question(),
+                    retained.level() == null ? AbstractionLevel.INTRODUCTORY
+                            : AbstractionLevel.valueOf(retained.level()),
+                    claimIds, sourceIds));
+        }
+        return observations;
     }
 }
