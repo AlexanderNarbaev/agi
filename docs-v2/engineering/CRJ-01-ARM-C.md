@@ -15,8 +15,11 @@ checked on **held-out** questions it was never proposed from, and only a candida
 reproduces the reference on every one of them is **promoted** with a version and a provenance;
 after a **restart** the promoted procedure is offered to the kernel and **answers a different
 question**. That is the contract's REUSE phase, executed. What it is **not** is the CRJ-01
-developmental milestone: the sealed set does not exist, the oracle is not written, and no
-three-arm comparison has been run. And one measured result is a **null**: on this workspace the
+developmental milestone: the sealed set does not exist and no three-arm comparison has been
+run. **The oracle now exists** — both of them, built as test-tree instruments, with their
+controls — and **the learned-claims half is built**: a workspace claim the system validated
+against the document's own text, promoted with a version and a provenance, and **cited by the
+served answer**. And one measured result is a **null**: on this workspace the
 procedure saves **2.7 %** of the reading time — the mechanism is right, the workload is too
 small for it to matter.
 
@@ -151,7 +154,7 @@ measurement and an anecdote.
 | a **full-suite run rewrites the retained C2A enrichment documents** (`R-EPIS-12`) | **OPEN** | the coordinator: the measurement must write into a temporary directory and the committed document must be copied out deliberately. Found while running the suite the fast lane derives when a changed file sits in the root package: the run left five of the owner's documents modified, and they were restored from `HEAD` |
 | the learning command's **first entry point booted the whole application**, which started the background trainers and rewrote their state in `data/` | **FIXED in this slice** | the command now runs **alone** through its own `main`, so promoting a procedure touches nothing but the knowledge database it was pointed at |
 | the arm C **cost** claim rests on one measurement over a 17-claim workspace | **OPEN** | the programme: the protocol's instrumented run |
-| the learned-claims half of arm C | **OPEN — the oracle now exists** | the programme: the two oracles are built (`docs-v2/engineering/CRJ-01-INSTRUMENTS.md`), so a learned claim can be validated against the corpus's **own bytes** instead of against the reference. What is still missing is the corpus and the cases, which §5.6 requires from a case author who implements no arm |
+| the learned-claims half of arm C | **CLOSED (2026-11-21)** — see §7 | the programme: the two oracles are built (`docs-v2/engineering/CRJ-01-INSTRUMENTS.md`), so a learned claim can be validated against the corpus's **own bytes** instead of against the reference. What is still missing is the corpus and the cases, which §5.6 requires from a case author who implements no arm |
 
 ## 6. The decision: **CONTINUE**, with the next step named
 
@@ -160,10 +163,12 @@ is real and the benefit is not yet**. The next step is therefore **not** more of
 
 1. the **oracle** (OD-081's D3) and the **sealed set** with its freeze (D5) — without them, no
    `δ_MI` can be measured and arm C's correctness stays unclaimed;
-2. the **learned-claims** half of arm C, validated against that oracle rather than against the
-   reference — which is what could make arm C **more correct** rather than merely cheaper;
-3. the two defects above (the declared cost, the episode row), which are cheap and make the
-   promotion's own evidence honest;
+2. the **corpus and the cases**, commissioned from a **case author who implements no arm** and
+   frozen by an **independent reviewer** — the oracle and the producer are ready for them, and
+   the corpus's required shape is now **measured** (`docs-v2/engineering/CRJ-01-INSTRUMENTS.md` §4);
+3. the **operator's path** for the claim learner, which the procedure learner has and the
+   claim learner does not yet;
+4. the **declared cost** of the first selection — the one defect above that is still open;
 4. the **load-sensitive latency assertions** of the research suite (`Exp324` among them): they
    measure the machine and not the code, and they go red whenever the full suite runs the
    model-heavy suites next to them. They are the suite's own known class (`CI-SIMPLIFICATION-RFC`
@@ -172,3 +177,69 @@ is real and the benefit is not yet**. The next step is therefore **not** more of
 
 **Nothing here is pushed past the owner:** the merge, the review and the freeze's reviewer stay
 the owner's.
+
+## 7. The learned-claims half — BUILT (2026-11-21)
+
+**OD-082's second half is no longer open.** A **learned claim** is a workspace claim the
+system has **validated**, with the provenance of that validation: the production claim id, the
+source it was checked against, the held-out cases it survived, the measured agreement, the
+episode it was learned in, and the note that says what its standing rests on.
+
+### 7.1 What the gates are, and what each of them refuses
+
+| the gate | what it refuses |
+|---|---|
+| the **quarantine** gate | everything, when the quarantine list is **absent** — it fails closed, because the evaluation traffic must never become the durable learning |
+| the **held-out-case rule** | a validation case that is one of the observed episodes, **by identity or by question** — a case the proposal came from proves nothing |
+| the **minimum case count** | a promotion decided on fewer than **5** held-out cases — the repository's own convention for a validated procedure |
+| the **agreement gate** | a candidate the reference does **not** carry on some held-out case; the reason names the case |
+| the **containment gate** | a candidate whose proposition is **not a verbatim span of its source's text** — a learned claim may assert only what the document literally contains |
+
+The containment gate is the new one, and it is the gate that makes the learned claim safe.
+It asks the same question the CRJ-01 **source-span oracle** asks — independently, against the
+corpus file's bytes instead of the workspace's copy of the text. A paraphrase is the
+workspace's business (the extraction machinery's), and a learned claim that asserted one would
+be asserting something nobody checked against the text.
+
+### 7.2 The serving role: it reaches the answer
+
+A learned claim that is promoted and never used is a record, not a capability. So the journey
+**applies** it: the workspace's learned claims join the answer's evidence when the question
+resolved to the claim's **concept** — and the concept is the workspace's own semantic anchor,
+not the question's tokens, because a rule that matched on tokens would be the retriever's own
+rule, and the protocol names that confound exactly (A3: "the gain is retrieval by overlap",
+REJECTED for transfer).
+
+The response **says** which claim was learned and on how many held-out cases it was
+validated: a caller reading the evidence has to be able to tell what the retrieval found from
+what the system learned.
+
+### 7.3 The evidence
+
+| the artefact | what it holds |
+|---|---|
+| `…/evidence/TEST-io.matrix.cognitive.report.ReportClaimLearningTest.xml` | **8 tests, 0 failures** — the promotion with its version and provenance, and **each of the five gates refusing** |
+| `…/evidence/TEST-io.matrix.cognitive.report.LearnedClaimServingTest.xml` | **1 test, 0 failures** — a validated learned claim **in the served evidence** of a different question, with its provenance named |
+| the regression | **227 suites / 1395 tests / 0 failures** over `io.matrix.knowledge.*`, `io.matrix.cognitive.*` and `io.matrix.crj.*` |
+
+### 7.4 What it is NOT, and what the owner must know
+
+- **The workspace the tests use is imported from the research pool, not the bundled package** —
+  and that is not a convenience: the bundled package's claims are **paraphrases** (measured:
+  0 of 7 cited claims are spans), so the containment gate would refuse every candidate there.
+  The production path's claims are spans (measured: **483 of 540**). The gate is therefore
+  **proved** on a corpus where it can pass, and it is **proved to refuse** on the bundled one.
+- **The learned claim is not yet measured against the oracle.** The oracle can check the
+  property the gate uses — the proposition is a span of the document — and it will, at the
+  sealed split. What it cannot yet do is score a **learned claim's** contribution, because the
+  sealed set does not exist.
+- **The transfer claim is still unmeasured.** A learned claim adds evidence for a question
+  about its concept; whether that makes the answer **more correct** on a sealed set of novel
+  questions is exactly the `δ_MI` the protocol asks for, and it is **not** claimed.
+- **The applicability is the concept alone.** Two claims of the same concept are both
+  applicable; the system's own machinery for a narrower class does not exist yet.
+- The **promotion path** is the producer only: the operator's command that drives the
+  procedure learner does not yet drive the claim learner. The learned claim is therefore
+  promoted **programmatically**, and the operator's path for it is **OPEN**.
+
+---

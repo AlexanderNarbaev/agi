@@ -924,3 +924,21 @@ evidence is a suspicion, and it is marked as such.
 - **status**: **OPEN as a constraint on the corpus** — the measurement is done and the finding is
   recorded; what remains is the corpus itself, which §5.6 requires from a case author who
   implements no arm.
+
+### R-EPIS-16 — a learned claim is a claim about this workspace, and its applicability is the concept alone
+
+- **the finding**: the learned claim's serving role is to join the answer's evidence when the question resolved to
+  the claim's **concept**. That is the workspace's own semantic anchor rather than the question's tokens — a token
+  rule would be the retriever's own rule, and the protocol names that confound exactly (A3: "the gain is retrieval by
+  overlap", REJECTED for transfer). But the anchor is **coarse**: two claims of the same concept are both applicable,
+  and the system has no machinery for a narrower class.
+- **why it matters**: a learned claim that applies too widely is a claim asserted where it was never validated. The
+  containment gate bounds what it may SAY; the applicability bounds WHERE it may be said, and the second bound is the
+  coarse one.
+- **the evidence**: `docs-v2/engineering/evidence/TEST-io.matrix.cognitive.report.LearnedClaimServingTest.xml` — the
+  claim reaches the served answer of a different question, and the response names which claim was learned and on how
+  many held-out cases it was validated.
+- **owner**: the programme — the **sealed set** is what would say whether the coarse applicability costs accuracy,
+  because the oracle scores the cited evidence of every answer.
+- **status**: **OPEN as a labelled limit** — the mechanism is bounded on the side of WHAT a claim may say (the
+  containment gate) and coarse on the side of WHERE (the concept).
