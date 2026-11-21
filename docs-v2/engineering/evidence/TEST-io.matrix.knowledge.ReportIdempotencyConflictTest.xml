@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.ReportIdempotencyConflictTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-20T14:09:19.727Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.866">
+  <properties/>
+  <testcase name="a reused key with a different report name does not serve the earlier report" classname="io.matrix.knowledge.ReportIdempotencyConflictTest" time="0.635"/>
+  <testcase name="a reused key with a different question is never answered with the earlier report" classname="io.matrix.knowledge.ReportIdempotencyConflictTest" time="0.114"/>
+  <testcase name="the exact replay of a request stays a correct replay" classname="io.matrix.knowledge.ReportIdempotencyConflictTest" time="0.105"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

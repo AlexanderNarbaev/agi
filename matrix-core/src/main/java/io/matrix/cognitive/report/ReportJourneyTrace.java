@@ -68,6 +68,8 @@ public final class ReportJourneyTrace {
 
     /** The key the retained payload is stored under. */
     private static final String RETAINED_METHOD = "methodId";
+    private static final String RETAINED_QUESTION = "question";
+    private static final String RETAINED_LEVEL = "level";
     private static final String RETAINED_FINGERPRINT = "workspaceFingerprint";
     private static final String RETAINED_SHA256 = "sha256";
     private static final String RETAINED_FILE_NAME = "fileName";
@@ -164,6 +166,8 @@ public final class ReportJourneyTrace {
         try {
             return MAPPER.writeValueAsString(Map.of(
                     RETAINED_METHOD, retained.methodId(),
+                    RETAINED_QUESTION, retained.question() == null ? "" : retained.question(),
+                    RETAINED_LEVEL, retained.level() == null ? "" : retained.level(),
                     RETAINED_FINGERPRINT, retained.workspaceFingerprint(),
                     RETAINED_SHA256, retained.sha256(),
                     RETAINED_FILE_NAME, retained.fileName(),
@@ -178,7 +182,14 @@ public final class ReportJourneyTrace {
             Map<String, String> fields = MAPPER.readValue(payload,
                     new TypeReference<Map<String, String>>() {
                     });
+            // a record written before the question was retained names no question, and an
+            // unnamed question is not replayable: the replay fails closed on it rather
+            // than serving an answer whose question it cannot state
+            String question = fields.get(RETAINED_QUESTION);
+            String level = fields.get(RETAINED_LEVEL);
             return new ReportJourney.Retained(fields.get(RETAINED_METHOD),
+                    question == null || question.isBlank() ? null : question,
+                    level == null || level.isBlank() ? null : level,
                     fields.get(RETAINED_FINGERPRINT), fields.get(RETAINED_SHA256),
                     fields.get(RETAINED_FILE_NAME), fields.get(RETAINED_RESPONSE));
         } catch (IOException e) {

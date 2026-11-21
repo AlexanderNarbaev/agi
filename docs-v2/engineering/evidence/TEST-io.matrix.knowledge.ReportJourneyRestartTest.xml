@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.ReportJourneyRestartTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-20T14:11:39.099Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.085">
+  <properties/>
+  <testcase name="after a restart the next analogous task consults the earlier experience" classname="io.matrix.knowledge.ReportJourneyRestartTest" time="0.085"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

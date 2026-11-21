@@ -295,6 +295,11 @@ public final class DecisionPathAuditor {
         boolean adversarialActive = false;
         boolean permittedEntered = false;
         boolean adversarialEntered = false;
+        // the annotation's member has not been entered yet: its DECLARATION line carries the
+        // read when the body is written on the same line (`public long stamp() { return
+        // System.currentTimeMillis(); }`), and the depth rule cannot see that read, because
+        // the line is scanned at the enclosing depth before its own braces are counted
+        boolean permittedDeclarationPending = false;
         int permittedFromDepth = 0;
         int adversarialFromDepth = 0;
         int depth = 0;
@@ -302,7 +307,7 @@ public final class DecisionPathAuditor {
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i].trim();
 
-            if (line.contains("ArticleIPermitted")) {
+            if (line.contains("ArticleIPermitted") && !line.startsWith("import ")) {
                 // A NESTED annotation must not clear `entered`. The import line matches first,
                 // making the whole type active, and the method annotation inside it re-arms the
                 // baseline at the current depth — resetting `entered` there made the method body
@@ -311,11 +316,22 @@ public final class DecisionPathAuditor {
                 // annotated and a method inside it is annotated too, re-arming at the method's
                 // own depth would put the baseline AT the method, so the method body would not
                 // read as deeper than it and the site inside it stayed UNCLASSIFIED.
+                //
+                // R-EPIS-10 — an IMPORT of the annotation is not an ANNOTATION. The exemption
+                // used to be armed by the mere TEXT of the name, and the import statement
+                // carries that text: the exemption was therefore armed at depth 0, before the
+                // type was opened, and it covered the WHOLE class body. A file that merely
+                // imports the annotation was outside the gate's reach whatever it contained —
+                // a synthetic, unannotated wall-clock read in an unrelated method of such a
+                // class was classified PERMITTED and did not block. The exemption is armed by
+                // the annotation's USE, at the member it annotates, and an import line is not a
+                // use.
                 if (!permittedActive) {
                     permittedEntered = false;
                     permittedFromDepth = depth;
                 }
                 permittedActive = true;
+                permittedDeclarationPending = true;
                 continue;
             }
             if (line.contains("@AdversarialStochasticity")) {
@@ -327,10 +343,17 @@ public final class DecisionPathAuditor {
             int opens = count(line, '{');
             int closes = count(line, '}');
             boolean inPermittedMember = permittedActive && depth > permittedFromDepth;
-            boolean exempt = inPermittedMember
+            // the annotated member's DECLARATION line: the line that opens the member's
+            // body. A member written on one line carries its read there, and the depth
+            // rule cannot see it — the line is scanned at the enclosing depth, before its
+            // own braces are counted. The annotation covers the member it annotates, and
+            // the declaration is part of that member
+            boolean isPermittedDeclaration = permittedActive && permittedDeclarationPending
+                    && opens > 0;
+            boolean exempt = inPermittedMember || isPermittedDeclaration
                     || (adversarialActive && depth > adversarialFromDepth);
 
-            if (inPermittedMember) {
+            if (inPermittedMember || isPermittedDeclaration) {
                 // Still RECORDED, just not blocking. Silently skipping an annotated site would
                 // make the report understate the debt it claims to have adjudicated — the count
                 // would fall without any record of what fell.
@@ -352,6 +375,9 @@ public final class DecisionPathAuditor {
             }
 
             depth += opens - closes;
+            if (isPermittedDeclaration) {
+                permittedDeclarationPending = false;
+            }
             if (permittedActive && depth > permittedFromDepth) {
                 permittedEntered = true;
             }
@@ -361,6 +387,7 @@ public final class DecisionPathAuditor {
             if (permittedActive && permittedEntered && depth <= permittedFromDepth) {
                 permittedActive = false;
                 permittedEntered = false;
+                permittedDeclarationPending = false;
             }
             if (adversarialActive && adversarialEntered && depth <= adversarialFromDepth) {
                 adversarialActive = false;

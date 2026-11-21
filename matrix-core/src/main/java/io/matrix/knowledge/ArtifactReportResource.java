@@ -312,7 +312,8 @@ public class ArtifactReportResource {
         ReportJourney.Retained retained = traceStore == null || !consultRetainedTrace ? null
                 : ReportJourneyTrace.retained(traceStore, episodeId);
         String fingerprint = workspaceFingerprint(workspaceId);
-        Set<String> facts = journeyFacts(identity, retained, fingerprint, reportName);
+        Set<String> facts = journeyFacts(identity, retained, fingerprint, reportName,
+                request.question(), level);
 
         ReportJourney.Problem problem = new ReportJourney.Problem(workspaceId, request.question(),
                 identity, reportName, level, workbench, actions.writer(), retained, fingerprint);
@@ -405,7 +406,8 @@ public class ArtifactReportResource {
                 ReportJourneyTrace.PHASE_RETAINED, ReportJourneyTrace.ACTOR_ROUTE,
                 result.replayed() ? "the retained journey was served; the trace is unchanged"
                         : ReportJourneyTrace.payload(new ReportJourney.Retained(
-                                plan.method().capability().id(), fingerprint, written.sha256(),
+                                plan.method().capability().id(), request.question(), level.name(),
+                                fingerprint, written.sha256(),
                                 written.fileName(), json(response))))));
 
         int status = written.disposition() == ArtifactWriter.Disposition.REPLAYED ? 200 : 201;
@@ -602,7 +604,7 @@ public class ArtifactReportResource {
      * @return the facts
      */
     private Set<String> journeyFacts(String identity, ReportJourney.Retained retained,
-            String fingerprint, String reportName) {
+            String fingerprint, String reportName, String question, AbstractionLevel level) {
         Set<String> facts = new LinkedHashSet<>();
         if (retained != null && ReportJourneyMethod.committed(actions.writer(), identity)) {
             facts.add(ReportJourneyMethod.FACT_IDENTITY_COMMITTED);
@@ -612,6 +614,18 @@ public class ArtifactReportResource {
         }
         if (retained != null && retained.fileName().equals(reportName)) {
             facts.add(ReportJourneyMethod.FACT_NAME_UNCHANGED);
+        }
+        // the retained answer answers one question at one level. The facts are the
+        // request's own comparison with the retained record, so the replay is admitted
+        // only inside the domain it can state — a different question or a different level
+        // is a different request, and the retained answer does not answer it
+        if (retained != null && retained.question() != null
+                && retained.question().equals(question)) {
+            facts.add(ReportJourneyMethod.FACT_QUESTION_UNCHANGED);
+        }
+        if (retained != null && retained.level() != null
+                && retained.level().equals(level.name())) {
+            facts.add(ReportJourneyMethod.FACT_LEVEL_UNCHANGED);
         }
         return facts;
     }
