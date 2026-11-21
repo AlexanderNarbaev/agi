@@ -138,7 +138,7 @@ measurement and an anecdote.
 |---|---|
 | **transfer to a different task** | **DEMONSTRATED, in one domain**: a question the procedure was neither proposed from nor validated on was answered by it. It is a **same-domain** transfer over a **17-claim** workspace |
 | **the saving is worth anything** | **CHARACTERISED, NOT NULL** (§8): the saving is a function of the support set's **fraction** of the workspace — on a **540-claim** corpus at a fraction of **1/6** it is **78 %** of the reading (**20 ms against 92 ms**), and the bundled 17-claim workspace at its own fraction of **0.88** measures **−0.6 % to 2.8 %**, which is exactly the earlier "2.7 % null". **The null was the workload, not the mechanism** |
-| **the kernel chose the procedure for a measured reason** | **MEASURED, and the first one was not**: the decision used the procedure's **DECLARED** complexity (1 ms against the reference's 25 ms), because the procedure had never run before and the ledger had no measurement of it. The first decision therefore rests on a **promise**; the second rests on the measurement — and that transition is now **pinned by a test** (`ReportProcedureCostBasisTest`): the decision's own stated basis changes from `DECLARED_COMPLEXITY` to `MEASURED` after the procedure has run once, and the trace says so. The remaining defect is the one below |
+| **the kernel chose the procedure for a measured reason** | **MEASURED, and now the FIRST one is too**: the decision used to rest on the procedure's **DECLARED** complexity (1 ms against the reference's 25 ms), because the procedure had never run and the ledger had no measurement of it — and the cost curve of §8 showed that constant to be off by about **twenty times**. The promotion now **measures** the restricted reading it runs during the validation, the store carries that measurement beside the procedure's other validation measurements, and the method declares it. The decision's own basis is now `MEASURED_COMPLEXITY` — a third basis the selector grew for it, so a record can no longer call a measurement a promise. **Proven by** `ReportProcedureMeasuredCostTest`; the ledger's own measurement still replaces it once the method has run, and that transition is pinned by `ReportProcedureCostBasisTest` |
 | **the CRJ-01 developmental milestone** | **NOT DONE**: no sealed set, no independent oracle, no three-arm comparison, no `δ_MI = 2` measurement. The protocol's D5 — the freeze by a reviewer who is neither the case author nor a solver author — is still open |
 | **the learned-claims half of arm C** (OD-082's second half) | **NOT DONE**: this slice builds the **procedures**. The learned claims need their own promotion-and-validation contract with a held-out-case rule, and the oracle (OD-081's D3) must exist before a claim can be validated against anything but the reference |
 | **the quarantine list** | **SUPPLIED BY THE CALLER**: the gate is fail-closed, but the list's correctness is the caller's. The chain-A episode ids **can now be enumerated from the store** — the journey opens its episode (the fix of 2026-11-21, `ReportJourneyEpisodeTest`), so `store.episodes(workspace)` lists them — but the list itself is still the caller's to name |
@@ -147,7 +147,7 @@ measurement and an anecdote.
 
 | the defect | the state | the owner |
 |---|---|---|
-| the **first** selection of a promoted procedure rests on its **declared** cost | **MITIGATED, NOT CLOSED** | the coordinator: the selector already prefers a **measured** cost when the ledger holds one, and the transition is now pinned by a test — the first decision rests on a promise, every decision after it rests on a measurement. The residual is that the *first* decision is made on an estimate; the promotion could carry the validation's own measured cost instead of a declared one |
+| the **first** selection of a promoted procedure rests on its **declared** cost | **CLOSED (2026-11-21)** — §8.3 | the promotion now **measures** the restricted reading it runs during the validation (after a warmup pass, the median over the held-out cases), the store carries that measurement beside the procedure's other validation measurements, and the method **declares the measurement** rather than the portfolio's constant. The selector's vocabulary grew a third basis for it: `MEASURED_COMPLEXITY` — "the method has not run, but its complexity profile carries a measurement somebody took of the work it stands for" — so a decision record can no longer call a measurement a promise. Pinned by `ReportProcedureMeasuredCostTest` |
 | the journey did not open an **episode row**, so a workspace's journeys could not be enumerated from the store | **CLOSED (2026-11-21)** | the journey now **opens** its episode before it writes a step into it (`CognitiveStore.ensureEpisode` → `ReportJourneyTrace.ensureEpisode` → the route), and the episode's account is never rewritten by a later journey. **Proven RED → GREEN** (`CRJ-01-REPRODUCTION-journey-episode-missing.xml`: 2 tests, 2 failures; `TEST-io.matrix.cognitive.report.ReportJourneyEpisodeTest.xml`: 2 tests, 0 failures). The gap it closed was real: the learned procedure's provenance names the episode it was learned in, and a reader who followed it found nothing |
 | the **quarantine list** is the caller's | **OPEN** | the programme: chain A needs the same role/quarantine discipline chain B has, or the caller's list must be audited |
 | the report journey could refuse a request with **HTTP 503 `output_root_unavailable`** because the **database was busy** — a wrong name for the cause, and a **pre-existing** defect of the served path (`R-EPIS-13`) | **FIXED and PROVEN** | the coordinator: the knowledge store's read-then-write is now one IMMEDIATE transaction. RED without the fix (the retained XML), GREEN with it. The control tree — the commit before arm C — fails the same probe at the same rate (32 of 40 rounds against 33 of 40), so arm C did not cause it |
@@ -166,10 +166,7 @@ is real and the benefit is not yet**. The next step is therefore **not** more of
 2. the **corpus and the cases**, commissioned from a **case author who implements no arm** and
    frozen by an **independent reviewer** — the oracle and the producer are ready for them, and
    the corpus's required shape is now **measured** (`docs-v2/engineering/CRJ-01-INSTRUMENTS.md` §4);
-3. the **operator's path** for the claim learner, which the procedure learner has and the
-   claim learner does not yet;
-4. the **declared cost** of the first selection — the one defect above that is still open;
-4. the **load-sensitive latency assertions** of the research suite (`Exp324` among them): they
+3. the **load-sensitive latency assertions** of the research suite (`Exp324` among them): they
    measure the machine and not the code, and they go red whenever the full suite runs the
    model-heavy suites next to them. They are the suite's own known class (`CI-SIMPLIFICATION-RFC`
    §7.1) and they are **not** silenced here — but the owner may want them to assert on a
@@ -313,7 +310,40 @@ as the stable ones.)
    which is exactly the 2.7 % the earlier report quoted. **The null was the workload, not the
    mechanism.**
 
-### 8.3 What it means for the programme — a decision the owner can act on
+### 8.3 The first decision now rests on a measurement — the declared cost is closed
+
+The cost curve says the portfolio's constant (**1 ms**) was off by about **twenty times** on
+the research pool, so the first decision was made on a promise that was wrong by an order of
+magnitude. It is closed:
+
+1. **the promotion measures the work it already does.** The validation runs the restricted
+   reading on every held-out case; the promotion now **times** those runs — after a **warmup
+   pass** (the first reading of a path pays the JIT's warmup, and a cost measured on a cold
+   path is not the cost the method will pay when the serving process runs it) — and takes the
+   **median**, for the same reason the cost curve does;
+2. **the store carries the measurement.** It is a column beside the procedure's other
+   validation measurements (`validation_cases`, `validation_agreement`), and it is **not** part
+   of the procedure's definition: the immutability check does not compare it, and a later
+   re-measurement never rewrites the one the promotion was made with. The table's W44
+   migration path carries the column too, so a store written before it still migrates;
+3. **the method declares the measurement**, not the constant — and the declaration carries it
+   as a **structured marker** (`costMeasuredNanos=…`), not as prose;
+4. **the selector's vocabulary grew a third basis**: `MEASURED_COMPLEXITY` — "the method has
+   not run, but its complexity profile carries a measurement somebody took of the work it
+   stands for". Without it a decision record would call a measurement "DECLARED_COMPLEXITY",
+   which is a description of the number's origin and a falsehood about the number's standing.
+
+**What is still true:** the reference's own declared cost (**25 ms**) remains a declaration,
+and the ledger's measurement of the reference replaces it once the reference has run. The
+procedure's first decision therefore compares a **measured** reading with a **declared**
+reading — which is honest and is stated in the record, but it is not a comparison of two
+measurements. That is the portfolio's own boundary, and the arm C slice does not move it.
+
+**The evidence:** `docs-v2/engineering/evidence/TEST-io.matrix.cognitive.report.ReportProcedureMeasuredCostTest.xml`
+— one test, zero failures: the promotion records the measurement, the method declares it, and
+the decision's own reason names the basis.
+
+### 8.4 What it means for the programme — a decision the owner can act on
 
 - **The sealed split's corpus must be a LARGE workspace.** A corpus of a few dozen claims
   cannot show this mechanism's value at **any** support fraction: the best the bundled
