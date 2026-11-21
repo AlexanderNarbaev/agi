@@ -515,6 +515,10 @@ public final class CognitiveStore
             try (Statement st = connection.createStatement()) {
                 addColumnIfMissing(st, "cognitive_procedure", "learned_in_episode", "TEXT");
                 addColumnIfMissing(st, "cognitive_procedure", "validation_note", "TEXT");
+                // OD-082: the cost the promotion's OWN validation measured. It is a
+                // MEASUREMENT and not part of the procedure's definition, so it is not
+                // compared by the immutability check and a re-measurement never rewrites it.
+                addColumnIfMissing(st, "cognitive_procedure", "measured_cost_nanos", "INTEGER");
             }
             return;
         }
@@ -539,6 +543,7 @@ public final class CognitiveStore
                         validation_kind TEXT,
                         learned_in_episode TEXT,
                         validation_note TEXT,
+                        measured_cost_nanos INTEGER,
                         PRIMARY KEY (id, version)
                     )""");
             // A table written before the validation kind existed carries no such column,
@@ -579,6 +584,7 @@ public final class CognitiveStore
                         validation_kind TEXT,
                         learned_in_episode TEXT,
                         validation_note TEXT,
+                        measured_cost_nanos INTEGER,
                         PRIMARY KEY (id, version)
                     )""");
         }
@@ -1184,6 +1190,30 @@ public final class CognitiveStore
      * @param procedure   the version
      */
     public synchronized void recordProcedure(String workspaceId, Procedure procedure) {
+        recordProcedure(workspaceId, procedure, null);
+    }
+
+    /**
+     * Records a procedure with the cost its promotion MEASURED.
+     *
+     * <p><b>Why the measured cost is separate from the definition.</b> The cost is a
+     * MEASUREMENT of this version, like the counters and the promotion instant: it is not
+     * part of what the procedure IS, so the immutability check does not compare it, and a
+     * later re-measurement never rewrites the one the promotion was made with.</p>
+     *
+     * <p><b>Why the promotion measures it at all.</b> A procedure's first selection is made
+     * before it has ever run, so the selector weighs it by its <b>declared</b> cost — a
+     * promise. The promotion has already run the restricted reading on its held-out cases,
+     * so it knows what the reading actually costs, and a promotion that carries that
+     * measurement makes the FIRST decision rest on a measurement too.</p>
+     *
+     * @param workspaceId     the workspace the procedure belongs to
+     * @param procedure       the version
+     * @param measuredCostNanos the cost the promotion measured, in nanoseconds; null when
+     *                        nothing was measured
+     */
+    public synchronized void recordProcedure(String workspaceId, Procedure procedure,
+                                            Long measuredCostNanos) {
         List<String> existing = procedureContent(procedure.id(), procedure.version());
         if (existing != null) {
             if (existing.equals(procedureDefinitionOf(procedure))) {
@@ -1200,8 +1230,8 @@ public final class CognitiveStore
                         + "version, applicability, required_facts, reference_algorithm_id, "
                         + "validation_cases, validation_agreement, use_count, failure_count, "
                         + "promoted_at, invalidated_at, validation_kind, learned_in_episode, "
-                        + "validation_note) "
-                        + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
+                        + "validation_note, measured_cost_nanos) "
+                        + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
             ps.setString(1, procedure.id());
             ps.setString(2, workspaceId);
             ps.setString(3, procedure.name());
@@ -1220,6 +1250,11 @@ public final class CognitiveStore
                     ? ValidationKind.IN_SAMPLE.name() : procedure.validationKind().name());
             ps.setString(16, procedure.learnedInEpisode());
             ps.setString(17, procedure.validationNote());
+            if (measuredCostNanos == null) {
+                ps.setNull(18, java.sql.Types.INTEGER);
+            } else {
+                ps.setLong(18, measuredCostNanos);
+            }
             ps.executeUpdate();
         } catch (SQLException e) {
             if (isConstraintViolation(e)) {
@@ -1383,6 +1418,34 @@ public final class CognitiveStore
                                 + " already exists");
             }
             throw new IllegalStateException("failed to record the learned claim", e);
+        }
+    }
+
+    /**
+     * The cost a promotion measured for a procedure version.
+     *
+     * @param workspaceId the workspace
+     * @param procedureId the procedure
+     * @param version     the version
+     * @return the measured cost in nanoseconds, or null when the promotion measured nothing
+     */
+    public synchronized Long procedureMeasuredCostNanos(String workspaceId, String procedureId,
+                                                         String version) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT measured_cost_nanos FROM cognitive_procedure WHERE workspace_id = ? "
+                        + "AND id = ? AND version = ?")) {
+            ps.setString(1, workspaceId);
+            ps.setString(2, procedureId);
+            ps.setString(3, version);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    return null;
+                }
+                long value = rs.getLong(1);
+                return rs.wasNull() ? null : value;
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the procedure's measured cost", e);
         }
     }
 

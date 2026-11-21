@@ -107,7 +107,19 @@ public final class AlgorithmSelector {
         /** The ledger has measured this method. */
         MEASURED,
         /** Nobody measured this method, so its declared complexity was used. */
-        DECLARED_COMPLEXITY
+        DECLARED_COMPLEXITY,
+        /**
+         * The method has not run, but its complexity profile carries a MEASUREMENT somebody
+         * took of the work it stands for.
+         *
+         * <p><b>Why this is a basis of its own.</b> A declared cost is a promise and a measured
+         * cost is a fact, and a decision record that calls a measurement "declared" is
+         * describing the fact wrongly. The case is real: a promoted procedure is weighed
+         * before it has ever run, and the promotion has already run the work its method
+         * stands for — so the profile carries what that work actually cost, and the first
+         * decision rests on that rather than on an estimate.</p>
+         */
+        MEASURED_COMPLEXITY
     }
 
     /** The cost of one candidate and where it came from. */
@@ -415,7 +427,11 @@ public final class AlgorithmSelector {
             return new CostAssessment(measured, 0, CostBasis.MEASURED, detail);
         }
         DeclaredCost.Cost declared = DeclaredCost.parse(capability.complexity().time());
-        return new CostAssessment(declared.nanos(), declared.nodes(), CostBasis.DECLARED_COMPLEXITY,
+        // the profile may carry a MEASUREMENT of the work - somebody ran it and timed it -
+        // and that is not the same thing as the profile's declared estimate
+        CostBasis basis = declared.measured() ? CostBasis.MEASURED_COMPLEXITY
+                : CostBasis.DECLARED_COMPLEXITY;
+        return new CostAssessment(declared.nanos(), declared.nodes(), basis,
                 declared.describe());
     }
 

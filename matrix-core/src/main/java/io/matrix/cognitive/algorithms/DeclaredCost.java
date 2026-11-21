@@ -75,17 +75,39 @@ public final class DeclaredCost {
      * @param label    the asymptotic label the cost was read from
      * @param recognised whether the label was one this package knows
      */
-    public record Cost(long nanos, int nodes, boolean explicit, String label, boolean recognised) {
+    public record Cost(long nanos, int nodes, boolean explicit, String label, boolean recognised,
+                       boolean measured) {
 
         /** A short description for a decision record. */
         public String describe() {
-            String basis = explicit ? "declared" : "growth-table";
+            String basis = measured ? "measured" : (explicit ? "declared" : "growth-table");
             return basis + " " + label + " = " + nanos + "ns"
                     + (nodes > 0 ? ", " + nodes + " nodes" : "");
         }
     }
 
     private DeclaredCost() {
+    }
+
+    /**
+     * Builds the complexity label with a MEASURED cost.
+     *
+     * <p><b>Why a measurement is written differently from an estimate.</b> A declared cost is
+     * a promise: somebody said "this is about so long". A measured cost is a fact: somebody
+     * ran the work and timed it. The two must not read the same in a decision record, because
+     * a decision made on a promise and a decision made on a measurement have different
+     * standing, and the reader of the record has to be able to tell them apart.</p>
+     *
+     * <p>The measurement is written in NANOSECONDS, because a measurement is a duration and a
+     * duration is not a whole number of milliseconds: rounding it before it is stored would
+     * lose the precision the measurement was taken with.</p>
+     *
+     * @param label the asymptotic label, e.g. {@code "O(V+E)"}
+     * @param nanos the measured cost in nanoseconds
+     * @return the label with the measurement appended
+     */
+    public static String declareMeasured(String label, long nanos) {
+        return (label == null ? "unknown" : label) + ";costMeasuredNanos=" + nanos;
     }
 
     /**
@@ -114,11 +136,12 @@ public final class DeclaredCost {
     public static Cost parse(String complexityTime) {
         String text = complexityTime == null ? "" : complexityTime.trim();
         if (text.isEmpty()) {
-            return new Cost(DEFAULT_DECLARED_COST_NANOS, 0, false, "unknown", false);
+            return new Cost(DEFAULT_DECLARED_COST_NANOS, 0, false, "unknown", false, false);
         }
         String[] parts = text.split(";");
         String label = parts[0].trim();
         Long explicitMillis = null;
+        Long measuredNanos = null;
         int nodes = 0;
         for (int i = 1; i < parts.length; i++) {
             String hint = parts[i].trim();
@@ -140,15 +163,28 @@ public final class DeclaredCost {
                 } catch (NumberFormatException e) {
                     nodes = 0;
                 }
+            } else if ("costmeasurednanos".equals(key)) {
+                try {
+                    measuredNanos = Long.parseLong(value);
+                } catch (NumberFormatException e) {
+                    measuredNanos = null;
+                }
             }
         }
+        if (measuredNanos != null && measuredNanos >= 0) {
+            // a MEASUREMENT wins over a declared hint: the work was timed, and a number
+            // somebody wrote down is not a better fact than one somebody measured
+            return new Cost(measuredNanos, Math.max(0, nodes), true, label, true, true);
+        }
         if (explicitMillis != null && explicitMillis >= 0) {
-            return new Cost(explicitMillis * NANOS_PER_MILLI, Math.max(0, nodes), true, label, true);
+            return new Cost(explicitMillis * NANOS_PER_MILLI, Math.max(0, nodes), true, label, true,
+                    false);
         }
         Long tableValue = GROWTH_TABLE.get(label);
         if (tableValue == null) {
-            return new Cost(DEFAULT_DECLARED_COST_NANOS, Math.max(0, nodes), false, label, false);
+            return new Cost(DEFAULT_DECLARED_COST_NANOS, Math.max(0, nodes), false, label, false,
+                    false);
         }
-        return new Cost(tableValue, Math.max(0, nodes), false, label, true);
+        return new Cost(tableValue, Math.max(0, nodes), false, label, true, false);
     }
 }
