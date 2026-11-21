@@ -10,6 +10,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The domain-A oracle of CRJ-01: the <b>source-span oracle</b>.
@@ -151,12 +152,51 @@ public final class SourceSpanOracle {
     private final Path corpusRoot;
 
     /**
+     * The production claim ids of the workspace UNDER TEST, by proposition.
+     *
+     * <p><b>Why this exists — a defect the oracle would otherwise carry.</b> A production
+     * claim id is derived from the WORKSPACE as well as from the content
+     * ({@code DocumentImporter.claimId}: {@code "clm-" + digest(workspaceId + "|" +
+     * contentHash + "|" + proposition)}). The CRJ-01 protocol requires that "each arm runs
+     * against its <b>own</b> workspace id", and the arms' workspaces are therefore three
+     * different workspaces — and the SAME document imported into three workspaces yields
+     * THREE DIFFERENT claim ids.</p>
+     *
+     * <p>So a set that froze a gold claim id would be groundable by at most ONE of the
+     * three arms, and the other two would read as ungrounded for a reason that has nothing
+     * to do with the arms at all. The fix is not to weaken the corpus requirement but to
+     * resolve the gold in the workspace under test: the gold is the SOURCE's claim
+     * <b>in the workspace the answer came from</b>, and the oracle checks that the cited
+     * claim is that claim — by its proposition, byte-identical, and by its id in that
+     * workspace.</p>
+     *
+     * <p>When the map is empty the oracle falls back to the ids the case recorded, which is
+     * the right behaviour when the workspace under test IS the workspace the set was built
+     * in.</p>
+     */
+    private final Map<String, String> claimIdsByProposition;
+
+    /**
      * The oracle over a corpus directory.
      *
      * @param corpusRoot the directory the corpus files live in
      */
     public SourceSpanOracle(Path corpusRoot) {
+        this(corpusRoot, Map.of());
+    }
+
+    /**
+     * The oracle over a corpus directory, resolving the gold's claim ids in the workspace
+     * under test.
+     *
+     * @param corpusRoot         the directory the corpus files live in
+     * @param claimIdsByProposition the production claim ids of the workspace under test, by
+     *                              proposition
+     */
+    public SourceSpanOracle(Path corpusRoot, Map<String, String> claimIdsByProposition) {
         this.corpusRoot = corpusRoot;
+        this.claimIdsByProposition = Map.copyOf(
+                claimIdsByProposition == null ? Map.of() : claimIdsByProposition);
     }
 
     /**
@@ -218,17 +258,45 @@ public final class SourceSpanOracle {
                 continue;
             }
             for (String goldProposition : gold.goldPropositions()) {
-                if (byteIdentical(goldProposition, cited.proposition())
-                        && gold.goldClaimIds().contains(cited.claimId())) {
-                    return new Verdict(gold.caseId(), Outcome.GROUNDED, true,
-                            "the answer cites the gold proposition from the claim "
-                                    + cited.claimId());
+                if (!byteIdentical(goldProposition, cited.proposition())) {
+                    continue;
                 }
+                if (!isTheProductionClaimOf(goldProposition, cited.claimId(), gold)) {
+                    continue;
+                }
+                return new Verdict(gold.caseId(), Outcome.GROUNDED, true,
+                        "the answer cites the gold proposition from the claim "
+                                + cited.claimId());
             }
         }
         return new Verdict(gold.caseId(), Outcome.UNGROUNDED, false,
                 "the answer cites " + served.cited().size() + " claim(s), none of which is the "
                         + "gold proposition of this case's own claim");
+    }
+
+    /**
+     * Whether the cited claim IS the production claim of the gold proposition.
+     *
+     * <p>Two ways to know, and the first is preferred:</p>
+     * <ul>
+     *   <li>the workspace under test's own production ids — the authoritative answer, and
+     *       the one that survives the arms' workspace isolation;</li>
+     *   <li>the ids the case recorded — correct only when the workspace under test is the
+     *       workspace the set was built in.</li>
+     * </ul>
+     *
+     * @param goldProposition the gold proposition
+     * @param citedClaimId    the id the answer cited
+     * @param gold            the case's gold
+     * @return true when the cited claim is the production claim of that proposition
+     */
+    private boolean isTheProductionClaimOf(String goldProposition, String citedClaimId,
+                                            GoldCase gold) {
+        String productionId = claimIdsByProposition.get(goldProposition);
+        if (productionId != null) {
+            return productionId.equals(citedClaimId);
+        }
+        return gold.goldClaimIds().contains(citedClaimId);
     }
 
     /**
