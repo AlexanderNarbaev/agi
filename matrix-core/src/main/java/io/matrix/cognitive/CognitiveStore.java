@@ -784,6 +784,48 @@ public final class CognitiveStore
     }
 
     /**
+     * Opens an episode unless it is already there.
+     *
+     * <p><b>This is the operation a container that outlives one run needs.</b> An episode is
+     * OPENED and later CLOSED, and {@link #startEpisode} is the open — but a caller whose
+     * container is keyed by something that repeats (an action identity, a request key) meets
+     * the open twice, and the second meeting is not a second episode: it is the same episode,
+     * still there, still holding what the first run left in it.</p>
+     *
+     * <p>So this call opens the episode only when it is ABSENT, and never rewrites one that is
+     * already there. The account of what an episode was — its workspace, its summary and the
+     * instant it started — belongs to the first writer, and a later caller that disagrees with
+     * it does not get to replace it: the episode stands as it was opened. That is the same
+     * rule {@link #startEpisode} follows, applied to the case {@code startEpisode} refuses
+     * rather than accepts.</p>
+     *
+     * <p><b>Concurrent callers.</b> Two callers that meet for the first time can both find the
+     * episode absent, and both can try to open it. The loser of that race is not an error: the
+     * episode is there, and its content is the winner's. The loser is told it did not open
+     * anything.</p>
+     *
+     * @param episodeId  the episode
+     * @param workspaceId the workspace the episode belongs to
+     * @param summary    what the episode is about
+     * @param startedAt  the instant the episode started
+     * @return whether THIS call opened the episode; false when it was already there
+     */
+    public synchronized boolean ensureEpisode(String episodeId, String workspaceId, String summary,
+                                               String startedAt) {
+        if (episodeContent(episodeId) != null) {
+            return false;
+        }
+        try {
+            startEpisode(episodeId, workspaceId, summary, startedAt);
+            return true;
+        } catch (CognitiveConflictException alreadyThere) {
+            // another writer opened the episode between the check and the insert; the episode
+            // exists, and its account is not this caller's to rewrite
+            return false;
+        }
+    }
+
+    /**
      * Closes an episode.
      *
      * <p>An explicit UPDATE of {@code closed_at} and of nothing else: the summary and the start

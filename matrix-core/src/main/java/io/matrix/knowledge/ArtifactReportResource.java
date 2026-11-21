@@ -371,6 +371,20 @@ public class ArtifactReportResource {
 
         // ── THE TRACE — what happened, kept where the next task can read it ─
         List<String> traceFailures = new ArrayList<>();
+        // the journey's episode is OPENED before anything is written into it: a trace that
+        // lives in an episode nobody opened is a trace no reader can follow, because the
+        // store's own listing of the workspace's episodes would not hold it
+        if (traceStore != null) {
+            try {
+                ReportJourneyTrace.ensureEpisode(traceStore, episodeId, workspaceId, identity);
+            } catch (RuntimeException unopenable) {
+                // the journey continues: an episode that could not be opened is a fact the
+                // caller is told, not a reason to refuse a request the workspace can answer
+                // — the trace itself is written with the same tolerance
+                traceFailures.add("the journey's episode could not be opened: "
+                        + unopenable.getMessage());
+            }
+        }
         List<CognitiveStore.EventRecord> steps = new ArrayList<>();
         String planDetail = plan.method().capability().id() + ": " + plan.reason();
         steps.add(new CognitiveStore.EventRecord(ReportJourneyTrace.PHASE_PLAN,
