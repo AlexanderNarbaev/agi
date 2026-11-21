@@ -6,8 +6,8 @@
   "arms" : [ "A", "B", "C" ],
   "precommittedSeeds" : [ 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3008, 3009 ],
   "budget" : {
-    "maxWallClockMillis" : 30000,
-    "maxCpuMillis" : 30000
+    "maxCpuMillis" : 30000,
+    "maxWallClockMillis" : 30000
   },
   "note" : "a DEV run on the solver's own split of the PRE-COMMITTED seed list: a DEBUGGING artefact, never evidence of an arm's advantage",
   "rows" : [ {
@@ -16,10 +16,10 @@
     "arm" : "A",
     "variant" : "measured",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -29,7 +29,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 1749166,
+    "wallNanos" : 378693,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -39,10 +39,10 @@
     "arm" : "B",
     "variant" : "repeat",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -52,7 +52,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 187694,
+    "wallNanos" : 223782,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -62,10 +62,10 @@
     "arm" : "C",
     "variant" : "measured",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -75,7 +75,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 1749166,
+    "wallNanos" : 378693,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -85,10 +85,10 @@
     "arm" : "A",
     "variant" : "measured",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -98,7 +98,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 173266,
+    "wallNanos" : 225505,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -108,10 +108,10 @@
     "arm" : "B",
     "variant" : "repeat",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -121,7 +121,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 139903,
+    "wallNanos" : 188185,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -131,10 +131,10 @@
     "arm" : "C",
     "variant" : "measured",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -144,7 +144,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 173266,
+    "wallNanos" : 225505,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -154,10 +154,10 @@
     "arm" : "A",
     "variant" : "measured",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -167,7 +167,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 137579,
+    "wallNanos" : 187303,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -177,10 +177,10 @@
     "arm" : "B",
     "variant" : "repeat",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -190,7 +190,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 128392,
+    "wallNanos" : 170472,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -200,10 +200,10 @@
     "arm" : "C",
     "variant" : "measured",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -213,7 +213,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 137579,
+    "wallNanos" : 187303,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -223,10 +223,10 @@
     "arm" : "A",
     "variant" : "measured",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -236,7 +236,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 131227,
+    "wallNanos" : 102493,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -246,10 +246,10 @@
     "arm" : "B",
     "variant" : "repeat",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -259,7 +259,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 144853,
+    "wallNanos" : 105128,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -269,10 +269,10 @@
     "arm" : "C",
     "variant" : "measured",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -282,7 +282,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 131227,
+    "wallNanos" : 102493,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -292,10 +292,10 @@
     "arm" : "A",
     "variant" : "measured",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -305,7 +305,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 160252,
+    "wallNanos" : 108865,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -315,10 +315,10 @@
     "arm" : "B",
     "variant" : "repeat",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -328,7 +328,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 196490,
+    "wallNanos" : 117081,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -338,10 +338,10 @@
     "arm" : "C",
     "variant" : "measured",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -351,7 +351,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 160252,
+    "wallNanos" : 108865,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -361,10 +361,10 @@
     "arm" : "A",
     "variant" : "measured",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -374,7 +374,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 124063,
+    "wallNanos" : 92144,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -384,10 +384,10 @@
     "arm" : "B",
     "variant" : "repeat",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -397,7 +397,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 129163,
+    "wallNanos" : 88267,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -407,10 +407,10 @@
     "arm" : "C",
     "variant" : "measured",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -420,7 +420,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 124063,
+    "wallNanos" : 92144,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -430,10 +430,10 @@
     "arm" : "A",
     "variant" : "measured",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -443,7 +443,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 124314,
+    "wallNanos" : 87776,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -453,10 +453,10 @@
     "arm" : "B",
     "variant" : "repeat",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -466,7 +466,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 143300,
+    "wallNanos" : 87956,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -476,10 +476,10 @@
     "arm" : "C",
     "variant" : "measured",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -489,7 +489,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 124314,
+    "wallNanos" : 87776,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -499,10 +499,10 @@
     "arm" : "A",
     "variant" : "measured",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -512,7 +512,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 152387,
+    "wallNanos" : 137348,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -522,10 +522,10 @@
     "arm" : "B",
     "variant" : "repeat",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -535,7 +535,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 135084,
+    "wallNanos" : 89228,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -545,10 +545,10 @@
     "arm" : "C",
     "variant" : "measured",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -558,7 +558,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 152387,
+    "wallNanos" : 137348,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -568,10 +568,10 @@
     "arm" : "A",
     "variant" : "measured",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -581,7 +581,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 125606,
+    "wallNanos" : 98055,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -591,10 +591,10 @@
     "arm" : "B",
     "variant" : "repeat",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -604,7 +604,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 221387,
+    "wallNanos" : 98335,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -614,10 +614,10 @@
     "arm" : "C",
     "variant" : "measured",
     "answers" : {
-      "power=1,switch=0" : false,
-      "power=0,switch=0" : false,
+      "power=1,switch=1" : true,
       "power=0,switch=1" : false,
-      "power=1,switch=1" : true
+      "power=0,switch=0" : false,
+      "power=1,switch=0" : false
     },
     "correct" : 4,
     "novelQueries" : 0,
@@ -627,7 +627,7 @@
     "terminationReason" : "MODEL_SETTLED",
     "settled" : true,
     "stepsSavedVsA" : 0,
-    "wallNanos" : 125606,
+    "wallNanos" : 98055,
     "inapplicable" : false,
     "reason" : null,
     "error" : null
@@ -640,7 +640,7 @@
       "probes" : 36,
       "settled" : 9,
       "inapplicable" : 0,
-      "wallNanos" : 2877860
+      "wallNanos" : 1418182
     },
     "B" : {
       "episodes" : 9,
@@ -649,7 +649,7 @@
       "probes" : 0,
       "settled" : 9,
       "inapplicable" : 0,
-      "wallNanos" : 1426266
+      "wallNanos" : 1168434
     },
     "C" : {
       "episodes" : 9,
@@ -658,7 +658,7 @@
       "probes" : 0,
       "settled" : 9,
       "inapplicable" : 0,
-      "wallNanos" : 2877860
+      "wallNanos" : 1418182
     }
   }
 }
