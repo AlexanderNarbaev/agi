@@ -858,3 +858,34 @@ evidence is a suspicion, and it is marked as such.
 - **owner**: the coordinator (Level 1 — test-only changes), after the release.
 - **status**: OPEN as a **labelled gap**, now with the classification measured rather than
   asserted; the two false-success probes of this wave are CLOSED.
+
+### R-EPIS-14 — the journey's trace lived in an episode the store never opened
+
+- **the finding**: the report journey's trace lives in an episode — the store's own container for "one run of
+  something", with an account of what it was, a workspace it belongs to and an instant it started. The journey wrote
+  its **steps** into that episode and never **opened** it: `appendEvents` inserts into the event table, and an event
+  names its episode in a column; nothing ever inserted a row into the episode table. So the episode existed in the
+  event table and **nowhere else**.
+- **how it surfaced**: the store's own listing of a workspace's episodes was **empty** while the journey's steps were
+  in the event table. Two things follow from that, and both matter. First, a **learned competence's provenance** —
+  `learned_in_episode` — named an episode that a reader following it could not find. Second, the **quarantine list**
+  of arm C could not be enumerated from the store at all, which is why the operator had to name the ids by hand.
+- **the reproduction** (the retained RED artefact):
+  `docs-v2/engineering/evidence/CRJ-01-REPRODUCTION-journey-episode-missing.xml` — two tests, **two failures**. The
+  gate is `matrix-core/src/test/java/io/matrix/cognitive/report/ReportJourneyEpisodeTest.java`.
+- **the fix**: the journey **opens** its episode before it writes a step into it. The form is an `ensure` rather than
+  an open, because the episode is keyed by the **action identity**: the same request always names the same episode, so
+  a later journey **continues** it. The account of what the episode was belongs to the first writer and is never
+  rewritten — which is the store's own rule, extended to the case `startEpisode` refuses rather than accepts. Two
+  concurrent callers that meet for the first time produce **one** episode: the loser of the race is told it did not
+  open anything.
+- **the alternatives**: the journey keeps writing events only (rejected — the episode is nowhere); the episode is
+  opened with the wall clock each time (rejected — `startEpisode` treats a different account as a **conflict**, so a
+  replay would have been refused); the episode is closed at the end of each journey (rejected — the trace's episode id
+  is the identity's, so closing it would end the identity's record at its first journey, and a later journey would
+  write into a closed episode).
+- **owner**: the coordinator (Level 2 — a change that reaches a persistent store).
+- **status**: **FIXED and PROVEN** — RED without the fix (two failures, the retained XML), GREEN with it
+  (`TEST-io.matrix.cognitive.report.ReportJourneyEpisodeTest.xml`: two tests, zero failures). The residual: the
+  episode's **summary** is derived from the action identity, so the episode does not itself name the question — a
+  reader reads the identity and follows it to the request.
