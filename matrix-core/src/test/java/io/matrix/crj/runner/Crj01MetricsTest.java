@@ -210,6 +210,50 @@ class Crj01MetricsTest {
     }
 
     @Test
+    @DisplayName("the domain-B metrics are computed, and the transfer's empty denominator is reported")
+    void theDomainBMetricsAreComputed() throws Exception {
+        Path evidence = RepositoryPaths.root()
+                .resolve("docs-v2/engineering/CRJ-01-EVIDENCE-DOMAIN-B.json");
+        assertThat(evidence).as("the domain-B evidence").exists();
+        java.util.List<Crj01Metrics.Metric> metrics = Crj01Metrics.domainBMetrics(evidence);
+        assertThat(metrics).as("the domain-B metrics").isNotEmpty();
+        assertThat(metrics).allSatisfy(metric -> {
+            assertThat(metric.id()).startsWith("M-B");
+            assertThat(metric.population()).isNotBlank();
+            assertThat(metric.note()).isNotBlank();
+        });
+
+        // M-B2: every dev episode settled — the bound is the domain's size
+        Crj01Metrics.Metric settled = metrics.stream()
+                .filter(metric -> metric.id().equals("M-B2") && metric.name().contains("(A)"))
+                .findFirst().orElseThrow();
+        assertThat(settled.denominator()).as("the episodes").isEqualTo(9);
+        assertThat(settled.numerator()).as("the episodes that settled").isEqualTo(9);
+
+        // M-B5: the primary metric — arm A pays for the probes, arm C does not
+        Crj01Metrics.Metric costA = metrics.stream()
+                .filter(metric -> metric.id().equals("M-B5") && metric.name().contains("(A)"))
+                .findFirst().orElseThrow();
+        Crj01Metrics.Metric costC = metrics.stream()
+                .filter(metric -> metric.id().equals("M-B5") && metric.name().contains("(C)"))
+                .findFirst().orElseThrow();
+        assertThat(costA.numerator()).as("arm A's probes").isEqualTo(36);
+        assertThat(costA.denominator()).as("arm A's correct answers").isEqualTo(36);
+        assertThat(costC.numerator()).as("arm C's probes").isZero();
+        assertThat(costC.denominator()).as("arm C's correct answers").isEqualTo(36);
+
+        // M-B4: the TRANSFER metric's denominator is ZERO, and it is REPORTED, not dropped
+        Crj01Metrics.Metric transfer = metrics.stream()
+                .filter(metric -> metric.id().equals("M-B4") && metric.name().contains("(A)"))
+                .findFirst().orElseThrow();
+        assertThat(transfer.denominator())
+                .as("the transfer subset is EMPTY in the lamp world as it exists")
+                .isZero();
+        assertThat(transfer.rate()).as("a rate over nothing is not a number").isNull();
+        assertThat(transfer.note()).contains("ZERO");
+    }
+
+    @Test
     @DisplayName("the exact McNemar test agrees with the protocol's own worked examples")
     void theMcnemarTestAgreesWithTheWorkedExamples() {
         // the protocol's own numbers: 6/6 discordant pairs all favouring one arm reach

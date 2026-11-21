@@ -1060,3 +1060,40 @@ evidence is a suspicion, and it is marked as such.
 - **the owner**: the case author and the freezing reviewer.
 - **status**: **OPEN as a measurement constraint**; the metrics that expose it are built and
   the constraint is written into the report.
+
+### R-EPIS-21 — the lamp world as it exists has NO transfer case, so M-B4 divides by zero
+
+- **the finding**: the protocol's domain-B metrics are built on a **transfer** — M-B4 is
+  "transfer answer accuracy" over "the sealed episodes' **novel** query assignments" — and
+  the lamp world has exactly **four** assignments. The structure measurement asks, for every
+  possible step bound, whether there is both a novel query **and** an arm that can answer
+  it. There is **none**:
+  | bound | episodes | settled | novel queries | the reference answered |
+  |---|---|---|---|---|
+  | 1 | 9 | 0 | 27 | **0** |
+  | 2 | 9 | 0 | 18 | **0** |
+  | 3 | 9 | 0 | 9 | **0** |
+  | 4 | 9 | **9** | **0** | 0 |
+  A bound below the domain's size leaves a novel assignment, but the surviving hypotheses
+  **disagree** about it and the reference **refuses** — it refuses rather than answering from
+  a hypothesis set that does not choose. A bound of the domain's size settles the model and
+  leaves no novel query.
+- **the consequence**: **M-B4's denominator is zero**, and it is reported **with its empty
+  denominator** rather than quietly dropped. A sealed domain-B split of 18 episodes would
+  produce 18 rows whose transfer metric divides by nothing.
+- **the worse consequence**: at the pre-committed bound the comparison is a **pure cost**
+  comparison — arm A answers 36/36 for **36 probes**, arm C answers 36/36 for **0 probes**,
+  and **arm B, the exact replay, answers 36/36 for 0 probes too**. So in this domain arm
+  C's advantage over arm A is **indistinguishable from the replay's**, and the null's first
+  term is **complete**. The contract's rule applies verbatim: "if arm C wins only exact
+  repeats, do not call it a competence gain".
+- **what is still true**: the protocol's P1 — "arm C's correctness will be **equal** to arm
+  A's on every case" — is **confirmed** (36/36 against 36/36), and the cost advantage is
+  real (M-B5: 36 probes against 0; M-B6: 36 probes saved).
+- **the owner's options**: (1) run the domain-B arm comparison **once** as a rehearsal of
+  the null and treat **domain A** as the decisive domain; (2) commission a micro-world with
+  a **larger input domain**, so an episode can settle **before** exhausting it — this is a
+  change to D1's domain B; (3) accept that domain B measures the episode rather than the
+  transfer, and restate M-B4/M-B5/M-B6 accordingly.
+- **status**: **OPEN — an owner decision**; the measurement, the instrument and the metrics
+  are built, and the finding is in `docs-v2/engineering/CRJ-01-ARM-C.md` §12.

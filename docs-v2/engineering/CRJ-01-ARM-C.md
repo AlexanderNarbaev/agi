@@ -609,3 +609,90 @@ for.
 — two tests, zero failures; the numbers are in `docs-v2/engineering/CRJ-01-METRICS.json`.
 
 ---
+
+## 12. Domain B — the lamp world, and what it can actually measure (2026-11-21)
+
+**Domain B had no instrument at all.** Domain A's arms are the served report route; domain
+B's are **different classes** — the reference enumerates the hypothesis space, the settled
+model answers only when the model has settled, and the replay serves the retained episode.
+`Crj01DomainBRunner` runs them side by side, one row per (episode, arm), and scores the
+answers with the **independently written truth table** (`LampTruthOracle`), whose own
+cross-check must agree on all four assignments or the run is VOID.
+
+### 12.1 The structure of the world — measured, and it decides everything
+
+The protocol's domain-B metrics are built on a **transfer**: M-B4 is "transfer answer
+accuracy" over "the sealed episodes' **novel** query assignments (assignments that episode
+had not observed)". The lamp world has exactly **four** assignments, so the structure
+measurement asks: for every possible step bound, is there both a novel query **and** an arm
+that can answer it?
+
+| the bound | the episodes | settled | novel queries | the reference answered | the settled model applicable |
+|---|---|---|---|---|---|
+| 1 | 9 | 0 | 27 | **0** | 0 |
+| 2 | 9 | 0 | 18 | **0** | 0 |
+| 3 | 9 | 0 | 9 | **0** | 0 |
+| **4** | 9 | **9** | **0** | 0 | 0 |
+
+**There is NO bound that gives both.** A bound below the domain's size leaves a novel
+assignment — but then the surviving hypotheses **disagree** about it, and the reference
+method **refuses**: it refuses rather than answering from a hypothesis set that does not
+choose. A bound of the domain's size settles the model and leaves **no** novel query.
+
+**⇒ The lamp world as it exists has NO transfer case. M-B4's denominator is ZERO**, and the
+metric is reported **with its empty denominator** rather than quietly dropped. **An owner
+who commissions 18 sealed domain-B episodes should know this BEFORE commissioning them:**
+the rows would be produced, and the transfer metrics would divide by nothing.
+
+### 12.2 What domain B CAN measure — a pure cost comparison
+
+At the pre-committed bound (the domain's size), the queries are the episode's **observed**
+assignments, and the arms answer them:
+
+| arm | the episodes | correct | **probes** | settled | inapplicable |
+|---|---|---|---|---|---|
+| **A** — the reference | 9 | **36/36** | **36** | 9 | 0 |
+| **B** — the replay | 9 | **36/36** | **0** | 9 | 0 |
+| **C** — the settled model | 9 | **36/36** | **0** | 9 | 0 |
+
+- **M-B1** the utility: 0.9375 per episode (1 − 1/16) — the model settles on every episode;
+- **M-B2** the model settled: **9/9**;
+- **M-B3** the probes to settle: **4** per episode;
+- **M-B5** the cost per correct answer — the domain's **primary** metric: arm A pays
+  **36 probes for 36 answers**, arm C pays **0**;
+- **M-B6** the probes saved against arm A: **36** (arm C), and the replay's **36**;
+- **M-B8** the termination honesty: **9/9** on every arm — the reported reason agrees with
+  the survivor count;
+- **M-B4** the transfer accuracy: **0/0** — vacuous, as measured above.
+
+### 12.3 The finding: in domain B, arm C is INDISTINGUISHABLE from the cache
+
+**The protocol's P1 is confirmed**: "arm C's *correctness* will be **equal** to arm A's on
+every case" — 36/36 against 36/36.
+
+**And the cost advantage is real: arm C pays 0 probes against arm A's 36.** But **arm B —
+the exact replay — also pays 0 probes and also answers 36/36**. So in the lamp world as it
+exists, **arm C's measured advantage over arm A is indistinguishable from the replay's
+advantage over arm A.** The null's **first term is complete** in this domain.
+
+The contract's own rule therefore applies verbatim: *"If arm C wins only exact repeats, do
+not call it a competence gain."* **On domain B, it wins only exact repeats.**
+
+**What this means for the programme.** The sealed domain-B split, as the protocol describes
+it, would measure a cost advantage that the replay explains in full, and its transfer
+metric would divide by zero. Three things follow, and the third is the owner's:
+1. **the domain-B arm comparison is a rehearsal of the null**, not a test of the hypothesis —
+   which is worth running once, and is NOT worth 18 sealed episodes on its own;
+2. **the arm C mechanism needs a domain where a transfer case exists** — a world with a
+   larger input domain, so that an episode can settle **before** exhausting it. That is a
+   change to D1's domain B, and it is the owner's decision;
+3. **domain A remains the decisive domain**: the corpus is large (540 claims), the support
+   can be a small fraction of it, and the questions are novel by construction. The arm
+   runner's domain-A rows — 6/9 grounded for both arms, arm C 26.1 % cheaper — are the
+   measurement the programme can actually make.
+
+**The evidence:** `docs-v2/engineering/evidence/TEST-io.matrix.crj.runner.Crj01DomainBRunnerTest.xml`
+and `…Crj01DomainBStructureMeasurementTest.xml` — the rows are in
+`docs-v2/engineering/CRJ-01-EVIDENCE-DOMAIN-B.json`.
+
+---

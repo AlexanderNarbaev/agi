@@ -529,6 +529,176 @@ final class Crj01Metrics {
     }
 
     /**
+     * The domain-B metrics, computed from the domain-B evidence artefact.
+     *
+     * <p>The protocol's §6.2 metrics, each with its numerator and its denominator. The one
+     * that matters most here is <b>M-B4</b>: the transfer answer accuracy over the episodes'
+     * <b>novel</b> query assignments. Its denominator is <b>measured</b>, and in the lamp
+     * world as it exists it is <b>zero</b> — so the metric is reported with its empty
+     * denominator rather than quietly dropped.</p>
+     *
+     * @param evidence the domain-B artefact
+     * @return the metrics
+     * @throws Exception when the artefact cannot be read
+     */
+    static List<Metric> domainBMetrics(Path evidence) throws Exception {
+        ObjectMapper json = JsonMapper.builder().build();
+        Map<?, ?> parsed = json.readValue(Files.readString(evidence, StandardCharsets.UTF_8),
+                Map.class);
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (Object entry : (List<?>) parsed.get("rows")) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> row = (Map<String, Object>) entry;
+            rows.add(row);
+        }
+        List<Metric> metrics = new ArrayList<>();
+
+        // M-B1: the episode utility, 1 - finalSurvivors / 16, per arm
+        for (String arm : List.of("A", "B", "C")) {
+            List<Map<String, Object>> armRows = ofArm(rows, arm);
+            if (armRows.isEmpty()) {
+                continue;
+            }
+            double utility = 0.0;
+            for (Map<String, Object> row : armRows) {
+                utility += doubleOf(row.get("utility"));
+            }
+            metrics.add(new Metric("M-B1", "episode utility (" + arm + ")", (long) Math.round(
+                    utility * 1_000_000), armRows.size(),
+                    "the episodes of this arm; the scale's denominator is "
+                            + "UNBIASED_HYPOTHESIS_COUNT = 16",
+                    "the mean utility is 1 - finalSurvivors / 16, and it is reported in "
+                            + "millionths so that the numerator is an integer"));
+        }
+
+        // M-B2: the episodes whose model settled
+        for (String arm : List.of("A", "B", "C")) {
+            List<Map<String, Object>> armRows = ofArm(rows, arm);
+            if (armRows.isEmpty()) {
+                continue;
+            }
+            long settled = armRows.stream().filter(row -> Boolean.TRUE.equals(
+                    row.get("settled"))).count();
+            metrics.add(new Metric("M-B2", "model settled (" + arm + ")", settled,
+                    armRows.size(), "the episodes of this arm",
+                    "an episode counts when finalSurvivors == 1"));
+        }
+
+        // M-B3: the probes it took to settle
+        for (String arm : List.of("A", "B", "C")) {
+            List<Map<String, Object>> armRows = ofArm(rows, arm);
+            if (armRows.isEmpty()) {
+                continue;
+            }
+            long probes = armRows.stream().mapToLong(row -> longOf(row.get("probes"))).sum();
+            metrics.add(new Metric("M-B3", "probes to settle (" + arm + ")", probes,
+                    armRows.size(), "the episodes of this arm",
+                    "the total probes, against the number of episodes; the bound is "
+                            + "DEFAULT_STEP_LIMIT = 4"));
+        }
+
+        // M-B4: the TRANSFER answer accuracy — over the episodes' NOVEL query assignments
+        for (String arm : List.of("A", "B", "C")) {
+            List<Map<String, Object>> armRows = ofArm(rows, arm);
+            if (armRows.isEmpty()) {
+                continue;
+            }
+            long novel = armRows.stream().mapToLong(row -> longOf(row.get("novelQueries")))
+                    .sum();
+            metrics.add(new Metric("M-B4", "transfer answer accuracy (" + arm + ")", 0, novel,
+                    "the episodes' NOVEL query assignments — the assignments that episode had "
+                            + "NOT observed",
+                    "the denominator is MEASURED, and in the lamp world as it exists it is "
+                            + "ZERO: an episode that exhausts the four assignments settles the "
+                            + "model and leaves no novel query, and an episode that stops early "
+                            + "leaves a novel query the surviving hypotheses disagree about, "
+                            + "which the reference refuses to answer. The metric is reported "
+                            + "with its empty denominator rather than dropped"));
+        }
+
+        // M-B5: the cost per correct answer — the domain's PRIMARY metric
+        for (String arm : List.of("A", "B", "C")) {
+            List<Map<String, Object>> armRows = ofArm(rows, arm);
+            if (armRows.isEmpty()) {
+                continue;
+            }
+            long probes = armRows.stream().mapToLong(row -> longOf(row.get("probes"))).sum();
+            long correct = armRows.stream().mapToLong(row -> longOf(row.get("correct"))).sum();
+            metrics.add(new Metric("M-B5", "cost per correct answer (" + arm + ")", probes,
+                    correct, "the number of correct answers this arm produced",
+                    "the numerator is the arm's total probes; the ratio is the probes per "
+                            + "correct answer"));
+        }
+
+        // M-B6: the probes saved against arm A
+        for (String arm : List.of("B", "C")) {
+            List<Map<String, Object>> armRows = ofArm(rows, arm);
+            if (armRows.isEmpty()) {
+                continue;
+            }
+            long saved = armRows.stream().mapToLong(row -> longOf(row.get("stepsSavedVsA")))
+                    .sum();
+            metrics.add(new Metric("M-B6", "probes saved vs A (" + arm + ")", saved,
+                    armRows.size(), "the episodes of this arm",
+                    "the probes the arm did not have to make, against the episode count"));
+        }
+
+        // M-B8: the termination honesty
+        for (String arm : List.of("A", "B", "C")) {
+            List<Map<String, Object>> armRows = ofArm(rows, arm);
+            if (armRows.isEmpty()) {
+                continue;
+            }
+            long truthful = 0;
+            for (Map<String, Object> row : armRows) {
+                String reason = String.valueOf(row.get("terminationReason"));
+                long survivors = longOf(row.get("finalSurvivors"));
+                boolean consistent = ("MODEL_SETTLED".equals(reason) && survivors == 1)
+                        || ("DOMAIN_EXHAUSTED".equals(reason) && survivors >= 1)
+                        || ("STEP_LIMIT_REACHED".equals(reason) && survivors >= 1)
+                        || ("NO_SURVIVING_HYPOTHESIS".equals(reason) && survivors == 0);
+                if (consistent) {
+                    truthful++;
+                }
+            }
+            metrics.add(new Metric("M-B8", "termination honesty (" + arm + ")", truthful,
+                    armRows.size(), "the episodes of this arm",
+                    "an episode counts when the reported reason agrees with the survivor "
+                            + "count: MODEL_SETTLED with one survivor, DOMAIN_EXHAUSTED and "
+                            + "STEP_LIMIT_REACHED with survivors, NO_SURVIVING_HYPOTHESIS "
+                            + "with none"));
+        }
+        return metrics;
+    }
+
+    /**
+     * The rows of one arm.
+     *
+     * @param rows the rows
+     * @param arm  the arm
+     * @return the arm's rows
+     */
+    private static List<Map<String, Object>> ofArm(List<Map<String, Object>> rows, String arm) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> row : rows) {
+            if (arm.equals(String.valueOf(row.get("arm")))) {
+                out.add(row);
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Reads a double out of a map.
+     *
+     * @param value the value
+     * @return the double, or zero
+     */
+    private static double doubleOf(Object value) {
+        return value instanceof Number number ? number.doubleValue() : 0.0;
+    }
+
+    /**
      * Reads an int out of a map.
      *
      * @param value the value

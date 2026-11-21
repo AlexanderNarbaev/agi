@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.crj.runner.Crj01DomainBStructureMeasurementTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-21T14:57:59.709Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.016">
+  <properties/>
+  <testcase name="the lamp world's structure decides what domain B can measure" classname="io.matrix.crj.runner.Crj01DomainBStructureMeasurementTest" time="0.015"/>
+  <system-out><![CDATA[[CRJ-01] the lamp world's structure, per step bound:
+[CRJ-01] bound | episodes | settled | novel queries | reference answered | settled-model applicable
+[CRJ-01]     1 |        9 |       0 |             27 |                 0 |                        0
+[CRJ-01]     2 |        9 |       0 |             18 |                 0 |                        0
+[CRJ-01]     3 |        9 |       0 |              9 |                 0 |                        0
+[CRJ-01]     4 |        9 |       9 |              0 |                 0 |                        0
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

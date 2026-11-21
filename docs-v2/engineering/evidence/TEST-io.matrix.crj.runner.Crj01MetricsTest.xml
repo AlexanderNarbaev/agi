@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="io.matrix.crj.runner.Crj01MetricsTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-21T14:36:58.709Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.032">
+<testsuite name="io.matrix.crj.runner.Crj01MetricsTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-21T14:57:59.725Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.037">
   <properties/>
   <testcase name="the exact McNemar test agrees with the protocol's own worked examples" classname="io.matrix.crj.runner.Crj01MetricsTest" time="0.001"/>
-  <testcase name="the protocol's verdicts are computed from the rows, with their denominators" classname="io.matrix.crj.runner.Crj01MetricsTest" time="0.03"/>
+  <testcase name="the protocol's verdicts are computed from the rows, with their denominators" classname="io.matrix.crj.runner.Crj01MetricsTest" time="0.031"/>
+  <testcase name="the domain-B metrics are computed, and the transfer's empty denominator is reported" classname="io.matrix.crj.runner.Crj01MetricsTest" time="0.004"/>
   <system-out><![CDATA[[CRJ-01] the metrics /home/alexandr-narbaev/Projects/agi/docs-v2/engineering/CRJ-01-METRICS.json
 [CRJ-01] M-A1 grounded answer rate = 12/18
 [CRJ-01] M-A2 abstention correctness = 0/6
