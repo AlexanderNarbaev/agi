@@ -188,10 +188,21 @@ public final class ReportProcedureLearner {
         }
 
         int agreements = 0;
+        // the restricted reading is TIMED as it runs: the promotion is the one moment that
+        // knows what the narrower reading costs before the method has ever run, and a
+        // procedure's FIRST selection is made on its declared cost - a promise. Carrying the
+        // validation's own measurement makes that first decision rest on a measurement.
+        List<Long> restrictedNanos = new ArrayList<>();
         for (Case heldOutCase : heldOut) {
             Answer reference = workbench.ask(workspaceId, heldOutCase.question(), heldOutCase.level());
+            // the WARMUP pass: the first reading of a path pays the JIT's warmup, and a
+            // cost measured on a cold path is not the cost the method will pay when the
+            // serving process runs it. The warmup is not timed and not judged.
+            workbench.ask(workspaceId, heldOutCase.question(), heldOutCase.level(), support);
+            long start = System.nanoTime();
             Answer restricted = workbench.ask(workspaceId, heldOutCase.question(),
                     heldOutCase.level(), support);
+            restrictedNanos.add(System.nanoTime() - start);
             if (!agrees(reference, restricted)) {
                 return new Outcome(false, "the candidate disagreed with the reference on the "
                         + "held-out case '" + heldOutCase.caseId() + "', so it was not promoted",
@@ -200,15 +211,39 @@ public final class ReportProcedureLearner {
             agreements++;
         }
         double agreement = (double) agreements / (double) heldOut.size();
+        Long measuredCostNanos = medianNanos(restrictedNanos);
 
         Procedure procedure = ReportProcedure.record(support,
                 "the sources the observed journeys of this workspace drew on",
                 heldOut.size(), agreement, episodeIds(observed),
                 "validated on " + heldOut.size() + " held-out case(s) against the reference, "
                         + "over the support set of " + support.size() + " source(s)", promotedAt);
-        store.recordProcedure(workspaceId, procedure);
+        store.recordProcedure(workspaceId, procedure, measuredCostNanos);
         return new Outcome(true, "the candidate agreed with the reference on all "
                 + heldOut.size() + " held-out case(s) and was promoted", procedure);
+    }
+
+    /**
+     * The median of the timings, in nanoseconds.
+     *
+     * <p>The median and not the mean: the distribution of a reading on a shared machine has a
+     * long tail, and the mean of such a tail is not the cost of the reading. The repository's
+     * own latency assertion uses the median of its passes for exactly this reason.</p>
+     *
+     * @param nanos the timings
+     * @return the median, or null when nothing was timed
+     */
+    private static Long medianNanos(List<Long> nanos) {
+        if (nanos == null || nanos.isEmpty()) {
+            return null;
+        }
+        List<Long> sorted = new ArrayList<>(nanos);
+        java.util.Collections.sort(sorted);
+        int middle = sorted.size() / 2;
+        if (sorted.size() % 2 == 1) {
+            return sorted.get(middle);
+        }
+        return (sorted.get(middle - 1) + sorted.get(middle)) / 2;
     }
 
     /**

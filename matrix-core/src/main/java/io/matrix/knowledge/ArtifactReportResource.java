@@ -335,7 +335,7 @@ public class ArtifactReportResource {
         ProblemRequest planRequest = new ProblemRequest(AlgorithmFamilies.KNOWLEDGE_REPORT, problem,
                 facts, ComputeBudget.unbounded());
         ReportJourneyPlanner.Plan plan = planner.plan(planRequest, forcedMethodId,
-                procedureMethods(procedures));
+                procedureMethods(workspaceId, procedures));
         if (plan.refused()) {
             return refused(422, "no_method_for_request", plan.reason());
         }
@@ -720,10 +720,18 @@ public class ArtifactReportResource {
      * @param procedures the workspace's procedures
      * @return the methods
      */
-    private List<ReportJourneyPlanner.JourneyMethod> procedureMethods(List<Procedure> procedures) {
+    private List<ReportJourneyPlanner.JourneyMethod> procedureMethods(String workspaceId,
+                                                                         List<Procedure> procedures) {
         List<ReportJourneyPlanner.JourneyMethod> methods = new ArrayList<>();
+        CognitiveStore store = traceStore();
         for (Procedure procedure : procedures) {
-            methods.add(new ReportProcedureMethod(procedure));
+            // the cost the promotion MEASURED, when it measured one: a procedure's first
+            // selection is made before it has ever run, and a declaration is a promise. The
+            // promotion's own measurement is what makes that first decision a measurement.
+            Long measuredCost = store == null ? null
+                    : store.procedureMeasuredCostNanos(workspaceId, procedure.id(),
+                            procedure.version());
+            methods.add(new ReportProcedureMethod(procedure, measuredCost));
         }
         return methods;
     }

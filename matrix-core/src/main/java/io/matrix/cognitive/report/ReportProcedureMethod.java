@@ -63,13 +63,42 @@ public final class ReportProcedureMethod
     private final AlgorithmCapability capability;
 
     /**
+     * The cost the promotion measured for this procedure, in nanoseconds; -1 when nothing was
+     * measured.
+     */
+    private final long measuredCostNanos;
+
+    /**
      * @param procedure the validated procedure this method replays
      */
     public ReportProcedureMethod(Procedure procedure) {
+        this(procedure, null);
+    }
+
+    /**
+     * The method, with the cost its promotion measured.
+     *
+     * <p><b>Why the measured cost changes what the method declares.</b> A procedure's FIRST
+     * selection is made before it has ever run, so the selector weighs it by its declared
+     * cost — and a declared cost is a promise. The promotion has already run the restricted
+     * reading on its held-out cases, so it knows what that reading actually costs, and a
+     * method that declares the MEASUREMENT makes the first decision rest on a measurement
+     * rather than on a promise.</p>
+     *
+     * <p><b>What the label says.</b> The label names what was measured and over how many
+     * cases, so a reader can see that the number is a reading's cost and not the journey's:
+     * the artifact write is common to both paths and is not part of the difference.</p>
+     *
+     * @param procedure        the validated procedure this method replays
+     * @param measuredCostNanos the cost the promotion measured, in nanoseconds; null when
+     *                        nothing was measured
+     */
+    public ReportProcedureMethod(Procedure procedure, Long measuredCostNanos) {
         if (procedure == null) {
             throw new IllegalArgumentException("procedure must not be null");
         }
         this.procedure = procedure;
+        this.measuredCostNanos = measuredCostNanos == null ? -1L : measuredCostNanos;
         this.support = ReportProcedure.supportOf(procedure);
         this.capability = new AlgorithmCapability(
                 ID_PREFIX + procedure.id(),
@@ -79,9 +108,7 @@ public final class ReportProcedureMethod
                 Set.of(ReportJourney.Problem.class.getName()),
                 Set.of(ReportJourney.Result.class.getName()),
                 new AlgorithmCapability.ComplexityProfile(
-                        DeclaredCost.declare("O(claims of the support set), against the "
-                                + "reference's O(claims of the workspace)", MEASURED_COST_MILLIS, 0),
-                        "O(claims of the support set)"),
+                        declaredCost(), "O(claims of the support set)"),
                 new AlgorithmCapability.ResourceProfile(
                         "one workspace snapshot, read as the support set; the snapshot is not "
                                 + "held by the method", true, false,
@@ -116,6 +143,39 @@ public final class ReportProcedureMethod
     /** The procedure this method replays. */
     public Procedure procedure() {
         return procedure;
+    }
+
+    /**
+     * The cost this method declares.
+     *
+     * @return the measured cost in nanoseconds when the promotion measured one, and the
+     *         declared constant otherwise
+     */
+    public long declaredCostMillis() {
+        if (measuredCostNanos < 0) {
+            return MEASURED_COST_MILLIS;
+        }
+        // the measurement is in NANOSECONDS and the declared cost is in MILLISECONDS; the
+        // conversion rounds UP, so a reading that took a fraction of a millisecond is
+        // declared as a whole millisecond rather than as zero
+        return Math.max(1L, (measuredCostNanos + 999_999L) / 1_000_000L);
+    }
+
+    /**
+     * What the declared cost is, in words a reader can act on.
+     *
+     * <p>A method that has never run declares the portfolio's constant — a promise. A method
+     * whose promotion measured the work it stands for declares that MEASUREMENT, and the
+     * selector's record says so, so a reader can tell the two apart.</p>
+     */
+    private String declaredCost() {
+        if (measuredCostNanos < 0) {
+            return DeclaredCost.declare("O(claims of the support set), against the reference's "
+                    + "O(claims of the workspace)", MEASURED_COST_MILLIS, 0);
+        }
+        return DeclaredCost.declareMeasured("the reading of the support set, measured over "
+                + procedure.validationCases() + " held-out case(s), against the reference's "
+                + "O(claims of the workspace)", measuredCostNanos);
     }
 
     /** The support set the procedure answers from. */
