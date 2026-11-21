@@ -143,6 +143,13 @@ class Crj01CorpusReportBuilder {
             int spans = 0;
             int fresh = 0;
             int freshAndSpan = 0;
+            // ── REACHABILITY: the span the ORACLE reads and the span the LEARNER
+            //    reads are not the same text. The oracle reads the corpus FILE; the
+            //    learner's containment gate reads the source's stored EXCERPT. A
+            //    candidate the learner cannot see is a candidate the sealed split
+            //    cannot use, so the report counts the ones it CAN see.
+            int spansVisibleToTheLearner = 0;
+            int freshAndSpanVisibleToTheLearner = 0;
             for (Claim claim : snapshot.claims()) {
                 Source source = snapshot.sources().stream()
                         .filter(s -> s.id().equals(claim.introducedBySourceId()))
@@ -163,8 +170,16 @@ class Crj01CorpusReportBuilder {
                 if (isFresh) {
                     fresh++;
                 }
+                boolean visibleToTheLearner = source.excerpt() != null
+                        && source.excerpt().contains(claim.proposition());
+                if (isSpan && visibleToTheLearner) {
+                    spansVisibleToTheLearner++;
+                }
                 if (isFresh && isSpan) {
                     freshAndSpan++;
+                    if (visibleToTheLearner) {
+                        freshAndSpanVisibleToTheLearner++;
+                    }
                     Map<String, Object> candidate = new LinkedHashMap<>();
                     candidate.put("claimId", claim.id());
                     candidate.put("proposition", claim.proposition());
@@ -215,6 +230,9 @@ class Crj01CorpusReportBuilder {
             counts.put("claimsThatAreVerbatimSpans", spans);
             counts.put("claimsThatAreFresh", fresh);
             counts.put("claimsThatAreFreshAndSpans", freshAndSpan);
+            counts.put("claimsWhoseSpanTheLearnerCanSee", spansVisibleToTheLearner);
+            counts.put("freshAndSpanCandidatesTheLearnerCanSee",
+                    freshAndSpanVisibleToTheLearner);
             counts.put("regressionGoldPropositions", allGold.size());
             report.put("counts", counts);
             report.put("claimsPerDocument", claimsPerFile);

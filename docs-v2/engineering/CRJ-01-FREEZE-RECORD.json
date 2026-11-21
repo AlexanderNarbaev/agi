@@ -3,23 +3,20 @@
   "protocol" : "docs-v2/engineering/CRJ-01-PROTOCOL.md §5.5 (the fields) and §5.6 (the freeze procedure)",
   "status" : "DIGEST RECORD — the digests are final and re-derivable; the two role fields are PLACEHOLDERS and the record is NOT a valid freeze until the reviewer fills them and publishes it",
   "fields" : {
-    "baselineSha" : "b7bd1be4c38f7d51f0eb2462af695af148d729c1",
     "oracle.sourceSha256" : {
-      "domainB" : "c669dfb70825796bec3cc4e58d39cb8f997871175593d736906d3ae5565cff52",
-      "domainA" : "dda2e3e8a3a5713a8da5e6cb0be4442fcf0c2979cd4ff4f114935eb3c0494522"
+      "domainA" : "dda2e3e8a3a5713a8da5e6cb0be4442fcf0c2979cd4ff4f114935eb3c0494522",
+      "domainB" : "c669dfb70825796bec3cc4e58d39cb8f997871175593d736906d3ae5565cff52"
     },
-    "generator.seed" : 20261121,
-    "seeds" : {
-      "generatorSeed" : 20261121,
-      "domainBEpisodeSeeds" : [ 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3008, 3009 ]
+    "baselineSha" : "b7bd1be4c38f7d51f0eb2462af695af148d729c1",
+    "generator.source" : "matrix-core/src/test/java/io/matrix/crj/corpus/Crj01DevSplitValidatorTest.java",
+    "dataset.sha256" : "56779f8ade0eb86ca9d5aa63ad3c93f6f548761dab409b2a491932d5557f837a",
+    "branchShaMeaning" : "the exact commit the freeze is taken on - the repository's HEAD, resolved from .git/HEAD and that branch's ref (loose or packed). The protocol's baseline is b7bd1be4, and a freeze normally records its own SHA, which is NOT the baseline",
+    "roles" : {
+      "caseAuthor" : "UNNAMED — the case author, to be filled by the reviewer",
+      "freezingReviewer" : "UNNAMED — the freezing reviewer, to be filled by the reviewer",
+      "statement" : "the case author and the freezing reviewer are different people, and neither wrote a solver"
     },
-    "dataset.digestScope" : "the UTF-8 bytes of the compact JSON `cases` array + one line feed",
-    "corpusManifestSha256" : {
-      "matrix-core/src/main/resources/research-pool/plate-tectonics/corpus-manifest.json" : "fa7ba16e9baddea9d58109100c27d19a2404ee34391514a1ff4e2d785c0413b5"
-    },
-    "dataset.fullFileSha256" : "ddb0c602a90d6cb9e56e7694617bf9a0b1b815346bdebcbef31145ea85439a42",
-    "generator.sourceSha256" : "4dfb5491bd1d0e4398b8c3b0ca6e12df3d4e6ebc032224a0416dec0af0b4e7fc",
-    "dataset" : "docs-v2/engineering/CRJ-01-DEV-SPLIT.json",
+    "branchSha" : "c0837da5d5dbccc26d3297961ae53ea6ae5b5955",
     "instrumentCrosscheck" : {
       "instrument" : "the domain-B truth table",
       "assignments" : 4,
@@ -33,14 +30,17 @@
         "groundingRule" : "the cited proposition is byte-identical to a gold proposition AND the cited claim id is the production id of that source in the workspace under test"
       }
     },
-    "branchSha" : "0eb0bcf48e0b1547877280602ecd2a6cd730ebc1",
-    "roles" : {
-      "caseAuthor" : "UNNAMED — the case author, to be filled by the reviewer",
-      "freezingReviewer" : "UNNAMED — the freezing reviewer, to be filled by the reviewer",
-      "statement" : "the case author and the freezing reviewer are different people, and neither wrote a solver"
+    "dataset" : "docs-v2/engineering/CRJ-01-DEV-SPLIT.json",
+    "generator.sourceSha256" : "4dfb5491bd1d0e4398b8c3b0ca6e12df3d4e6ebc032224a0416dec0af0b4e7fc",
+    "dataset.fullFileSha256" : "ddb0c602a90d6cb9e56e7694617bf9a0b1b815346bdebcbef31145ea85439a42",
+    "corpusManifestSha256" : {
+      "matrix-core/src/main/resources/research-pool/plate-tectonics/corpus-manifest.json" : "fa7ba16e9baddea9d58109100c27d19a2404ee34391514a1ff4e2d785c0413b5"
     },
-    "branchShaMeaning" : "the exact commit the freeze is taken on - the repository's HEAD, resolved from .git/HEAD and that branch's ref (loose or packed). The protocol's baseline is b7bd1be4, and a freeze normally records its own SHA, which is NOT the baseline",
-    "dataset.sha256" : "56779f8ade0eb86ca9d5aa63ad3c93f6f548761dab409b2a491932d5557f837a",
-    "generator.source" : "matrix-core/src/test/java/io/matrix/crj/corpus/Crj01DevSplitValidatorTest.java"
+    "dataset.digestScope" : "the UTF-8 bytes of the compact JSON `cases` array + one line feed",
+    "seeds" : {
+      "generatorSeed" : 20261121,
+      "domainBEpisodeSeeds" : [ 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3008, 3009 ]
+    },
+    "generator.seed" : 20261121
   }
 }

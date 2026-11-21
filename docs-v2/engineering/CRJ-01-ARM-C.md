@@ -941,8 +941,32 @@ held-out questions that **all** carry the candidate, and the corpus's questions 
 claims too narrowly for that to be common. That is a property of **the corpus**, and it is
 a constraint the sealed split's author must know.
 
+### 16.4 What the fix does for the sealed split — the REACHABILITY check
+
+**The oracle and the learner read DIFFERENT texts.** The oracle reads the corpus **file**;
+the learner's containment gate reads the source's stored **excerpt**. So a candidate the
+learner cannot see is a candidate the sealed split **cannot use** — and the corpus report
+did not say so.
+
+The corpus report now counts **reachability**, and it is the pre-flight check the sealed
+split's author needs:
+
+| | before the fix | after the fix |
+|---|---|---|
+| the claims | 540 | 540 |
+| a **verbatim span** of the document's text (the oracle's read) | 483 | 483 |
+| **whose span the learner can see** (the learner's read) | **270** | **483** |
+| the **fresh-and-span candidates** | 413 | 413 |
+| **the fresh-and-span candidates the learner can see** | **213** | **413** |
+
+**So the sealed split's usable candidates went from 213 to 413 — 1.94×** — and the 18 cases
+the protocol needs are now not merely *measurable* but **reachable**. Before the fix, a
+case whose gold sat past the 8 000-character cut would have produced a row that could
+never be learned from.
+
 **The evidence:** `docs-v2/engineering/evidence/TEST-io.matrix.cognitive.report.ClaimSpanBeyondExcerptTest.xml`
 (the measurement, the fix and the storage cost) and
-`…ReportClaimLearnerPrecisionTest.xml` (the precision).
+`…ReportClaimLearnerPrecisionTest.xml` (the precision). The reachability is in
+`docs-v2/engineering/CRJ-01-CORPUS-REPORT.json`.
 
 ---
