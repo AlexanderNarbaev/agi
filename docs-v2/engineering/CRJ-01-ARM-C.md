@@ -1039,7 +1039,8 @@ a genuine blow-up.
 which is the property a reader actually cares about: *a minimiser that is wrong is worse than
 one that is slow.*
 
-**The instrument:** `scripts/load-sensitive-assertions.sh` — the discovery, the protocol, the
-isolation re-run, and the results table.
+**The instrument (first version, a shell script):** it discovered the class, ran the
+protocol and produced the table above — and it **woke a dormant CI gate** (see R-EPIS-24),
+so the instrument was **redelivered in Java** (below).
 
 ---

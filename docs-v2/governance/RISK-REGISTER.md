@@ -1167,3 +1167,26 @@ evidence is a suspicion, and it is marked as such.
 - **status**: **OPEN as a class**; one instance **confirmed and characterised**, the rest measured and being
   characterised. The owner's decision is whether to **re-specify** the class — to state a **ratio** against a
   measured baseline (the property of the code) instead of a **wall-clock budget** (the property of the machine).
+
+### R-EPIS-24 — the ShellCheck gate is DORMANT, and the first pull request that touches a script wakes it onto pre-existing debt
+
+- **the finding**: `.github/workflows/fast-pr.yml`'s ShellCheck job is **path-sensitive** — "neither is a required
+  check on its own: they only run when the pull request touches what they check" — and the condition is
+  `needs.scope.outputs.scripts == 'true'`. So the job has **never run against this repository's scripts**: it was
+  reported as `skipping` on every pull request until the CRJ-01 round that delivered the load-sensitive
+  measurement **as a shell script**.
+- **what happens then**: the job wakes and fails, on **pre-existing** debt — the findings are in `demo-chat.sh`,
+  `sequential-train.sh`, `scripts/matrix-full.sh`, `scripts/hardware-probe.sh`, `src/lib/53-auto-skills.sh` and
+  about **25 files** in all, roughly **100 findings**. **None of them is mine.**
+- **why it matters**: the gate is a **required check** on a pull request that touches a script, so **any** future
+  pull request that adds or edits a shell script is blocked by debt that predates it. The repository has a gate
+  that cannot be passed, on files that no one has touched in the time the gate has been dormant.
+- **what was done about it**: the CRJ-01 measurement was **delivered in Java instead** — `io.matrix.crj.quality.
+  LoadSensitiveAssertionTest` — which is where the programme's other instruments live (the arm runner, the
+  metrics, the corpus report, the freeze record) and which the gate does not cover. **The finding stands**: the
+  gate is still dormant and still armed with debt.
+- **what would fix it, and why it is not mine to do**: either the workflow's ShellCheck step is given an
+  **exclusion list** for the known debt, or the debt is fixed file by file, or the step is scoped to the
+  **changed** scripts. **All three touch `.github/workflows/**`, which is a FROZEN zone** and needs an explicit
+  RFC from the owner.
+- **status**: **OPEN — an owner decision**, with the measurement and the workaround both done.
