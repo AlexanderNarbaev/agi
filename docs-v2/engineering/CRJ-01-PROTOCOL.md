@@ -174,6 +174,15 @@ requirements on the *dataset*, not on any candidate.
 3. **The gold is the source's own text**: every gold proposition must occur **verbatim** in its
    source document, and the builder must prove it before the case is written out
    (`docs-v2/engineering/C2A-HELDOUT-SET.json`, `/manifest/method`).
+   > **MEASURED, PER CASE (2026-11-21).** The production acquisition path does **not** make every
+   > claim a literal span: of the **540** claims it derived from the research pool, the oracle
+   > grounded **483** and refused **57** — the propositions built from a **heading and the
+   > paragraph that follows it**, a **flattened list**, or **boilerplate**. The corpus condition
+   > is therefore satisfiable **per case, not per corpus**: the case author must **select a gold
+   > that IS a span** and the builder must **prove** it, exactly as the repository's own held-out
+   > builder does for the claims it selects. The evidence is
+   > `docs-v2/engineering/evidence/TEST-io.matrix.crj.evidence.ImportedCorpusSpanMeasurementTest.xml`
+   > (one test, zero failures); the analysis is in `docs-v2/engineering/CRJ-01-INSTRUMENTS.md` §4.1.
 4. **No hand-written identifiers**: every claim id in the dataset is the production claim id
    introduced by that document's source (`.../C2A-HELDOUT-SET.json`, `/manifest/verifications`).
 5. **Class coverage**: the set must contain at least one case of each class in §7
