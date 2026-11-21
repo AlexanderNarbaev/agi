@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="io.matrix.crj.evidence.SourceSpanOracleTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-11-21T10:14:36.962Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.007">
+<testsuite name="io.matrix.crj.evidence.SourceSpanOracleTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-11-21T10:21:06.570Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.006">
   <properties/>
   <testcase name="a negative case whose provenance does not match is a mismatch" classname="io.matrix.crj.evidence.SourceSpanOracleTest" time="0.001"/>
-  <testcase name="a positive case whose answer cites the proposition under ANOTHER claim is not grounded" classname="io.matrix.crj.evidence.SourceSpanOracleTest" time="0.0"/>
-  <testcase name="a positive case whose answer cites a DIFFERENT proposition is not grounded" classname="io.matrix.crj.evidence.SourceSpanOracleTest" time="0.0"/>
-  <testcase name="a corpus whose bytes are not the frozen ones is reported, not scored" classname="io.matrix.crj.evidence.SourceSpanOracleTest" time="0.001"/>
+  <testcase name="a positive case whose answer cites the proposition under ANOTHER claim is not grounded" classname="io.matrix.crj.evidence.SourceSpanOracleTest" time="0.001"/>
+  <testcase name="a positive case whose answer cites a DIFFERENT proposition is not grounded" classname="io.matrix.crj.evidence.SourceSpanOracleTest" time="0.001"/>
+  <testcase name="a corpus whose bytes are not the frozen ones is reported, not scored" classname="io.matrix.crj.evidence.SourceSpanOracleTest" time="0.0"/>
   <testcase name="a positive case whose answer cites the gold is grounded" classname="io.matrix.crj.evidence.SourceSpanOracleTest" time="0.001"/>
   <testcase name="a negative case is scored on its disposition and its provenance" classname="io.matrix.crj.evidence.SourceSpanOracleTest" time="0.001"/>
   <testcase name="the instrument's own control: a gold corrupted by one character fails LOUDLY" classname="io.matrix.crj.evidence.SourceSpanOracleTest" time="0.0"/>
