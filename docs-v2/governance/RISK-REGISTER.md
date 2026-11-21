@@ -889,3 +889,30 @@ evidence is a suspicion, and it is marked as such.
   (`TEST-io.matrix.cognitive.report.ReportJourneyEpisodeTest.xml`: two tests, zero failures). The residual: the
   episode's **summary** is derived from the action identity, so the episode does not itself name the question — a
   reader reads the identity and follows it to the request.
+
+### R-EPIS-15 — the bundled package is a paraphrase corpus, so the oracle's question is unanswerable over it
+
+- **the finding**: the source-span oracle asks whether the served response cites the evidence the
+  source document **actually contains**. Run against the **real served path** — the report
+  journey over the bundled photosynthesis package — it grounded **0** of the **7** claims the
+  journey cited. The package carries each document's text as the source's excerpt, and **17 of
+  the 18** evidence excerpts **are** spans of it, but the claim's **proposition** — which is what
+  the answer cites — is a **paraphrase** of that text and is never byte-identical to a span of
+  it.
+- **why it is not a defect of the instrument**: the claim's own **evidence excerpt** is a span of
+  its document, and the oracle **grounds** it. The instrument discriminates over the real path;
+  the measurement is a property of the package.
+- **the consequence**: the bundled package **cannot** be the sealed split's corpus. The protocol's
+  new-corpus requirement (§2.1.3.1–2) — a new directory, imported through the **production
+  acquisition path** — is a **hard condition** under which the oracle's question is answerable at
+  all, and it is now **measured** rather than assumed. A case built over the bundled package
+  would be scored UNGROUNDED on every case, and the run would look like a failure of the arms.
+- **the evidence**: `docs-v2/engineering/evidence/TEST-io.matrix.crj.evidence.BundledCorpusSpanMeasurementTest.xml`
+  — three tests, zero failures (the measurement, the production ids, the positive control). The
+  analysis is in `docs-v2/engineering/CRJ-01-INSTRUMENTS.md` §4.
+- **owner**: the programme — the **case author** must be given this before they start, and the
+  corpus they build must carry the documents' text such that the claims' propositions are spans
+  of it.
+- **status**: **OPEN as a constraint on the corpus** — the measurement is done and the finding is
+  recorded; what remains is the corpus itself, which §5.6 requires from a case author who
+  implements no arm.

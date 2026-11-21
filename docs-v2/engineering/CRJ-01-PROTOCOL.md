@@ -155,6 +155,19 @@ requirements on the *dataset*, not on any candidate.
    revision, access date and the **sha256 of the imported bytes**. The importer verifies the
    hash before it reads the file — a file whose bytes differ is reported, not silently imported
    (`matrix-core/src/main/resources/corpus/corpus-manifest.json`, `/theLicensing`).
+   > **MEASURED, NOT ASSUMED (2026-11-21).** The oracle was run against the **real served
+   > path** — the report journey over the bundled photosynthesis package — over a corpus built
+   > from that package's own source documents. The journey cited **7** claims and the oracle
+   > grounded **0** of them; **17 of the 18** evidence excerpts **are** spans of their
+   > document, and the oracle **does** ground such a span (the positive control). The bundled
+   > package is therefore a **paraphrase corpus**: its claims' propositions are paraphrases of
+   > the documents, and a verbatim-span instrument has nothing to match. **This rule is a hard
+   > condition, not a formality** — a sealed set built over the bundled package would be scored
+   > UNGROUNDED on every case, and the run would look like a failure of the arms rather than a
+   > property of the corpus. The evidence is
+   > `docs-v2/engineering/evidence/TEST-io.matrix.crj.evidence.BundledCorpusSpanMeasurementTest.xml`
+   > (three tests, zero failures); the analysis is in
+   > `docs-v2/engineering/CRJ-01-INSTRUMENTS.md` §4.
 2. **The documents must be imported through the production acquisition path**, not through a
    test-only loader, so the claims, sources and ids in the gold are the production ones
    (the convention of `docs-v2/engineering/EPISTEMIC-HELDOUT-SET.md` §2).
