@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.cognitive.report.ClaimSpanBeyondExcerptTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-21T18:24:42.016Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="6.465">
+  <properties/>
+  <testcase name="the claims that ARE spans of the document but lie past the excerpt's cut" classname="io.matrix.cognitive.report.ClaimSpanBeyondExcerptTest" time="6.455"/>
+  <system-out><![CDATA[[CRJ-01] the containment gate's blind spot, over the research pool:
+[CRJ-01]   the excerpt's limit: 8000 characters
+[CRJ-01]   the claims: 540
+[CRJ-01]   a VERBATIM SPAN of the document's text: 483
+[CRJ-01]   found in the stored EXCERPT: 483
+[CRJ-01]   a span but BEYOND THE CUT (refused, wrongly): 0
+[CRJ-01]   not a span at all: 57
+[CRJ-01]   the STORAGE: the excerpt holds 105771 characters over the pool, against 51246 under the old floor, and the documents hold 105778 characters in all
+[CRJ-01]   the highest claim end in the corpus: 29455 characters
+[CRJ-01]   the claims per document: {src-ec44517=79, src-1fa1d2e1=76, src-96834f0d=141, src-303adbd6=41, src-15e8ee0d=56, src-34523c28=78, src-da805ddd=12}
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
