@@ -967,3 +967,68 @@ evidence is a suspicion, and it is marked as such.
 - **status**: **CLOSED as a measurement**; the claim it replaces is characterised, and the
   **correctness** side (`δ_MI`) remains unmeasured for the reason every other measurement here
   remains unmeasured: the sealed set does not exist.
+
+### R-EPIS-18 — the corpus's usable remainder was unmeasured, and the first read was empty
+
+- **the finding**: the corpus question was settled only partly. Two measurements had shown
+  that the bundled package is a **paraphrase** corpus and that the research pool serves
+  **verbatim spans** (483 of 540) — but the sealed split needs **FRESH** evidence, and the
+  three regression sets had taken **101 gold propositions** from this pool and its seed
+  corpus. A claim that is one of their gold is **not held-out proof** by the protocol's §5.2.
+  The pool's usable remainder was unmeasured.
+- **the measurement** (2026-11-21, `Crj01CorpusReportBuilder`): the pool imported through the
+  **production import path**, every claim classified by two properties — is it a **verbatim
+  span** of its document's bytes, and is its proposition **fresh** — into a byte-reproducible
+  artefact (`docs-v2/engineering/CRJ-01-CORPUS-REPORT.json`). **540 claims, 483 spans, 470
+  fresh, 413 both.** The sealed split needs **18**: the corpus is **sufficient** by a factor
+  of **23**, and a one-document support set is **0.1667** of it — exactly the fraction at
+  which the cost curve measured a **78 %** saving.
+- **the defect the instrument caught in itself**: the first run reported **"540 of 540 are
+  fresh"**, which was **false** — the builder read the sets with Jackson's `readTree`, which
+  returns a `JsonNode` and not a `Map`, so the shape test was always false and **no set was
+  read at all**. An instrument that reads nothing reports everything as fresh. The read is
+  now `readValue(..., Map.class)`, and the builder **asserts that it read something** — that
+  the discovery found the sets and that each set's gold is non-empty.
+- **the governance it had to satisfy**: the repository holds that a held-out set "is
+  referenced by its own builder and its own reader, and by nothing else in the production or
+  research code", and the check is enforced on **every** file. The corpus report therefore
+  **does not name** the held-out sets: it **discovers** them by **shape** — a JSON file whose
+  cases carry gold claims with propositions — which needs no list to maintain. It carries **no
+  gold proposition and no question** of any set; it reads them at run time, as the
+  repository's own adversarial probes do. The artefact's overlap with the sets' 101 gold
+  propositions is **zero**.
+- **the owner**: the case author and the freezing reviewer — the corpus is ready, and the
+  commission's constraints are now measured rather than guessed.
+- **status**: **CLOSED as a measurement**; the corpus question is **settled** and the sealed
+  split may be built from this pool.
+
+### R-EPIS-19 — the portfolio benchmark asserted a property of the MACHINE, not of the code
+
+- **the finding**: `PortfolioBenchmarkTest` asserted that "the prebuilt index is cheaper per
+  query than the scan it replaces", and it compared the two on the **mean** of 30 passes over
+  a corpus of **256** short strings. It failed in the **full suite** — twice — and passed in
+  isolation.
+- **the two causes, and they are different**:
+  1. **the wrong statistic.** The trie's **p50** was 10.1 us against the scan's 19.8 us — the
+     index is **twice** as fast — while the trie's **p95** was 39.4 us and its **mean**
+     21.4 us. One collection among thirty samples moved the mean past the difference the
+     comparison is about. The repository's own latency assertion already uses the median for
+     exactly this reason, and so does the CRJ-01 cost curve;
+  2. **the wrong regime.** At 256 short strings the whole corpus fits in the CPU's cache, so
+     the scan's linear pass is cache-resident and almost free. The claim is an **asymptotic**
+     one — the index's lookup does not grow with the corpus and the scan's does — and a
+     corpus that small cannot show it. The break-even the test computed overflowed to
+     `9223372036854775807` queries, which is the symptom of a comparison made where it
+     cannot hold.
+- **the fix**: the per-query comparison uses the **median**, with a **warmup** (the first
+  execution of a body pays the JIT's warmup, and a measurement that includes it measures the
+  compiler); and the corpus is **4096** entries, large enough that the scan's linear pass is
+  real work. The measured result is now **stable and large**: the scan costs **1787.3
+  ns/query** and the index **226.7 ns/query** — **7.9× cheaper** — and the break-even is a
+  real **960 queries**.
+- **what it is not**: this is not a claim that the product changed. It is a claim that the
+  test now measures the property it names, and that the property is the code's and not the
+  machine's.
+- **owner**: the programme — the wider class of load-sensitive assertions is unchanged and
+  is the owner's decision whether to re-specify it.
+- **status**: **CLOSED** for this test; the wider class is open and already on the register.

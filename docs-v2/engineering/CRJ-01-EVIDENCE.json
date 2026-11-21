@@ -5,8 +5,8 @@
   "domain" : "A",
   "arms" : [ "A", "B", "C" ],
   "budget" : {
-    "maxCpuMillis" : 30000,
-    "maxWallClockMillis" : 30000
+    "maxWallClockMillis" : 30000,
+    "maxCpuMillis" : 30000
   },
   "note" : "a DEV run on the solver's own split: a DEBUGGING artefact, never evidence of an arm's advantage",
   "rows" : [ {
@@ -20,8 +20,8 @@
     "oracleOutcome" : "GROUNDED",
     "oracleReason" : "the answer cites the gold proposition from the claim clm-a27d669",
     "citedClaimIds" : [ "clm-a27d669", "clm-b2f22afd", "clm-b2f6dd2f", "clm-70c1c1e4", "clm-3988c10d", "clm-47283e6f", "clm-d08e5670", "clm-7521bd02", "clm-3d626fae", "clm-19ca6b10", "clm-55bc2374", "clm-6ccc97fc", "clm-b3c33e32", "clm-bf1113ac", "clm-10f3aba1", "clm-155b4cd1", "clm-f9d6fc77" ],
-    "wallNanos" : 204842978,
-    "cpuNanos" : 175971722,
+    "wallNanos" : 63010177,
+    "cpuNanos" : 51385536,
     "inapplicable" : false,
     "reason" : "the method was FORCED to report.journey.reference.v1 for the counterfactual; the evidence would have chosen report.journey.reference.v1 (selected report.journey.reference.v1@1.0.0 with score 1.0 over 1 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 1 case(s); the cost came from DECLARED_COMPLEXITY and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — no measured reliability for this method in this stratum; the reliability evidence was no measured reliability for this method in this stratum)",
     "error" : null
@@ -36,8 +36,8 @@
     "oracleOutcome" : "GROUNDED",
     "oracleReason" : "the answer cites the gold proposition from the claim clm-c727ade5",
     "citedClaimIds" : [ "clm-c727ade5", "clm-9c077014", "clm-45cfec1e", "clm-f6f66977", "clm-9dcb5eeb", "clm-c8526c0" ],
-    "wallNanos" : 79406364,
-    "cpuNanos" : 74269297,
+    "wallNanos" : 46048539,
+    "cpuNanos" : 41112868,
     "inapplicable" : false,
     "reason" : "the method was FORCED to report.journey.reference.v1 for the counterfactual; the evidence would have chosen report.journey.reference.v1 (selected report.journey.reference.v1@1.0.0 with score 1.0 over 1 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 1 case(s); the cost came from MEASURED and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — the observations are pooled over the strata, and a pooled rate is not evidence for this request; the reliability evidence was the observations are pooled over the strata, and a pooled rate is not evidence for this request)",
     "error" : null
@@ -52,8 +52,8 @@
     "oracleOutcome" : "GROUNDED",
     "oracleReason" : "the answer cites the gold proposition from the claim clm-9dcb5eeb",
     "citedClaimIds" : [ "clm-9dcb5eeb", "clm-7efc2262", "clm-26cb3bfa", "clm-3d18498c", "clm-7ac8b1e6", "clm-7f467a39", "clm-8a14f1f1", "clm-8c3b7760", "clm-a4830a4d", "clm-b27bbfe7", "clm-c32f1a67", "clm-d5d09397" ],
-    "wallNanos" : 75958157,
-    "cpuNanos" : 66749357,
+    "wallNanos" : 47048954,
+    "cpuNanos" : 43099377,
     "inapplicable" : false,
     "reason" : "the method was FORCED to report.journey.reference.v1 for the counterfactual; the evidence would have chosen report.journey.reference.v1 (selected report.journey.reference.v1@1.0.0 with score 1.0 over 1 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 1 case(s); the cost came from MEASURED and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — the observations are pooled over the strata, and a pooled rate is not evidence for this request; the reliability evidence was the observations are pooled over the strata, and a pooled rate is not evidence for this request)",
     "error" : null
@@ -68,8 +68,8 @@
     "oracleOutcome" : "GROUNDED",
     "oracleReason" : "the answer cites the gold proposition from the claim clm-8ee532ef",
     "citedClaimIds" : [ "clm-8ee532ef", "clm-8ac4ff93", "clm-827ed66a", "clm-8a188923", "clm-29186041", "clm-8875761b", "clm-e67c9ba7", "clm-e8e31b3f", "clm-f3f9140f", "clm-f60f3f46", "clm-cfe5d5fb" ],
-    "wallNanos" : 57627504,
-    "cpuNanos" : 53072087,
+    "wallNanos" : 47473915,
+    "cpuNanos" : 43307738,
     "inapplicable" : false,
     "reason" : "the method was FORCED to report.journey.reference.v1 for the counterfactual; the evidence would have chosen report.journey.reference.v1 (selected report.journey.reference.v1@1.0.0 with score 1.0 over 1 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 1 case(s); the cost came from MEASURED and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — the observations are pooled over the strata, and a pooled rate is not evidence for this request; the reliability evidence was the observations are pooled over the strata, and a pooled rate is not evidence for this request)",
     "error" : null
@@ -84,8 +84,8 @@
     "oracleOutcome" : "GROUNDED",
     "oracleReason" : "the answer cites the gold proposition from the claim clm-8f240fbb",
     "citedClaimIds" : [ "clm-8f240fbb", "clm-7efc2262", "clm-82f3634f", "clm-42a2c702", "clm-a603df4d", "clm-b306367f", "clm-49c49bdc", "clm-ac4f7766", "clm-8823dae6", "clm-d2594c0c", "clm-5a1e595a", "clm-1042100a", "clm-1d76f7d3", "clm-31d238e1", "clm-38e83232", "clm-396ad3d6", "clm-3dcde2d", "clm-5c886357", "clm-6df771f4", "clm-8212c9a2", "clm-8573853", "clm-a859b489", "clm-f3f9140f", "clm-f7ed2d8b", "clm-5fe8b327", "clm-1d0b0d6d", "clm-1dec6678", "clm-1e8b971a", "clm-2acdf54", "clm-2c7aefb0", "clm-38dee512", "clm-3b3c96bc", "clm-5ca254e0", "clm-5e73c364", "clm-733a629c", "clm-cb97b028", "clm-e1347aea", "clm-e3f2e3d7", "clm-a2d237af", "clm-5d04ec8a", "clm-f6f66977", "clm-65016587", "clm-9d2236b7", "clm-ca2702da", "clm-16aaa195", "clm-1c994128", "clm-1eb6c53", "clm-231f3c67", "clm-3adbe046", "clm-465ffc6c", "clm-551ddbd1", "clm-57106398", "clm-57152353", "clm-57b33767", "clm-5a53b910", "clm-7fa537c", "clm-90362a36", "clm-94ebc994", "clm-9d27bfea", "clm-9dec9933", "clm-b5c662af", "clm-b9274988", "clm-ba442d28", "clm-c8526c0", "clm-c85c2224", "clm-c9a264a5", "clm-cb065767", "clm-dfcbc238", "clm-e288f428", "clm-40272ff0", "clm-26cb3bfa", "clm-3d18498c", "clm-7ac8b1e6", "clm-7f467a39", "clm-8a14f1f1", "clm-8c3b7760", "clm-a4830a4d", "clm-b27bbfe7", "clm-c32f1a67", "clm-d5d09397", "clm-1a12b7e8", "clm-5d292bb0", "clm-649d499a" ],
-    "wallNanos" : 169829779,
-    "cpuNanos" : 164920749,
+    "wallNanos" : 161384933,
+    "cpuNanos" : 116478072,
     "inapplicable" : false,
     "reason" : "the method was FORCED to report.journey.reference.v1 for the counterfactual; the evidence would have chosen report.journey.reference.v1 (selected report.journey.reference.v1@1.0.0 with score 1.0 over 1 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 1 case(s); the cost came from MEASURED and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — the observations are pooled over the strata, and a pooled rate is not evidence for this request; the reliability evidence was the observations are pooled over the strata, and a pooled rate is not evidence for this request)",
     "error" : null
@@ -100,8 +100,8 @@
     "oracleOutcome" : "DISPOSITION_MISMATCHED",
     "oracleReason" : "the expected disposition was UNSUPPORTED and the answer carries AMBIGUOUS",
     "citedClaimIds" : [ "clm-ca71ca5c", "clm-40272ff0" ],
-    "wallNanos" : 149526680,
-    "cpuNanos" : 109088872,
+    "wallNanos" : 57777218,
+    "cpuNanos" : 53524810,
     "inapplicable" : false,
     "reason" : "the method was FORCED to report.journey.reference.v1 for the counterfactual; the evidence would have chosen report.journey.reference.v1 (selected report.journey.reference.v1@1.0.0 with score 1.0 over 1 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 1 case(s); the cost came from MEASURED and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — the observations are pooled over the strata, and a pooled rate is not evidence for this request; the reliability evidence was the observations are pooled over the strata, and a pooled rate is not evidence for this request)",
     "error" : null
@@ -116,8 +116,8 @@
     "oracleOutcome" : "DISPOSITION_MISMATCHED",
     "oracleReason" : "the expected disposition was REFUTED and the answer carries AMBIGUOUS",
     "citedClaimIds" : [ "clm-efe0bf5a", "clm-80338a6d", "clm-2acdf54", "clm-42a2c702", "clm-45a7dcc6", "clm-57152353", "clm-6df771f4", "clm-b306367f", "clm-c1f0695d", "clm-1cead723", "clm-26cb3bfa", "clm-3d18498c", "clm-7ac8b1e6", "clm-7f467a39", "clm-8a14f1f1", "clm-8c3b7760", "clm-a4830a4d", "clm-b27bbfe7", "clm-c32f1a67", "clm-d5d09397", "clm-38dee512", "clm-507fe7b4", "clm-68c82177", "clm-aed1ddb6", "clm-4a0c2547", "clm-affa03f5", "clm-db5132b" ],
-    "wallNanos" : 102036809,
-    "cpuNanos" : 90827328,
+    "wallNanos" : 62437277,
+    "cpuNanos" : 57902122,
     "inapplicable" : false,
     "reason" : "the method was FORCED to report.journey.reference.v1 for the counterfactual; the evidence would have chosen report.journey.reference.v1 (selected report.journey.reference.v1@1.0.0 with score 1.0 over 1 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 1 case(s); the cost came from MEASURED and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — the observations are pooled over the strata, and a pooled rate is not evidence for this request; the reliability evidence was the observations are pooled over the strata, and a pooled rate is not evidence for this request)",
     "error" : null
@@ -132,8 +132,8 @@
     "oracleOutcome" : "DISPOSITION_MISMATCHED",
     "oracleReason" : "the expected disposition was UNSUPPORTED and the answer carries AMBIGUOUS",
     "citedClaimIds" : [ "clm-8a188923", "clm-8ee532ef", "clm-5efc33c7", "clm-40272ff0", "clm-7d84e432", "clm-ca71ca5c", "clm-29186041", "clm-c40a59e4", "clm-827ed66a", "clm-838b8008", "clm-26cb3bfa", "clm-3d18498c", "clm-7ac8b1e6", "clm-7f467a39", "clm-8a14f1f1", "clm-8c3b7760", "clm-a4830a4d", "clm-b27bbfe7", "clm-c32f1a67", "clm-d5d09397" ],
-    "wallNanos" : 64387713,
-    "cpuNanos" : 60215720,
+    "wallNanos" : 62472103,
+    "cpuNanos" : 58040295,
     "inapplicable" : false,
     "reason" : "the method was FORCED to report.journey.reference.v1 for the counterfactual; the evidence would have chosen report.journey.reference.v1 (selected report.journey.reference.v1@1.0.0 with score 1.0 over 1 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 1 case(s); the cost came from MEASURED and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — the observations are pooled over the strata, and a pooled rate is not evidence for this request; the reliability evidence was the observations are pooled over the strata, and a pooled rate is not evidence for this request)",
     "error" : null
@@ -148,8 +148,8 @@
     "oracleOutcome" : "GROUNDED",
     "oracleReason" : "the answer cites the gold proposition from the claim clm-a27d669",
     "citedClaimIds" : [ "clm-a27d669", "clm-b2f6dd2f", "clm-70c1c1e4", "clm-dbf660ef" ],
-    "wallNanos" : 59157958,
-    "cpuNanos" : 54278129,
+    "wallNanos" : 52121121,
+    "cpuNanos" : 47966776,
     "inapplicable" : false,
     "reason" : "the method was FORCED to report.journey.reference.v1 for the counterfactual; the evidence would have chosen report.journey.reference.v1 (selected report.journey.reference.v1@1.0.0 with score 1.0 over 1 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 1 case(s); the cost came from MEASURED and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — the observations are pooled over the strata, and a pooled rate is not evidence for this request; the reliability evidence was the observations are pooled over the strata, and a pooled rate is not evidence for this request)",
     "error" : null
@@ -164,8 +164,8 @@
     "oracleOutcome" : "UNGROUNDED",
     "oracleReason" : "the answer cites 0 claim(s), none of which is the gold proposition of this case's own claim",
     "citedClaimIds" : [ ],
-    "wallNanos" : 20139641,
-    "cpuNanos" : 12844747,
+    "wallNanos" : 19607693,
+    "cpuNanos" : 11685163,
     "inapplicable" : true,
     "reason" : " | refused: {error=method_refused, detail=the journey's preconditions do not hold for this request: the method cannot run inside its applicability domain}",
     "error" : null
@@ -180,8 +180,8 @@
     "oracleOutcome" : "GROUNDED",
     "oracleReason" : "the answer cites the gold proposition from the claim clm-83d8c810",
     "citedClaimIds" : [ "clm-83d8c810", "clm-29d55e7e", "clm-47652d0a", "clm-1e6f4b85", "clm-38889054", "clm-6dd47cbe", "clm-d97ad65d", "clm-c78961eb", "clm-9364a8f", "clm-24831755", "clm-366bc7cf", "clm-5e25ee45", "clm-7a5ba86f", "clm-f3a7c253", "clm-4fd44300", "clm-e50433ce", "clm-fbc1ac30" ],
-    "wallNanos" : 21584004,
-    "cpuNanos" : 19463475,
+    "wallNanos" : 8924895,
+    "cpuNanos" : 7844506,
     "inapplicable" : false,
     "reason" : "the method was FORCED to report.journey.replay.v1 for the counterfactual; the evidence would have chosen report.journey.replay.v1 (selected report.journey.replay.v1@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 3 case(s); the cost came from MEASURED and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — the observations are pooled over the strata, and a pooled rate is not evidence for this request; the reliability evidence was the observations are pooled over the strata, and a pooled rate is not evidence for this request)",
     "error" : null
@@ -196,8 +196,8 @@
     "oracleOutcome" : "UNGROUNDED",
     "oracleReason" : "the answer cites 0 claim(s), none of which is the gold proposition of this case's own claim",
     "citedClaimIds" : [ ],
-    "wallNanos" : 7357244,
-    "cpuNanos" : 7354786,
+    "wallNanos" : 6668023,
+    "cpuNanos" : 6684859,
     "inapplicable" : true,
     "reason" : " | refused: {error=method_refused, detail=the journey's preconditions do not hold for this request: the method cannot run inside its applicability domain}",
     "error" : null
@@ -212,8 +212,8 @@
     "oracleOutcome" : "GROUNDED",
     "oracleReason" : "the answer cites the gold proposition from the claim clm-e45e5d4a",
     "citedClaimIds" : [ "clm-e45e5d4a", "clm-9a2662f5", "clm-62ab2292", "clm-f709d3e7", "clm-6a9852c9", "clm-794bdfd8" ],
-    "wallNanos" : 10974701,
-    "cpuNanos" : 9571097,
+    "wallNanos" : 9641997,
+    "cpuNanos" : 8429604,
     "inapplicable" : false,
     "reason" : "the method was FORCED to report.journey.replay.v1 for the counterfactual; the evidence would have chosen report.journey.replay.v1 (selected report.journey.replay.v1@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 3 case(s); the cost came from MEASURED and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — the observations are pooled over the strata, and a pooled rate is not evidence for this request; the reliability evidence was the observations are pooled over the strata, and a pooled rate is not evidence for this request)",
     "error" : null
@@ -228,8 +228,8 @@
     "oracleOutcome" : "UNGROUNDED",
     "oracleReason" : "the answer cites 0 claim(s), none of which is the gold proposition of this case's own claim",
     "citedClaimIds" : [ ],
-    "wallNanos" : 7747550,
-    "cpuNanos" : 7751300,
+    "wallNanos" : 7726147,
+    "cpuNanos" : 6440770,
     "inapplicable" : true,
     "reason" : " | refused: {error=method_refused, detail=the journey's preconditions do not hold for this request: the method cannot run inside its applicability domain}",
     "error" : null
@@ -244,8 +244,8 @@
     "oracleOutcome" : "GROUNDED",
     "oracleReason" : "the answer cites the gold proposition from the claim clm-794bdfd8",
     "citedClaimIds" : [ "clm-794bdfd8", "clm-ad964123", "clm-3e006550", "clm-5044d18e", "clm-6f546f9e", "clm-77569515", "clm-7b407130", "clm-8abe5c00", "clm-c71b5061", "clm-cfb8aba2", "clm-d00e4901", "clm-e3df75e9" ],
-    "wallNanos" : 10642935,
-    "cpuNanos" : 9327502,
+    "wallNanos" : 9919510,
+    "cpuNanos" : 8870622,
     "inapplicable" : false,
     "reason" : "the method was FORCED to report.journey.replay.v1 for the counterfactual; the evidence would have chosen report.journey.replay.v1 (selected report.journey.replay.v1@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 3 case(s); the cost came from MEASURED and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — the observations are pooled over the strata, and a pooled rate is not evidence for this request; the reliability evidence was the observations are pooled over the strata, and a pooled rate is not evidence for this request)",
     "error" : null
@@ -260,8 +260,8 @@
     "oracleOutcome" : "UNGROUNDED",
     "oracleReason" : "the answer cites 0 claim(s), none of which is the gold proposition of this case's own claim",
     "citedClaimIds" : [ ],
-    "wallNanos" : 7635829,
-    "cpuNanos" : 7644209,
+    "wallNanos" : 7024275,
+    "cpuNanos" : 7030738,
     "inapplicable" : true,
     "reason" : " | refused: {error=method_refused, detail=the journey's preconditions do not hold for this request: the method cannot run inside its applicability domain}",
     "error" : null
@@ -276,8 +276,8 @@
     "oracleOutcome" : "GROUNDED",
     "oracleReason" : "the answer cites the gold proposition from the claim clm-9d69bc0",
     "citedClaimIds" : [ "clm-9d69bc0", "clm-22c3c896", "clm-820187b", "clm-cbb52e8", "clm-163c0792", "clm-528638cc", "clm-583cb792", "clm-772b0dde", "clm-80778f47", "clm-f7285bb4", "clm-f2e0045c" ],
-    "wallNanos" : 10387935,
-    "cpuNanos" : 9324674,
+    "wallNanos" : 8579043,
+    "cpuNanos" : 7462820,
     "inapplicable" : false,
     "reason" : "the method was FORCED to report.journey.replay.v1 for the counterfactual; the evidence would have chosen report.journey.replay.v1 (selected report.journey.replay.v1@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 3 case(s); the cost came from MEASURED and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — the observations are pooled over the strata, and a pooled rate is not evidence for this request; the reliability evidence was the observations are pooled over the strata, and a pooled rate is not evidence for this request)",
     "error" : null
@@ -292,8 +292,8 @@
     "oracleOutcome" : "UNGROUNDED",
     "oracleReason" : "the answer cites 0 claim(s), none of which is the gold proposition of this case's own claim",
     "citedClaimIds" : [ ],
-    "wallNanos" : 6547278,
-    "cpuNanos" : 6551699,
+    "wallNanos" : 6319637,
+    "cpuNanos" : 6323591,
     "inapplicable" : true,
     "reason" : " | refused: {error=method_refused, detail=the journey's preconditions do not hold for this request: the method cannot run inside its applicability domain}",
     "error" : null
@@ -308,8 +308,8 @@
     "oracleOutcome" : "GROUNDED",
     "oracleReason" : "the answer cites the gold proposition from the claim clm-609e0420",
     "citedClaimIds" : [ "clm-609e0420", "clm-98cce8ac", "clm-ad964123", "clm-46f4ea76", "clm-cc698201", "clm-683a6394", "clm-4f3ab93f", "clm-d08d1b53", "clm-a41aaa53", "clm-d675d22f", "clm-e61ddd81", "clm-29fde3f0", "clm-386bec14", "clm-5526dd9d", "clm-56cdec52", "clm-59d98061", "clm-6ba7b2b9", "clm-6c995bfa", "clm-77784cdf", "clm-99fb1074", "clm-aef0713c", "clm-bd7758c4", "clm-d67bcfc3", "clm-f7285bb4", "clm-e9a33b24", "clm-1d7f94fe", "clm-1f7fd321", "clm-4268f205", "clm-4dcf562f", "clm-697d78b", "clm-7c51e9e5", "clm-821aa55c", "clm-97907873", "clm-b5c0c533", "clm-bd4cded", "clm-cc75d23f", "clm-cdbc0115", "clm-f64bd679", "clm-2d7babb8", "clm-62ab2292", "clm-be8fc747", "clm-4c167be", "clm-54453324", "clm-bae0425f", "clm-1e7fe2a3", "clm-254ecd53", "clm-27130062", "clm-27c0837d", "clm-2a102bfa", "clm-39c01dc1", "clm-4397ae85", "clm-45a63871", "clm-4791042e", "clm-6147d28a", "clm-64f17f9d", "clm-6a9852c9", "clm-76835fe", "clm-7a562b4", "clm-7e6cbcf9", "clm-8882133", "clm-89318c37", "clm-9f83a183", "clm-aa8ef414", "clm-b7f5d446", "clm-c1da5bc1", "clm-c936931a", "clm-e81f8a97", "clm-e866864", "clm-f57c7c13", "clm-fdfe103", "clm-3e006550", "clm-5044d18e", "clm-6f546f9e", "clm-77569515", "clm-7b407130", "clm-8abe5c00", "clm-c71b5061", "clm-cfb8aba2", "clm-d00e4901", "clm-e3df75e9", "clm-2b7c7147", "clm-d7cb7d33", "clm-ed06213f" ],
-    "wallNanos" : 13658007,
-    "cpuNanos" : 11915077,
+    "wallNanos" : 11646763,
+    "cpuNanos" : 9758706,
     "inapplicable" : false,
     "reason" : "the method was FORCED to report.journey.replay.v1 for the counterfactual; the evidence would have chosen report.journey.replay.v1 (selected report.journey.replay.v1@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 3 case(s); the cost came from MEASURED and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — the observations are pooled over the strata, and a pooled rate is not evidence for this request; the reliability evidence was the observations are pooled over the strata, and a pooled rate is not evidence for this request)",
     "error" : null
@@ -324,8 +324,8 @@
     "oracleOutcome" : "DISPOSITION_MISMATCHED",
     "oracleReason" : "the expected disposition was UNSUPPORTED and the answer carries null",
     "citedClaimIds" : [ ],
-    "wallNanos" : 7652691,
-    "cpuNanos" : 7657896,
+    "wallNanos" : 7155912,
+    "cpuNanos" : 7142579,
     "inapplicable" : true,
     "reason" : " | refused: {error=method_refused, detail=the journey's preconditions do not hold for this request: the method cannot run inside its applicability domain}",
     "error" : null
@@ -340,8 +340,8 @@
     "oracleOutcome" : "DISPOSITION_MISMATCHED",
     "oracleReason" : "the expected disposition was UNSUPPORTED and the answer carries REFUTED",
     "citedClaimIds" : [ "clm-c8d34bef", "clm-fdfe103" ],
-    "wallNanos" : 10052984,
-    "cpuNanos" : 9011426,
+    "wallNanos" : 11195393,
+    "cpuNanos" : 7846339,
     "inapplicable" : false,
     "reason" : "the method was FORCED to report.journey.replay.v1 for the counterfactual; the evidence would have chosen report.journey.replay.v1 (selected report.journey.replay.v1@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 3 case(s); the cost came from MEASURED and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — the observations are pooled over the strata, and a pooled rate is not evidence for this request; the reliability evidence was the observations are pooled over the strata, and a pooled rate is not evidence for this request)",
     "error" : null
@@ -356,8 +356,8 @@
     "oracleOutcome" : "DISPOSITION_MISMATCHED",
     "oracleReason" : "the expected disposition was REFUTED and the answer carries null",
     "citedClaimIds" : [ ],
-    "wallNanos" : 7449999,
-    "cpuNanos" : 7456948,
+    "wallNanos" : 6472244,
+    "cpuNanos" : 6476778,
     "inapplicable" : true,
     "reason" : " | refused: {error=method_refused, detail=the journey's preconditions do not hold for this request: the method cannot run inside its applicability domain}",
     "error" : null
@@ -372,8 +372,8 @@
     "oracleOutcome" : "DISPOSITION_MISMATCHED",
     "oracleReason" : "the expected disposition was REFUTED and the answer carries AMBIGUOUS",
     "citedClaimIds" : [ "clm-ef730297", "clm-d3ad72da", "clm-f64bd679", "clm-cc698201", "clm-f8d43d89", "clm-4791042e", "clm-59d98061", "clm-683a6394", "clm-878ed21c", "clm-7efdb0ba", "clm-1ae61e9c", "clm-73b51139", "clm-b5c0c533", "clm-eb11761b", "clm-3e006550", "clm-5044d18e", "clm-6f546f9e", "clm-77569515", "clm-7b407130", "clm-8abe5c00", "clm-c71b5061", "clm-cfb8aba2", "clm-d00e4901", "clm-e3df75e9", "clm-33e6a0ba", "clm-507f8eca", "clm-a1e546da" ],
-    "wallNanos" : 12081145,
-    "cpuNanos" : 10788080,
+    "wallNanos" : 10392680,
+    "cpuNanos" : 8839131,
     "inapplicable" : false,
     "reason" : "the method was FORCED to report.journey.replay.v1 for the counterfactual; the evidence would have chosen report.journey.replay.v1 (selected report.journey.replay.v1@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 3 case(s); the cost came from MEASURED and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — the observations are pooled over the strata, and a pooled rate is not evidence for this request; the reliability evidence was the observations are pooled over the strata, and a pooled rate is not evidence for this request)",
     "error" : null
@@ -388,8 +388,8 @@
     "oracleOutcome" : "DISPOSITION_MISMATCHED",
     "oracleReason" : "the expected disposition was UNSUPPORTED and the answer carries null",
     "citedClaimIds" : [ ],
-    "wallNanos" : 7591886,
-    "cpuNanos" : 7598625,
+    "wallNanos" : 7263095,
+    "cpuNanos" : 7271069,
     "inapplicable" : true,
     "reason" : " | refused: {error=method_refused, detail=the journey's preconditions do not hold for this request: the method cannot run inside its applicability domain}",
     "error" : null
@@ -404,8 +404,8 @@
     "oracleOutcome" : "DISPOSITION_MISMATCHED",
     "oracleReason" : "the expected disposition was UNSUPPORTED and the answer carries AMBIGUOUS",
     "citedClaimIds" : [ "clm-cbb52e8", "clm-9d69bc0", "clm-d4cfdbdc", "clm-fdfe103", "clm-9d8a4cab", "clm-c8d34bef", "clm-163c0792", "clm-d22f7025", "clm-820187b", "clm-86129665", "clm-3e006550", "clm-5044d18e", "clm-6f546f9e", "clm-77569515", "clm-7b407130", "clm-8abe5c00", "clm-c71b5061", "clm-cfb8aba2", "clm-d00e4901", "clm-e3df75e9" ],
-    "wallNanos" : 11839791,
-    "cpuNanos" : 10713450,
+    "wallNanos" : 9824791,
+    "cpuNanos" : 8621855,
     "inapplicable" : false,
     "reason" : "the method was FORCED to report.journey.replay.v1 for the counterfactual; the evidence would have chosen report.journey.replay.v1 (selected report.journey.replay.v1@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 3 case(s); the cost came from MEASURED and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — the observations are pooled over the strata, and a pooled rate is not evidence for this request; the reliability evidence was the observations are pooled over the strata, and a pooled rate is not evidence for this request)",
     "error" : null
@@ -420,8 +420,8 @@
     "oracleOutcome" : "UNGROUNDED",
     "oracleReason" : "the answer cites 0 claim(s), none of which is the gold proposition of this case's own claim",
     "citedClaimIds" : [ ],
-    "wallNanos" : 7610561,
-    "cpuNanos" : 7623049,
+    "wallNanos" : 6737694,
+    "cpuNanos" : 6742858,
     "inapplicable" : true,
     "reason" : " | refused: {error=method_refused, detail=the journey's preconditions do not hold for this request: the method cannot run inside its applicability domain}",
     "error" : null
@@ -436,8 +436,8 @@
     "oracleOutcome" : "GROUNDED",
     "oracleReason" : "the answer cites the gold proposition from the claim clm-83d8c810",
     "citedClaimIds" : [ "clm-83d8c810", "clm-47652d0a", "clm-1e6f4b85", "clm-cbd911ce" ],
-    "wallNanos" : 10778722,
-    "cpuNanos" : 9709426,
+    "wallNanos" : 10429540,
+    "cpuNanos" : 9337373,
     "inapplicable" : false,
     "reason" : "the method was FORCED to report.journey.replay.v1 for the counterfactual; the evidence would have chosen report.journey.replay.v1 (selected report.journey.replay.v1@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 3 case(s); the cost came from MEASURED and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — the observations are pooled over the strata, and a pooled rate is not evidence for this request; the reliability evidence was the observations are pooled over the strata, and a pooled rate is not evidence for this request)",
     "error" : null
@@ -452,8 +452,8 @@
     "oracleOutcome" : "GROUNDED",
     "oracleReason" : "the answer cites the gold proposition from the claim clm-9980b74f",
     "citedClaimIds" : [ "clm-9980b74f", "clm-3260e813", "clm-e9dd5b79", "clm-c72f65b2", "clm-f8cc8b73", "clm-7b6f8e3a", "clm-9ed7e709", "clm-d3a2a2a8", "clm-89e7e51c", "clm-1691b876", "clm-4462e926", "clm-7c2e06bc", "clm-cfc0bb8e", "clm-db53da42", "clm-1dca6b13", "clm-1fa1b36d", "clm-f2dffdff" ],
-    "wallNanos" : 64011452,
-    "cpuNanos" : 57826419,
+    "wallNanos" : 61542211,
+    "cpuNanos" : 55298717,
     "inapplicable" : false,
     "reason" : "the method was FORCED to procedure.report.procedure.c49e6ff9.45dc671a for the counterfactual; the evidence would have chosen report.journey.reference.v1 (selected report.journey.reference.v1@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 1 case(s); the cost came from DECLARED_COMPLEXITY and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — no measured reliability for this method in this stratum; the reliability evidence was no measured reliability for this method in this stratum)",
     "error" : null
@@ -468,8 +468,8 @@
     "oracleOutcome" : "GROUNDED",
     "oracleReason" : "the answer cites the gold proposition from the claim clm-63cffd47",
     "citedClaimIds" : [ "clm-63cffd47", "clm-1185f7de", "clm-16dd35f1", "clm-b84f484", "clm-21146ba1", "clm-68a3105e" ],
-    "wallNanos" : 54039883,
-    "cpuNanos" : 50333368,
+    "wallNanos" : 53671201,
+    "cpuNanos" : 49871521,
     "inapplicable" : false,
     "reason" : "the method was FORCED to procedure.report.procedure.c49e6ff9.45dc671a for the counterfactual; the evidence would have chosen report.journey.reference.v1 (selected report.journey.reference.v1@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 1 case(s); the cost came from DECLARED_COMPLEXITY and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — no measured reliability for this method in this stratum; the reliability evidence was no measured reliability for this method in this stratum)",
     "error" : null
@@ -484,8 +484,8 @@
     "oracleOutcome" : "GROUNDED",
     "oracleReason" : "the answer cites the gold proposition from the claim clm-21146ba1",
     "citedClaimIds" : [ "clm-21146ba1", "clm-33b8d954", "clm-272b2339", "clm-3725a118", "clm-42416429", "clm-5e4c7869", "clm-77689482", "clm-7983275f", "clm-86cc5ef3", "clm-981f5060", "clm-bd173b67", "clm-c955c52" ],
-    "wallNanos" : 57436721,
-    "cpuNanos" : 52979116,
+    "wallNanos" : 57335655,
+    "cpuNanos" : 52999241,
     "inapplicable" : false,
     "reason" : "the method was FORCED to procedure.report.procedure.c49e6ff9.45dc671a for the counterfactual; the evidence would have chosen report.journey.reference.v1 (selected report.journey.reference.v1@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 1 case(s); the cost came from DECLARED_COMPLEXITY and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — no measured reliability for this method in this stratum; the reliability evidence was no measured reliability for this method in this stratum)",
     "error" : null
@@ -500,8 +500,8 @@
     "oracleOutcome" : "GROUNDED",
     "oracleReason" : "the answer cites the gold proposition from the claim clm-d5c56da1",
     "citedClaimIds" : [ "clm-d5c56da1", "clm-3b5849cd", "clm-f67402ac", "clm-cc9cf215", "clm-530a5eed", "clm-d7d13531", "clm-f2edc585", "clm-fdd38c2b", "clm-458bfe1d", "clm-ce0dae5c", "clm-c164db89" ],
-    "wallNanos" : 56047511,
-    "cpuNanos" : 51902748,
+    "wallNanos" : 62622917,
+    "cpuNanos" : 58433333,
     "inapplicable" : false,
     "reason" : "the method was FORCED to procedure.report.procedure.c49e6ff9.45dc671a for the counterfactual; the evidence would have chosen report.journey.reference.v1 (selected report.journey.reference.v1@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 1 case(s); the cost came from DECLARED_COMPLEXITY and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — no measured reliability for this method in this stratum; the reliability evidence was no measured reliability for this method in this stratum)",
     "error" : null
@@ -516,8 +516,8 @@
     "oracleOutcome" : "GROUNDED",
     "oracleReason" : "the answer cites the gold proposition from the claim clm-4d48aa8d",
     "citedClaimIds" : [ "clm-4d48aa8d", "clm-33b8d954", "clm-da8f50e1", "clm-48e2d527", "clm-bc0fde4", "clm-b2041481", "clm-35c2a574", "clm-f5a43aca", "clm-fa87216c", "clm-aa917e02", "clm-d726c6e8", "clm-251939d9", "clm-458bfe1d", "clm-4602e58d", "clm-534e0eaf", "clm-5aa8a44", "clm-6c768ed3", "clm-8398b849", "clm-8e6f95b8", "clm-9cd6aba0", "clm-9dae0994", "clm-b26986f7", "clm-c73c84ed", "clm-e32f882e", "clm-28f412c5", "clm-1f5b3402", "clm-4c966c99", "clm-6ddf06ee", "clm-763b2f72", "clm-96071a74", "clm-9c52dfda", "clm-9cd553a", "clm-b18dca96", "clm-c0897c6e", "clm-c7ac1fb0", "clm-d011e3b2", "clm-d14901dc", "clm-d97f582f", "clm-44536625", "clm-16dd35f1", "clm-d3b5a8cc", "clm-51c67c05", "clm-757f4a25", "clm-9458aeb8", "clm-1d0c8095", "clm-2752c7c8", "clm-2c33afc5", "clm-2dd54fcf", "clm-456716f7", "clm-5b3c9a6a", "clm-5b881041", "clm-650d15fe", "clm-68a3105e", "clm-7512d49a", "clm-7a048194", "clm-824883c1", "clm-84dc6046", "clm-868dfa36", "clm-8d1bc8ae", "clm-a1fd72f1", "clm-a29c9a13", "clm-a8168d8e", "clm-a8b9b36d", "clm-a93f2c8a", "clm-af485931", "clm-b4c18c6e", "clm-c8752e32", "clm-e0189428", "clm-fb7ac3b2", "clm-6c3ea98a", "clm-9f4b35ee", "clm-a1209b20", "clm-de8d8a1e", "clm-272b2339", "clm-3725a118", "clm-42416429", "clm-5e4c7869", "clm-77689482", "clm-7983275f", "clm-86cc5ef3", "clm-981f5060", "clm-bd173b67", "clm-c955c52" ],
-    "wallNanos" : 159163874,
-    "cpuNanos" : 117305737,
+    "wallNanos" : 103669382,
+    "cpuNanos" : 99750922,
     "inapplicable" : false,
     "reason" : "the method was FORCED to procedure.report.procedure.c49e6ff9.45dc671a for the counterfactual; the evidence would have chosen report.journey.reference.v1 (selected report.journey.reference.v1@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 1 case(s); the cost came from DECLARED_COMPLEXITY and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — no measured reliability for this method in this stratum; the reliability evidence was no measured reliability for this method in this stratum)",
     "error" : null
@@ -532,8 +532,8 @@
     "oracleOutcome" : "DISPOSITION_MISMATCHED",
     "oracleReason" : "the expected disposition was UNSUPPORTED and the answer carries REFUTED",
     "citedClaimIds" : [ "clm-780a5272", "clm-6c3ea98a" ],
-    "wallNanos" : 58704862,
-    "cpuNanos" : 54537232,
+    "wallNanos" : 58370285,
+    "cpuNanos" : 52622392,
     "inapplicable" : false,
     "reason" : "the method was FORCED to procedure.report.procedure.c49e6ff9.45dc671a for the counterfactual; the evidence would have chosen report.journey.reference.v1 (selected report.journey.reference.v1@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 1 case(s); the cost came from DECLARED_COMPLEXITY and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — no measured reliability for this method in this stratum; the reliability evidence was no measured reliability for this method in this stratum)",
     "error" : null
@@ -548,8 +548,8 @@
     "oracleOutcome" : "DISPOSITION_MISMATCHED",
     "oracleReason" : "the expected disposition was REFUTED and the answer carries AMBIGUOUS",
     "citedClaimIds" : [ "clm-83d190d4", "clm-eeef6263", "clm-6ddf06ee", "clm-bc0fde4", "clm-28116a58", "clm-2c33afc5", "clm-b2041481", "clm-e32f882e", "clm-a3ec704b", "clm-aa2501d", "clm-631ac231", "clm-9208fb7b", "clm-9e3b439d", "clm-4dd68b41", "clm-5aa2b37c", "clm-c7ac1fb0", "clm-cb253cf2", "clm-272b2339", "clm-3725a118", "clm-42416429", "clm-5e4c7869", "clm-77689482", "clm-7983275f", "clm-86cc5ef3", "clm-981f5060", "clm-bd173b67", "clm-c955c52" ],
-    "wallNanos" : 64404935,
-    "cpuNanos" : 59991435,
+    "wallNanos" : 61606141,
+    "cpuNanos" : 57689663,
     "inapplicable" : false,
     "reason" : "the method was FORCED to procedure.report.procedure.c49e6ff9.45dc671a for the counterfactual; the evidence would have chosen report.journey.reference.v1 (selected report.journey.reference.v1@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 1 case(s); the cost came from DECLARED_COMPLEXITY and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — no measured reliability for this method in this stratum; the reliability evidence was no measured reliability for this method in this stratum)",
     "error" : null
@@ -564,8 +564,8 @@
     "oracleOutcome" : "DISPOSITION_MISMATCHED",
     "oracleReason" : "the expected disposition was UNSUPPORTED and the answer carries AMBIGUOUS",
     "citedClaimIds" : [ "clm-cc9cf215", "clm-d5c56da1", "clm-f53a661", "clm-6c3ea98a", "clm-780a5272", "clm-e3b69018", "clm-fdd38c2b", "clm-3b0c397e", "clm-c304b046", "clm-f67402ac", "clm-272b2339", "clm-3725a118", "clm-42416429", "clm-5e4c7869", "clm-77689482", "clm-7983275f", "clm-86cc5ef3", "clm-981f5060", "clm-bd173b67", "clm-c955c52" ],
-    "wallNanos" : 66629520,
-    "cpuNanos" : 59966381,
+    "wallNanos" : 58824310,
+    "cpuNanos" : 54430716,
     "inapplicable" : false,
     "reason" : "the method was FORCED to procedure.report.procedure.c49e6ff9.45dc671a for the counterfactual; the evidence would have chosen report.journey.reference.v1 (selected report.journey.reference.v1@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 1 case(s); the cost came from DECLARED_COMPLEXITY and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — no measured reliability for this method in this stratum; the reliability evidence was no measured reliability for this method in this stratum)",
     "error" : null
@@ -580,8 +580,8 @@
     "oracleOutcome" : "GROUNDED",
     "oracleReason" : "the answer cites the gold proposition from the claim clm-9980b74f",
     "citedClaimIds" : [ "clm-9980b74f", "clm-e9dd5b79", "clm-89e26c7d", "clm-c72f65b2" ],
-    "wallNanos" : 58600235,
-    "cpuNanos" : 54135283,
+    "wallNanos" : 53886107,
+    "cpuNanos" : 49979463,
     "inapplicable" : false,
     "reason" : "the method was FORCED to procedure.report.procedure.c49e6ff9.45dc671a for the counterfactual; the evidence would have chosen report.journey.reference.v1 (selected report.journey.reference.v1@1.0.0 with score 1.0 over 2 admitted candidate(s); the accuracy evidence was 1.0 on the DECLARED basis over 1 case(s); the cost came from DECLARED_COMPLEXITY and was weighed with a cost weight of 1.0; the reliability was kept out of the score (NO_EVIDENCE) — no measured reliability for this method in this stratum; the reliability evidence was no measured reliability for this method in this stratum)",
     "error" : null
@@ -592,32 +592,32 @@
       "grounded" : 6,
       "inapplicable" : 0,
       "crashed" : 0,
-      "wallNanos" : 962773942,
-      "cpuNanos" : 849393261
+      "wallNanos" : 599774237,
+      "cpuNanos" : 512817594
     },
     "B/novel" : {
       "cases" : 9,
       "grounded" : 0,
       "inapplicable" : 9,
       "crashed" : 0,
-      "wallNanos" : 79732679,
-      "cpuNanos" : 72483259
+      "wallNanos" : 74974720,
+      "cpuNanos" : 65798405
     },
     "B/repeat" : {
       "cases" : 9,
       "grounded" : 6,
       "inapplicable" : 0,
       "crashed" : 0,
-      "wallNanos" : 112000224,
-      "cpuNanos" : 99824207
+      "wallNanos" : 90554612,
+      "cpuNanos" : 77010956
     },
     "C/measured" : {
       "cases" : 9,
       "grounded" : 6,
       "inapplicable" : 0,
       "crashed" : 0,
-      "wallNanos" : 639038993,
-      "cpuNanos" : 558977719
+      "wallNanos" : 571528209,
+      "cpuNanos" : 531075968
     }
   }
 }
