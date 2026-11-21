@@ -103,6 +103,11 @@ tasks.withType(Test) {
     // this property names; unset means it only prints.
     systemProperty 'matrix.b3.result', System.getProperty('matrix.b3.result', '')
     systemProperty 'matrix.b3.dir', System.getProperty('matrix.b3.dir', '')
+    // The load-sensitive assertion class is measured on demand, not on every run: the
+    // measurement is slow, and its subject is the MACHINE, so it is not something the
+    // ordinary suite should pay for. It runs when the property is set:
+    //   ./gradlew :matrix-core:test --tests "io.matrix.crj.quality.*" -Dcrj01.loadSensitive=true
+    systemProperty 'crj01.loadSensitive', System.getProperty('crj01.loadSensitive', '')
     // RECON-W43: the ONNX runtime extracts a native library of about 583 MB
     // into a fresh directory under java.io.tmpdir for EVERY session load and
     // never removes it. A test run therefore left as many directories as it
