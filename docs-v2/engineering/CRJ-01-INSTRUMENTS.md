@@ -14,7 +14,14 @@ carries the control that makes it an instrument rather than a restatement of the
 source-span oracle **fails loudly** on a gold corrupted by a single character, and the lamp
 truth oracle **voids the run** on any disagreement with the world. The **cross-check has been
 executed**: the oracle and the world agree on all four assignments, and the record is
-`instrument_crosscheck: {assignments: 4, agreements: 4}`. What is **still missing** is not code:
+`instrument_crosscheck: {assignments: 4, agreements: 4}`. The oracle was then run against the **real served path** — the journey over the bundled
+photosynthesis package — and it **measured** something the programme needs: the bundled package
+is a **paraphrase corpus** (the journey cited 7 claims; the oracle grounded **0** of them,
+while it **does** ground a proposition that is a genuine span — the positive control). So the
+bundled package **cannot** be the sealed split's corpus, and the protocol's new-corpus
+requirement is a **hard condition, now measured** rather than assumed.
+
+What is **still missing** is not code:
 it is the **corpus**, the **cases**, the **generator** and the **freeze** — and by the
 protocol's own rule those belong to a **case author who implements no arm** and an **independent
 reviewer**, and this agent implemented arm C.
@@ -98,7 +105,57 @@ Two negative cases are tested, and both make the run **VOID** with the reason
 one of the four assignments** — a missing answer is a disagreement, never a pass. Neither is
 scored and neither is re-run to a nicer number; the mismatch is a finding in its own right.
 
-## 4. The freeze fields this closes, and the ones it does not
+## 4. The measurement the oracle made against the SERVED path — and what it found
+
+A fixture cannot tell the owner whether the workspace the system actually serves could ever be
+scored by the oracle. So the oracle was run against the **real served path** — the report
+journey over the bundled photosynthesis package — over a corpus built from the workspace's own
+source documents (one file per source, holding the document text the package carries, which is
+the shape the protocol's corpus has, §2.1.3.1).
+
+**The measurement:**
+
+| | |
+|---|---|
+| the workspace | **4** sources, **17** claims, **18** evidence rows |
+| the journey cited | **7** claims |
+| the oracle grounded | **0** of the 7 |
+| of the 18 evidence rows, how many are a **span** of their document | **17** |
+
+**The finding: the bundled package is a PARAPHRASE corpus.** The package carries each document's
+text as the source's excerpt, and **17 of the 18** evidence excerpts **are** spans of it — but
+the claim's **proposition**, which is what the served answer cites, is a paraphrase of that
+text and is **never** byte-identical to a span of it. So the oracle, asked "does the served
+response cite the evidence the source document actually contains?", answers **no** for a
+correct answer: the answer cites a *true* proposition the document does not *contain* in those
+words.
+
+**The positive control, so the finding is about the package and not about the instrument.** The
+claim's own **evidence excerpt** IS a span of its document, and the oracle **grounds** it. So the
+instrument discriminates over the real path: it grounds what is a span and refuses what is a
+paraphrase. The measurement is a property of the package.
+
+**What this means for the programme — and it is a decision-grade result:**
+
+1. **The bundled photosynthesis package CANNOT be the sealed split's corpus.** The oracle's
+   question is unanswerable over it. This is not a nuance of the instrument: the package's
+   propositions are paraphrases, and a verbatim-span instrument has nothing to match.
+2. **The protocol's requirement of a NEW corpus directory, imported through the production
+   acquisition path (§2.1.3.1–2), is a HARD CONDITION, not a formality.** The import is what
+   makes the document's text the source's excerpt **and** the claim's proposition a span of it,
+   and it is what makes the claim id the **production** one — the answer carries `cl-…`
+   (production ids), while the package's own keys are something else. The measurement records
+   this too: the served answer's claim ids **are** the production ones, so a case built by the
+   production path would match on the id; it is the **proposition** that does not.
+3. **The case author must be told this before they start.** A case built over the bundled
+   package would be scored UNGROUNDED on every case, and the run would look like a failure of
+   the arms rather than a property of the corpus.
+
+**The evidence:** `docs-v2/engineering/evidence/TEST-io.matrix.crj.evidence.BundledCorpusSpanMeasurementTest.xml`
+— three tests, zero failures: the paraphrase measurement, the production-id measurement, and the
+positive control.
+
+## 5. The freeze fields this closes, and the ones it does not
 
 | the field of §5.5 | the state |
 |---|---|
@@ -111,7 +168,7 @@ scored and neither is re-run to a nicer number; the mismatch is a finding in its
 | `branchSha` | **OPEN** — the freeze records its own SHA, which is not the baseline `b7bd1be4` |
 | `roles` | **OPEN** — and this is the owner's to name |
 
-## 5. Why the corpus and the cases are **not** built here
+## 6. Why the corpus and the cases are **not** built here
 
 The protocol's §5.6 is binding and it names roles:
 
@@ -139,14 +196,15 @@ commission:
 | the **freeze** — the hashes, the roles and the statement that the freeze precedes any measurement | the **independent reviewer** | the builder and the corpus |
 | the **three-arm run** on the sealed split, in the pre-registered order A, B, C | the programme, after the freeze | the frozen set and the frozen oracles |
 
-## 6. The evidence
+## 7. The evidence
 
 | the artefact | what it holds |
 |---|---|
 | `docs-v2/engineering/evidence/TEST-io.matrix.crj.evidence.SourceSpanOracleTest.xml` | 7 tests, 0 failures — the grounded case, the wrong-claim case, the wrong-proposition case, the changed corpus, the two negative cases and the **corrupted-gold control** |
 | `docs-v2/engineering/evidence/TEST-io.matrix.crj.microworld.LampTruthOracleTest.xml` | 4 tests, 0 failures — the table, the **cross-check on all four assignments**, the disagreement and the missing answer |
+| `docs-v2/engineering/evidence/TEST-io.matrix.crj.evidence.BundledCorpusSpanMeasurementTest.xml` | 3 tests, 0 failures — the **measurement against the served path**: the paraphrase finding, the production ids, and the **positive control** that grounds a genuine span |
 
-## 7. The decision: **CONTINUE**, with the next step named
+## 8. The decision: **CONTINUE**, with the next step named
 
 The instrument is built and proven, so the next step is the one the instrument was missing:
 **the corpus, the cases, the builder and the freeze** — commissioned from a **case author who
