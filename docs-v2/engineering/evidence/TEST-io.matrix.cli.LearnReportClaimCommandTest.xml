@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.cli.LearnReportClaimCommandTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-21T11:04:21.112Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="8.318">
+  <properties/>
+  <testcase name="the command promotes the claim the journeys agreed on, with its provenance" classname="io.matrix.cli.LearnReportClaimCommandTest" time="8.313"/>
+  <testcase name="the command refuses without the quarantine file, because the gate fails closed" classname="io.matrix.cli.LearnReportClaimCommandTest" time="0.003"/>
+  <testcase name="the command refuses without the cases file" classname="io.matrix.cli.LearnReportClaimCommandTest" time="0.002"/>
+  <system-out><![CDATA[the quarantine file is missing: /home/alexandr-narbaev/Projects/agi/data/tmp/junit-8883417571242253319/absent.txt — the gate fails closed, so nothing can be admitted without it
+the cases file is missing: /home/alexandr-narbaev/Projects/agi/data/tmp/junit-3135661520412213303/absent.tsv
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
