@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.crj.evidence.BundledCorpusSpanMeasurementTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-21T10:14:36.040Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.921">
+  <properties/>
+  <testcase name="the bundled package's claim ids are the production ones, not the package's keys" classname="io.matrix.crj.evidence.BundledCorpusSpanMeasurementTest" time="0.733"/>
+  <testcase name="the bundled package's cited propositions are not spans of the documents" classname="io.matrix.crj.evidence.BundledCorpusSpanMeasurementTest" time="0.105"/>
+  <testcase name="the oracle DOES ground a proposition that is a span of the document" classname="io.matrix.crj.evidence.BundledCorpusSpanMeasurementTest" time="0.06"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
