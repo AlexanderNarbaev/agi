@@ -2,6 +2,7 @@ package io.matrix.cognitive.report;
 
 import io.matrix.cognitive.KernelSelector;
 import io.matrix.cognitive.algorithms.AlgorithmDecision;
+import io.matrix.cognitive.algorithms.AlgorithmMethod;
 import io.matrix.cognitive.algorithms.AlgorithmRegistry;
 import io.matrix.cognitive.algorithms.CostLedger;
 import io.matrix.cognitive.algorithms.ProblemRequest;
@@ -43,7 +44,7 @@ public class ReportJourneyPlanner {
 
     private final KernelSelector selector;
     private final CostLedger ledger;
-    private final Map<String, ReportJourneyMethod> methods = new LinkedHashMap<>();
+    private final Map<String, JourneyMethod> methods = new LinkedHashMap<>();
 
     /** Creates the planner with its own ledger. */
     public ReportJourneyPlanner() {
@@ -68,16 +69,16 @@ public class ReportJourneyPlanner {
      * @param ledger  the ledger the measured costs are kept in
      * @param methods the methods the portfolio offers
      */
-    public ReportJourneyPlanner(CostLedger ledger, List<ReportJourneyMethod> methods) {
+    public ReportJourneyPlanner(CostLedger ledger, List<JourneyMethod> methods) {
         this.ledger = ledger;
         AlgorithmRegistry registry = new AlgorithmRegistry();
-        for (ReportJourneyMethod method : methods) {
+        for (JourneyMethod method : methods) {
             register(registry, method);
         }
         this.selector = new KernelSelector(registry, ledger);
     }
 
-    private void register(AlgorithmRegistry registry, ReportJourneyMethod method) {
+    private void register(AlgorithmRegistry registry, JourneyMethod method) {
         registry.register(method);
         methods.put(method.capability().id(), method);
     }
@@ -116,14 +117,59 @@ public class ReportJourneyPlanner {
      * @return the plan: the chosen method and the decision that chose it
      */
     public Plan plan(ProblemRequest request, String forcedMethodId) {
-        AlgorithmDecision decision = selector.selectTyped(request, COST_WEIGHT).decision();
-        ReportJourneyMethod chosen = decision.selectedAlgorithmId() == null
+        return plan(request, forcedMethodId, List.of());
+    }
+
+    /**
+     * The plan for a request, with the methods the caller OFFERS in addition to the
+     * portfolio's own.
+     *
+     * <p>The offered methods are the VALIDATED PROCEDURES of the workspace: a procedure
+     * becomes a member of the family for the request that may use it, and it is offered only
+     * with the facts that establish its applicability domain. The catalogue is therefore
+     * per request, while the COST LEDGER is not: the ledger is the planner's own and outlives
+     * the request, so what a method cost is remembered across requests — including the
+     * request that follows a procedure.</p>
+     *
+     * <p>An offered method never displaces the journey's own methods: an id that is already
+     * in the portfolio is the portfolio's.</p>
+     *
+     * @param request        the problem, with the facts that are known about it
+     * @param forcedMethodId the method that must run, or null to let the evidence choose
+     * @param offered        the methods the caller offers, beyond the portfolio's own
+     * @return the plan: the chosen method and the decision
+     */
+    public Plan plan(ProblemRequest request, String forcedMethodId, List<JourneyMethod> offered) {
+        if (offered == null || offered.isEmpty()) {
+            return planOver(methods, selector, request, forcedMethodId);
+        }
+        Map<String, JourneyMethod> catalogue = new LinkedHashMap<>(methods);
+        AlgorithmRegistry requestRegistry = new AlgorithmRegistry();
+        for (JourneyMethod method : catalogue.values()) {
+            requestRegistry.register(method);
+        }
+        for (JourneyMethod method : offered) {
+            String id = method.capability().id();
+            if (catalogue.containsKey(id)) {
+                continue;
+            }
+            requestRegistry.register(method);
+            catalogue.put(id, method);
+        }
+        return planOver(catalogue, new KernelSelector(requestRegistry, ledger), request,
+                forcedMethodId);
+    }
+
+    private Plan planOver(Map<String, JourneyMethod> catalogue, KernelSelector requestSelector,
+            ProblemRequest request, String forcedMethodId) {
+        AlgorithmDecision decision = requestSelector.selectTyped(request, COST_WEIGHT).decision();
+        JourneyMethod chosen = decision.selectedAlgorithmId() == null
                 ? null
-                : methods.get(decision.selectedAlgorithmId());
+                : catalogue.get(decision.selectedAlgorithmId());
         if (forcedMethodId == null) {
             return new Plan(chosen, decision, null);
         }
-        ReportJourneyMethod forced = methods.get(forcedMethodId);
+        JourneyMethod forced = catalogue.get(forcedMethodId);
         if (forced == null) {
             throw new IllegalArgumentException("no method with the id " + forcedMethodId
                     + " serves the report journey");
@@ -149,13 +195,26 @@ public class ReportJourneyPlanner {
     }
 
     /**
+     * A method of the report journey family.
+     *
+     * <p>The family's methods all speak the same payload and return the same output, so the
+     * selector may offer any of them for any request of the family and the route may read the
+     * result without knowing which one ran. That is what lets a VALIDATED PROCEDURE compete
+     * with the reference method on equal terms: it is a method of this family, not a wrapper
+     * around one.</p>
+     */
+    public interface JourneyMethod
+            extends AlgorithmMethod<ReportJourney.Problem, ReportJourney.Result> {
+    }
+
+    /**
      * The plan: the method the kernel chose and the decision that chose it.
      *
      * @param method   the chosen method, or null when the request was refused
      * @param decision the decision record
      * @param forcedMethodId the method that was forced, or null when the evidence chose
      */
-    public record Plan(ReportJourneyMethod method, AlgorithmDecision decision,
+    public record Plan(JourneyMethod method, AlgorithmDecision decision,
             String forcedMethodId) {
 
         /** Whether the kernel had no method for the request. */

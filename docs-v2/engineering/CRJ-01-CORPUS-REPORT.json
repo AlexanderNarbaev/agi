@@ -1,0 +1,3379 @@
+{
+  "report" : "crj-01-corpus-report",
+  "version" : "1.0",
+  "date" : "2026-11-21",
+  "corpus" : "research-pool/plate-tectonics",
+  "acquisitionPath" : "the PRODUCTION import path: workbench.importDocument(workspace, path, file, language)",
+  "purpose" : "how much of the research pool is left for a FRESH case after the three regression sets have taken their gold, and whether the arm C mechanism's support fraction is reachable here at all",
+  "counts" : {
+    "documents" : 7,
+    "claims" : 540,
+    "claimsThatAreVerbatimSpans" : 483,
+    "claimsThatAreFresh" : 470,
+    "claimsThatAreFreshAndSpans" : 413,
+    "regressionGoldPropositions" : 101
+  },
+  "claimsPerDocument" : {
+    "wikipedia-seafloor-spreading.md" : 92,
+    "wikipedia-mid-ocean-ridge.md" : 82,
+    "wikipedia-subduction.md" : 152,
+    "wikipedia-mantle-convection.md" : 45,
+    "wikipedia-paleomagnetism.md" : 65,
+    "wikipedia-continental-drift.md" : 90,
+    "wikipedia-slab-pull.md" : 14
+  },
+  "supportFractions" : [ {
+    "supportDocuments" : 1,
+    "supportFiles" : [ "wikipedia-continental-drift.md" ],
+    "supportClaims" : 90,
+    "workspaceClaims" : 540,
+    "supportFraction" : "0.1667"
+  }, {
+    "supportDocuments" : 2,
+    "supportFiles" : [ "wikipedia-continental-drift.md", "wikipedia-mantle-convection.md" ],
+    "supportClaims" : 135,
+    "workspaceClaims" : 540,
+    "supportFraction" : "0.2500"
+  }, {
+    "supportDocuments" : 3,
+    "supportFiles" : [ "wikipedia-continental-drift.md", "wikipedia-mantle-convection.md", "wikipedia-mid-ocean-ridge.md" ],
+    "supportClaims" : 217,
+    "workspaceClaims" : 540,
+    "supportFraction" : "0.4019"
+  }, {
+    "supportDocuments" : 4,
+    "supportFiles" : [ "wikipedia-continental-drift.md", "wikipedia-mantle-convection.md", "wikipedia-mid-ocean-ridge.md", "wikipedia-paleomagnetism.md" ],
+    "supportClaims" : 282,
+    "workspaceClaims" : 540,
+    "supportFraction" : "0.5222"
+  }, {
+    "supportDocuments" : 5,
+    "supportFiles" : [ "wikipedia-continental-drift.md", "wikipedia-mantle-convection.md", "wikipedia-mid-ocean-ridge.md", "wikipedia-paleomagnetism.md", "wikipedia-seafloor-spreading.md" ],
+    "supportClaims" : 374,
+    "workspaceClaims" : 540,
+    "supportFraction" : "0.6926"
+  }, {
+    "supportDocuments" : 6,
+    "supportFiles" : [ "wikipedia-continental-drift.md", "wikipedia-mantle-convection.md", "wikipedia-mid-ocean-ridge.md", "wikipedia-paleomagnetism.md", "wikipedia-seafloor-spreading.md", "wikipedia-slab-pull.md" ],
+    "supportClaims" : 388,
+    "workspaceClaims" : 540,
+    "supportFraction" : "0.7185"
+  }, {
+    "supportDocuments" : 7,
+    "supportFiles" : [ "wikipedia-continental-drift.md", "wikipedia-mantle-convection.md", "wikipedia-mid-ocean-ridge.md", "wikipedia-paleomagnetism.md", "wikipedia-seafloor-spreading.md", "wikipedia-slab-pull.md", "wikipedia-subduction.md" ],
+    "supportClaims" : 540,
+    "workspaceClaims" : 540,
+    "supportFraction" : "1.0000"
+  } ],
+  "regressionSets" : [ "matrix-core/src/main/resources/epistemic-eval/cases.json", "docs-v2/engineering/C2A-HELDOUT-SET.json", "docs-v2/engineering/EPISTEMIC-HELDOUT-SET.json" ],
+  "regressionGoldPerSet" : {
+    "matrix-core/src/main/resources/epistemic-eval/cases.json" : 31,
+    "docs-v2/engineering/C2A-HELDOUT-SET.json" : 59,
+    "docs-v2/engineering/EPISTEMIC-HELDOUT-SET.json" : 11
+  },
+  "candidates" : [ {
+    "claimId" : "clm-10506423",
+    "proposition" : "Spreading centers end in transform faults or in overlapping spreading center offsets.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-108a2420",
+    "proposition" : "Two processes, ridge-push and slab pull, are thought to be responsible for spreading at mid-ocean ridges.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-10c40e85",
+    "proposition" : "Oceanic lithosphere is continuously formed at a constant rate at the mid-ocean ridges.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-10c9a264",
+    "proposition" : "Other research showed that the ridge crest was seismically active and fresh lavas were found in the rift valley.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-11ecb42b",
+    "proposition" : "To get the dependence on x, one must substitute t = x/v ~ Ax/L, where L is the distance between the ridge to the continental shelf (roughly half the ocean width), and A is the ocean basin age.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-12033ef9",
+    "proposition" : "The subducted oceanic crust triggers volcanism, although the basic mechanisms are varied.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-120585dd",
+    "proposition" : "When Alfred Wegener first presented a hypothesis of continental drift in 1912, he suggested that continents plowed through the ocean crust.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-13012b56",
+    "proposition" : "appears to be a Hilton for wrens and purple martins.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-1305a1f5",
+    "proposition" : "This storage represents a carbon sink, removing carbon from the atmosphere and resulting in global cooling.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-15342fdb",
+    "proposition" : "Magma that remains in the lithosphere long enough will cool and form plutonic rocks such as diorite, granodiorite, and sometimes granite.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-1581441a",
+    "proposition" : "The modern theory of plate tectonics, refining Wegener, explains that there are two kinds of crust of different composition, continental and oceanic, both floating on a much deeper \"plastic\" mantle.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-1592a074",
+    "proposition" : "Arcs are also associated with most ore deposits.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-16b4df21",
+    "proposition" : "As the two active rifts continue to open, eventually the continental crust is attenuated as far as it will stretch.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-170283dd",
+    "proposition" : "Depending on sedimentation rates, the forearc may include an accretionary wedge of sediments scraped off the subducting slab and accreted to the overriding plate.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-17724133",
+    "proposition" : "Although the first-discovered section of the ridge system runs down the middle of the Atlantic Ocean, it was found that most mid-ocean ridges are located away from the center of other ocean basins.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-190731fe",
+    "proposition" : "Subducting slabs are composed of basaltic crust topped with pelagic sediments; however, the pelagic sediments may be accreted onto the forearc-hanging wall and not subducted.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-1b0871c4",
+    "proposition" : "The typical rift system consists of three rift arms at approximately 120-degree angles.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-1c4bafff",
+    "proposition" : "The subducting basalt and sediment are normally rich in hydrous minerals and clays.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-1ccb2146",
+    "proposition" : "advancing subduction: caused by strong coupling between the upper and lower plate.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-1e142704",
+    "proposition" : "His Principles of Physical Geology, ending with a chapter on continental drift, was published in 1944.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-1e95cb91",
+    "proposition" : "When oceanic plates diverge, tensional stress causes fractures to occur in the lithosphere.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-1fc87d67",
+    "proposition" : "The age-depth relation can be modeled by the cooling of a lithosphere plate or mantle half-space in areas without significant subduction.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-202f0778",
+    "proposition" : "The tremendous magnitudes of earthquakes and volcanic eruptions can also have knock-on effects with global impact.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-2078f5c6",
+    "proposition" : "The flat-slab subduction in northern Peru and the Norte Chico region of Chile is believed to be the result of the subduction of two buoyant aseismic ridges, the Nazca Ridge and the Juan Fernández Ridge, respectively.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-20e9c226",
+    "proposition" : "Road cuts are a convenient man-made source of outcrops.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-213870cc",
+    "proposition" : "Yin suggests that meteorite impacts may have contributed to subduction initiation on early Earth.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-21b91f4a",
+    "proposition" : "stable subduction: caused by intermediate coupling between the lower and upper plate.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-21d48864",
+    "proposition" : "It was not until after World War II, when the ocean floor was surveyed in more detail, that the full extent of mid-ocean ridges became known.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-232cf497",
+    "proposition" : "Later these deposits have the potential to become hydrocarbon seals and are of particular interest to petroleum geologists.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-233525ad",
+    "proposition" : "The ancient magnesium-rich rocks mean that Earth's mantle was once hotter, but not that subduction conditions were hotter.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-24666233",
+    "proposition" : "Spreading rate is the rate at which an ocean basin widens due to seafloor spreading.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-254e365d",
+    "proposition" : "He suggested that the continents had been pulled apart by the centrifugal pseudoforce (Polflucht) of the Earth's rotation or by a small component of astronomical precession, but calculations showed that the force was not sufficient.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-25d27e7e",
+    "proposition" : "Wegener was the first to use the phrase \"continental drift\" (1912, 1915) (German: \"die Verschiebung der Kontinente\") and to publish the hypothesis that the continents had somehow \"drifted\" apart.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-25ee7bb4",
+    "proposition" : "The rate of seafloor spreading determines the morphology of the crest of the mid-ocean ridge and its width in an ocean basin.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-26545961",
+    "proposition" : "Spreading rate is the rate at which an ocean basin widens due to seafloor spreading.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-2731b8e9",
+    "proposition" : "Willem van der Gracht was virtually the only tectonicist who supported mobilism.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-27507b53",
+    "proposition" : "An important conclusion was that along this system, new ocean floor was being created, a process, dubbed seafloor spreading by Robert S.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-275e519a",
+    "proposition" : "IRM is often induced in drill cores by the magnetic field of the steel core barrel.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-280a3a2e",
+    "proposition" : "This broad-scale pattern of flow is also consistent with the tectonic plate motions, which are the surface expression of convection in the Earth's mantle and currently indicate convergence toward the western Pacific and the Americas, and divergence away from the central Pacific and Africa.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-2910d93f",
+    "proposition" : "Seafloor spreading can stop during the process, but if it continues to the point that the continent is completely severed, then a new ocean basin is created.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-29b07b80",
+    "proposition" : "Hydrothermal vents fueled by magmatic and volcanic heat are a common feature at oceanic spreading centers.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-29e1dd33",
+    "proposition" : "There is evidence this has taken place in the Izu-Bonin-Mariana subduction system.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-2ac8b718",
+    "proposition" : "The phenomenon is known today as plate tectonics.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-2b19cfb4",
+    "proposition" : "At first the driving force for spreading was argued to be convection currents in the mantle.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-2bc656a9",
+    "proposition" : "Transitions between facies cause hydrous minerals to dehydrate at certain pressure-temperature conditions and can therefore be tracked to melting events in the mantle beneath a volcanic arc.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-2c356bef",
+    "proposition" : "Japanese geophysicist Motonori Matuyama showed in the late 1920s that Earth's magnetic field reversed in the mid-Quaternary, a reversal now known as the Brunhes–Matuyama reversal.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-2e084df3",
+    "proposition" : "The Polflucht hypothesis was also studied by Paul Sophus Epstein in 1920 and found to be implausible.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-2ec842d5",
+    "proposition" : "This sinking is driven by the temperature difference between the slab and the surrounding asthenosphere, as the colder oceanic lithosphere is, on average, more dense.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-2f1c88f8",
+    "proposition" : "Depth is better explained by a cooling lithosphere plate model rather than the cooling mantle half-space.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-2f80c2f5",
+    "proposition" : "In a series of papers published between 1959 and 1963, Heezen, Dietz, Hess, Mason, Vine, Matthews, and Morley collectively realized that the magnetization of the ocean floor formed extensive, zebra-like patterns: one stripe would exhibit normal polarity and the adjoining stripes reversed polarity.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-312e0c71",
+    "proposition" : "The English geologist Arthur Holmes championed the theory of continental drift at a time when it was deeply unfashionable.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-31692810",
+    "proposition" : "Alfred Wegener first proposed in 1915 that continents had once been joined together and had since moved apart.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-325b85f3",
+    "proposition" : "The Red Sea is an example of a new arm of the sea.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-3526f49",
+    "proposition" : "Between these two examples there is the evolution of the Farallon Plate: from the huge slab width with the Nevada, the Sevier and Laramide orogenies; the Mid-Tertiary ignimbrite flare-up and later left as Juan de Fuca and Cocos plates, the Basin and Range Province under extension, with slab break off, smaller slab width, more edges and mantle return flow.",
+    "sourceId" : "src-da805ddd",
+    "sourceTitle" : "wikipedia-slab-pull.md",
+    "corpusFile" : "wikipedia-slab-pull.md",
+    "corpusSha256" : "3bddce4afba68cf2bf424083acad6f92bc048de755df0b172468503a3111bc30",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-36b35d89",
+    "proposition" : "Since then, it has been shown that the motion of the continents is linked to seafloor spreading by the theory of plate tectonics, which is driven by convection that includes the crust itself as well.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-374906c6",
+    "proposition" : "Some earthworm families (such as Ocnerodrilidae, Acanthodrilidae, Octochaetidae) are found in South America and Africa.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-37857109",
+    "proposition" : "Cloos and Troll maintained that excepting the Pacific Ocean, continents were not radically different from oceans in their behaviour.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-37c4b2c9",
+    "proposition" : "Rates can be computed by mapping marine magnetic anomalies that span mid-ocean ridges.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-38492e7e",
+    "proposition" : "These provide the orientations.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-3921588b",
+    "proposition" : "Understanding the timing and conditions in which these dehydration reactions occur is key to interpreting mantle melting, volcanic arc magmatism, and the formation of continental crust.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-3995e061",
+    "proposition" : "(The rate at which new oceanic lithosphere is added to each tectonic plate on either side of a mid-ocean ridge is the spreading half-rate and is equal to half of the spreading rate).",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-39f31c22",
+    "proposition" : "Subduction at a steeper angle is characterized by the formation of back-arc basins.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-3a382bec",
+    "proposition" : "Due to the large grain sizes (at low stresses as high as several mm), it is unlikely that Nabarro-Herring (NH) creep dominates; dislocation creep tends to dominate instead.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-3a62cba2",
+    "proposition" : "This has happened with the Ontong Java Plateau and the Vitiaz Trench.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-3a62efc8",
+    "proposition" : "The compilation of subduction zone initiation events back to 100 Ma suggests horizontally-forced subduction zone initiation for most modern subduction zones, which is supported by results from numerical models and geologic studies.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-3b52a8ba",
+    "proposition" : "While creep behavior is generally plotted as homologous temperature versus stress, in the case of the mantle it is often more useful to look at the pressure dependence of stress.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-3c52ad65",
+    "proposition" : "As the oceanic crust and lithosphere moves away from the ridge axis, the peridotite in the underlying mantle lithosphere cools and becomes more rigid.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-3c97f18e",
+    "proposition" : "This is thought due to temperature gradients in the asthenosphere from mantle plumes near the spreading center.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-3d327dae",
+    "proposition" : "The separated margins of the continents evolve to form passive margins.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-3d60e57a",
+    "proposition" : "Where this angle is shallow, the subducting slab drags the overlying continental crust partially with it, which produces a zone of shortening and crustal thickening in which there may be extensive folding and thrust faulting.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-3d8f6ff4",
+    "proposition" : "However, island arcs subducted end-on may cause only local disruption, while an arc arriving parallel to the zone can shut it down.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-3e122691",
+    "proposition" : "Most crust in the ocean basins is less than 200 million years old, which is much younger than the 4.54 billion year age of Earth.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-3ede7562",
+    "proposition" : "In 1939 an international geological conference was held in Frankfurt, organized by the fixist Hans Cloos, which expounded abundant criticism of continental drift and mobilism from the perspectives of tectonics, sedimentology (Nölke), paleontology (Nölke), mechanics (Lehmann) and oceanography (Troll, Wüst).",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-3f1acab",
+    "proposition" : "The new crust is magnetized by the Earth's magnetic field, which undergoes occasional reversals.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-3f71e26e",
+    "proposition" : "Aerosols injected into the stratosphere during violent eruptions can cause rapid cooling of Earth's climate and affect air travel.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-401ea201",
+    "proposition" : "A process previously proposed to contribute to plate motion and the formation of new oceanic crust at mid-ocean ridges is the \"mantle conveyor\" due to deep convection (see image).",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-407cd8a7",
+    "proposition" : "Due to the large velocity, the temperature dependence on the horizontal direction is negligible, and the height at time t (i.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-40985324",
+    "proposition" : "The Mid-Atlantic Ridge is a slow-spreading center, while the East Pacific Rise is an example of fast spreading.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-40dc77a2",
+    "proposition" : "Ultra-slow spreading ridges form both magmatic and amagmatic (currently lack volcanic activity) ridge segments without transform faults.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-40f42810",
+    "proposition" : "The arrival of continental crust results in continental collision or terrane accretion that may disrupt subduction.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-41329f89",
+    "proposition" : "The source of the lithosphere has a half-plane shape (x = 0, z 0 is moving away from the ridge at a constant velocity v, which is assumed large compared to other typical scales in the problem.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-41536964",
+    "proposition" : "Before this device is removed, a mark is scratched on the sample.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-42557d4a",
+    "proposition" : "Then in 1963, Morley, Vine and Matthews showed that marine magnetic anomalies provided evidence for seafloor spreading.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-428126a3",
+    "proposition" : "\"Breakthrough Achieved in Explaining Why Tectonic Plates Move the Way They Do\".",
+    "sourceId" : "src-da805ddd",
+    "sourceTitle" : "wikipedia-slab-pull.md",
+    "corpusFile" : "wikipedia-slab-pull.md",
+    "corpusSha256" : "3bddce4afba68cf2bf424083acad6f92bc048de755df0b172468503a3111bc30",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-43707293",
+    "proposition" : "Additional deformation in the mantle can be attributed to transformation enhanced ductility.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-43a7ccbd",
+    "proposition" : "The Niger River has formed in the failed rift arm of the triple junction.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-455d4127",
+    "proposition" : "From the Seafloor to the Volcano's Top Video about the work of the Collaborative Research Center (SFB) 574 Volatiles and Fluids in Subduction Zones in Chile by GEOMAR I Helmholtz Centre for Ocean Research Kiel.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-45a2ab85",
+    "proposition" : "The similarity of southern continent geological formations had led Roberto Mantovani to conjecture in 1889 and 1909 that all the continents had once been joined into a supercontinent; Wegener noted the similarity of Mantovani's and his own maps of the former positions of the southern continents.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-45fcf973",
+    "proposition" : "The mobilist theory of Émile Argand for the Alpine orogeny was criticized by Kurt Leuchs.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-46c6662a",
+    "proposition" : "During the opening of the Atlantic Ocean, sea level was so high that a Western Interior Seaway formed across North America from the Gulf of Mexico to the Arctic Ocean.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-46f3b75e",
+    "proposition" : "These plates are in slow motion, due mostly to the pull force of subducting lithosphere.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-487cdd62",
+    "proposition" : "The continuity of glaciers, inferred from oriented glacial striations and tillite deposits, suggested the existence of the supercontinent of Gondwana, which became a central element of the concept of continental drift.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-48b24f73",
+    "proposition" : "Hu ultimately proposes that a combination of subduction age and slab characteristics provide the strongest controls over subduction dips.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-491b321c",
+    "proposition" : "The driver for seafloor spreading in plates with active margins is the weight of the cool, dense, subducting slabs that pull them along, or slab pull.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-4978413f",
+    "proposition" : "However, there is a large transition region in creep processes between the upper and lower mantle, and even within each section creep properties can change strongly with location and thus temperature and pressure.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-4a32781e",
+    "proposition" : "Around the African Plate upwelling mantle plumes from the core-mantle boundary produce rifting including the African and Ethiopian rift valleys.",
+    "sourceId" : "src-da805ddd",
+    "sourceTitle" : "wikipedia-slab-pull.md",
+    "corpusFile" : "wikipedia-slab-pull.md",
+    "corpusSha256" : "3bddce4afba68cf2bf424083acad6f92bc048de755df0b172468503a3111bc30",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-4ae4176e",
+    "proposition" : "A second was that Wegener's estimate of the speed of continental motion, 250 cm/year (100 in/year), was implausibly high.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-4b735444",
+    "proposition" : "The highest known rate was over 200 mm/yr during the Miocene on the East Pacific Rise.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-4bbc0077",
+    "proposition" : "Earthquakes are common along subduction zones, and fluids released by the subducting plate trigger volcanism in the overriding plate.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-4bd9ef4e",
+    "proposition" : "19th century studies of the direction of magnetization in rocks showed that some recent lavas were magnetized parallel to Earth's magnetic field.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-4beaa25f",
+    "proposition" : "Today, the Atlantic basin is actively spreading at the Mid-Atlantic Ridge.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-4c20a008",
+    "proposition" : "In addition, Marie Tharp provided essential corroboration using her skills in cartography and seismographic data.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-4d3fbdc",
+    "proposition" : "In the 1960s, the past record of geomagnetic reversals of Earth's magnetic field was noticed by observing magnetic stripe \"anomalies\" on the ocean floor.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-4e5165dd",
+    "proposition" : "Since it is very difficult to simulate the high pressures in the mantle (1MPa at 300–400 km), the low pressure laboratory data is usually extrapolated to high pressures by applying creep concepts from metallurgy.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-4eee95fd",
+    "proposition" : "Hydrothermal activity at the ridge crest is efficient in removing magnesium.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-4f08e2f8",
+    "proposition" : "Thus at x = 0 the temperature is the Heaviside step function T1⋅Θ(−z).",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-4f0a8550",
+    "proposition" : "This is likely due to the strength of the oceanic or transitional crust at the continental passive margins, suggesting that if the crust did not break in its first 20 million years of life, it is unlikely to break in the future under normal sedimentation loads.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-4f2544f8",
+    "proposition" : "by earthquakes and floods\" and went on to say: \"The vestiges of the rupture reveal themselves if someone brings forward a map of the world and considers carefully the coasts of the three [continents].",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-4f4043da",
+    "proposition" : "If spreading continues past the incipient stage described above, two of the rift arms will open while the third arm stops opening and becomes a 'failed rift' or aulacogen.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-4f7a7956",
+    "proposition" : "The motivating force for seafloor spreading ridges is tectonic plate slab pull at subduction zones, rather than magma pressure, although there is typically significant magma activity at spreading ridges.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-4f8cb288",
+    "proposition" : "Volcanoes that occur above subduction zones, such as Mount St.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-4fd44e8d",
+    "proposition" : "Magnetic signatures in rocks can be recorded by several different mechanisms.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-526afebc",
+    "proposition" : "One hypothesis for different along-axis depths is variations in magma supply to the spreading center.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-52c04dbe",
+    "proposition" : "The point where the slab begins to plunge downwards is marked by an oceanic trench.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-5325ffd8",
+    "proposition" : "Apparent polar wander paths provided the first clear geophysical evidence for continental drift, while marine magnetic anomalies did the same for seafloor spreading.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-534c11ee",
+    "proposition" : "However, Wegener did not pursue this observation in his later works and his theory was dismissed by geologists because there was no mechanism to explain how continents could plow through ocean crust, and the theory became largely forgotten.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-54835531",
+    "proposition" : "Each of these metamorphic facies is marked by the presence of a specific stable mineral assemblage, recording the metamorphic conditions undergone but the subducting slab.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-54fb4f83",
+    "proposition" : "Flat slab subduction (subduction angle less than 30°) occurs when the slab subducts nearly horizontally.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-5874a677",
+    "proposition" : "Continental drift is the movement of Earth's continents relative to each other over geologic time.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-5a2b5234",
+    "proposition" : "Although he presented much evidence for continental drift, he was unable to provide a convincing explanation for the physical processes which might have caused this drift.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-5a956dde",
+    "proposition" : "The rocks making up the crust below the seafloor are youngest along the axis of the ridge and age with increasing distance from that axis.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-5ada7ba5",
+    "proposition" : "The Laramide Orogeny in the Rocky Mountains of the United States is attributed to flat-slab subduction.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-5c5df1da",
+    "proposition" : "Below 400 km, the olivine undergoes a pressure-induced phase transformation, which can cause more deformation due to the increased ductility.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-5c989403",
+    "proposition" : "The depth-age relation can be modeled by the cooling of a lithosphere plate or mantle half-space.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-5d87c1f0",
+    "proposition" : "The simple result is that the ridge height or ocean depth is proportional to the square root of its age.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-5e05f026",
+    "proposition" : "(The currently accepted rate for the separation of the Americas from Europe and Africa is about 2.5 cm/year (1 in/year).",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-5e2becd8",
+    "proposition" : "Zeolite and prehnite-pumpellyite facies assemblages may or may not be present, thus the onset of metamorphism may only be marked by blueschist facies conditions.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-5e6bc5dd",
+    "proposition" : "Although it is accepted that subducting slabs cross the mantle transition zone and descend into the lower mantle, debate about the existence and continuity of plumes persists, with important implications for the style of mantle convection.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-5fa56e55",
+    "proposition" : "The ocean-ocean plate relationship can lead to subduction zones between oceanic and continental plates, therefore highlighting how important it is to understand this subduction setting.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-60379f93",
+    "proposition" : "The fraction of a rock’s overall magnetization that is a viscous remanent magnetization is dependent on the magnetic mineralogy.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-60382fdc",
+    "proposition" : "However, some studies have shown that the upper mantle (asthenosphere) is too plastic (flexible) to generate enough friction to pull the tectonic plate along.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-619ecbb8",
+    "proposition" : "The East African rift was thought to be a failed arm that was opening more slowly than the other two arms, but in 2005 the Ethiopian Afar Geophysical Lithospheric Experiment reported that in the Afar region, September 2005, a 60 km fissure opened as wide as eight meters.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-61b72868",
+    "proposition" : "Rates of subduction are typically measured in centimeters per year, with rates of convergence as high as 11 cm/year.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-6305642e",
+    "proposition" : "Plates can also be driven by ridge push, where the rigid lithosphere slides down the hot, raised asthenosphere below mid-ocean ridges.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-630c72e8",
+    "proposition" : "The record of geomagnetic reversals preserved in volcanic and sedimentary rock sequences (magnetostratigraphy) provides a time-scale that is used as a geochronologic tool.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-6384bec1",
+    "proposition" : "This model is strongly based on the results of global seismic tomography models, which typically show slab and plume-like anomalies crossing the mantle transition zone.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-641c18a9",
+    "proposition" : "Because less dense objects rise in relation to denser objects, the area being heated becomes a broad dome (see isostasy).",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-6420d631",
+    "proposition" : "Some applications of paleomagnetic evidence to reconstruct histories of terranes have continued to arouse controversies.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-6458a42e",
+    "proposition" : "The crust and the relatively rigid peridotite below it make up the oceanic lithosphere, which sits above the less rigid and viscous asthenosphere.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-64947c00",
+    "proposition" : "This has been proved with regard to North America from the position and distribution of the first beds of the Lower Silurian, – those of the Potsdam epoch.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-655f3f02",
+    "proposition" : "The lithosphere consists of the outermost light crust plus the uppermost rigid portion of the mantle.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-6654e054",
+    "proposition" : "A common form is held by the mineral hematite, another iron oxide.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-66606b8d",
+    "proposition" : "After the sample is broken off, the mark can be augmented for clarity.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-669ee879",
+    "proposition" : "Evidence for the movement of continents on tectonic plates is now extensive.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-670faa97",
+    "proposition" : "The assumption that v is relatively large is equivalent to the assumption that the thermal diffusivity κ is small compared to L2/A, where L is the ocean width (from mid-ocean ridges to continental shelf) and A is the age of the ocean basin.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-673bebed",
+    "proposition" : "Sediments and some trapped water are carried downwards by the slab and recycled into the deep mantle.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-6788f515",
+    "proposition" : "This results in broadly evident \"stripes\" from which the past magnetic field polarity can be inferred from data gathered with a magnetometer towed on the sea surface or from an aircraft.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-67bda901",
+    "proposition" : "This provides an explanation as to why flat subduction only presently occurs in the eastern pacific as only these regions were old and wide enough to support flat slab subduction and why the Laramide flat slab subduction and South China flat slab subduction were possible.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-6afff5ea",
+    "proposition" : "After shedding the low density cover units, the continental plate, especially if it is old, goes down the subduction zone.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-6bb32896",
+    "proposition" : "Paleomagnetic studies are combined with geochronological methods to determine absolute ages for rocks in which the magnetic record is preserved.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-6c4f323",
+    "proposition" : "The English geologist Arthur Holmes proposed in 1920 that plate junctions might lie beneath the sea, and in 1928 that convection currents within the mantle might be the driving force.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-6e822c1",
+    "proposition" : "In some locations spreading rates have been found to be asymmetric; the half rates differ on each side of the ridge crest by about five percent.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-6ee84172",
+    "proposition" : "The spreading center or axis commonly connects to a transform fault oriented at right angles to the axis.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-6f53c7be",
+    "proposition" : "Slow-spreading ridges such as the Mid-Atlantic Ridge have spread much less far (showing a steeper profile) than faster ridges such as the East Pacific Rise (gentle profile) for the same amount of time and cooling and consequent bathymetric deepening.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-6f8a2ecb",
+    "proposition" : "The strength of olivine is proportional to its melting temperature, and is also very sensitive to water and silica content.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-6fe5d234",
+    "proposition" : "As plates sink and heat up, released fluids can trigger seismicity and induce melting within the subducted plate and in the overlying mantle wedge.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-70de03f0",
+    "proposition" : "The mineralogy of reef-building and sediment-producing organisms is thus regulated by chemical reactions occurring along the mid-ocean ridge, the rate of which is controlled by the rate of sea-floor spreading.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-724b6f7e",
+    "proposition" : "Accretion occurs as mantle is added to the growing edges of a plate, associated with seafloor spreading.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-72b9b64d",
+    "proposition" : "In the laboratory, IRM is induced by applying fields of various strengths and is used for many purposes in rock magnetism.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-72eda7f7",
+    "proposition" : "However, the plates making up the Pacific Ocean are experiencing subduction along many of their boundaries which causes the volcanic activity in what has been termed the Ring of Fire of the Pacific Ocean.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-73dc8514",
+    "proposition" : "The lithosphere is divided into tectonic plates that are continuously being created or consumed at plate boundaries.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-73f13fc9",
+    "proposition" : "Spreading centers at slow and intermediate rates exhibit a rift valley while at fast rates an axial high is found within the crustal accretion zone.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-75005acf",
+    "proposition" : "Speeds can be faster for small-scale convection occurring in low viscosity regions beneath the lithosphere, and slower in the lowermost mantle where viscosities are larger.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-7662a6da",
+    "proposition" : "Subduction zones have also been considered as possible disposal sites for nuclear waste in which the action of subduction itself would carry the material into the planetary mantle, safely away from any possible influence on humanity or the surface environment.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-779a8c9f",
+    "proposition" : "Even today, the details of the forces propelling the plates are poorly understood.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-781aac3e",
+    "proposition" : "A pioneer of the modern view of mobilism was Austrian geologist Otto Ampferer.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-79204cd0",
+    "proposition" : "The hot material added at spreading centers cools down by conduction and convection of heat as it moves away from the spreading centers.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-79f916fe",
+    "proposition" : "Flat-slab subduction is ongoing beneath part of the Andes, causing segmentation of the Andean Volcanic Belt into four zones.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-7a621fb1",
+    "proposition" : "Paleomagnetism (occasionally palaeomagnetism) is the study of prehistoric Earth's magnetic fields recorded in rocks, sediment, or archeological materials.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-7b82d61b",
+    "proposition" : "Subduction is the descending component of mantle convection.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-7bc5aecc",
+    "proposition" : "The idea that the seafloor itself moves and also carries the continents with it as it spreads from a central rift axis was proposed by Harold Hammond Hess from Princeton University and Robert Dietz of the U.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-7c7cbcae",
+    "proposition" : "The melt rises as magma at the linear weakness between the separating plates, and emerges as lava, creating new oceanic crust and lithosphere upon cooling.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-7ce8c86f",
+    "proposition" : "The facts indicate that the continent of North America had its surface near tide-level, part above and part below it (p.196); and this will probably be proved to be the condition in Primordial time of the other continents also.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-7d56f38",
+    "proposition" : "(2011) propose a different mechanism for carbon transport into the overriding plate via dissolution (release of carbon from carbon-bearing minerals into an aqueous solution) instead of decarbonation.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-7d9cf939",
+    "proposition" : "Berkland argued that Reclus should be recognized \"in the history of the development of plate tectonic theory as one of its foremost pioneers and, perhaps, as its founder\".",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-7e6f6707",
+    "proposition" : "Arc volcanism has the greatest impact on humans because many arc volcanoes lie above sea level and erupt violently.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-7e99b0c8",
+    "proposition" : "Stresses in the mantle are dependent on density, gravity, thermal expansion coefficients, temperature differences driving convection, and the distance over which convection occurs—all of which give stresses around a fraction of 3-30MPa.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-7ed0a296",
+    "proposition" : "The magnetic north pole is constantly shifting relative to the axis of rotation of Earth.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-7f0da123",
+    "proposition" : "The discovery of mid-ocean ridges and the process of seafloor spreading allowed for Wegener's theory to be expanded so that it included the movement of oceanic crust as well as the continents.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-7fab2dde",
+    "proposition" : "Some of the magma will make it to the surface of the crust where it will form volcanoes and, if eruptive on earth's surface, will produce andesitic lava.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-7fe3c8da",
+    "proposition" : "Continental crust is inherently lighter.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-80dbe888",
+    "proposition" : "Early in the 20th century, work by David, Bernard Brunhes and Paul Louis Mercanton showed that many rocks were magnetized antiparallel to the field.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-81093733",
+    "proposition" : "In millions of years, slab pull, ridge-push, and other forces of tectonophysics will further separate and rotate those two continents.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-816cd8c8",
+    "proposition" : "If the diameter of the earth remains relatively constant despite the production of new crust, a mechanism must exist by which crust is also destroyed.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-817685a1",
+    "proposition" : "The depth of the axis changes in a systematic way with shallower depths between offsets such as transform faults and overlapping spreading centers dividing the axis into segments.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-823e8050",
+    "proposition" : "Older rocks will be found farther away from the spreading zone while younger rocks will be found nearer to the spreading zone.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-8268e12",
+    "proposition" : "Upwelling beneath the spreading centers is a shallow, rising component of mantle convection and in most cases not directly linked to the global mantle upwelling.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-83d11887",
+    "proposition" : "The identity of the subject, the consumer, or agent of consumption, is left unstated.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-83dc0935",
+    "proposition" : "He was the first to realize that one of the effects of continental motion would be the formation of mountains, attributing the formation of the Himalayas to the collision between the Indian subcontinent with Asia.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-842260c3",
+    "proposition" : "If the angle of subduction steepens or rolls back, the upper plate lithosphere will be put in tension instead, often producing a back-arc basin.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-84460529",
+    "proposition" : "Though not directly accessible, the deeper portions can be studied using geophysics and geochemistry.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-84fe5eed",
+    "proposition" : "14 MPa is the stress below which diffusional creep dominates and above which power law creep dominates at 0.5Tm of olivine.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-858aedd6",
+    "proposition" : "Though the idea of subduction initiation at passive margins is popular, there is no modern day example for this type of subduction nucleation.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-85e11792",
+    "proposition" : "Paleomagnetic evidence is also used in constraining possible ages for rocks and processes and in reconstructions of the deformational histories of parts of the crust.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-876b53ce",
+    "proposition" : "Wegener said that of all those theories, Taylor's had the most similarities to his own.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-87ee1c6b",
+    "proposition" : "Parsons and Sclater concluded that some style of mantle convection must apply heat to the base of the plate everywhere to prevent cooling down below 125 km and lithosphere contraction (seafloor deepening) at older ages.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-882ecfdc",
+    "proposition" : "Remanence of this sort is not useful for paleomagnetism, but it can be acquired as a result of lightning strikes.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-88f5a551",
+    "proposition" : "One problem was that a plausible driving force was missing.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-8bd518b0",
+    "proposition" : "The temperature at the upper boundary of the lithosphere (z = 0) is a constant T0 = 0.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-8c9a8c0",
+    "proposition" : "Into this space is inserted a pipe with a compass and inclinometer attached.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-8cc7470f",
+    "proposition" : "Lightning-induced remanent magnetization can be distinguished by its high intensity and rapid variation in direction over scales of centimeters.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-8cf40372",
+    "proposition" : "Magnetism is a vector and so magnetic field variation is studied by palaeodirectional measurements of magnetic declination and magnetic inclination and palaeointensity measurements.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-8d672557",
+    "proposition" : "Soundings from lines dropped to the seafloor were analyzed by oceanographers Matthew Fontaine Maury and Charles Wyville Thomson and revealed a prominent rise in the seafloor that ran down the Atlantic basin from north to south.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-92490e45",
+    "proposition" : "Striations indicated glacial flow away from the equator and toward the poles, based on continents' current positions and orientations, and supported the idea that the southern continents had previously been in dramatically different locations contiguous with one another.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-92ad7525",
+    "proposition" : "Volcanism may occur due to processes that add buoyancy to partially melted mantle, which would cause upward flow of the partial melt as it decreases in density.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-93621fbf",
+    "proposition" : "The ridge push at rifts contributes only 5 to 10%.",
+    "sourceId" : "src-da805ddd",
+    "sourceTitle" : "wikipedia-slab-pull.md",
+    "corpusFile" : "wikipedia-slab-pull.md",
+    "corpusSha256" : "3bddce4afba68cf2bf424083acad6f92bc048de755df0b172468503a3111bc30",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-9476f8f6",
+    "proposition" : "Hydrothermal vents are common at spreading centers.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-94c3e0ea",
+    "proposition" : "Blueschist is a rock typical for present-day subduction settings.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-94e1c742",
+    "proposition" : "During this period of initial flooding the new sea is sensitive to changes in climate and eustasy.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-953768fb",
+    "proposition" : "On the other hand, some of the world's largest tectonic plates such as the North American plate and South American plate are in motion, yet only are being subducted in restricted locations such as the Lesser Antilles Arc and Scotia Arc, pointing to action by the ridge push body force on these plates.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-955cee4d",
+    "proposition" : "Only a small portion of the oceanic crust produced in the Atlantic is subducted.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-95a5418d",
+    "proposition" : "These areas are named triple junctions and can be found in several places across the world today.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-95b6da6b",
+    "proposition" : "Nonetheless, the record has been preserved well enough in basalts of oceanic crust to have been critical in the development of theories of sea floor spreading related to plate tectonics.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-96509c91",
+    "proposition" : "The most massive subduction zone earthquakes, so-called \"megaquakes\", have been found to occur in flat-slab subduction zones.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-98095710",
+    "proposition" : "Since the upper mantle is primarily composed of olivine ((Mg,Fe)2SiO4), the rheological characteristics of the upper mantle are largely those of olivine.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-98bf8b47",
+    "proposition" : "The Pacific is also home to one of the world's most active spreading centers (the East Pacific Rise) with spreading rates of up to 145 ± 4 mm/yr between the Pacific and Nazca plates.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-98c588d4",
+    "proposition" : "However, the theory was largely rejected for many years, with evidence in its favor considered insufficient, and Wegener did not live to see his hypothesis triumph.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-9ac861b2",
+    "proposition" : "The upper plate, the subject, performs the action of overriding the object, the lower plate, which is overridden.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-9ad66675",
+    "proposition" : "Thus, even for relatively low temperatures, the stress diffusional creep would operate at is too low for realistic conditions.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-9b3deb1b",
+    "proposition" : "Since the new oceanic basins are shallower than the old oceanic basins, the total capacity of the world's ocean basins decreases during times of active sea floor spreading.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-9b5277b",
+    "proposition" : "\"And everywhere, in profusion along this half mile of [roadcut], there are small, neatly cored holes .",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-9b6e0a76",
+    "proposition" : "It is estimated that along Earth's mid-ocean ridges every year 2.7 km2 (1.0 mi2) of new seafloor is formed by this process.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-9bf0a42e",
+    "proposition" : "One way to achieve the first goal is to use a rock coring drill that has an auger tipped with diamond bits.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-9d036297",
+    "proposition" : "Plate motion is partly driven by the weight of cold, dense plates sinking into the mantle at oceanic trenches.",
+    "sourceId" : "src-da805ddd",
+    "sourceTitle" : "wikipedia-slab-pull.md",
+    "corpusFile" : "wikipedia-slab-pull.md",
+    "corpusSha256" : "3bddce4afba68cf2bf424083acad6f92bc048de755df0b172468503a3111bc30",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-9d5d01f6",
+    "proposition" : "Although it is not fully understood what causes the initiation of subduction of an oceanic plate under another oceanic plate, there are three main models put forth by Baitsch-Ghirardello et al.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-9d8a2fc3",
+    "proposition" : "A good approximation is that the depth of the seafloor at a location on a spreading mid-ocean ridge is proportional to the square root of the age of the seafloor.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-9db7e978",
+    "proposition" : "However, evidence from thermodynamic modeling has shown that the pressures and temperatures necessary for this type of metamorphism are much higher than what is observed in most subduction zones.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-9dc3c662",
+    "proposition" : "The chemical composition of the erupting lava depends upon the degree to which the mantle-derived basalt interacts with (melts) Earth's crust or undergoes fractional crystallization.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-9dc6dc99",
+    "proposition" : "The speculation that continents might have \"drifted\" was first put forward by Abraham Ortelius in 1596.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-9dd2e273",
+    "proposition" : "The volcanism and plutonism occur as a consequence of the subducting oceanic slab dehydrating as it reaches higher pressures and temperatures.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-9ed115c",
+    "proposition" : "Arc volcanoes tend to produce dangerous eruptions because they are rich in water (from the slab and sediments) and tend to be extremely explosive.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-9f0cb175",
+    "proposition" : "He concluded that the cause of the earthquake was a megathrust reaction in the Aleutian Trench, a result of the Alaskan continental crust overlapping the Pacific oceanic crust.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-9f0fd265",
+    "proposition" : "The subducting sediments thicken causing partially molten plumes to be on top of subducting plate.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-9f59ac4f",
+    "proposition" : "The overall shape of ridges results from Pratt isostasy: close to the ridge axis, there is a hot, low-density mantle supporting the oceanic crust.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a0145149",
+    "proposition" : "This does not happen under diffusional creep, thus observation of preferred orientations in samples lends credence to the dominance of dislocation creep.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a0487638",
+    "proposition" : "In 1993 it was suggested that inhomogeneities in the D\" layer have some impact on mantle convection.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a05aa076",
+    "proposition" : "Though the power law creep rate increases with increasing water content due to weakening (reducing activation energy of diffusion and thus increasing the NH creep rate) NH is generally still not large enough to dominate.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a06fcb98",
+    "proposition" : "Another example may be the continued northward motion of India, which is subducting beneath Asia.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a0a19c53",
+    "proposition" : "Further evidence for the dominance of power law creep comes from preferred lattice orientations as a result of deformation.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a0b6fd14",
+    "proposition" : "When one of the rifts opens into the existing ocean, the rift system is flooded with seawater and becomes a new sea.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a0bf9adc",
+    "proposition" : "The effective thermal expansion coefficient αeff is different from the usual thermal expansion coefficient α due to isostasic effect of the change in water column height above the lithosphere as it expands or retracts.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a0c92533",
+    "proposition" : "Subduction is a geological process in which the oceanic lithosphere and some continental lithosphere is recycled into the Earth's mantle at the convergent boundaries between tectonic plates.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a12110ba",
+    "proposition" : "Oceanic crust is created at spreading centers and descends back into the mantle at subduction zones, driving the system of plates chaotically, with continuous orogeny and areas of isostatic imbalance.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a12342e5",
+    "proposition" : "The magmas, in turn, rise as diapirs because they are less dense than the rocks of the mantle.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a25bb31a",
+    "proposition" : "However, as surveys of the ocean floor continued around the world, it was discovered that every ocean contains parts of the mid-ocean ridge system.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a2735ad5",
+    "proposition" : "Geophysicists who specialize in paleomagnetism are called paleomagnetists.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a280cc30",
+    "proposition" : "Over the next decade, it became increasingly clear that the magnetization patterns were not anomalies, as had been originally supposed.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a417e1e0",
+    "proposition" : "The system is assumed to be at a quasi-steady state, so that the temperature distribution is constant in time, i.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a44135ad",
+    "proposition" : "This would explain one, but only one, mountain-building episode between any pair of continents; it failed to account for earlier orogenic episodes.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a52a5a76",
+    "proposition" : "Rather than height of the ocean floor h(t) above a base or reference level hb, the depth of the ocean d(t) is of interest.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a5c788c7",
+    "proposition" : "Some subducted material appears to reach the lower mantle, while in other regions this material is impeded from sinking further, possibly due to a phase transition from spinel to silicate perovskite and magnesiowustite, an endothermic reaction.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a66fdcbe",
+    "proposition" : "Bernauer thought this extension had drifted the continents only 100–200 km (60–120 mi) apart, the approximate width of the volcanic zone in Iceland.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a7819147",
+    "proposition" : "There is also living evidence, with the same animals being found on two continents.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a8041627",
+    "proposition" : "Subduction zone chemistry: The subducted sediments and crust dehydrate and release water-rich (aqueous) fluids into the overlying mantle, causing mantle melting and fractionation of elements between the surface and deep mantle reservoirs, producing island arcs and continental crust.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a904913c",
+    "proposition" : "Over very long timescales, however, it is the result of changes in the volume of the ocean basins which are, in turn, affected by rates of seafloor spreading along the mid-ocean ridges.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a914738d",
+    "proposition" : "The subduction zone generally stays in the same place and the subduction plate subducts at a consistent angle.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a9353e9c",
+    "proposition" : "Subduction is possible because the cold and rigid oceanic lithosphere is slightly denser than the underlying asthenosphere, the hot, ductile layer in the upper mantle.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a9790e1a",
+    "proposition" : "The destruction of oceanic crust occurs at subduction zones where oceanic crust is forced under either continental crust or oceanic crust.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-a9e0fa49",
+    "proposition" : "Though stress is simply force over area, defining the area is difficult in geology.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-aa1eeb6b",
+    "proposition" : "Although elements of this debate still continue, results from seismic tomography, numerical simulations of mantle convection and examination of Earth's gravitational field are all beginning to suggest the existence of whole mantle convection, at least at the present time.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-aa42a53f",
+    "proposition" : "The concept was independently and more fully developed by Alfred Wegener in 1912, and expanded into book form with his 1915 publication, Die Entstehung der Kontinente und Ozeane (The Origin of Continents and Oceans).",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-aa582747",
+    "proposition" : "A spreading center includes a seismically active plate boundary zone a few kilometers to tens of kilometers wide, a crustal accretion zone within the boundary zone where the ocean crust is youngest, and an instantaneous plate boundary – a line within the crustal accretion zone demarcating the two separating plates.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-ab67e949",
+    "proposition" : "The geological term is \"consumed\", which happens the geological moment the lower plate slips under, even though it may persist for some time until its remelting and dissipation.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-abf28d1",
+    "proposition" : "The complementary arrangement of the facing sides of South America and Africa is an obvious and temporary coincidence.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-ac74728e",
+    "proposition" : "This appeared to be confirmed by the exploration of the deep sea beds conducted by the Challenger expedition, 1872–1876, which showed that contrary to expectation, land debris brought down by rivers to the ocean is deposited comparatively close to the shore on what is now known as the continental shelf.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-acc930dc",
+    "proposition" : "Recent studies have also shown a strong correlation that older and wider subduction zones are related to flatter subduction dips.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-acd3811a",
+    "proposition" : "However, at that time his hypothesis was rejected by many, largely because there was no known geological mechanism which could propel such massive movements.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-ad783560",
+    "proposition" : "A metamorphic facies is characterized by a stable mineral assemblage specific to a pressure-temperature range and specific starting material.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-ad93f1d2",
+    "proposition" : "Blackett provided a major impetus to paleomagnetism by inventing a sensitive astatic magnetometer in 1956.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-adf11f74",
+    "proposition" : "In slab pull the weight of a tectonic plate being subducted (pulled) below an overlying plate at a subduction zone drags the rest of the plate along behind it.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-af51c40f",
+    "proposition" : "In Mantovani's conjecture, this continent broke due to volcanic activity caused by thermal expansion, and the new continents drifted away from each other because of further expansion of the rip-zones, where the oceans now lie.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-afe4055c",
+    "proposition" : "The process of subduction has created most of the Earth's continental crust.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-b095bbc0",
+    "proposition" : "Magnetostratigraphy uses the polarity reversal history of Earth's magnetic field recorded in rocks to determine the age of those rocks.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-b0c261f0",
+    "proposition" : "Such a paleolatitude provides information about the geological environment at the time of deposition.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-b0e6d389",
+    "proposition" : "However, anomalous shallower angles of subduction are known to exist as well as some that are extremely steep.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-b1896d24",
+    "proposition" : "TRM can also be recorded in pottery kilns, hearths, and burned adobe buildings.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-b22a9638",
+    "proposition" : "The mantle-derived magmas (which are initially basaltic in composition) can ultimately reach the Earth's surface, resulting in volcanic eruptions.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-b299787b",
+    "proposition" : "Reversal magnetostratigraphy is often used to estimate the age of sites bearing fossils and hominin remains.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-b2c10d95",
+    "proposition" : ") Furthermore, Wegener was treated less seriously because he was not a geologist.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-b2d754e0",
+    "proposition" : "The absence of blueschist older than Neoproterozoic reflects more magnesium-rich compositions of Earth's oceanic crust during that period.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-b3bf33e7",
+    "proposition" : "The best explanation was the \"conveyor belt\" or Vine–Matthews–Morley hypothesis.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-b4802ea3",
+    "proposition" : "Both lines of evidence refute previous conceptions of modern-style subduction having been initiated in the Neoproterozoic Era 1.0 Ga ago.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-b5466f42",
+    "proposition" : "At this point basaltic oceanic crust and upper mantle lithosphere begins to form between the separating continental fragments.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-b5f6a3f7",
+    "proposition" : "Geological maps of the time showed huge land bridges spanning the Atlantic and Indian oceans to account for the similarities of fauna and flora and the divisions of the Asian continent in the Permian period, but failing to account for glaciation in India, Australia and South Africa.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-b6cb2c6c",
+    "proposition" : "The spreading rate of the North Atlantic Ocean is ~ 25 mm/yr, while in the Pacific region, it is 80–145 mm/yr.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-b78705d2",
+    "proposition" : "During this period of evaporation large evaporite deposits will be made in the rift valley.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-b94feaa9",
+    "proposition" : "His intent was to test his theory that the geomagnetic field was related to Earth's rotation, a theory that he ultimately rejected; but the astatic magnetometer became the basic tool of paleomagnetism and led to a revival of the theory of continental drift.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-b9ea762f",
+    "proposition" : "A region where this process occurs is known as a subduction zone, and its surface expression is known as an arc-trench complex.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-b9f75216",
+    "proposition" : "A feature of the elevated ridges is their relatively high heat flow values, of about 1–10 μcal/cm2s, or roughly 0.04–0.4 W/m2.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-ba958d1f",
+    "proposition" : "An example of a volcanic arc having both island and continental arc sections is found behind the Aleutian Trench subduction zone in Alaska.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-bb9f4fe",
+    "proposition" : "This process of convection allows heat generated by radioactive decay to escape from the Earth's interior.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-bc0e86b6",
+    "proposition" : "Furthermore, plate subduction zones are associated with very large megathrust earthquakes, making the effects of using any specific site for disposal unpredictable and possibly adverse to the safety of long-term disposal.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-bf682fa0",
+    "proposition" : "However, scientific communication in the 1930s and 1940s was inhibited by World War II, and the theory still required work to overcome the orogeny and isostasy objections.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-bf9863a6",
+    "proposition" : "\" and claims that the first to throw doubt on this was James Dwight Dana in 1849.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-bfa0020",
+    "proposition" : "Recent studies have also correlated steep angled subduction zones with younger and less extensive subduction zones.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-bfe5e2bc",
+    "proposition" : "The Red Sea has not yet completely split Arabia from Africa, but a similar feature can be found on the other side of Africa that has broken completely free.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-c0f77061",
+    "proposition" : "This provided the first clear geophysical evidence for continental drift.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-c1a98111",
+    "proposition" : "On the ocean side of the complex, where the subducting plate first approaches the subduction zone, there is often an outer trench high or outer trench swell.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-c1e2ec95",
+    "proposition" : "Beyond the trench is the forearc portion of the overriding plate.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-c469aad3",
+    "proposition" : "This type of melting selectively concentrates volatiles and transports them into the overlying plate.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-c53edc7d",
+    "proposition" : "The slab pull mechanism is considered to be contributing more than the ridge push.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-c5802a3",
+    "proposition" : "On the ridge flanks, the depth of the seafloor (or the height of a location on a mid-ocean ridge above a base-level) is correlated with its age (age of the lithosphere where depth is measured).",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-c5a550f4",
+    "proposition" : "With a crustal thickness of 7 km (4.3 mi), this amounts to about 19 km3 (4.6 mi3) of new ocean crust formed every year.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-c5fbda52",
+    "proposition" : "Hematite forms through chemical oxidation reactions of other minerals in the rock including magnetite.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-c64857b3",
+    "proposition" : "This theory was to become known as seafloor spreading.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-c6613f69",
+    "proposition" : "The partially melted material is more buoyant and as a result will rise into the lithosphere, where it forms large magma chambers called diapirs.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-c677b227",
+    "proposition" : "However, that method of disposal is currently banned by international agreement.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-c695f888",
+    "proposition" : "On a global scale, surface expression of this convection is the tectonic plate motions and therefore has speeds of a few cm per year.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-c6975980",
+    "proposition" : "The idea was moonshine, I was informed.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-c7a36084",
+    "proposition" : "The solidus depression by impurities, primarily Ca, Al, and Na, and pressure affects creep behavior and thus contributes to the change in creep mechanisms with location.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-c7af328a",
+    "proposition" : "The stripes on one side of the mid-ocean ridge were the mirror image of those on the other side.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-c7ed273e",
+    "proposition" : "As the crust bows upward, fractures occur that gradually grow into rifts.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-cb7a4fa1",
+    "proposition" : "The production of new seafloor and oceanic lithosphere results from mantle upwelling in response to plate separation.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-ce1c05c9",
+    "proposition" : "The 100 to 170 meters higher sea level of the Cretaceous Period (144–65 Ma) is partly attributed to plate tectonics because thermal expansion and the absence of ice sheets only account for some of the extra sea level.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-ce364c14",
+    "proposition" : "The first discovered mid-ocean ridge was the Mid-Atlantic Ridge, which is a spreading center that bisects the North and South Atlantic basins; its location was the reason for the name \"mid-ocean ridge\".",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-cf8b9c99",
+    "proposition" : "Earlier in Earth's history, subduction is likely to have initiated without horizontal forcing due to the lack of relative plate motion, though a proposal by A.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-cfe10103",
+    "proposition" : "Because the field has reversed directions at known intervals throughout its history, the pattern of geomagnetic reversals in the ocean crust can be used as an indicator of age; given the crustal age and distance from the ridge axis, spreading rates can be calculated.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-cffeaa41",
+    "proposition" : "The record so preserved is called a thermoremanent magnetization (TRM).",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-d0c578c4",
+    "proposition" : "Most oceanic spreading centers are not in the middle of their hosting ocean basins, but are traditionally called mid-ocean ridges regardless.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-d0ef6e07",
+    "proposition" : "This displaces the overlying ocean and causes sea levels to rise.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-d13e7923",
+    "proposition" : "The results show at least a minimum of 229 km (142 mi) of subduction of the northern Australian continental plate.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-d1d5f4be",
+    "proposition" : "Because complex oxidation reactions may occur as igneous rocks cool after crystallization, the orientations of Earth's magnetic field are not always accurately recorded, nor is the record necessarily maintained.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-d1fa890f",
+    "proposition" : "For a time in the mid-20th century, the theory of continental drift was referred to as the \"Taylor-Wegener hypothesis\".",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-d271c0ba",
+    "proposition" : "Subduction zones are where cold oceanic lithosphere sinks back into the mantle and is recycled.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-d3ba40e8",
+    "proposition" : "For igneous rocks such as basalt, commonly used methods include potassium–argon and argon–argon geochronology.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-d3f55871",
+    "proposition" : "Mid-ocean ridges around the globe are linked by plate tectonic boundaries and the trace of the ridges across the ocean floor appears similar to the seam of a baseball.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-d5cfacdc",
+    "proposition" : "Although he produced an abundance of circumstantial evidence, his theory met with little acceptance for two reasons: (1) no mechanism for continental drift was known, and (2) there was no way to reconstruct the movements of the continents over time.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-d6368394",
+    "proposition" : "The oceanic crust is in a constant state of 'renewal' at the mid-ocean ridges by the processes of seafloor spreading and plate tectonics.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-d6f6ad92",
+    "proposition" : "Secondary convection may cause surface volcanism as a consequence of intraplate extension and mantle plumes.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-d7017d58",
+    "proposition" : "Experiments show that most modern high-Mg calcite organisms would have been low-Mg calcite in past calcite seas, meaning that the Mg/Ca ratio in an organism's skeleton varies with the Mg/Ca ratio of the seawater in which it was grown.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-d90bdd7c",
+    "proposition" : "It was that temporary feature that inspired Wegener to propose continental drift.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-d9335b04",
+    "proposition" : "As this happens, metamorphic reactions increase the density of the continental crustal rocks, which leads to less buoyancy.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-da00b13a",
+    "proposition" : "Beyond the volcanic arc is a back-arc region whose character depends strongly on the angle of subduction of the subducting slab.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-da4a7074",
+    "proposition" : "Slow spreading at mid-ocean ridges has the opposite effect and will result in a higher Mg/Ca ratio favoring the precipitation of aragonite and high-Mg calcite polymorphs of calcium carbonate (aragonite seas).",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-daca0c26",
+    "proposition" : "The discipline based on the study of thermoremanent magnetisation in archaeological materials is called archaeomagnetic dating.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-db29d65e",
+    "proposition" : "In rocks, this remanence is typically aligned in the direction of the modern-day geomagnetic field.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-dc190f4c",
+    "proposition" : "The arc magmatism occurs one hundred to two hundred kilometers from the trench and approximately one hundred kilometers above the subducting slab.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-dcd3e37d",
+    "proposition" : "As oceanographers continued to bathymeter the ocean basins, a system of mid-oceanic ridges was detected.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-dd4f67fb",
+    "proposition" : "Holmes's views were particularly influential: in his bestselling textbook, Principles of Physical Geology, he included a chapter on continental drift, proposing that Earth's mantle contained convection cells which dissipated radioactive heat and moved the crust at the surface.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-ddc004ca",
+    "proposition" : "Seismic tomography shows that some slabs can penetrate the lower mantle and sink clear to the core–mantle boundary.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-ddd0a2e4",
+    "proposition" : "Older theory states that the carbon from the subducting plate is made available in overlying magmatic systems via decarbonation, where CO2 is released through silicate-carbonate metamorphism.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-de047d69",
+    "proposition" : "Ridges that spread at rates <20 mm/yr are referred to as ultraslow spreading ridges (e.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-df33245c",
+    "proposition" : "The CRM signatures in red beds can be quite useful, and they are common targets in magnetostratigraphy studies.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-df885188",
+    "proposition" : "Although Wegener's theory was formed independently and was more complete than those of his predecessors, Wegener later credited a number of past authors with similar ideas: Franklin Coxworthy (between 1848 and 1890), Roberto Mantovani (between 1889 and 1909), William Henry Pickering (1907), and Frank Bursley Taylor (1908).",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-e1f5c58a",
+    "proposition" : "The eclogite itself was produced by oceanic subduction during the assembly of supercontinents at about 1.9–2.0 Ga.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-e2100949",
+    "proposition" : "Because subduction of slabs to depth is necessary to drive subduction zone volcanism, flat-slab subduction can be invoked to explain volcanic gaps.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-e213c1eb",
+    "proposition" : "Eduard Suess had proposed a supercontinent Gondwana in 1885, and the Tethys Ocean in 1893, assuming a land-bridge between the present continents submerged in the form of a geosyncline, and John Perry had written an 1895 paper proposing that the Earth's interior was fluid, and disagreeing with Lord Kelvin on the age of the Earth.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-e27d4a9c",
+    "proposition" : "However, continental drift has subsequently been extensively validated and is incorporated into the science of plate tectonics, which studies the movement of the continents as they ride on plates of the Earth's lithosphere.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-e3c7b1d6",
+    "proposition" : "He proposed in 1931 that the Earth's mantle contained convection cells which dissipated heat produced by radioactive decay and moved the crust at the surface.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-e407755",
+    "proposition" : "These curves diverged but could be reconciled if it was assumed that the continents had been in contact up to 200 million years ago.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-e4a4966d",
+    "proposition" : "This would explain why most modern subduction zones are relatively steep.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-e4b9bc2a",
+    "proposition" : "Sealevel change can be attributed to other factors (thermal expansion, ice melting, and mantle convection creating dynamic topography).",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-e59ea300",
+    "proposition" : "Without workable alternatives to explain the stripes, geophysicists were forced to conclude that Holmes had been right: ocean rifts were sites of perpetual orogeny at the boundaries of convection cells.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-e6647ce0",
+    "proposition" : "zone in which the floor of the Atlantic, as it keeps spreading, is continuously tearing open and making space for fresh, relatively fluid and hot sima [rising] from depth\".",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-e67e3679",
+    "proposition" : "At the consumption edges of the plate, the material has thermally contracted to become dense, and it sinks under its own weight in the process of subduction usually at an oceanic trench.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-e6aadee",
+    "proposition" : "This geometry is commonly caused by the subduction of buoyant lithosphere due to thickened crust or warmer lithosphere.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-e78dd2ba",
+    "proposition" : "This meant that the Pacific crust was being forced downward, or subducted, beneath the Alaskan crust.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-e7c5fd81",
+    "proposition" : "In this case the plates are sliding apart over the mantle upwelling in the process of ridge push.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-e7d01489",
+    "proposition" : "Continental lithosphere is up to 200 km (120 mi) thick.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-e7e2a607",
+    "proposition" : "The magmatism at the ridge is considered to be passive upwelling, which is caused by the plates being pulled apart under the weight of their own slabs.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-e7f7311a",
+    "proposition" : "Some early models of plate tectonics envisioned the plates riding on top of convection cells like conveyor belts, exactly like just above the yellow arrows in the image above.",
+    "sourceId" : "src-da805ddd",
+    "sourceTitle" : "wikipedia-slab-pull.md",
+    "corpusFile" : "wikipedia-slab-pull.md",
+    "corpusSha256" : "3bddce4afba68cf2bf424083acad6f92bc048de755df0b172468503a3111bc30",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-e7fd64ae",
+    "proposition" : "In 2021, Reclus, a tectonics database, was named for Elisée Reclus.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-e886e10c",
+    "proposition" : "Although the Māori people of New Zealand do not make pottery, their 700- to 800-year-old steam ovens, or hāngī, provide adequate archaeomagnetic material.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-e90b34b9",
+    "proposition" : "Geology makes to subduct into an intransitive verb and a reflexive verb.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-e936ca12",
+    "proposition" : "However, the arrival of buoyant continental lithosphere at a subduction zone can result in increased coupling at the trench and cause plate boundary reorganization.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-e97019ad",
+    "proposition" : "Conversely, for a fossil of known age, the paleomagnetic data can fix the latitude at which the fossil was laid down.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-ea04ca6d",
+    "proposition" : "Moreover, mantle upwelling that causes magma to form beneath the ocean ridges appears to involve only its upper 400 km (250 mi), as deduced from seismic tomography and observations of the seismic discontinuity in the upper mantle at about 400 km (250 mi).",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-ea4609e5",
+    "proposition" : "The process starts by heating at the base of the continental crust which causes it to become more plastic and less dense.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-ea4e730f",
+    "proposition" : "Slow-spreading ridges (less than 40 mm/yr) generally have large rift valleys, sometimes as wide as 10–20 km (6.2–12.4 mi), and very rugged terrain at the ridge crest that can have relief of up to 1,000 m (3,300 ft).",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-eaa68138",
+    "proposition" : "Once initiated, stable subduction is driven mostly by the negative buoyancy of the dense subducting lithosphere.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-ead6c2b4",
+    "proposition" : "Most mid-ocean ridges of the world are connected and form the Ocean Ridge, a global mid-oceanic ridge system that is part of every ocean, making it the longest mountain range in the world.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-eb28ba1a",
+    "proposition" : "The field is said to be recorded by chemical remanent magnetization (CRM).",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-eb2a2051",
+    "proposition" : "Mantle convection is the very slow creep of Earth's solid silicate mantle as convection currents carry heat from the interior to the planet's surface.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-ec665b24",
+    "proposition" : "At first, the ridge was thought to be a feature specific to the Atlantic Ocean.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-ed80a348",
+    "proposition" : "However, the Mid-Atlantic ridge itself is not bordered by plates that are being pulled into subduction zones, except the minor subduction in the Lesser Antilles and Scotia Arc.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-ee0afa0",
+    "proposition" : "This can be thought of as analogous to a rug on a table with little friction: when part of the rug is off of the table, its weight pulls the rest of the rug down with it.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-ee45b80",
+    "proposition" : "Within the crustal accretion zone is a 1–2 km-wide neovolcanic zone where active volcanism occurs.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-eeac00a9",
+    "proposition" : "The highest known rate is over 200 mm/yr in the Miocene on the East Pacific Rise.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-efa59c13",
+    "proposition" : "Arcs produce about 10% of the total volume of magma produced each year on Earth (approximately 0.75 cubic kilometers), much less than the volume produced at mid-ocean ridges, but they have formed most continental crust.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-efb01fe2",
+    "proposition" : "Eclogite xenoliths found in the North China Craton provide evidence that modern-style subduction occurred at least as early as 1.8 Ga ago in the Paleoproterozoic Era.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-effa168e",
+    "proposition" : "They are found at convergent plate boundaries, where the heavier oceanic lithosphere of one plate is overridden by the leading edge of another, less-dense plate.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-f01b9b43",
+    "proposition" : "At faster spreading rates the axes often display overlapping spreading centers that lack connecting transform faults.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-f02e3321",
+    "proposition" : "This fact reflects the process of lithosphere recycling into the Earth's mantle during subduction.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-f04e0a2f",
+    "proposition" : "Around Taitao Peninsula flat-slab subduction is attributed to the subduction of the Chile Rise, a spreading ridge.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-f149af20",
+    "proposition" : "Red beds, clastic sedimentary rocks (such as sandstones) are red because of hematite that formed during sedimentary diagenesis.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-f2db9464",
+    "proposition" : "As a result, the new sea will evaporate (partially or completely) several times before the elevation of the rift valley has been lowered to the point that the sea becomes stable.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-f362162a",
+    "proposition" : "The steepest dipping subduction zone lies in the Mariana Trench, which is also where the oceanic lithosphere of Jurassic age is the oldest on Earth exempting ophiolites.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-f37e5414",
+    "proposition" : "the rate of expansion of the mid-ocean ridge) have caused the global (eustatic) sea level to rise over very long timescales (millions of years).",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-f3feed53",
+    "proposition" : "Hess' theory was that new seafloor is formed when magma is forced upward toward the surface at a mid-ocean ridge.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-f47c7fb8",
+    "proposition" : "Both models can eventually yield self-sustaining subduction zones, as the oceanic crust is metamorphosed at great depth and becomes denser than the surrounding mantle rocks.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-f4946115",
+    "proposition" : "The metamorphic conditions the slab passes through in this process create and destroy water bearing (hydrous) mineral phases, releasing water into the mantle.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-f538b161",
+    "proposition" : "This contaminant is generally parallel to the barrel, and most of it can be removed by heating up to about 400 °C or demagnetizing in a small alternating field.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-f5e67bc1",
+    "proposition" : "Oceanic lithosphere ranges in thickness from just a few km for young lithosphere created at mid-ocean ridges to around 100 km (62 mi) for the oldest oceanic lithosphere.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-f63afc60",
+    "proposition" : "This record provides information on the past behavior of the geomagnetic field and the past location of tectonic plates.",
+    "sourceId" : "src-15e8ee0d",
+    "sourceTitle" : "wikipedia-paleomagnetism.md",
+    "corpusFile" : "wikipedia-paleomagnetism.md",
+    "corpusSha256" : "af0b1cece2be2560b481c3f9c42598dd6b08bda5a3d92c388051c26c2ef3eb00",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-f68a53af",
+    "proposition" : "Other geologists who opposed continental drift were Bailey Willis, Charles Schuchert, Rollin Chamberlin, Walther Bucher and Walther Penck.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-f6a137a7",
+    "proposition" : "As crystallized basalt extruded at a ridge axis cools below Curie points of appropriate iron-titanium oxides, magnetic field directions parallel to the Earth's magnetic field are recorded in those oxides.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-f725ac37",
+    "proposition" : "The flanks of mid-ocean ridges are in many places marked by the inactive scars of transform faults called fracture zones.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-f7e4b518",
+    "proposition" : "By calculating in the frame of reference of the moving lithosphere (velocity v), which has spatial coordinate x′=x−vt, T=T(x′,z,t).",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-f80808ac",
+    "proposition" : "Seafloor spreading, or seafloor spread, is a process that occurs at mid-ocean ridges, where new oceanic crust is formed through volcanic activity and then gradually moves away from the ridge.",
+    "sourceId" : "src-ec44517",
+    "sourceTitle" : "wikipedia-seafloor-spreading.md",
+    "corpusFile" : "wikipedia-seafloor-spreading.md",
+    "corpusSha256" : "ebd0d04c772bf71b5285f699f9a1a0065aa01b888cb64c8472c3035766ec06c4",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-f81c0234",
+    "proposition" : "She collaborated with Bruce Heezen, who was initially sceptical of Tharp's assertions that her maps confirmed continental drift.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-f87b722c",
+    "proposition" : "Thus older seafloor is underlain by denser material and is deeper.",
+    "sourceId" : "src-1fa1d2e1",
+    "sourceTitle" : "wikipedia-mid-ocean-ridge.md",
+    "corpusFile" : "wikipedia-mid-ocean-ridge.md",
+    "corpusSha256" : "0cb70b434112f708fe707e855fcc30108e36db5163cc867d1bf8447ccc9960dd",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-f8b04c1",
+    "proposition" : "In this conceptual model, plate is continually being used up.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-f95454d5",
+    "proposition" : "Steep-angle subduction (subduction angle greater than 70°) occurs in subduction zones where Earth's oceanic crust and lithosphere are cold and thick and have, therefore, lost buoyancy.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-f9d1147f",
+    "proposition" : "But gravitational measurements showed that many areas are not in isostatic equilibrium.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-fa0be409",
+    "proposition" : "Most metamorphic phase transitions that occur within the subducting slab are prompted by the dehydration of hydrous mineral phases.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-fb77389c",
+    "proposition" : "Only with additional weaking of the crust, through hotspot magmatism or extensional rifting, would the crust be able to break from its continent and begin subduction.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-fc1c6cca",
+    "proposition" : "However, not all arc-trench complexes have an accretionary wedge.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-fc9ce84c",
+    "proposition" : "The Earth's lithosphere rides atop the asthenosphere, and the two form the components of the upper mantle.",
+    "sourceId" : "src-303adbd6",
+    "sourceTitle" : "wikipedia-mantle-convection.md",
+    "corpusFile" : "wikipedia-mantle-convection.md",
+    "corpusSha256" : "7991295c188f930dd9d2405c889d05e6d25b1fdbb75d94fb33032b92b0ebf682",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-fcc3dd3e",
+    "proposition" : "The lithosphere is relatively cold and rigid compared with the underlying asthenosphere, and so tectonic plates move as solid bodies atop the asthenosphere.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-fd14d848",
+    "proposition" : "The collision between the two continents initiated around 50 my ago, but is still active.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-fd297782",
+    "proposition" : "Sinking lithosphere at subduction zones is a part of convection cells in the underlying ductile mantle.",
+    "sourceId" : "src-96834f0d",
+    "sourceTitle" : "wikipedia-subduction.md",
+    "corpusFile" : "wikipedia-subduction.md",
+    "corpusSha256" : "a44b13d8f873a763fa3152f0a68d7ba9bd2ad48fcba2cc8768589e189eda7b74",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-fd48e7cf",
+    "proposition" : "In his Manual of Geology (1863), Dana wrote, \"The continents and oceans had their general outline or form defined in earliest time.",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  }, {
+    "claimId" : "clm-fef1ca59",
+    "proposition" : "Holmes's proposal resolved the phase disequilibrium objection (the underlying fluid was kept from solidifying by radioactive heating from the core).",
+    "sourceId" : "src-34523c28",
+    "sourceTitle" : "wikipedia-continental-drift.md",
+    "corpusFile" : "wikipedia-continental-drift.md",
+    "corpusSha256" : "0c7724c9a5dcb4770941f367cd2f0e030ba99953f4fbb1ab60bcf99cd91b65d2",
+    "conceptIds" : [ ]
+  } ]
+}

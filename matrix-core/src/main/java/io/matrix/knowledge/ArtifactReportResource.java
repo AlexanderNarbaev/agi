@@ -12,11 +12,15 @@ import io.matrix.cognitive.algorithms.AlgorithmRefusalException;
 import io.matrix.cognitive.algorithms.ComputeBudget;
 import io.matrix.cognitive.algorithms.ProblemRequest;
 import io.matrix.cognitive.report.ArtifactObserver;
+import io.matrix.cognitive.report.LearnedClaim;
 import io.matrix.cognitive.report.ReportJourney;
 import io.matrix.cognitive.report.ReportJourneyOutcome;
 import io.matrix.cognitive.report.WorkspaceFingerprint;
+import io.matrix.cognitive.algorithms.Procedure;
 import io.matrix.cognitive.report.ReportJourneyMethod;
 import io.matrix.cognitive.report.ReportJourneyPlanner;
+import io.matrix.cognitive.report.ReportProcedure;
+import io.matrix.cognitive.report.ReportProcedureMethod;
 import io.matrix.cognitive.report.ReportJourneyTrace;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -77,6 +81,22 @@ public class ArtifactReportResource {
      */
     @Inject
     public ArtifactActionService actions;
+
+    /**
+     * The budget the journey runs under.
+     *
+     * <p><b>Why this is a field and not a constant.</b> The shipped route runs unbounded:
+     * a report is a local write and the server's own limits govern it. But the CRJ-01
+     * protocol requires that every arm of a comparison runs under an <b>identical and
+     * explicit</b> budget, so that a difference between the arms is a difference between the
+     * arms and not between their budgets. An unbounded run cannot be compared with an
+     * unbounded run and still answer "what would this have cost".</p>
+     *
+     * <p>The default is unbounded, so the shipped behaviour is unchanged; a caller that
+     * measures sets it before the journey runs. The field is public for the same reason as
+     * {@link #workbench}.</p>
+     */
+    public ComputeBudget budget = ComputeBudget.unbounded();
 
     /**
      * The kernel's plan for the journey.
@@ -311,14 +331,27 @@ public class ArtifactReportResource {
         CognitiveStore traceStore = traceStore();
         ReportJourney.Retained retained = traceStore == null || !consultRetainedTrace ? null
                 : ReportJourneyTrace.retained(traceStore, episodeId);
-        String fingerprint = workspaceFingerprint(workspaceId);
-        Set<String> facts = journeyFacts(identity, retained, fingerprint, reportName);
+        // the workspace is read ONCE: the fingerprint is computed from the snapshot, and the
+        // snapshot also says which sources are present — which is what a procedure's
+        // applicability domain is checked against
+        KnowledgeSnapshot snapshot = workbench.workspace(workspaceId);
+        String fingerprint = WorkspaceFingerprint.of(snapshot);
+        Set<String> facts = journeyFacts(identity, retained, fingerprint, reportName,
+                request.question(), level);
+        List<Procedure> procedures = proceduresOf(workspaceId);
+        facts.addAll(procedureFacts(procedures, snapshot));
+        // the LEARNED CLAIMS of the workspace: claims the system has validated, with their
+        // provenance. They are evidence, not authority: a claim that is not applicable to
+        // the question's concept is not added, and a claim whose source is gone is not added.
+        List<LearnedClaim> learnedClaims = learnedClaimsOf(workspaceId);
 
         ReportJourney.Problem problem = new ReportJourney.Problem(workspaceId, request.question(),
-                identity, reportName, level, workbench, actions.writer(), retained, fingerprint);
+                identity, reportName, level, workbench, actions.writer(), retained, fingerprint,
+                learnedClaims);
         ProblemRequest planRequest = new ProblemRequest(AlgorithmFamilies.KNOWLEDGE_REPORT, problem,
-                facts, ComputeBudget.unbounded());
-        ReportJourneyPlanner.Plan plan = planner.plan(planRequest, forcedMethodId);
+                facts, budget);
+        ReportJourneyPlanner.Plan plan = planner.plan(planRequest, forcedMethodId,
+                procedureMethods(workspaceId, procedures));
         if (plan.refused()) {
             return refused(422, "no_method_for_request", plan.reason());
         }
@@ -327,7 +360,7 @@ public class ArtifactReportResource {
         ReportJourney.Result result;
         try {
             result = planner.measure(plan.method().capability().id(),
-                    () -> plan.method().execute(problem, ComputeBudget.unbounded()));
+                    () -> plan.method().execute(problem, budget));
         } catch (AlgorithmRefusalException refused) {
             // the method refused: its own preconditions do not hold for this request. A
             // forced method is refused exactly like a chosen one — forcing chooses what
@@ -360,6 +393,20 @@ public class ArtifactReportResource {
 
         // ── THE TRACE — what happened, kept where the next task can read it ─
         List<String> traceFailures = new ArrayList<>();
+        // the journey's episode is OPENED before anything is written into it: a trace that
+        // lives in an episode nobody opened is a trace no reader can follow, because the
+        // store's own listing of the workspace's episodes would not hold it
+        if (traceStore != null) {
+            try {
+                ReportJourneyTrace.ensureEpisode(traceStore, episodeId, workspaceId, identity);
+            } catch (RuntimeException unopenable) {
+                // the journey continues: an episode that could not be opened is a fact the
+                // caller is told, not a reason to refuse a request the workspace can answer
+                // — the trace itself is written with the same tolerance
+                traceFailures.add("the journey's episode could not be opened: "
+                        + unopenable.getMessage());
+            }
+        }
         List<CognitiveStore.EventRecord> steps = new ArrayList<>();
         String planDetail = plan.method().capability().id() + ": " + plan.reason();
         steps.add(new CognitiveStore.EventRecord(ReportJourneyTrace.PHASE_PLAN,
@@ -397,7 +444,7 @@ public class ArtifactReportResource {
         try {
             response = result.replayed()
                     ? replayedResponse(retained, written, traceFailures)
-                    : response(result, written, traceFailures);
+                    : response(workspaceId, result, written, traceFailures);
         } catch (IllegalStateException unreadable) {
             return refused(503, "output_root_unavailable", unreadable.getMessage());
         }
@@ -405,7 +452,8 @@ public class ArtifactReportResource {
                 ReportJourneyTrace.PHASE_RETAINED, ReportJourneyTrace.ACTOR_ROUTE,
                 result.replayed() ? "the retained journey was served; the trace is unchanged"
                         : ReportJourneyTrace.payload(new ReportJourney.Retained(
-                                plan.method().capability().id(), fingerprint, written.sha256(),
+                                plan.method().capability().id(), request.question(), level.name(),
+                                fingerprint, written.sha256(),
                                 written.fileName(), json(response))))));
 
         int status = written.disposition() == ArtifactWriter.Disposition.REPLAYED ? 200 : 201;
@@ -507,8 +555,8 @@ public class ArtifactReportResource {
      * @param written     the writer's own result
      * @return the response
      */
-    private ReportResponse response(ReportJourney.Result result, ArtifactWriter.Result written,
-            List<String> traceFailures) {
+    private ReportResponse response(String workspaceId, ReportJourney.Result result,
+            ArtifactWriter.Result written, List<String> traceFailures) {
         Answer answer = result.answer();
         List<EvidenceReference> evidence = new ArrayList<>();
         Map<String, String> sourceTitles = new LinkedHashMap<>();
@@ -524,6 +572,17 @@ public class ArtifactReportResource {
         List<String> limitations = new ArrayList<>(answer.limitations());
         limitations.add("a written report is a record of what the workspace said; it is not "
                 + "independent evidence for the propositions it repeats");
+        // the LEARNED CLAIMS that contributed are named: a caller that reads the evidence
+        // has to be able to tell which of it the retrieval found and which of it the system
+        // learned and validated
+        for (LearnedClaim learned : learnedClaimsOf(workspaceId)) {
+            if (answer.claims().stream().anyMatch(claim -> claim.id().equals(learned.claimId()))) {
+                limitations.add("the evidence includes the learned claim " + learned.claimId()
+                        + ", which the system validated on " + learned.validationCases()
+                        + " held-out case(s) against the reference; it is a claim about this "
+                        + "workspace, not about the world");
+            }
+        }
         limitations.addAll(traceFailures);
         if (!answer.answered()) {
             limitations.add("the question was not answered; the absence of an answer is the "
@@ -601,8 +660,100 @@ public class ArtifactReportResource {
      * @param reportName  the requested report name
      * @return the facts
      */
+    /**
+     * The workspace's promoted procedures of the report family.
+     *
+     * <p>A procedure is offered to the kernel only when it is ACTIVE and when it belongs to
+     * the family this route serves. The store is the procedure's own durable home, so a
+     * procedure that was promoted before a restart is offered again after it.</p>
+     *
+     * @param workspaceId the workspace the request addresses
+     * @return the procedures
+     */
+    /**
+     * The workspace's learned claims.
+     *
+     * <p>A learned claim is a claim the system validated — its proposition checked to be a
+     * span of its source's text, and the reference checked to carry it on held-out questions.
+     * The journey may cite one inside its applicability, and the applicability is checked
+     * against the workspace as it is now: a claim whose document is gone is a claim about
+     * nothing, and it is not offered.</p>
+     *
+     * @param workspaceId the workspace
+     * @return the learned claims
+     */
+    private List<LearnedClaim> learnedClaimsOf(String workspaceId) {
+        CognitiveStore store = traceStore();
+        if (store == null) {
+            return List.of();
+        }
+        return new ArrayList<>(store.learnedClaims(workspaceId));
+    }
+
+    private List<Procedure> proceduresOf(String workspaceId) {
+        CognitiveStore store = traceStore();
+        if (store == null) {
+            return List.of();
+        }
+        List<Procedure> procedures = new ArrayList<>();
+        for (Procedure procedure : store.procedures(workspaceId)) {
+            if (procedure.active() && ReportProcedure.FAMILY.equals(procedure.problemFamily())) {
+                procedures.add(procedure);
+            }
+        }
+        return procedures;
+    }
+
+    /**
+     * The facts the procedures' applicability domains establish.
+     *
+     * <p>A procedure may be used only inside its verified domain, and its domain is the set
+     * of sources its validation covered. The fact is established HERE, against the workspace
+     * as it is now: a procedure whose sources are gone is not admissible, and the reference
+     * method answers instead.</p>
+     *
+     * @param procedures the workspace's procedures
+     * @param snapshot   the workspace as it is now
+     * @return the facts
+     */
+    private Set<String> procedureFacts(List<Procedure> procedures, KnowledgeSnapshot snapshot) {
+        Set<String> facts = new LinkedHashSet<>();
+        Set<String> present = snapshot.sources().stream()
+                .map(Source::id)
+                .collect(java.util.stream.Collectors.toSet());
+        for (Procedure procedure : procedures) {
+            Set<String> support = ReportProcedure.supportOf(procedure);
+            if (!support.isEmpty() && present.containsAll(support)) {
+                facts.add(ReportProcedure.supportPresentFact(procedure.id()));
+            }
+        }
+        return facts;
+    }
+
+    /**
+     * The methods the procedures are offered as.
+     *
+     * @param procedures the workspace's procedures
+     * @return the methods
+     */
+    private List<ReportJourneyPlanner.JourneyMethod> procedureMethods(String workspaceId,
+                                                                         List<Procedure> procedures) {
+        List<ReportJourneyPlanner.JourneyMethod> methods = new ArrayList<>();
+        CognitiveStore store = traceStore();
+        for (Procedure procedure : procedures) {
+            // the cost the promotion MEASURED, when it measured one: a procedure's first
+            // selection is made before it has ever run, and a declaration is a promise. The
+            // promotion's own measurement is what makes that first decision a measurement.
+            Long measuredCost = store == null ? null
+                    : store.procedureMeasuredCostNanos(workspaceId, procedure.id(),
+                            procedure.version());
+            methods.add(new ReportProcedureMethod(procedure, measuredCost));
+        }
+        return methods;
+    }
+
     private Set<String> journeyFacts(String identity, ReportJourney.Retained retained,
-            String fingerprint, String reportName) {
+            String fingerprint, String reportName, String question, AbstractionLevel level) {
         Set<String> facts = new LinkedHashSet<>();
         if (retained != null && ReportJourneyMethod.committed(actions.writer(), identity)) {
             facts.add(ReportJourneyMethod.FACT_IDENTITY_COMMITTED);
@@ -612,6 +763,18 @@ public class ArtifactReportResource {
         }
         if (retained != null && retained.fileName().equals(reportName)) {
             facts.add(ReportJourneyMethod.FACT_NAME_UNCHANGED);
+        }
+        // the retained answer answers one question at one level. The facts are the
+        // request's own comparison with the retained record, so the replay is admitted
+        // only inside the domain it can state — a different question or a different level
+        // is a different request, and the retained answer does not answer it
+        if (retained != null && retained.question() != null
+                && retained.question().equals(question)) {
+            facts.add(ReportJourneyMethod.FACT_QUESTION_UNCHANGED);
+        }
+        if (retained != null && retained.level() != null
+                && retained.level().equals(level.name())) {
+            facts.add(ReportJourneyMethod.FACT_LEVEL_UNCHANGED);
         }
         return facts;
     }

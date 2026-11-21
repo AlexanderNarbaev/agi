@@ -68,6 +68,8 @@ public final class ReportJourneyTrace {
 
     /** The key the retained payload is stored under. */
     private static final String RETAINED_METHOD = "methodId";
+    private static final String RETAINED_QUESTION = "question";
+    private static final String RETAINED_LEVEL = "level";
     private static final String RETAINED_FINGERPRINT = "workspaceFingerprint";
     private static final String RETAINED_SHA256 = "sha256";
     private static final String RETAINED_FILE_NAME = "fileName";
@@ -89,6 +91,35 @@ public final class ReportJourneyTrace {
      */
     public static String episodeId(String identity) {
         return "report-" + identity;
+    }
+
+    /**
+     * Makes sure the journey's episode is a REAL episode of the workspace.
+     *
+     * <p><b>Why this exists.</b> The trace's steps live in an episode, and an episode is a row
+     * in the store's own table of episodes — a container with an account of what it was, a
+     * workspace it belongs to and an instant it started. Writing the steps alone left the
+     * episode in the event table and nowhere else: the store's listing of a workspace's
+     * episodes did not contain it, and a reader who followed a provenance to the episode a
+     * competence was learned in found nothing there.</p>
+     *
+     * <p><b>Why it is opened and not replaced.</b> The episode is keyed by the action
+     * identity, so the same request always names the same episode — and a later journey
+     * continues it. The account of what the episode was belongs to the first journey that
+     * opened it, and a later one does not rewrite it. The episode is opened once and stays
+     * open, because the identity's record keeps growing: the trace of an identity is an
+     * ongoing record, not a bounded cycle.</p>
+     *
+     * @param store      the kernel's store
+     * @param episodeId  the episode the journey belongs to
+     * @param workspaceId the workspace the journey served
+     * @param identity   the action identity the episode is derived from
+     * @return whether this call opened the episode
+     */
+    public static boolean ensureEpisode(CognitiveStore store, String episodeId, String workspaceId,
+                                         String identity) {
+        return store.ensureEpisode(episodeId, workspaceId, "the report journey of " + identity,
+                Instant.now().toString());
     }
 
     /**
@@ -164,6 +195,8 @@ public final class ReportJourneyTrace {
         try {
             return MAPPER.writeValueAsString(Map.of(
                     RETAINED_METHOD, retained.methodId(),
+                    RETAINED_QUESTION, retained.question() == null ? "" : retained.question(),
+                    RETAINED_LEVEL, retained.level() == null ? "" : retained.level(),
                     RETAINED_FINGERPRINT, retained.workspaceFingerprint(),
                     RETAINED_SHA256, retained.sha256(),
                     RETAINED_FILE_NAME, retained.fileName(),
@@ -178,7 +211,14 @@ public final class ReportJourneyTrace {
             Map<String, String> fields = MAPPER.readValue(payload,
                     new TypeReference<Map<String, String>>() {
                     });
+            // a record written before the question was retained names no question, and an
+            // unnamed question is not replayable: the replay fails closed on it rather
+            // than serving an answer whose question it cannot state
+            String question = fields.get(RETAINED_QUESTION);
+            String level = fields.get(RETAINED_LEVEL);
             return new ReportJourney.Retained(fields.get(RETAINED_METHOD),
+                    question == null || question.isBlank() ? null : question,
+                    level == null || level.isBlank() ? null : level,
                     fields.get(RETAINED_FINGERPRINT), fields.get(RETAINED_SHA256),
                     fields.get(RETAINED_FILE_NAME), fields.get(RETAINED_RESPONSE));
         } catch (IOException e) {

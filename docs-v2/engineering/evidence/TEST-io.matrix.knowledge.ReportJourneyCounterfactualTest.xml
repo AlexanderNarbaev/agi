@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.ReportJourneyCounterfactualTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-11-20T14:11:38.452Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.451">
+  <properties/>
+  <testcase name="an HTTP caller cannot force a method" classname="io.matrix.knowledge.ReportJourneyCounterfactualTest" time="0.003"/>
+  <testcase name="the counterfactual shows what changed and what did not" classname="io.matrix.knowledge.ReportJourneyCounterfactualTest" time="0.09"/>
+  <testcase name="forcing a method does not bypass the output root's control" classname="io.matrix.knowledge.ReportJourneyCounterfactualTest" time="0.131"/>
+  <testcase name="forcing a method does not bypass the consent" classname="io.matrix.knowledge.ReportJourneyCounterfactualTest" time="0.067"/>
+  <testcase name="a forced method whose preconditions do not hold is refused" classname="io.matrix.knowledge.ReportJourneyCounterfactualTest" time="0.071"/>
+  <testcase name="forcing a method does not bypass the idempotency" classname="io.matrix.knowledge.ReportJourneyCounterfactualTest" time="0.087"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

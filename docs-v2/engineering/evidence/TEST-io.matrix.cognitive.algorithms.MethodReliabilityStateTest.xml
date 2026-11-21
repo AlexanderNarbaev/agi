@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.cognitive.algorithms.MethodReliabilityStateTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-11-20T15:25:44.410Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.004">
+  <properties/>
+  <testcase name="an observed stratum that decided nothing is NOT_YET_USABLE, not NO_EVIDENCE" classname="io.matrix.cognitive.algorithms.MethodReliabilityStateTest" time="0.001"/>
+  <testcase name="the state that says nothing was observed is reserved for the empty stratum" classname="io.matrix.cognitive.algorithms.MethodReliabilityStateTest" time="0.0"/>
+  <testcase name="a method that was never measured is NO_EVIDENCE" classname="io.matrix.cognitive.algorithms.MethodReliabilityStateTest" time="0.0"/>
+  <testcase name="a call that confirmed nothing is an observation as well" classname="io.matrix.cognitive.algorithms.MethodReliabilityStateTest" time="0.0"/>
+  <testcase name="a stratum in which nothing was observed is NO_EVIDENCE" classname="io.matrix.cognitive.algorithms.MethodReliabilityStateTest" time="0.001"/>
+  <testcase name="a decided stratum is ESTIMATED only when its interval is narrow enough" classname="io.matrix.cognitive.algorithms.MethodReliabilityStateTest" time="0.001"/>
+  <testcase name="a decided stratum with a wide interval is NOT_YET_USABLE" classname="io.matrix.cognitive.algorithms.MethodReliabilityStateTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

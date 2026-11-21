@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Random;
+import java.util.stream.Collectors;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /**
@@ -400,7 +401,40 @@ public class KnowledgeWorkbench implements AutoCloseable {
      * time is a contract, not a limitation of the machine.</p>
      */
     public synchronized Answer ask(String workspaceId, String question, AbstractionLevel level) {
+        return ask(workspaceId, question, level, Set.of());
+    }
+
+    /**
+     * Asks a question of a workspace, reading only the named sources.
+     *
+     * <p><b>Why this overload exists.</b> The CRJ-01 arm C needs a CHEAP path that is still a
+     * real path: the workspace's full retrieval reads every claim of the workspace, and a
+     * validated procedure of the knowledge-report family answers the same question from the
+     * sources its validation covered. Restricting the reading is what makes the procedure a
+     * cheaper path rather than a claim to be one — the saving is MEASURED by the caller, not
+     * asserted here.</p>
+     *
+     * <p><b>What is unchanged.</b> Everything after the reading: the demand analysis, the
+     * premise assessment, the corrections, the language note, the weakened bindings, the
+     * record of the asking and the conversation turn. The restriction narrows WHAT THE
+     * WORKSPACE IS READ AS, and it does not fork the asking path — there is one asking path,
+     * and this overload is the same path with a narrower snapshot.</p>
+     *
+     * <p><b>What an empty set means.</b> No restriction: the whole workspace is read, exactly
+     * as the three-argument overload does. The restriction is opt-in and never implicit.</p>
+     *
+     * @param workspaceId the workspace the question is addressed to
+     * @param question    the question
+     * @param level       the abstraction level the answer is asked for
+     * @param sourceIds   the sources the workspace may be read as, or an empty set for all of them
+     * @return the answer
+     */
+    public synchronized Answer ask(String workspaceId, String question, AbstractionLevel level,
+            Set<String> sourceIds) {
         KnowledgeSnapshot snapshot = workspace(workspaceId);
+        if (sourceIds != null && !sourceIds.isEmpty()) {
+            snapshot = restrictedTo(snapshot, sourceIds);
+        }
         // The conversation resolves the reference BEFORE the retrieval, so
         // that "Explain this in more detail" reaches the concept the last
         // turn was about. The original question is what the answer carries.
@@ -456,6 +490,48 @@ public class KnowledgeWorkbench implements AutoCloseable {
         context.record(question, answer);
         persistTurn(workspaceId, context);
         return answer;
+    }
+
+    /**
+     * The workspace as the named sources read it.
+     *
+     * <p>The restriction keeps what a source carries and what a claim needs to be read: the
+     * claims the named sources introduced, the evidence that binds them to their concepts, the
+     * concepts those claims are about, and the representations of those concepts. Everything
+     * else — the prerequisites, the revisions, the derivations, the contradictions and the
+     * goals — is kept as it is, because it describes the workspace rather than the evidence,
+     * and dropping it would change what the asking path reasons with rather than how much it
+     * reads.</p>
+     *
+     * @param snapshot  the workspace as it is
+     * @param sourceIds the sources the workspace may be read as
+     * @return the restricted snapshot
+     */
+    private KnowledgeSnapshot restrictedTo(KnowledgeSnapshot snapshot, Set<String> sourceIds) {
+        List<Source> sources = snapshot.sources().stream()
+                .filter(source -> sourceIds.contains(source.id()))
+                .toList();
+        List<Claim> claims = snapshot.claims().stream()
+                .filter(claim -> sourceIds.contains(claim.introducedBySourceId()))
+                .toList();
+        Set<String> claimIds = claims.stream().map(Claim::id).collect(Collectors.toSet());
+        Set<String> conceptIds = claims.stream()
+                .map(Claim::conceptId)
+                .filter(conceptId -> conceptId != null && !conceptId.isBlank())
+                .collect(Collectors.toSet());
+        List<Concept> concepts = snapshot.concepts().stream()
+                .filter(concept -> conceptIds.contains(concept.id()))
+                .toList();
+        List<Evidence> evidence = snapshot.evidence().stream()
+                .filter(row -> claimIds.contains(row.claimId()))
+                .toList();
+        List<Representation> representations = snapshot.representations().stream()
+                .filter(row -> conceptIds.contains(row.conceptId()))
+                .toList();
+        return new KnowledgeSnapshot(snapshot.workspaceId(), snapshot.workspaceName(),
+                concepts, sources, claims, evidence, representations,
+                snapshot.prerequisites(), snapshot.revisions(), snapshot.derivations(),
+                snapshot.contradictions(), snapshot.goals(), snapshot.exportedAt());
     }
 
     /**

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.cognitive.algorithms.AlgorithmSelectorTest" tests="16" skipped="0" failures="0" errors="0" timestamp="2026-11-20T15:25:44.186Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.013">
+  <properties/>
+  <testcase name="aMethodOutsideItsPreconditionIsNeverSelected()" classname="io.matrix.cognitive.algorithms.AlgorithmSelectorTest" time="0.0"/>
+  <testcase name="theCostBasisIsReportedForEveryCandidate()" classname="io.matrix.cognitive.algorithms.AlgorithmSelectorTest" time="0.0"/>
+  <testcase name="aFamilyWithNoAdmittedMethodIsRefusedAndTheBlockingPreconditionIsNamed()" classname="io.matrix.cognitive.algorithms.AlgorithmSelectorTest" time="0.001"/>
+  <testcase name="aRefusedRequestIsRefusedEvenWhenTheMethodWouldHaveSaidOtherwise()" classname="io.matrix.cognitive.algorithms.AlgorithmSelectorTest" time="0.0"/>
+  <testcase name="aFamilyWithNoRegisteredMethodIsRefused()" classname="io.matrix.cognitive.algorithms.AlgorithmSelectorTest" time="0.001"/>
+  <testcase name="aMeasuredCostReplacesTheDeclaredComplexityAndTheDecisionSaysSo()" classname="io.matrix.cognitive.algorithms.AlgorithmSelectorTest" time="0.002"/>
+  <testcase name="aBadCostWeightIsRefused()" classname="io.matrix.cognitive.algorithms.AlgorithmSelectorTest" time="0.001"/>
+  <testcase name="aMethodThatDoesNotFitTheBudgetIsNotChosenOverOneThatDoes()" classname="io.matrix.cognitive.algorithms.AlgorithmSelectorTest" time="0.0"/>
+  <testcase name="selectReturnsTheChosenMethodWithItsDecision()" classname="io.matrix.cognitive.algorithms.AlgorithmSelectorTest" time="0.001"/>
+  <testcase name="theIdDecidesWhenTheCostWeightMakesTheScoresEqual()" classname="io.matrix.cognitive.algorithms.AlgorithmSelectorTest" time="0.001"/>
+  <testcase name="aRefusedRequestSelectsNoMethod()" classname="io.matrix.cognitive.algorithms.AlgorithmSelectorTest" time="0.0"/>
+  <testcase name="theDecisionCarriesTheBudgetItWasMadeUnder()" classname="io.matrix.cognitive.algorithms.AlgorithmSelectorTest" time="0.0"/>
+  <testcase name="theSameRequestAlwaysSelectsTheSameMethod()" classname="io.matrix.cognitive.algorithms.AlgorithmSelectorTest" time="0.001"/>
+  <testcase name="everyCandidateThatWasConsideredIsKeptInTheDecision()" classname="io.matrix.cognitive.algorithms.AlgorithmSelectorTest" time="0.001"/>
+  <testcase name="aFamilyWhereNothingFitsTheBudgetIsResourceLimited()" classname="io.matrix.cognitive.algorithms.AlgorithmSelectorTest" time="0.0"/>
+  <testcase name="theCheaperMethodIsSelectedWhenTheQualityIsEqual()" classname="io.matrix.cognitive.algorithms.AlgorithmSelectorTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

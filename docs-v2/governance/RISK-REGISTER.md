@@ -752,15 +752,84 @@ evidence is a suspicion, and it is marked as such.
   true only **within the gate's reach**. The two annotations the wave added are correctly placed
   on the right members, and the gate is green, but the gate would not have found a third read in
   those files.
-- **the fix**: not applied. The auditor's exemption must be **member-granular** — the annotation's
-  position must be recognised, and an `import` line must not arm it — and the three files must
-  then be re-scanned. Changing the gate changes the accepted baseline
-  (`docs-v2/quality/decision-path-baseline.txt`), which is a governance artefact ⇒ ⇒ ⇒ it needs the
-  owner's decision, and it is **not** decided by this release.
-- **owner**: the owner (the instrument's change is a governance decision) — the coordinator can
-  implement it once the decision is taken.
-- **status**: OPEN as a **gap in the instrument**, not as a defect in the wave's code. The wave's
-  two wall-clock reads are annotated and decide nothing.
+- **the fix**: **applied on 2026-11-20** under the owner's decision **OD-080**. The auditor's
+  exemption is now **member-granular** in two parts: an `import` line does not arm it
+  (`matrix-core/src/main/java/io/matrix/auditor/DecisionPathAuditor.java:310`), and the
+  annotated member's **declaration** line is part of the member
+  (`matrix-core/src/main/java/io/matrix/auditor/DecisionPathAuditor.java:351`) — without the
+  second part, a member written on one line (`public long stamp() { return
+  System.currentTimeMillis(); }`) fell outside its own annotation, and the repository's own
+  `DecisionPathAuditorTest.articleIPermittedAnnotationClearsASite()` caught exactly that.
+- **the governance consequence that did NOT happen**: the accepted baseline
+  (`docs-v2/quality/decision-path-baseline.txt`) is **unchanged**, and the gate stayed green.
+  The reason is that all three files' wall-clock reads are **adjudicated** — each sits inside a
+  properly annotated member — and a permitted finding does not block. The instrument's reach
+  grew; the exception list did not.
+- **owner**: the owner decided (OD-080); the coordinator implemented it.
+- **status**: **CLOSED** as a gap in the instrument (2026-11-20). The evidence is the negative
+  control `matrix-core/src/test/java/io/matrix/auditor/DecisionPathImportExemptionTest.java`
+  (a planted, unannotated wall-clock read in a class that merely **imports** the annotation is
+  found and **blocks**; the annotated member is still exempt), the retained XML
+  `docs-v2/engineering/evidence/TEST-io.matrix.auditor.DecisionPathImportExemptionTest.xml`,
+  and the green gate `docs-v2/engineering/evidence/TEST-io.matrix.auditor.DecisionPathGateTest.xml`.
+  The wave's wall-clock reads are annotated and decide nothing — that claim now holds **inside
+  the gate's true reach** rather than inside its reduced one.
+
+### R-EPIS-13 — the asked-question write could not be upgraded, and the journey reported it as a broken output root
+
+- **the finding**: `KnowledgeStore.recordAskedQuestion` did a **read-then-write** in autocommit mode: it read the
+  record's count with a `SELECT` and wrote back one more with an `UPDATE`, and the `ResultSet` of the first was
+  still open when the second ran. The connection therefore held a **read snapshot** across the write. This store
+  shares its file with the cognitive store — which writes the journey's **trace** into it — so another connection can
+  commit between the read and the write. A snapshot another commit has invalidated cannot be **upgraded** to a write:
+  SQLite answers `SQLITE_BUSY` at once, and the **busy timeout does not apply** to that case, because waiting cannot
+  make a stale snapshot fresh. The store's own W51 doctrine says exactly this — and this method did not follow it.
+- **how it surfaced**: the report journey caught the store's `IllegalStateException` and answered **HTTP 503
+  `output_root_unavailable`** — a wrong name for a database that was busy. The refusal body carried
+  `detail=Failed to read the asked question`, and the cause chain behind it was
+  `SQLiteException :: [SQLITE_BUSY] The database file is locked`.
+- **the measurement**: the defect is **NOT** caused by CRJ-01's arm C. The **control** tree (the commit before arm C)
+  fails the same probe at the same rate: **32 of 40 rounds refused** on the control against **33 of 40** on the arm C
+  tree. It is a **pre-existing** defect of the served path, found because the full suite was run.
+- **the reproduction** (the retained RED artefact):
+  `docs-v2/engineering/evidence/CRJ-01-REPRODUCTION-concurrent-journey-sqlite-busy.xml` — one test, **one failure**.
+  The gate is `matrix-core/src/test/java/io/matrix/knowledge/ConcurrentReportJourneyTest.java`: two concurrent requests
+  with the same identity, **40 rounds**, and **not one refusal** is allowed. A single round proves nothing, because the
+  failure depends on the timing.
+- **the fix**: the read and the write are now **one transaction**. The transaction takes the write lock when it
+  **begins**, so the wait for it is a wait, the read that follows sees a database nobody else can change under it, and
+  the write that closes it needs no upgrade at all. It is IMMEDIATE because the connection is configured that way — the
+  same reason the store's other write paths use one.
+- **owner**: the coordinator (Level 2 — a change that reaches a persistent store).
+- **status**: **FIXED and PROVEN** — RED without the fix (one failure, the retained XML), GREEN with it, and the
+  journey's concurrent test in the route's own suite is green again.
+
+### R-EPIS-12 — a full-suite run rewrites the retained C2A enrichment documents
+
+- **the finding**: the retained documents of the C2A wave are **written by the test suite**:
+  `matrix-core/src/test/java/io/matrix/knowledge/concept/ConceptEnrichmentExperimentTest.java`
+  and `HeldOutEvaluationTest.java` write `docs-v2/engineering/C2A-CONCEPT-ENRICHMENT-EXPERIMENT.md`,
+  `C2A-CONCEPT-ENRICHMENT-RESULTS.json`, `C2A-HELDOUT-EVALUATION.{json,md}` and
+  `C2A-LEARNING-EVIDENCE.json`. A run of the suite therefore **mutates the repository's own
+  evidence**: the preparation cost, the extraction times and the retained byte counts in those
+  documents change with every run, and the documents are committed artefacts.
+- **how it was found**: a full-suite run (`--tests "io.matrix.*"`, the scope the fast lane
+  derives when a changed file sits in the ROOT package) rewrote five of those documents while
+  the coordinator was working on another change; the coordinator restored them from `HEAD` and
+  the working tree was clean again.
+- **why it matters**: an artefact that a run rewrites is not **retained** evidence — it is a
+  measurement that changes every time somebody measures it again, and a reviewer cannot tell
+  whether the committed numbers are the ones the last run produced. This is the same class of
+  defect as R-EPIS-11, one level up: the probe family at least printed its numbers; these
+  tests **write them into the repository**.
+- **the fix**: not applied. The right fix is for the measurement to write into a **temporary
+  directory** and for the committed document to be copied out of it deliberately — the same
+  discipline the retained-evidence directory already follows for the JUnit XML. Changing those
+  tests is Level 1 (test-only), but it touches five documents' producers, so it is the next
+  wave's work rather than a change made in passing.
+- **owner**: the coordinator (Level 1 — test-only changes).
+- **status**: **OPEN as a labelled gap**. Until it is fixed, a full-suite run leaves the
+  working tree dirty, and the coordinator must check `git status` after such a run.
 
 ### R-EPIS-11 — the wave's own probe family reports a measurement and asserts nothing
 
@@ -776,5 +845,190 @@ evidence is a suspicion, and it is marked as such.
   has a **mutation proof** (red with the guard disabled, green after the restoration).
 - **the fix**: the remaining probes are named, not fixed — converting a measurement probe into a
   gate is a **design decision** about what the probe is for, and it is the next wave's work.
+- **the measurement of 2026-11-20 (COG-02)**: the family was counted, class by class, over the
+  whole tree — `HardReview*` and `AdversarialProbe*` classes in the three test trees: **11
+  classes, 51 methods, 79 assertion calls, 213 print calls, and not one class that is a pure
+  gate**. Five classes are **measurement** (no assertion at all), six are **mix** (they assert,
+  and they also print). The per-class table is
+  `docs-v2/engineering/CRJ-01-RISK-VERDICT.md` §2.2. The sharpest reading of it: **the family
+  covered no idempotency probe at all** — the changed-payload defect in R-EPIS-10's sibling
+  (CRJ-01.1) had no adversarial probe, which is one reason it survived; the two probes written
+  for CRJ-01 (`ReportIdempotencyConflictTest`, `DecisionPathImportExemptionTest`) were written
+  as **gates** on purpose, and the first one was proven **red before** its fix.
 - **owner**: the coordinator (Level 1 — test-only changes), after the release.
-- **status**: OPEN as a **labelled gap**; the two false-success probes of this wave are CLOSED.
+- **status**: OPEN as a **labelled gap**, now with the classification measured rather than
+  asserted; the two false-success probes of this wave are CLOSED.
+
+### R-EPIS-14 — the journey's trace lived in an episode the store never opened
+
+- **the finding**: the report journey's trace lives in an episode — the store's own container for "one run of
+  something", with an account of what it was, a workspace it belongs to and an instant it started. The journey wrote
+  its **steps** into that episode and never **opened** it: `appendEvents` inserts into the event table, and an event
+  names its episode in a column; nothing ever inserted a row into the episode table. So the episode existed in the
+  event table and **nowhere else**.
+- **how it surfaced**: the store's own listing of a workspace's episodes was **empty** while the journey's steps were
+  in the event table. Two things follow from that, and both matter. First, a **learned competence's provenance** —
+  `learned_in_episode` — named an episode that a reader following it could not find. Second, the **quarantine list**
+  of arm C could not be enumerated from the store at all, which is why the operator had to name the ids by hand.
+- **the reproduction** (the retained RED artefact):
+  `docs-v2/engineering/evidence/CRJ-01-REPRODUCTION-journey-episode-missing.xml` — two tests, **two failures**. The
+  gate is `matrix-core/src/test/java/io/matrix/cognitive/report/ReportJourneyEpisodeTest.java`.
+- **the fix**: the journey **opens** its episode before it writes a step into it. The form is an `ensure` rather than
+  an open, because the episode is keyed by the **action identity**: the same request always names the same episode, so
+  a later journey **continues** it. The account of what the episode was belongs to the first writer and is never
+  rewritten — which is the store's own rule, extended to the case `startEpisode` refuses rather than accepts. Two
+  concurrent callers that meet for the first time produce **one** episode: the loser of the race is told it did not
+  open anything.
+- **the alternatives**: the journey keeps writing events only (rejected — the episode is nowhere); the episode is
+  opened with the wall clock each time (rejected — `startEpisode` treats a different account as a **conflict**, so a
+  replay would have been refused); the episode is closed at the end of each journey (rejected — the trace's episode id
+  is the identity's, so closing it would end the identity's record at its first journey, and a later journey would
+  write into a closed episode).
+- **owner**: the coordinator (Level 2 — a change that reaches a persistent store).
+- **status**: **FIXED and PROVEN** — RED without the fix (two failures, the retained XML), GREEN with it
+  (`TEST-io.matrix.cognitive.report.ReportJourneyEpisodeTest.xml`: two tests, zero failures). The residual: the
+  episode's **summary** is derived from the action identity, so the episode does not itself name the question — a
+  reader reads the identity and follows it to the request.
+
+### R-EPIS-15 — the bundled package is a paraphrase corpus, so the oracle's question is unanswerable over it
+
+- **the finding**: the source-span oracle asks whether the served response cites the evidence the
+  source document **actually contains**. Run against the **real served path** — the report
+  journey over the bundled photosynthesis package — it grounded **0** of the **7** claims the
+  journey cited. The package carries each document's text as the source's excerpt, and **17 of
+  the 18** evidence excerpts **are** spans of it, but the claim's **proposition** — which is what
+  the answer cites — is a **paraphrase** of that text and is never byte-identical to a span of
+  it.
+- **why it is not a defect of the instrument**: the claim's own **evidence excerpt** is a span of
+  its document, and the oracle **grounds** it. The instrument discriminates over the real path;
+  the measurement is a property of the package.
+- **the consequence**: the bundled package **cannot** be the sealed split's corpus. The protocol's
+  new-corpus requirement (§2.1.3.1–2) — a new directory, imported through the **production
+  acquisition path** — is a **hard condition** under which the oracle's question is answerable at
+  all, and it is now **measured** rather than assumed. A case built over the bundled package
+  would be scored UNGROUNDED on every case, and the run would look like a failure of the arms.
+- **the evidence**: `docs-v2/engineering/evidence/TEST-io.matrix.crj.evidence.BundledCorpusSpanMeasurementTest.xml`
+  — three tests, zero failures (the measurement, the production ids, the positive control). The
+  analysis is in `docs-v2/engineering/CRJ-01-INSTRUMENTS.md` §4.
+- **the refinement, and it is per CASE rather than per corpus**: the production acquisition path
+  does **not** make every claim a literal span. Of the **540** claims it derived from the
+  research pool, the oracle grounded **483** and refused **57** — the propositions built from a
+  **heading and the paragraph that follows it**, a **flattened list**, or **boilerplate**. So the
+  corpus condition is satisfiable, but the case author must **select a gold that IS a span** and
+  the builder must **prove** it, exactly as the repository's own held-out builder does for the
+  claims it selects. The evidence is
+  `docs-v2/engineering/evidence/TEST-io.matrix.crj.evidence.ImportedCorpusSpanMeasurementTest.xml`.
+- **owner**: the programme — the **case author** must be given this before they start, and the
+  corpus they build must carry the documents' text such that the claims' propositions are spans
+  of it.
+- **status**: **OPEN as a constraint on the corpus** — the measurement is done and the finding is
+  recorded; what remains is the corpus itself, which §5.6 requires from a case author who
+  implements no arm.
+
+### R-EPIS-16 — a learned claim is a claim about this workspace, and its applicability is the concept alone
+
+- **the finding**: the learned claim's serving role is to join the answer's evidence when the question resolved to
+  the claim's **concept**. That is the workspace's own semantic anchor rather than the question's tokens — a token
+  rule would be the retriever's own rule, and the protocol names that confound exactly (A3: "the gain is retrieval by
+  overlap", REJECTED for transfer). But the anchor is **coarse**: two claims of the same concept are both applicable,
+  and the system has no machinery for a narrower class.
+- **why it matters**: a learned claim that applies too widely is a claim asserted where it was never validated. The
+  containment gate bounds what it may SAY; the applicability bounds WHERE it may be said, and the second bound is the
+  coarse one.
+- **the evidence**: `docs-v2/engineering/evidence/TEST-io.matrix.cognitive.report.LearnedClaimServingTest.xml` — the
+  claim reaches the served answer of a different question, and the response names which claim was learned and on how
+  many held-out cases it was validated.
+- **owner**: the programme — the **sealed set** is what would say whether the coarse applicability costs accuracy,
+  because the oracle scores the cited evidence of every answer.
+- **status**: **OPEN as a labelled limit** — the mechanism is bounded on the side of WHAT a claim may say (the
+  containment gate) and coarse on the side of WHERE (the concept).
+
+### R-EPIS-17 — the arm C cost claim rested on one measurement over a 17-claim workspace
+
+- **the finding**: the report's cost claim was **one measurement** — the procedure saves
+  **2.7 %** of the reading — over a workspace of **17 claims** whose support covered **15** of
+  them. A single measurement over a workload that small cannot say whether the mechanism is
+  worthless or merely mis-applied.
+- **the measurement** (2026-11-21, `ArmCCostMeasurementTest`): the same two readings, timed 30
+  times after a 10-pair warmup and **interleaved**, reported as the **median**, over two
+  workspaces and four support fractions each. On the **540-claim** research pool the saving is
+  **78 %** at a fraction of **1/6**, **68 %** at a third, **27 %** at three quarters and
+  **≈0 %** at the whole workspace; on the **17-claim** bundled workspace it is **25 %** at a
+  fraction of **0.06** and **≈0 %** at its own fraction of **0.88**.
+- **the attribution**: the bundled support's fraction was **0.88**, and the curve at that
+  fraction measures **−0.6 % to 2.8 %** — the "2.7 % null". **The null was the workload, not
+  the mechanism**, and the mechanism's premise — a narrower reading is cheaper — holds where
+  the workspace is large enough for the per-claim cost to dominate.
+- **the consequence for the programme**: the sealed split's corpus must be a **large** workspace
+  and the arm C support set a **small fraction** of it, or the mechanism has nothing to save.
+- **the evidence**: `docs-v2/engineering/evidence/TEST-io.matrix.cognitive.report.ArmCCostMeasurementTest.xml`
+  — 3 tests, 0 failures. The analysis is `docs-v2/engineering/CRJ-01-ARM-C.md` §8.
+- **owner**: the programme — the corpus commission carries this constraint.
+- **status**: **CLOSED as a measurement**; the claim it replaces is characterised, and the
+  **correctness** side (`δ_MI`) remains unmeasured for the reason every other measurement here
+  remains unmeasured: the sealed set does not exist.
+
+### R-EPIS-18 — the corpus's usable remainder was unmeasured, and the first read was empty
+
+- **the finding**: the corpus question was settled only partly. Two measurements had shown
+  that the bundled package is a **paraphrase** corpus and that the research pool serves
+  **verbatim spans** (483 of 540) — but the sealed split needs **FRESH** evidence, and the
+  three regression sets had taken **101 gold propositions** from this pool and its seed
+  corpus. A claim that is one of their gold is **not held-out proof** by the protocol's §5.2.
+  The pool's usable remainder was unmeasured.
+- **the measurement** (2026-11-21, `Crj01CorpusReportBuilder`): the pool imported through the
+  **production import path**, every claim classified by two properties — is it a **verbatim
+  span** of its document's bytes, and is its proposition **fresh** — into a byte-reproducible
+  artefact (`docs-v2/engineering/CRJ-01-CORPUS-REPORT.json`). **540 claims, 483 spans, 470
+  fresh, 413 both.** The sealed split needs **18**: the corpus is **sufficient** by a factor
+  of **23**, and a one-document support set is **0.1667** of it — exactly the fraction at
+  which the cost curve measured a **78 %** saving.
+- **the defect the instrument caught in itself**: the first run reported **"540 of 540 are
+  fresh"**, which was **false** — the builder read the sets with Jackson's `readTree`, which
+  returns a `JsonNode` and not a `Map`, so the shape test was always false and **no set was
+  read at all**. An instrument that reads nothing reports everything as fresh. The read is
+  now `readValue(..., Map.class)`, and the builder **asserts that it read something** — that
+  the discovery found the sets and that each set's gold is non-empty.
+- **the governance it had to satisfy**: the repository holds that a held-out set "is
+  referenced by its own builder and its own reader, and by nothing else in the production or
+  research code", and the check is enforced on **every** file. The corpus report therefore
+  **does not name** the held-out sets: it **discovers** them by **shape** — a JSON file whose
+  cases carry gold claims with propositions — which needs no list to maintain. It carries **no
+  gold proposition and no question** of any set; it reads them at run time, as the
+  repository's own adversarial probes do. The artefact's overlap with the sets' 101 gold
+  propositions is **zero**.
+- **the owner**: the case author and the freezing reviewer — the corpus is ready, and the
+  commission's constraints are now measured rather than guessed.
+- **status**: **CLOSED as a measurement**; the corpus question is **settled** and the sealed
+  split may be built from this pool.
+
+### R-EPIS-19 — the portfolio benchmark asserted a property of the MACHINE, not of the code
+
+- **the finding**: `PortfolioBenchmarkTest` asserted that "the prebuilt index is cheaper per
+  query than the scan it replaces", and it compared the two on the **mean** of 30 passes over
+  a corpus of **256** short strings. It failed in the **full suite** — twice — and passed in
+  isolation.
+- **the two causes, and they are different**:
+  1. **the wrong statistic.** The trie's **p50** was 10.1 us against the scan's 19.8 us — the
+     index is **twice** as fast — while the trie's **p95** was 39.4 us and its **mean**
+     21.4 us. One collection among thirty samples moved the mean past the difference the
+     comparison is about. The repository's own latency assertion already uses the median for
+     exactly this reason, and so does the CRJ-01 cost curve;
+  2. **the wrong regime.** At 256 short strings the whole corpus fits in the CPU's cache, so
+     the scan's linear pass is cache-resident and almost free. The claim is an **asymptotic**
+     one — the index's lookup does not grow with the corpus and the scan's does — and a
+     corpus that small cannot show it. The break-even the test computed overflowed to
+     `9223372036854775807` queries, which is the symptom of a comparison made where it
+     cannot hold.
+- **the fix**: the per-query comparison uses the **median**, with a **warmup** (the first
+  execution of a body pays the JIT's warmup, and a measurement that includes it measures the
+  compiler); and the corpus is **4096** entries, large enough that the scan's linear pass is
+  real work. The measured result is now **stable and large**: the scan costs **1787.3
+  ns/query** and the index **226.7 ns/query** — **7.9× cheaper** — and the break-even is a
+  real **960 queries**.
+- **what it is not**: this is not a claim that the product changed. It is a claim that the
+  test now measures the property it names, and that the property is the code's and not the
+  machine's.
+- **owner**: the programme — the wider class of load-sensitive assertions is unchanged and
+  is the owner's decision whether to re-specify it.
+- **status**: **CLOSED** for this test; the wider class is open and already on the register.

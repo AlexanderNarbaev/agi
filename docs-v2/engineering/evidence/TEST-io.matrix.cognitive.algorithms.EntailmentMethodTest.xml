@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.cognitive.algorithms.EntailmentMethodTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-11-20T15:25:44.212Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.005">
+  <properties/>
+  <testcase name="everyCorpusCaseAgreesWithTheReferenceChecker()" classname="io.matrix.cognitive.algorithms.EntailmentMethodTest" time="0.001"/>
+  <testcase name="aTheoryPastTheAtomBudgetIsRefusedByThePrecondition()" classname="io.matrix.cognitive.algorithms.EntailmentMethodTest" time="0.001"/>
+  <testcase name="theSelectorOffersTheMethodToTheReasoningFamily()" classname="io.matrix.cognitive.algorithms.EntailmentMethodTest" time="0.0"/>
+  <testcase name="aBlankGoalIsRefused()" classname="io.matrix.cognitive.algorithms.EntailmentMethodTest" time="0.0"/>
+  <testcase name="aTheoryTooLargeForTheNodeBudgetIsReportedAsResourceLimited()" classname="io.matrix.cognitive.algorithms.EntailmentMethodTest" time="0.001"/>
+  <testcase name="theOutputSaysWhetherTheConclusionWasEntailed()" classname="io.matrix.cognitive.algorithms.EntailmentMethodTest" time="0.0"/>
+  <testcase name="theAtomCountMirrorsWhatTheCheckerCounts()" classname="io.matrix.cognitive.algorithms.EntailmentMethodTest" time="0.0"/>
+  <testcase name="theCapabilityDeclaresTheFamilyAndTheAtomBudgetPrecondition()" classname="io.matrix.cognitive.algorithms.EntailmentMethodTest" time="0.0"/>
+  <testcase name="anUnmeasuredAccuracyProfileSaysSo()" classname="io.matrix.cognitive.algorithms.EntailmentMethodTest" time="0.0"/>
+  <testcase name="theResourceLimitCarriesTheUndecidedStatus()" classname="io.matrix.cognitive.algorithms.EntailmentMethodTest" time="0.001"/>
+  <testcase name="theCorpusHasExactlyAsManyCasesAsTheCapabilityDeclares()" classname="io.matrix.cognitive.algorithms.EntailmentMethodTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

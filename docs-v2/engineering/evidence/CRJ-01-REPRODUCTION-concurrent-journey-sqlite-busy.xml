@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.ConcurrentReportJourneyTest" tests="1" skipped="0" failures="1" errors="0" timestamp="2026-11-20T19:31:11.777Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="3.864">
+  <properties/>
+  <testcase name="two concurrent requests with the same identity both succeed, over many rounds" classname="io.matrix.knowledge.ConcurrentReportJourneyTest" time="3.854">
+    <failure message="java.lang.AssertionError: [the journey must not refuse a request because another writer of the same database changed it while the request was reading] &#10;Expecting empty but was: [&quot;round 3: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 4: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 5: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 6: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 7: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 8: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 10: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 11: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 12: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 13: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 14: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 15: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 17: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 18: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 19: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 20: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 22: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 23: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 25: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 27: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 28: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 29: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 31: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 32: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 33: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 34: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 35: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 36: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 37: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,&#10;    &quot;round 38: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;]" type="java.lang.AssertionError">java.lang.AssertionError: [the journey must not refuse a request because another writer of the same database changed it while the request was reading] 
+Expecting empty but was: [&quot;round 3: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 4: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 5: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 6: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 7: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 8: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 10: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 11: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 12: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 13: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 14: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 15: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 17: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 18: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 19: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 20: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 22: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 23: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 25: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 27: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 28: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 29: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 31: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 32: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 33: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 34: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 35: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 36: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 37: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;,
+    &quot;round 38: status 503 — {error=output_root_unavailable, detail=Failed to read the asked question}&quot;]
+	at io.matrix.knowledge.ConcurrentReportJourneyTest.theConcurrentRequestsBothSucceed(ConcurrentReportJourneyTest.java:56)
+</failure>
+  </testcase>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

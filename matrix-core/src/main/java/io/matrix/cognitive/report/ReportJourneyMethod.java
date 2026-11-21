@@ -44,7 +44,8 @@ import java.util.Set;
  * different facts, and the method believes the second one.</p>
  */
 public final class ReportJourneyMethod
-        implements AlgorithmMethod<ReportJourney.Problem, ReportJourney.Result> {
+        implements AlgorithmMethod<ReportJourney.Problem, ReportJourney.Result>,
+        ReportJourneyPlanner.JourneyMethod {
 
     /** The capability id of the reference method. */
     public static final String REFERENCE_ID = "report.journey.reference.v1";
@@ -81,6 +82,28 @@ public final class ReportJourneyMethod
      * replay must not turn that refusal into a silent answer.</p>
      */
     public static final String FACT_NAME_UNCHANGED = "report.name-unchanged";
+
+    /**
+     * The fact: the question is the one the retained journey answered.
+     *
+     * <p>The identity names the ACTION, and the action's content is the answer to a
+     * specific question. A reused idempotency key with a different question is a different
+     * request under the same identity: the retained answer does not answer it, and
+     * serving it anyway would report a success for a question nobody asked. The fact is
+     * established by comparing the request's question with the one the retained journey
+     * recorded — a retained journey that names no question establishes it for nobody.</p>
+     */
+    public static final String FACT_QUESTION_UNCHANGED = "report.question-unchanged";
+
+    /**
+     * The fact: the answer was retrieved at the level the request asks for.
+     *
+     * <p>The level is part of the request, and the workspace answers a question at a
+     * level: an answer retrieved at one level is not the answer another level would
+     * have produced. The fact is established by comparing the request's level with the one
+     * the retained journey recorded.</p>
+     */
+    public static final String FACT_LEVEL_UNCHANGED = "report.level-unchanged";
 
     /** The declared cost of the reference method, in milliseconds. */
     public static final long REFERENCE_DECLARED_COST_MILLIS = 25L;
@@ -156,7 +179,8 @@ public final class ReportJourneyMethod
      */
     public static ReportJourneyMethod replay() {
         return new ReportJourneyMethod(REPLAY_ID, true,
-                Set.of(FACT_IDENTITY_COMMITTED, FACT_WORKSPACE_UNCHANGED, FACT_NAME_UNCHANGED),
+                Set.of(FACT_IDENTITY_COMMITTED, FACT_WORKSPACE_UNCHANGED, FACT_NAME_UNCHANGED,
+                        FACT_QUESTION_UNCHANGED, FACT_LEVEL_UNCHANGED),
                 REPLAY_DECLARED_COST_MILLIS,
                 new AlgorithmCapability.AccuracyProfile(
                         "the agreement with the reference journey's answer", 1.0,
@@ -192,6 +216,16 @@ public final class ReportJourneyMethod
         if (!retained.workspaceFingerprint().equals(input.workspaceFingerprint())) {
             return false;
         }
+        // the retained answer answers ONE question at ONE level. A record that names
+        // neither cannot state which question it answers, so it is not replayable: the
+        // method refuses it instead of serving an answer of unknown provenance.
+        if (retained.question() == null || !retained.question().equals(input.question())) {
+            return false;
+        }
+        if (retained.level() == null
+                || !retained.level().equals(input.level().name())) {
+            return false;
+        }
         return committed(input.writer(), input.identity());
     }
 
@@ -209,6 +243,11 @@ public final class ReportJourneyMethod
 
     private ReportJourney.Result reference(ReportJourney.Problem input) {
         Answer answer = input.workbench().ask(input.workspaceId(), input.question(), input.level());
+        // the learned claims of the workspace join the evidence: a claim the system has
+        // validated belongs in the evidence of a question about its concept, even when the
+        // question's words did not point at it
+        answer = LearnedClaims.apply(input.workbench(), input.workspaceId(), answer,
+                input.learnedClaims());
         byte[] content = ReportBuilder.markdown(input.workspaceId(), input.question(), answer)
                 .getBytes(StandardCharsets.UTF_8);
         ArtifactWriter.Result write = input.writer().write(input.identity(), input.reportName(),
