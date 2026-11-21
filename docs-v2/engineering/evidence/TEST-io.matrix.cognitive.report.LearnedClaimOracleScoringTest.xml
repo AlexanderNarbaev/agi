@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.cognitive.report.LearnedClaimOracleScoringTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-21T17:01:31.398Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="7.951">
+  <properties/>
+  <testcase name="the learned claim's contribution is scored: grounded when cited, and never wrong" classname="io.matrix.cognitive.report.LearnedClaimOracleScoringTest" time="7.942"/>
+  <system-out><![CDATA[[CRJ-01] the learned claims' contribution, over 13 questions and 7 documents:
+[CRJ-01]   cited 20; grounded 20; UNGROUNDED 0; cited OUT OF SCOPE 0
+[CRJ-01]   ADDED by the learned claim (the reference alone did not carry it): 14
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

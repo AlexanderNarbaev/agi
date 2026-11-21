@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.crj.runner.Crj01FreezeRecordTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-21T16:58:43.845Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.026">
+  <properties/>
+  <testcase name="the record REFUSES to be written without its roles, or with one person in both" classname="io.matrix.crj.runner.Crj01FreezeRecordTest" time="0.004"/>
+  <testcase name="the freeze record carries every field of §5.5, and the digests are re-derivable" classname="io.matrix.crj.runner.Crj01FreezeRecordTest" time="0.021"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

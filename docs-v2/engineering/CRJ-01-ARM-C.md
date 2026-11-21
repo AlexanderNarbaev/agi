@@ -696,3 +696,166 @@ and `…Crj01DomainBStructureMeasurementTest.xml` — the rows are in
 `docs-v2/engineering/CRJ-01-EVIDENCE-DOMAIN-B.json`.
 
 ---
+
+## 13. The learned claim's scope — the concept alone was too coarse (2026-11-21)
+
+**R-EPIS-16 is closed.** The learned claim's serving rule was: it applies when the answer's
+**concepts** include the claim's concept, and nothing else. The concept is the right anchor
+— a token rule would be the retriever's own rule, and the protocol names that confound
+exactly (A3, "the gain is retrieval by overlap") — but the anchor was **coarse**: a question
+about a concept received **every** learned claim of that concept, from **any** document,
+including a claim validated against a document the question's evidence never touches, and
+therefore about a different part of the concept altogether.
+
+### 13.1 The rule now: the concept AND a common document
+
+**A learned claim applies only when the answer's evidence draws on one of the sources the
+claim was VALIDATED AGAINST** — its own source, and the sources observed with it.
+
+**Why that is the right scope and not a weaker one.** The learner's **agreement gate**
+established that the reference carried the claim on **every** held-out question, and those
+questions' evidence came from exactly those sources. So the claim's validated scope IS "what
+the workspace says about this concept, drawn from these documents", and the narrowed rule
+applies the claim **exactly where that validation speaks**. It can only **extend** the
+coverage of a body of evidence the answer already rests on; it can never import a document's
+subject into a question that never touched it.
+
+**And it fails CLOSED**: an answer with no sources, or a claim with no support, adds nothing.
+The rule may not be defeated by missing data.
+
+### 13.2 What the coarse rule cost — measured
+
+Over the research pool (seven real documents, **one learned claim per document**, each a
+verbatim span of its document) and **thirteen** questions:
+
+| | |
+|---|---|
+| the coarse rule would add | **22** claims |
+| the narrowed rule adds | **20** |
+| the coarse rule **over-applied** | **2** claims — every one from a document the answer **never drew on** |
+
+**The honest reading: 9 % is a real over-application and not a dramatic one**, and the reason
+is visible in the corpus — the pool's seven documents are all about plate tectonics, so a
+question about any of them draws on most of them, and **the concept genuinely is most of the
+scope**. **The coarse rule's error is bounded by how topically homogeneous the corpus is.**
+The defect grows with a corpus of unrelated documents, and the research pool is close to the
+best case for the coarse rule.
+
+**The evidence:** `docs-v2/engineering/evidence/TEST-io.matrix.cognitive.report.LearnedClaimScopeTest.xml`
+(the rule: the claim of the same concept from an unrelated document does **not** apply, the
+one from a shared document **does**, and the rule fails closed) and
+`…LearnedClaimScopeMeasurementTest.xml` (the measurement). The serving path is unchanged
+and still proven by `…LearnedClaimServingTest.xml`.
+
+---
+
+## 14. The freeze record — computed, re-derivable, and refusing to be written without its roles (2026-11-21)
+
+**§5.5 requires the freeze record to carry nine things**, and §5.6 binds the order: "the
+reviewer publishes the freeze record and the manifest hash **before** the first arm run". A
+freeze record is therefore a thing a reader who **was not there** must be able to **check** —
+otherwise it is a claim, not a record. There was no mechanism that computed it: the record
+would have been a hand-written list of digests, and a hand-written list of digests is a list
+nobody can re-derive.
+
+### 14.1 What the record now is
+
+`Crj01FreezeRecord` computes every field **from the artefacts** — the split, the builder
+source, the two oracle sources, the corpus manifest, the repository's HEAD — so a reader can
+re-derive each one and compare it. The test proves the re-derivation **independently**: it
+recomputes the dataset's digest from the compact JSON of the cases array, recomputes the
+generator's digest from the file's bytes, and resolves the branch SHA with `git rev-parse
+HEAD` — three independent derivations that must agree with the record.
+
+| the field | the value, and how it is derived |
+|---|---|
+| `dataset.sha256` | `56779f8ade0e…` — the UTF-8 bytes of the **compact** JSON `cases` array **+ one line feed** (the protocol's exact scope) |
+| `dataset.fullFileSha256` | `ddb0c602a90d…` — the file as it stands, recorded **separately** so a re-serialised file and the file on disk are both traceable |
+| `generator.sourceSha256` | `4dfb5491bd1d…` — the builder's bytes |
+| `oracle.sourceSha256` | `dda2e3e8a3a5…` (domain A) and `c669dfb70825…` (domain B) — **separately**, because they are different instruments |
+| `seeds` | the generator's seed `20261121` and the **27** pre-committed domain-B episode seeds |
+| `corpusManifestSha256` | `fa7ba16e9bad…` — the corpus manifest's digest, which **matches the value the protocol records** |
+| `branchSha` | the freeze's **own** commit — resolved from `.git/HEAD` and that branch's ref (loose or packed) |
+| `instrumentCrosscheck` | the domain-B truth table against the world: **4 assignments, 4 agreements, 0 disagreements** |
+| `roles` | the case author, the freezing reviewer, and the statement that they are different people and neither wrote a solver |
+
+**The branch SHA is the freeze's OWN commit, not a named branch's.** The protocol says the
+freeze records "the exact commit the freeze was taken on" and that it is "normally **not**
+`b7bd1be4`" — the protocol's baseline. Reading a **named** branch would have been wrong
+twice over: the local `develop` ref is **stale** until it is updated (the first run of this
+mechanism recorded `b7bd1be4` — the baseline — and was therefore wrong), and the freeze may
+legitimately be taken on a feature branch. So the record resolves `.git/HEAD`, and records the
+protocol's baseline **beside** it, under `baselineSha`.
+
+### 14.2 The roles are BINDING — and a machine cannot fill them
+
+The record **refuses to be written** without its roles, and refuses when one person holds
+both: *a freeze record that does not say who froze what is not a freeze record.*
+
+**And the publisher writes PLACEHOLDERS, deliberately.** `Crj01FreezeRecordPublisherTest`
+writes the record with the two role fields marked `UNNAMED` and the status
+`DIGEST RECORD — … the record is NOT a valid freeze until the reviewer fills them and
+publishes it`. A machine cannot name a person, and a record that names a person it invented
+would be **worse than no record**. The protocol's requirement is a fact about **people**, and
+the programme is the one that must assert it.
+
+**So the sealed freeze is two steps**: the publisher writes the **digest record** (final and
+re-derivable), and the **reviewer** fills the two role fields and publishes it. The digests
+are ready; the names are the owner's commission.
+
+**One property worth stating.** The record names the commit the freeze was taken on, which is
+the commit **before** the record itself is committed — so the record's own commit is always
+one step ahead of the SHA it carries. That is inherent to a record that names a commit: the
+**sealed** freeze must therefore be taken on a commit and published as a **later** commit,
+which is exactly the order §5.6 prescribes.
+
+**The evidence:** `docs-v2/engineering/evidence/TEST-io.matrix.crj.runner.Crj01FreezeRecordTest.xml`
+(the record is complete, the digests are re-derivable, the roles are binding) and
+`…Crj01FreezeRecordPublisherTest.xml` (the publication). The record itself is
+`docs-v2/engineering/CRJ-01-FREEZE-RECORD.json`.
+
+---
+
+## 15. The learned claim's contribution, SCORED (2026-11-21)
+
+**The gap this closes.** The learned claim reaches the served answer — proven by
+`LearnedClaimServingTest` — but its contribution was **not scored**: nothing measured
+whether the claim the system adds to the evidence is a claim that **grounds**, nor whether
+adding it ever makes an answer **wrong**. A learned claim that is cited but ungrounded is a
+citation the reader cannot check, and one that makes an answer wrong is worse than none.
+
+**The measurement.** Over the research pool (seven documents, **one learned claim per
+document**, each a claim whose proposition occurs **verbatim** in its document's text — the
+containment gate the learner enforces), **thirteen** questions asked through the served
+route, and every citation scored by the **source-span oracle's own rule**: the cited
+proposition is **byte-identical** to the proposition of the claim in its **own** document,
+and that document literally contains it — the same rule the domain-A arms are scored by.
+
+| | |
+|---|---|
+| the learned claims cited | **20** |
+| **grounded** | **20** — every one, by the oracle's rule |
+| **ungrounded** | **0** |
+| cited **out of scope** (the claim's document not among the answer's sources) | **0** |
+| **ADDED** by the learned claim — the reference **alone** did not carry it | **14** of 20 |
+
+**What that says.** The learned claim's contribution is **grounded every time it is
+cited**, and the narrowed scope rule (R-EPIS-16) **holds on the served path**: no citation
+was made for a claim whose document the answer never drew on.
+
+**And the capability is real and measured.** **14 of the 20 citations are evidence the
+reference alone did not carry** — the learned claim added claims to the evidence of a
+question the reference answered without them. That is the contract's **REUSE** row, which
+asks for "a **different related task** that retrieves the accepted knowledge and **changes
+the result**", stated as a number rather than as a claim: **70 %** of the citations the
+learned claim contributed were ones the reference did not make.
+
+**What it does not say.** This is the **research pool**, not the sealed set: the questions
+are the pool's own, and the split is not an author's. The **precision** of the serving rule
+on a *sealed* set — how often a learned claim is cited where it should not have been — is
+what the owner's commission still has to say. What is established here is that the
+mechanism's contribution **grounds** and that it **changes** the evidence.
+
+**The evidence:** `docs-v2/engineering/evidence/TEST-io.matrix.cognitive.report.LearnedClaimOracleScoringTest.xml`.
+
+---

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.crj.runner.Crj01FreezeRecordPublisherTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-21T16:58:43.579Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.265">
+  <properties/>
+  <testcase name="the freeze record is published, with its digests and its roles unfilled" classname="io.matrix.crj.runner.Crj01FreezeRecordPublisherTest" time="0.257"/>
+  <system-out><![CDATA[[CRJ-01] the freeze record: docs-v2/engineering/CRJ-01-FREEZE-RECORD.json
+[CRJ-01] the dataset's digest: 56779f8ade0eb86ca9d5aa63ad3c93f6f548761dab409b2a491932d5557f837a
+[CRJ-01] the branch SHA: dfb23f60fe4eb1325a33a93023ed01da9de69365
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
