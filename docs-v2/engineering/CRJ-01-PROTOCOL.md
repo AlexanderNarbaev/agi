@@ -7,6 +7,7 @@ who is not the author of the test cases freezes the sealed test set** and record
 (`CRJ-01-ACCEPTANCE.md:30`, `CRJ-01-EXECUTION-PLAN.md:41`, `CRJ-01-EXECUTION-PLAN.md:44`).
 
 **Date:** 2026-11-20
+**Internal amendment v1:** 2026-11-22, owner decision OD-083
 **Baseline SHA:** `b7bd1be4` (branch `develop`)
 **Drafted by:** the science specialist, sub-task `CRJ.0.6` of `docs-v2/engineering/CRJ-01-EXECUTION-PLAN.md:34`
 **Contract:** `docs-v2/engineering/CRJ-01-ACCEPTANCE.md`
@@ -543,7 +544,36 @@ javadoc). The CRJ-01 generator is a **new** builder; it does not exist at `b7bd1
 | `corpusManifestSha256` | each new corpus manifest's digest (the C2A set records the analogous field as `fa7ba16e…`, `docs-v2/engineering/C2A-HELDOUT-SET.json`, `/manifest/corpusManifestSha256`) |
 | `branchSha` | the exact commit the freeze was taken on. **The baseline of this protocol is `b7bd1be4`**; the freeze records its own SHA, which is normally **not** `b7bd1be4` because the corpus, the builder and the oracle are new files. |
 | `instrumentCrosscheck` | the 4-assignment agreement record of §4.2 |
-| `roles` | the name of the case author, the name of the freezing reviewer, and the statement that they are different people and that neither wrote a solver |
+| `roles` | the identities of the case author and freezing reviewer, and their attestations that they are distinct and neither wrote a solver. For internal AI-assisted evaluation, record the additional fields in §5.5a |
+
+### 5.5a Internal evaluation amendment v1 — SINGLE_OWNER_AI_ASSISTED
+
+The sole owner approved this mode for internal development review and
+experimental evaluation under OD-083 on 2026-11-22. The owner is accountable.
+Distinct, isolated AI roles may serve as implementer, case author, oracle
+author and freezing reviewer. Apply the independence requirements in §5.6
+to those roles. Record the model and session identities, assignments, access
+attestations, prior exposure, contamination risk and validation limitations.
+Label the result **independent AI-assisted internal evaluation** and reserve
+claims of independent human review for actual human review.
+
+Keep the hidden dataset and gold in evaluator-controlled storage. Deny the
+implementer read access before the frozen run. Give the solver only the
+preregistered inputs during the run and keep expected answers with the
+evaluator. Retain executable negative controls for safety-critical outcomes.
+
+Before the first run, publish the freeze manifest with the digests in §5.5,
+the scorer and metric schema hashes, the solver SHA, selection rules, seeds,
+arm budgets, execution order and acceptance thresholds. Publish the manifest
+without exposing cases or gold. Any change voids the freeze and requires a new
+dataset version and full rerun under §5.6. A protocol amendment alone leaves
+the split **NOT FROZEN**. Earlier DEV inputs and results remain historical
+debugging evidence. The proposed 18-case study remains an internal pilot.
+
+This amendment applies only to internal review and evaluation. The scientific
+thresholds, external-evidence requirements, and security and data controls
+remain binding. The pre-amendment protocol is available at revision
+`0549d27ee561afdf94214cbabe661c2532e08bae`.
 
 ### 5.6 The freeze procedure (binding)
 
@@ -867,7 +897,7 @@ was not**.
 | **D3 — the oracle** | **A** — a source-span oracle + an independently written truth table | A | the independence is **testable**: the truth table is cross-checked on all four assignments before the run, and a mismatch voids the run |
 | **D4 — δ_MI** | **A** — **2** additional sealed cases over both A and B | A | at n=18 the verdict of the pilot is expected to be **INCONCLUSIVE**; the interval is the primary outcome |
 | **CRJ.1.2 — what arm C builds** | **B** — a new `Procedure` family for domain A, beside the existing mechanism | A (reuse) | a larger surface, built **before** any measurement says it is needed — the held-out-case rule must be frozen with the sealed split, and the evaluation traffic stays quarantined |
-| **D5 — the freeze** | the contract decides it: a **third-party reviewer** freezes the sealed split; the hash record and the roles are published **before** the first arm run | A | **still OPEN as a procedure**: it needs a reviewer who is neither the case author nor a solver author — the freeze cannot be performed by the coordinator (the contract says so) |
+| **D5 — the freeze** | the contract decides it: a **third-party reviewer** freezes the sealed split; the hash record and the roles are published **before** the first arm run | A | OD-083 permits a distinct AI freezing reviewer for internal evaluation (§5.5a). The split remains NOT FROZEN until an eligible reviewer publishes the preregistered freeze record |
 
 Each decision lists the options and a **grounded recommendation**. All five are owner-level
 (`docs-v2/engineering/CRJ-01-EXECUTION-PLAN.md:70`).

@@ -110,7 +110,7 @@ the plan and the result cannot drift apart.
 | **CRJ.0.5** | **this document**, updated with the outcome | — |
 | **CRJ.0.6** | **DONE as a DRAFT** — the preregistration is written and **not frozen**; five owner decisions (D1–D5) are open | `docs-v2/engineering/CRJ-01-PROTOCOL.md` |
 | **CRJ.0.7** | **DONE** — the reproduction was executed in the one heavy JVM, the RED artefact was retained before the fix, and the GREEN artefact after it | `docs-v2/engineering/evidence/` |
-| **CRJ.1.1** | **BLOCKED on the owner** — the protocol cannot be frozen before D1–D5 are answered and an independent reviewer freezes the set | the protocol's §10 |
+| **CRJ.1.1** | **NOT FROZEN** — OD-083 approves a distinct AI reviewer for internal evaluation. A completed sealed set, access attestations and the preregistered freeze record are required | the protocol's §10 |
 | **CRJ.2.1 / CRJ.2.2** | **DONE for the local milestone** — the thinnest missing component was the replay's applicability domain, and the packaged journey ran **16/16** checks over real HTTP, including a restart | `docs-v2/engineering/CRJ-01-JOURNEY-DEMONSTRATION.json` |
 | **CRJ.2.3** | **NOT DONE** — the arm comparison needs a frozen protocol and an arm C that exists; the reuse demonstrated so far is arm B (the exact replay) | the protocol's §2 |
 
