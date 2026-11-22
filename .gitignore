@@ -200,3 +200,13 @@ data/models/**/*.safetensors.sha256
 # single CUDA install, so a fresh clone had dangling links. scripts/diagnose-cuda.sh
 # --repair recreates them locally; they are never committed.
 .onnx_libs/
+
+# Runtime artefacts at the repository root (added 2026-11-22). The jqwik property
+# database and the API gateway's task store are MACHINE STATE, not content: the
+# gateway's database is created by RemoteTaskStore ("data/mind/tasks.sqlite",
+# relative to the working directory), and the root-level jqwik database is the
+# same artefact the matrix-core one already excludes. Neither is ever committed.
+# The owner's documents under OpeAi/ ARE committed - they are the programme's
+# directive and handoff record, not machine state.
+/.jqwik-database
+/matrix-api-gateway/data/
