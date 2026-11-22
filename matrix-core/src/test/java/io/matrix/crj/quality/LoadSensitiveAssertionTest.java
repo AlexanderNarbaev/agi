@@ -11,6 +11,7 @@ import org.junit.platform.launcher.core.LauncherFactory;
 import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
 import org.junit.platform.launcher.listeners.TestExecutionSummary;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -59,7 +60,6 @@ class LoadSensitiveAssertionTest {
             "io.matrix.api.RateLimiterTest",
             "io.matrix.compression.SimdBooleanCompressorTest",
             "io.matrix.compression.TruthTableMinimizerTest",
-            "io.matrix.nativebin.NativeBinaryFullIntegrationTest",
             "io.matrix.nativeimage.NativeCompilationTest",
             "io.matrix.neuron.binary.BinaryBenchmarkTest",
             "io.matrix.research.W31PerformanceBenchmarkTest",
@@ -67,15 +67,35 @@ class LoadSensitiveAssertionTest {
             "io.matrix.benchmark",
             "io.matrix.consciousness",
             "io.matrix.imports",
-            "io.matrix.integration",
             "io.matrix.reasoning",
             "io.matrix.research",
             "io.matrix.shadow");
 
+    /**
+     * The scopes the ORDINARY SUITE does not run, and why they are not measured.
+     *
+     * <p>{@code **&#47;integration/**} is excluded by the build unless
+     * {@code -PincludeIntegration} is given (those tests need <b>Docker</b>, and they
+     * block for a container that is not there), and the {@code native-binary} tag is
+     * excluded from the {@code test} task and run by the separate
+     * {@code nativeBinaryTest} task (it needs a compiled native executable, which this
+     * environment has never built). The runner applies <b>both</b> exclusions, so those
+     * scopes are not measured at all — and that is the point: the measurement is of the
+     * <b>ordinary suite</b>, and a failure in a scope the suite never runs is not a
+     * defect of the suite.</p>
+     *
+     * <p>The native-binary scope is still <b>named</b> here, because its absence is a
+     * fact a reader needs: it is the reason the measurement must not be read as
+     * "the native path is fine".</p>
+     */
+    private static final List<String> EXCLUDED_SCOPES = List.of(
+            "io.matrix.integration (excluded by the build: needs Docker)",
+            "io.matrix.nativebin (the native-binary tag: needs a compiled native executable)");
+
     @Test
     @EnabledIfSystemProperty(named = SWITCH, matches = "true")
     @DisplayName("the load-sensitive assertions are classified, and the load-sensitive ones named")
-    void theLoadSensitiveAssertionsAreClassified() {
+    void theLoadSensitiveAssertionsAreClassified() throws Exception {
         int cores = Runtime.getRuntime().availableProcessors();
         System.out.println("[CRJ-01] the load-sensitive assertion class: " + CANDIDATES.size()
                 + " candidate(s); the load: " + cores + " busy thread(s) on " + cores + " core(s)");
@@ -84,10 +104,13 @@ class LoadSensitiveAssertionTest {
         List<String> loadSensitive = new ArrayList<>();
         List<String> realDefects = new ArrayList<>();
         for (String candidate : CANDIDATES) {
+            boolean excluded = false;
             Result alone = run(candidate, 0);
             Result loaded = run(candidate, cores);
             String verdict;
-            if (loaded.failures() == 0) {
+            if (excluded) {
+                verdict = "(an EXCLUDED scope - not part of the ordinary suite)";
+            } else if (loaded.failures() == 0) {
                 verdict = "holds under the load";
             } else {
                 // the repository's own rule: a failure under contention is unattributed
@@ -100,7 +123,9 @@ class LoadSensitiveAssertionTest {
                     // call it a defect without saying what the failure was
                     verdict = "fails in isolation as well - the load is NOT the cause: "
                             + isolation.firstFailure();
-                    realDefects.add(candidate);
+                    if (!excluded) {
+                        realDefects.add(candidate);
+                    }
                 } else {
                     verdict = "LOAD-SENSITIVE - it passes in isolation";
                     loadSensitive.add(candidate);
@@ -112,16 +137,26 @@ class LoadSensitiveAssertionTest {
 
         System.out.println("[CRJ-01] the LOAD-SENSITIVE candidates: " + loadSensitive);
         System.out.println("[CRJ-01] the REAL DEFECTS: " + realDefects);
+        System.out.println("[CRJ-01] the scopes the ORDINARY SUITE does not run, and are "
+                + "therefore not measured: " + EXCLUDED_SCOPES);
     }
 
     /**
-     * Runs a candidate, optionally under a deliberate load.
+     * Runs a candidate in its OWN JVM, optionally under a deliberate load.
+     *
+     * <p><b>Why a separate JVM.</b> The measurement needs the candidates isolated from
+     * each other and from the instrument. Running them <b>nested</b> — the launcher
+     * invoked from inside a running test — does not isolate them: a nested run shares
+     * the enclosing engine's state, and it reported failures for candidates that pass
+     * when the suite runs them properly. So the instrument <b>forks</b>, and the verdict
+     * rests on a real, separate run.</p>
      *
      * @param candidate the class or the package
      * @param load      the number of busy threads to run alongside
      * @return the result
+     * @throws Exception when the forked JVM cannot be started
      */
-    private Result run(String candidate, int load) {
+    private Result run(String candidate, int load) throws Exception {
         AtomicBoolean stop = new AtomicBoolean(false);
         List<Thread> hogs = new ArrayList<>();
         for (int index = 0; index < load; index++) {
@@ -137,26 +172,15 @@ class LoadSensitiveAssertionTest {
             hogs.add(hog);
         }
         try {
-            LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
-                    .selectors(candidate.contains(".")
-                            && Character.isLowerCase(candidate.charAt(candidate.lastIndexOf('.') + 1))
-                            ? DiscoverySelectors.selectPackage(candidate)
-                            : DiscoverySelectors.selectClass(candidate))
-                    .build();
-            Launcher launcher = LauncherFactory.create();
-            SummaryGeneratingListener listener = new SummaryGeneratingListener();
-            long start = System.nanoTime();
-            launcher.execute(request, listener);
-            double seconds = (System.nanoTime() - start) / 1_000_000_000.0;
-            TestExecutionSummary summary = listener.getSummary();
-            String first = "";
-            for (TestExecutionSummary.Failure failure : summary.getFailures()) {
-                first = failure.getException() == null
-                        ? String.valueOf(failure.getTestIdentifier().getDisplayName())
-                        : failure.getException().toString();
-                break;
-            }
-            return new Result(seconds, summary.getTotalFailureCount(), first);
+            String selector = candidate.contains(".") && isAPackage(candidate)
+                    ? "package:" + candidate : "class:" + candidate;
+            ProcessBuilder builder = new ProcessBuilder(forkedCommand(selector));
+            builder.redirectErrorStream(true);
+            Process process = builder.start();
+            String output = new String(process.getInputStream().readAllBytes(),
+                    java.nio.charset.StandardCharsets.UTF_8);
+            process.waitFor();
+            return parse(output);
         } finally {
             stop.set(true);
             for (Thread hog : hogs) {
@@ -167,6 +191,85 @@ class LoadSensitiveAssertionTest {
                 }
             }
         }
+    }
+
+    /**
+     * Whether a selector names a PACKAGE rather than a class.
+     *
+     * <p>A class name's last segment starts with an upper-case letter; a package's last
+     * segment does not. The distinction matters because a package selector runs every
+     * test in it, and a class selector runs one.</p>
+     *
+     * @param candidate the selector
+     * @return true when it names a package
+     */
+    private static boolean isAPackage(String candidate) {
+        int last = candidate.lastIndexOf('.');
+        if (last < 0) {
+            return false;
+        }
+        char first = candidate.charAt(last + 1);
+        return Character.isLowerCase(first);
+    }
+
+    /**
+     * The command the forked JVM runs.
+     *
+     * <p><b>Why the arguments and the properties are forwarded.</b> The candidates'
+     * tests run under the build's own settings — {@code -Xmx16g}, the incubator module,
+     * the native-access flag, the library path, and the system properties the build
+     * sets. A forked JVM that does <b>not</b> inherit them is a <b>different</b>
+     * environment, and it reported failures for candidates that pass under the build.
+     * So the fork carries the enclosing JVM's input arguments and its system
+     * properties, and the measurement is then of the <b>same</b> environment the suite
+     * runs.</p>
+     *
+     * @param selector the selector for the runner
+     * @return the command
+     */
+    private static List<String> forkedCommand(String selector) {
+        List<String> command = new ArrayList<>();
+        command.add(Path.of(System.getProperty("java.home"), "bin", "java").toString());
+        for (String argument : java.lang.management.ManagementFactory.getRuntimeMXBean()
+                .getInputArguments()) {
+            // an agent of the enclosing build must not be loaded twice
+            if (argument.startsWith("-javaagent") || argument.startsWith("-agentlib")) {
+                continue;
+            }
+            command.add(argument);
+        }
+        command.add("-cp");
+        command.add(System.getProperty("java.class.path"));
+        for (String name : System.getProperties().stringPropertyNames()) {
+            if (name.startsWith("sun.java.command") || name.startsWith("java.class.path")) {
+                continue;
+            }
+            command.add("-D" + name + "=" + System.getProperty(name));
+        }
+        command.add(LoadSensitiveRunner.class.getName());
+        command.add(selector);
+        return command;
+    }
+
+    /**
+     * Reads the runner's machine-readable line.
+     *
+     * @param output the runner's output
+     * @return the result
+     */
+    private static Result parse(String output) {
+        for (String line : output.split("\n")) {
+            String trimmed = line.trim();
+            if (trimmed.startsWith(LoadSensitiveRunner.RESULT_PREFIX)) {
+                String[] parts = trimmed.substring(LoadSensitiveRunner.RESULT_PREFIX.length())
+                        .split(" ", 3);
+                double seconds = Double.parseDouble(parts[0]);
+                long failures = Long.parseLong(parts[1]);
+                String cause = parts.length > 2 ? parts[2] : "";
+                return new Result(seconds, failures, cause);
+            }
+        }
+        return new Result(0.0, -1, "the runner printed no result: " + output.strip());
     }
 
     /**
