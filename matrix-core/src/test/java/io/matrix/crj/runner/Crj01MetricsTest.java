@@ -3,6 +3,7 @@ package io.matrix.crj.runner;
 import io.matrix.testsupport.RepositoryPaths;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,7 +35,7 @@ class Crj01MetricsTest {
 
     @Test
     @DisplayName("the protocol's verdicts are computed from the rows, with their denominators")
-    void theVerdictsAreComputedFromTheRows() throws Exception {
+    void theVerdictsAreComputedFromTheRows(@TempDir Path directory) throws Exception {
         Path evidence = RepositoryPaths.root().resolve(EVIDENCE);
         Path dataset = RepositoryPaths.root().resolve(DATASET);
         assertThat(evidence).as("the evidence artefact %s is missing", EVIDENCE).exists();
@@ -44,20 +45,23 @@ class Crj01MetricsTest {
         Map<?, ?> split = json.readValue(Files.readString(dataset), Map.class);
         Map<String, String> expected = new LinkedHashMap<>();
         Map<String, String> classes = new LinkedHashMap<>();
+        Map<String, String> fields = new LinkedHashMap<>();
         for (Object entry : (List<?>) split.get("cases")) {
             @SuppressWarnings("unchecked")
             Map<String, Object> row = (Map<String, Object>) entry;
             expected.put(String.valueOf(row.get("id")), String.valueOf(row.get("expectedDisposition")));
+            fields.put(String.valueOf(row.get("id")), String.valueOf(row.get("expectedField")));
             classes.put(String.valueOf(row.get("id")), String.valueOf(row.get("class")));
         }
 
-        Crj01Metrics.Report report = Crj01Metrics.compute(evidence, 20261121L, expected, classes);
+        Crj01Metrics.Report report = Crj01Metrics.compute(evidence, 20261121L, expected, classes, fields);
 
         // ── the metrics artefact: the rows and the verdicts, written so that a
         //    reviewer can read both without running anything ─────────────────────
         Map<String, Object> artefact = new LinkedHashMap<>();
         artefact.put("metrics", "crj-01-metrics");
-        artefact.put("version", "1.0");
+        artefact.put("version", "1.1");
+        artefact.put("datasetVersion", split.get("version"));
         artefact.put("date", "2026-11-21");
         artefact.put("dataset", "crj-01-dev-split");
         artefact.put("evidence", EVIDENCE);
@@ -123,8 +127,7 @@ class Crj01MetricsTest {
         artefact.put("pairedRows", pairedRows);
         String artefactJson = com.fasterxml.jackson.databind.json.JsonMapper.builder().build()
                 .writerWithDefaultPrettyPrinter().writeValueAsString(artefact);
-        Path out = RepositoryPaths.root().resolve("docs-v2/engineering")
-                .resolve("CRJ-01-METRICS.json");
+        Path out = directory.resolve("CRJ-01-METRICS.json");
         Files.writeString(out, artefactJson);
         assertThat(Files.readString(out)).isEqualTo(artefactJson);
         System.out.println("[CRJ-01] the metrics " + out);
@@ -168,12 +171,15 @@ class Crj01MetricsTest {
         Crj01Metrics.Metric mA1 = report.metrics().stream()
                 .filter(metric -> metric.id().equals("M-A1")).findFirst().orElseThrow();
         assertThat(mA1.denominator()).as("M-A1's denominator").isEqualTo(18);
-        // M-A2's denominator is the NEGATIVE classes only: 2 unsupported + 1 refuted, on two
-        // measured arms
+        // Historical DEV negatives carry premise gold, with no epistemic abstention label.
         Crj01Metrics.Metric mA2 = report.metrics().stream()
                 .filter(metric -> metric.id().equals("M-A2")).findFirst().orElseThrow();
-        assertThat(mA2.denominator()).as("M-A2's denominator").isEqualTo(6);
-        assertThat(mA2.numerator()).as("M-A2's numerator").isLessThanOrEqualTo(mA2.denominator());
+        assertThat(mA2.denominator()).as("M-A2's denominator").isZero();
+        assertThat(mA2.rate()).isNull();
+        var mA4 = report.metrics().stream()
+                .filter(metric -> metric.id().equals("M-A4")).findFirst().orElseThrow();
+        assertThat(mA4.denominator()).isEqualTo(6);
+        assertThat(mA4.numerator()).isZero();
 
         // ── the paired differences, with their intervals and their power limitation ─
         assertThat(report.differences()).as("the paired differences").hasSize(3);

@@ -10,6 +10,7 @@ import io.matrix.knowledge.ArtifactReportResource;
 import io.matrix.knowledge.KnowledgeWorkbench;
 import io.matrix.knowledge.acquisition.AcquisitionCycle;
 import io.matrix.knowledge.acquisition.ClasspathCorpus;
+import io.matrix.knowledge.acquisition.SourceRecord;
 import io.matrix.crj.evidence.SourceSpanOracle;
 
 import java.lang.management.ManagementFactory;
@@ -234,9 +235,15 @@ final class Crj01ArmRunner {
             try {
                 // the SAME corpus, imported through the production path, in the SAME order,
                 // into the arm's OWN workspace
+                Map<String, SourceRecord> importedSources = new LinkedHashMap<>();
                 for (ClasspathCorpus.Entry entry : corpus.entries()) {
-                    bench.importDocument("crj01-arm-" + arm.name().toLowerCase(), entry.path(),
-                            entry.file(), entry.language());
+                    SourceRecord source = bench.importDocument(
+                            "crj01-arm-" + arm.name().toLowerCase(), entry.path(),
+                            entry.file(), entry.language()).source();
+                    if (!entry.sha256().equals(source.contentHash())
+                            || importedSources.putIfAbsent(entry.file(), source) != null) {
+                        throw new IllegalStateException("Invalid corpus import for " + entry.file());
+                    }
                 }
                 // the kernel's service is the route's own: the arm's OWN store holds the
                 // arm's OWN procedures and the arm's OWN trace, so no arm can see another's
@@ -262,12 +269,12 @@ final class Crj01ArmRunner {
                         // the contract requires the replay advantage to be reported
                         // separately from the genuinely-new-task subset.
                         rows.add(measure(arm, "novel", route, testCase, methodId, false,
-                                armOracle));
+                                armOracle, importedSources));
                         rows.add(measure(arm, "repeat", route, testCase, methodId, true,
-                                armOracle));
+                                armOracle, importedSources));
                     } else {
                         rows.add(measure(arm, "measured", route, testCase, methodId, false,
-                                armOracle));
+                                armOracle, importedSources));
                     }
                 }
             } finally {
@@ -407,7 +414,8 @@ final class Crj01ArmRunner {
      * @return the row
      */
     private Row measure(Arm arm, String variant, ArtifactReportResource route, Case testCase,
-                        String methodId, boolean prime, SourceSpanOracle armOracle) {
+                        String methodId, boolean prime, SourceSpanOracle armOracle,
+                        Map<String, SourceRecord> importedSources) {
         String workspaceId = "crj01-arm-" + arm.name().toLowerCase();
         // the report name is NOT the case's id: a name binds to ONE action identity, and
         // every case carries a FRESH idempotency key, so a shared name would make every
@@ -450,7 +458,7 @@ final class Crj01ArmRunner {
             cited.add(new SourceSpanOracle.CitedClaim(evidence.claimId(), evidence.proposition(),
                     evidence.status(), evidence.sourceId()));
         }
-        SourceSpanOracle.Verdict verdict = score(testCase, result, cited, armOracle);
+        SourceSpanOracle.Verdict verdict = score(testCase, result, cited, armOracle, importedSources);
         boolean inapplicable = "REFUSED".equals(outcome.disposition())
                 && !verdict.grounded();
         // a REFUSED row carries WHY it was refused: the refusal's own text is the row's
@@ -492,23 +500,39 @@ final class Crj01ArmRunner {
      * @param testCase the case
      * @param result   the journey's result
      * @param cited    the claims the answer cited
+     * @param armOracle the oracle for this workspace
+     * @param importedSources canonical import receipts keyed by manifest file
      * @return the verdict
      */
-    private SourceSpanOracle.Verdict score(Case testCase,
-                                           ArtifactReportResource.JourneyResult result,
-                                           List<SourceSpanOracle.CitedClaim> cited,
-                                           SourceSpanOracle armOracle) {
-        // a POSITIVE case is grounded when the answer cites the gold proposition; a
-        // NEGATIVE one is grounded when the answer's DISPOSITION is the expected one and
-        // the provenance it names is the expected one. The two are scored by the same
-        // oracle, on the case's own terms.
+    static SourceSpanOracle.Verdict score(Case testCase, ArtifactReportResource.JourneyResult result,
+                                          List<SourceSpanOracle.CitedClaim> cited,
+                                          SourceSpanOracle armOracle,
+                                          Map<String, SourceRecord> importedSources) {
+        String expectedSource = null;
+        if (testCase.expectedProvenance() != null && !testCase.expectedProvenance().isBlank()) {
+            // CRJ-01 v1 pins the refuting document through the case's corpus file and digest.
+            // Its historical source ID was assigned in a different workspace.
+            SourceRecord imported = importedSources.get(testCase.corpusFile());
+            if (imported == null || !testCase.corpusFile().equals(imported.filename())
+                    || !testCase.corpusSha256().equals(imported.contentHash())) {
+                throw new IllegalArgumentException("No matching workspace import for "
+                        + testCase.id() + ": " + testCase.corpusFile());
+            }
+            expectedSource = imported.sourceId();
+        }
         SourceSpanOracle.GoldCase gold = new SourceSpanOracle.GoldCase(testCase.id(),
                 testCase.corpusFile(), testCase.corpusSha256(), testCase.goldPropositions(),
                 testCase.goldClaimIds(), testCase.positive(), fieldOf(testCase.expectedField()),
-                testCase.expectedDisposition(), testCase.expectedProvenance());
+                testCase.expectedDisposition(), expectedSource);
+        Object entity = result.response() == null ? null : result.response().getEntity();
+        List<String> refutingSources = List.of();
+        if (entity instanceof ArtifactReportResource.ReportResponse response
+                && response.premise() != null) {
+            refutingSources = response.premise().refutingSourceIds();
+        }
         var outcome = result.outcome();
         return armOracle.score(gold, new SourceSpanOracle.ServedAnswer(outcome.disposition(),
-                outcome.epistemicDisposition(), outcome.premiseStatus(), cited, List.of()));
+                outcome.epistemicDisposition(), outcome.premiseStatus(), cited, refutingSources));
     }
 
     /**
