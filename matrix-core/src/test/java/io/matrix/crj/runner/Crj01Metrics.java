@@ -130,11 +130,12 @@ final class Crj01Metrics {
      * @param seed     the bootstrap's seed — recorded in the freeze record
      * @param expected the cases' expected dispositions, by case id
      * @param classes  the cases' classes, by case id
+     * @param fields   the fields addressed by the expected dispositions, by case id
      * @return the report
      * @throws Exception when the artefact cannot be read
      */
     static Report compute(Path evidence, long seed, Map<String, String> expected,
-                           Map<String, String> classes) throws Exception {
+                           Map<String, String> classes, Map<String, String> fields) throws Exception {
         ObjectMapper json = JsonMapper.builder().build();
         Map<?, ?> parsed = json.readValue(Files.readString(evidence, StandardCharsets.UTF_8),
                 Map.class);
@@ -145,7 +146,7 @@ final class Crj01Metrics {
             paired.add(toPairedRow(row, expected));
         }
 
-        List<Metric> metrics = domainAMetrics(paired, classes);
+        List<Metric> metrics = domainAMetrics(paired, classes, expected, fields);
         List<PairedDifference> differences = new ArrayList<>();
         differences.add(pairedDifference("C - A (all cases)", paired, "A", "measured", "C",
                 "measured", seed));
@@ -220,7 +221,9 @@ final class Crj01Metrics {
      * @param classes the cases' classes
      * @return the metrics
      */
-    private static List<Metric> domainAMetrics(List<PairedRow> rows, Map<String, String> classes) {
+    private static List<Metric> domainAMetrics(List<PairedRow> rows, Map<String, String> classes,
+                                                Map<String, String> expected,
+                                                Map<String, String> fields) {
         List<Metric> metrics = new ArrayList<>();
 
         // M-A1: the grounded answer rate over the cases that carried a question
@@ -249,17 +252,21 @@ final class Crj01Metrics {
                 continue;
             }
             String caseClass = classes.get(row.caseId());
-            if (caseClass == null || !isNegativeClass(caseClass)) {
+            String label = expected.get(row.caseId());
+            if (caseClass == null || !isNegativeClass(caseClass)
+                    || !"EPISTEMIC".equals(fields.get(row.caseId()))
+                    || !("ABSTAINED".equals(label) || "REFUTED".equals(label))) {
                 continue;
             }
             a2d++;
-            if ("CORRECT".equals(row.outcome())) {
+            if (!"ERROR".equals(row.outcome()) && !"INAPPLICABLE".equals(row.outcome())
+                    && label.equals(row.epistemicDisposition())) {
                 a2n++;
             }
         }
         metrics.add(new Metric("M-A2", "abstention correctness", a2n, a2d,
-                "the sealed split's unanswerable and premise-bearing NEGATIVE classes only",
-                "a negative case counts when the answer's disposition is the expected one"));
+                "negative cases with a valid epistemic abstention label, per measured arm",
+                "a zero denominator means no eligible gold labels; rate is unavailable"));
 
         // M-A3: the unsupported-answer rate over all the cases that carried a question
         long a3n = 0;
@@ -284,18 +291,20 @@ final class Crj01Metrics {
             if (!"measured".equals(row.variant())) {
                 continue;
             }
-            String status = row.premiseStatus();
-            if (status == null || status.isBlank() || "null".equals(status)
-                    || "NO_PREMISE".equals(status)) {
+            String label = expected.get(row.caseId());
+            if (!"PREMISE".equals(fields.get(row.caseId())) || label == null
+                    || !List.of("SUPPORTED", "REFUTED", "UNSUPPORTED", "CONTRADICTORY",
+                            "AMBIGUOUS").contains(label)) {
                 continue;
             }
             a4d++;
-            if ("DISPOSITION_MATCHED".equals(row.oracleVerdict())) {
+            if (!"ERROR".equals(row.outcome()) && !"INAPPLICABLE".equals(row.outcome())
+                    && label.equals(row.premiseStatus())) {
                 a4n++;
             }
         }
         metrics.add(new Metric("M-A4", "premise-disposition accuracy", a4n, a4d,
-                "the sealed cases that carry a premise, on the measured variant of each arm",
+                "cases with a valid premise-bearing gold status, per measured arm",
                 "a case counts when the answer's premise status is the expected one"));
 
         // M-A5: the conflict-surfacing rate over the CONTRADICTORY cases
