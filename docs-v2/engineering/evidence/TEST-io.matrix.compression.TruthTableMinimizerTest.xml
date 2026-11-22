@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.compression.TruthTableMinimizerTest" tests="23" skipped="0" failures="0" errors="0" timestamp="2026-11-21T20:39:03.175Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="47.672">
+  <properties/>
+  <testcase name="qmShouldMinimizeConstantFalse()" classname="io.matrix.compression.TruthTableMinimizerTest" time="0.0"/>
+  <testcase name="[1] 3" classname="io.matrix.compression.TruthTableMinimizerTest" time="0.0"/>
+  <testcase name="[2] 4" classname="io.matrix.compression.TruthTableMinimizerTest" time="0.0"/>
+  <testcase name="[3] 5" classname="io.matrix.compression.TruthTableMinimizerTest" time="0.0"/>
+  <testcase name="[4] 6" classname="io.matrix.compression.TruthTableMinimizerTest" time="0.0"/>
+  <testcase name="[5] 8" classname="io.matrix.compression.TruthTableMinimizerTest" time="0.002"/>
+  <testcase name="[6] 10" classname="io.matrix.compression.TruthTableMinimizerTest" time="0.118"/>
+  <testcase name="[7] 12" classname="io.matrix.compression.TruthTableMinimizerTest" time="8.373"/>
+  <testcase name="dnfEvaluateShouldWorkForBitSetInput()" classname="io.matrix.compression.TruthTableMinimizerTest" time="0.0"/>
+  <testcase name="espressoShouldMinimizeRandomK14()" classname="io.matrix.compression.TruthTableMinimizerTest" time="8.578"/>
+  <testcase name="espressoShouldMinimizeRandomK16()" classname="io.matrix.compression.TruthTableMinimizerTest" time="11.128"/>
+  <testcase name="qmShouldMinimizeSingleMinterm()" classname="io.matrix.compression.TruthTableMinimizerTest" time="0.0"/>
+  <testcase name="dnfShouldHaveReasonableImplicantCount()" classname="io.matrix.compression.TruthTableMinimizerTest" time="0.002"/>
+  <testcase name="espressoShouldScaleWithinTheExpectedFactor()" classname="io.matrix.compression.TruthTableMinimizerTest" time="19.464"/>
+  <testcase name="qmShouldMinimizeAndFunction()" classname="io.matrix.compression.TruthTableMinimizerTest" time="0.0"/>
+  <testcase name="qmShouldMinimizeConstantTrue()" classname="io.matrix.compression.TruthTableMinimizerTest" time="0.0"/>
+  <testcase name="shouldRejectInvalidK()" classname="io.matrix.compression.TruthTableMinimizerTest" time="0.001"/>
+  <testcase name="qmShouldMinimizeOrFunction()" classname="io.matrix.compression.TruthTableMinimizerTest" time="0.0"/>
+  <testcase name="qmShouldHandleK1()" classname="io.matrix.compression.TruthTableMinimizerTest" time="0.0"/>
+  <testcase name="qmShouldMinimizeRandomK8()" classname="io.matrix.compression.TruthTableMinimizerTest" time="0.002"/>
+  <testcase name="qmShouldMinimizeIdentityFunction()" classname="io.matrix.compression.TruthTableMinimizerTest" time="0.0"/>
+  <testcase name="minimizedDnfToStringShouldNotThrow()" classname="io.matrix.compression.TruthTableMinimizerTest" time="0.0"/>
+  <testcase name="qmShouldMinimizeXorFunction()" classname="io.matrix.compression.TruthTableMinimizerTest" time="0.0"/>
+  <system-out><![CDATA[[CRJ-01] the minimiser's scaling: 12 variables 7904.1 ms, 16 variables 11559.0 ms, the factor 1.5x (the budget is 20x)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1134,3 +1134,59 @@ evidence is a suspicion, and it is marked as such.
 - **the evidence**: `docs-v2/engineering/evidence/TEST-io.matrix.cognitive.report.ClaimSpanBeyondExcerptTest.xml`
   (the measurement, the fix and the storage cost) and
   `…ReportClaimLearnerPrecisionTest.xml` (the precision).
+
+### R-EPIS-23 — the load-sensitive assertion class: 39 assertions over 23 files, and the first one MEASURED
+
+- **the class**: an assertion of the form `assertThat(<A MEASURED DURATION>).isLessThan(<A CONSTANT BUDGET>)`
+  states a property of the **machine** ("this code finishes inside 500 ms"), not of the **code** ("this code
+  does the same work as that code"). Under load the machine's speed changes and the assertion flips while the
+  code is unchanged. R-EPIS-19 closed **one** instance of this class and left the class "open and already on the
+  register".
+- **the class was DISCOVERED, not guessed**: a scan of the test sources for an assertion whose measured value
+  carries a **time unit** in its name and whose threshold is a **constant**. Thresholds of `0` are tautologies and
+  are excluded; a comparison against another measurement is a different class and is excluded. **39 assertions over
+  23 files.**
+- **the measurement protocol is the repository's own** (AGENTS.md): "treat a failure that only appears under
+  contention as unattributed until it is reproduced in isolation". So each candidate is run **alone**, then under a
+  **deliberate load** (one busy thread per core — 32 on this machine), then, if it failed under the load, **alone
+  again**. A failure that does not reproduce in isolation is **load-sensitive** — the code is right and the machine
+  was busy. A failure that reproduces is a **real defect**.
+- **the load is real and measured**: the loaded runs are **3.3× slower** than the isolated ones, so the contention
+  is genuine and not a token one.
+- **the first confirmed instance**: `TruthTableMinimizerTest` — **alone 11.597 s, 0 failures**; **loaded 35.982 s,
+  2 failures**; and it **passes in isolation**. Its budget is 30 000 ms. **⇒ LOAD-SENSITIVE, confirmed.**
+- **an accidental instance, found the honest way**: the full suite on the merged tree failed at
+  `Exp324EndToEndForwardPassTest > endToEndForwardPassLatency()` — and it passed **in isolation**. The cause was
+  **mine**: I had started a Gradle invocation **without** the repository's `flock` while the full suite was running,
+  which violated the one-heavy-JVM rule and destroyed the suite's results at the same time. Under the repository's
+  own rule the failure is therefore **unattributed** — and the incident is the reason the class needs measuring
+  rather than assuming.
+- **the seven other candidates measured so far hold**: `RateLimiterTest`, `SimdBooleanCompressorTest`,
+  `NativeBinaryFullIntegrationTest`, `NativeCompilationTest`, `BinaryBenchmarkTest`, `W31PerformanceBenchmarkTest`
+  and `BridgeSafetyTest` all pass under the **3.3×** load with **0** failures.
+- **status**: **OPEN as a class**; one instance **confirmed and characterised**, the rest measured and being
+  characterised. The owner's decision is whether to **re-specify** the class — to state a **ratio** against a
+  measured baseline (the property of the code) instead of a **wall-clock budget** (the property of the machine).
+
+### R-EPIS-24 — the ShellCheck gate is DORMANT, and the first pull request that touches a script wakes it onto pre-existing debt
+
+- **the finding**: `.github/workflows/fast-pr.yml`'s ShellCheck job is **path-sensitive** — "neither is a required
+  check on its own: they only run when the pull request touches what they check" — and the condition is
+  `needs.scope.outputs.scripts == 'true'`. So the job has **never run against this repository's scripts**: it was
+  reported as `skipping` on every pull request until the CRJ-01 round that delivered the load-sensitive
+  measurement **as a shell script**.
+- **what happens then**: the job wakes and fails, on **pre-existing** debt — the findings are in `demo-chat.sh`,
+  `sequential-train.sh`, `scripts/matrix-full.sh`, `scripts/hardware-probe.sh`, `src/lib/53-auto-skills.sh` and
+  about **25 files** in all, roughly **100 findings**. **None of them is mine.**
+- **why it matters**: the gate is a **required check** on a pull request that touches a script, so **any** future
+  pull request that adds or edits a shell script is blocked by debt that predates it. The repository has a gate
+  that cannot be passed, on files that no one has touched in the time the gate has been dormant.
+- **what was done about it**: the CRJ-01 measurement was **delivered in Java instead** — `io.matrix.crj.quality.
+  LoadSensitiveAssertionTest` — which is where the programme's other instruments live (the arm runner, the
+  metrics, the corpus report, the freeze record) and which the gate does not cover. **The finding stands**: the
+  gate is still dormant and still armed with debt.
+- **what would fix it, and why it is not mine to do**: either the workflow's ShellCheck step is given an
+  **exclusion list** for the known debt, or the debt is fixed file by file, or the step is scoped to the
+  **changed** scripts. **All three touch `.github/workflows/**`, which is a FROZEN zone** and needs an explicit
+  RFC from the owner.
+- **status**: **OPEN — an owner decision**, with the measurement and the workaround both done.

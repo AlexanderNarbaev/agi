@@ -941,8 +941,106 @@ held-out questions that **all** carry the candidate, and the corpus's questions 
 claims too narrowly for that to be common. That is a property of **the corpus**, and it is
 a constraint the sealed split's author must know.
 
+### 16.4 What the fix does for the sealed split — the REACHABILITY check
+
+**The oracle and the learner read DIFFERENT texts.** The oracle reads the corpus **file**;
+the learner's containment gate reads the source's stored **excerpt**. So a candidate the
+learner cannot see is a candidate the sealed split **cannot use** — and the corpus report
+did not say so.
+
+The corpus report now counts **reachability**, and it is the pre-flight check the sealed
+split's author needs:
+
+| | before the fix | after the fix |
+|---|---|---|
+| the claims | 540 | 540 |
+| a **verbatim span** of the document's text (the oracle's read) | 483 | 483 |
+| **whose span the learner can see** (the learner's read) | **270** | **483** |
+| the **fresh-and-span candidates** | 413 | 413 |
+| **the fresh-and-span candidates the learner can see** | **213** | **413** |
+
+**So the sealed split's usable candidates went from 213 to 413 — 1.94×** — and the 18 cases
+the protocol needs are now not merely *measurable* but **reachable**. Before the fix, a
+case whose gold sat past the 8 000-character cut would have produced a row that could
+never be learned from.
+
 **The evidence:** `docs-v2/engineering/evidence/TEST-io.matrix.cognitive.report.ClaimSpanBeyondExcerptTest.xml`
 (the measurement, the fix and the storage cost) and
-`…ReportClaimLearnerPrecisionTest.xml` (the precision).
+`…ReportClaimLearnerPrecisionTest.xml` (the precision). The reachability is in
+`docs-v2/engineering/CRJ-01-CORPUS-REPORT.json`.
+
+---
+
+## 17. The load-sensitive assertion class — discovered, measured, and the first instance fixed (2026-11-21)
+
+**R-EPIS-19 closed ONE instance** of a class it left "open and already on the register".
+The class is: an assertion of the form
+
+```
+assertThat(<A MEASURED DURATION>).isLessThan(<A CONSTANT BUDGET>)
+```
+
+which states a property of the **machine** ("this code finishes inside 500 ms"), not of
+the **code** ("this code does the same work as that code"). Under load the machine's speed
+changes and the assertion flips while the code is unchanged.
+
+### 17.1 The class was DISCOVERED, not guessed
+
+A scan of the test sources for an assertion whose measured value carries a **time unit** in
+its name and whose threshold is a **constant**: thresholds of `0` are tautologies and are
+excluded, and a comparison against another measurement is a different class and is
+excluded. **39 assertions over 23 files.**
+
+### 17.2 The protocol is the repository's own
+
+AGENTS.md: *"treat a failure that only appears under contention as unattributed until it is
+reproduced in isolation"*. So each candidate runs **alone**, then under a **deliberate load**
+(one busy thread per core — **32** on this machine), then, if it failed under the load,
+**alone again**. A failure that does not reproduce in isolation is **load-sensitive**: the
+code is right and the machine was busy. A failure that reproduces is a **real defect**.
+
+**The load is real and measured**: the loaded runs are **3.3× slower** than the isolated ones.
+
+### 17.3 The result: ONE confirmed instance, and it is REPRODUCIBLE
+
+| the candidate | alone | loaded | the verdict |
+|---|---|---|---|
+| **`TruthTableMinimizerTest`** | **10.962 s, 0 failures** | **36.841 s, 1 failure** | **LOAD-SENSITIVE** — it passes in isolation |
+| the other **14** filters | 0 failures | 0 failures | hold under the 3.3× load |
+
+`TruthTableMinimizerTest` failed in **both** measurement runs (2 failures, then 1) and passed
+in isolation both times — so the finding is **reproducible**, not a one-off.
+
+### 17.4 An accidental instance, found the honest way
+
+The full suite on the merged tree failed at
+`Exp324EndToEndForwardPassTest > endToEndForwardPassLatency()` — and it **passed in
+isolation**. **The cause was mine**: I had started a Gradle invocation **without** the
+repository's `flock` while the full suite was running, which broke the one-heavy-JVM rule and
+destroyed the suite's results at the same time. Under the repository's own rule the failure
+is therefore **unattributed** — and the incident is exactly why the class needed measuring
+rather than assuming.
+
+### 17.5 The fix: a RATIO against a baseline taken in the same run
+
+The confirmed instance asserted *"the minimisation finishes inside 30 seconds"*. The property
+of the **code** is its **scaling**: the cost of minimising a 16-variable table measured
+**against** the cost of minimising a 12-variable table **in the same run**. Two measurements
+in one run **share the machine's load**, so their **ratio** survives contention — the same
+move R-EPIS-19 made for the portfolio benchmark: measure a **ratio**, not a **duration**.
+
+**Measured**: alone the 12-variable minimisation took **7 563.9 ms** and the 16-variable
+**11 906.5 ms** — a factor of **1.6×**. Under a **32-thread** load: **22 194.0 ms** and
+**36 650.4 ms** — a factor of **1.7×**. **The ratio is load-invariant**, and the assertion
+passes in both. The budget is **20×** — twelve times the measured factor, so it still catches
+a genuine blow-up.
+
+**And the correctness of the minimisation is asserted separately**, by the equivalence check,
+which is the property a reader actually cares about: *a minimiser that is wrong is worse than
+one that is slow.*
+
+**The instrument (first version, a shell script):** it discovered the class, ran the
+protocol and produced the table above — and it **woke a dormant CI gate** (see R-EPIS-24),
+so the instrument was **redelivered in Java** (below).
 
 ---

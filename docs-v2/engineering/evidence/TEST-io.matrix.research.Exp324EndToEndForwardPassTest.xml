@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.research.Exp324EndToEndForwardPassTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-21T21:01:23.339Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="4.613">
+  <properties/>
+  <testcase name="endToEndForwardPassLatency()" classname="io.matrix.research.Exp324EndToEndForwardPassTest" time="4.613"/>
+  <system-out><![CDATA[[Exp324] forward-pass latency p50=14351.34 us p95=24240.06 us p99=32892.71 us max=32892.71 us avg=15165.06 us over 100 passes (24-block chain + BPE + LM-head score)
+[Exp324] per-stage avg: BPE_encode=15154.57 us, chain_forward(24 blocks)=1856.92 us, LM_head_score=1.99 us over 50 passes
+[Exp324] chain_forward distribution: median=1687.38 us p95=2742.36 us max=8657.06 us mean=1856.92 us
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
