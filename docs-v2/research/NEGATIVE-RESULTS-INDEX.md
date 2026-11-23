@@ -141,6 +141,14 @@ say, the entry is marked `not tested` or `inconclusive` and says why.
 
 ---
 
+### 2.6 Measured candidate failures
+
+| id | the finding | class | status | the evidence | what repeating it would cost | date | successor |
+|---|---|---|---|---|---|---|---|
+| **NR-038** | The CRJ-01 premise text-matching candidate gained no passing frozen control group | a failed algorithm | `refuted-toy` | [CRJ-01 premise text matching negative result](CRJ-01-PREMISE-TEXT-MATCHING-NEGATIVE-RESULT.md) | Repeat the two matched evaluator runs on the frozen synthetic controls. The recorded implementation spent 98,089 provider-reported tokens over six calls | 2026-11-23 | No accepted successor. Test explicit source revision applicability next |
+
+---
+
 ## 3. How to read an entry
 
 - **The status is the source's, not the index's.** If a document says `refuted-toy`, the entry says `refuted-toy`.
