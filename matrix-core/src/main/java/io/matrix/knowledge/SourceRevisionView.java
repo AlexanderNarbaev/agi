@@ -48,17 +48,11 @@ public final class SourceRevisionView {
         Set<String> independentlySupported = availableEvidence.stream()
                 .filter(row -> row.relation() == EvidenceRelation.SUPPORTS)
                 .map(Evidence::claimId).collect(Collectors.toSet());
-        Set<Statement> activeStatements = archive.claims().stream()
-                .filter(claim -> claim.introducedBySourceId() != null
-                        && allowed.contains(claim.introducedBySourceId())
-                        && !EpistemicPolicy.isWithdrawn(claim.status()))
-                .map(Statement::of).collect(Collectors.toSet());
         List<Claim> claims = archive.claims().stream()
                 .filter(claim -> {
                     String introducedBy = claim.introducedBySourceId();
                     return introducedBy == null || allowed.contains(introducedBy)
-                            || independentlySupported.contains(claim.id())
-                            && !activeStatements.contains(Statement.of(claim));
+                            || independentlySupported.contains(claim.id());
                 }).toList();
         Set<String> claimIds = claims.stream().map(Claim::id).collect(Collectors.toSet());
         Set<String> conceptIds = claims.stream().map(Claim::conceptId).collect(Collectors.toSet());
@@ -77,12 +71,5 @@ public final class SourceRevisionView {
                 archive.contradictions().stream()
                         .filter(row -> claimIds.contains(row.claimAId()) && claimIds.contains(row.claimBId())).toList(),
                 archive.goals(), selected, archive.exportedAt());
-    }
-
-    private record Statement(String proposition, String scope) {
-
-        static Statement of(Claim claim) {
-            return new Statement(claim.proposition(), claim.scope());
-        }
     }
 }

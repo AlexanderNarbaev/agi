@@ -22,6 +22,7 @@ import io.matrix.cognitive.report.ReportJourneyPlanner;
 import io.matrix.cognitive.report.ReportProcedure;
 import io.matrix.cognitive.report.ReportProcedureMethod;
 import io.matrix.cognitive.report.ReportJourneyTrace;
+import io.matrix.contract.Provenance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
@@ -162,13 +163,27 @@ public class ArtifactReportResource {
      * caller that wants to know whether the answer was given reads the disposition.
      */
     public record PremiseStatus(String status, String kind, String premise, String reason,
-                                 List<String> refutingClaimIds, List<String> refutingSourceIds) {
+                                 List<String> refutingClaimIds, List<String> refutingSourceIds,
+                                 List<RefutingObservation> refutingObservations) {
+
+        public PremiseStatus(String status, String kind, String premise, String reason,
+                List<String> refutingClaimIds, List<String> refutingSourceIds) {
+            this(status, kind, premise, reason, refutingClaimIds, refutingSourceIds, List.of());
+        }
 
         public PremiseStatus {
             refutingClaimIds = List.copyOf(refutingClaimIds == null ? List.of() : refutingClaimIds);
             refutingSourceIds =
                     List.copyOf(refutingSourceIds == null ? List.of() : refutingSourceIds);
+            refutingObservations =
+                    List.copyOf(refutingObservations == null ? List.of() : refutingObservations);
         }
+    }
+
+    /** The reasoning claim and the exact local observation that supports it. */
+    public record RefutingObservation(String canonicalClaimId, String observationClaimId,
+            String evidenceId, String sourceId, String sourceSha256, String excerpt,
+            Provenance.Span segmentSpan) {
     }
 
     /** One side of a conflict the corpus holds, with its provenance. */
@@ -581,10 +596,7 @@ public class ArtifactReportResource {
         for (Claim claim : answer.claims()) {
             String sourceId = claim.introducedBySourceId();
             if (!snapshot.sourceRevisionSelections().isEmpty() && !sourceTitles.containsKey(sourceId)) {
-                sourceId = snapshot.evidence().stream()
-                        .filter(row -> row.claimId().equals(claim.id())
-                                && row.relation() == EvidenceRelation.SUPPORTS)
-                        .map(Evidence::sourceId).sorted().findFirst().orElse(null);
+                sourceId = null;
             }
             evidence.add(new EvidenceReference(claim.id(), claim.proposition(),
                     String.valueOf(claim.status()), sourceId, sourceTitles.get(sourceId)));
@@ -633,7 +645,7 @@ public class ArtifactReportResource {
                 "artifact-index:" + written.actionId(),
                 limitations,
                 refusals,
-                premiseStatus(answer),
+                premiseStatus(answer, snapshot),
                 conflicts(answer),
                 readings(answer));
     }
@@ -904,24 +916,39 @@ public class ArtifactReportResource {
      * @param answer the answer the workspace gave
      * @return the status, or null when the question asserted no premise
      */
-    private PremiseStatus premiseStatus(Answer answer) {
+    private PremiseStatus premiseStatus(Answer answer, KnowledgeSnapshot snapshot) {
         PremiseSemantics.Disposition disposition = answer.premise();
         if (disposition == null || disposition.status() == PremiseSemantics.Status.NO_PREMISE) {
             return null;
         }
         List<String> claimIds = new ArrayList<>();
         List<String> sourceIds = new ArrayList<>();
+        List<RefutingObservation> observations = new ArrayList<>();
         for (PremiseAssessment.EvidenceRef reference : disposition.evidence()) {
             if (!"CONTRADICTS".equals(reference.relation())) {
                 continue;
             }
-            claimIds.add(reference.claimId());
-            if (reference.sourceId() != null) {
-                sourceIds.add(reference.sourceId());
+            Claim canonical = snapshot.claims().stream()
+                    .filter(claim -> reference.claimId().equals(claim.id())).findFirst().orElse(null);
+            var observation = canonical == null ? java.util.Optional.<SourceObservation>empty()
+                    : SourceObservation.resolve(snapshot, canonical, reference.sourceId());
+            if (observation.isPresent()) {
+                SourceObservation local = observation.get();
+                observations.add(new RefutingObservation(reference.claimId(), local.claim().id(),
+                        local.support().id(), local.source().id(), local.source().contentHash(),
+                        local.support().excerpt(), ClaimSpan.parse(local.claim().context())));
+                claimIds.add(local.claim().id());
+                sourceIds.add(local.source().id());
+            } else if (snapshot.sourceRevisionSelections().isEmpty() || canonical != null
+                    && java.util.Objects.equals(canonical.introducedBySourceId(), reference.sourceId())) {
+                claimIds.add(reference.claimId());
+                if (reference.sourceId() != null) {
+                    sourceIds.add(reference.sourceId());
+                }
             }
         }
         return new PremiseStatus(disposition.status().name(), disposition.kind().name(),
-                disposition.premise(), disposition.reason(), claimIds, sourceIds);
+                disposition.premise(), disposition.reason(), claimIds, sourceIds, observations);
     }
 
     /**

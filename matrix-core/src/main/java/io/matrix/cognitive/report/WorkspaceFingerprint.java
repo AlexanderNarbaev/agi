@@ -68,7 +68,7 @@ public final class WorkspaceFingerprint {
                     .append(CLAIM_SEPARATOR);
         }
         if (!snapshot.sourceRevisionSelections().isEmpty()) {
-            appendFields(material, "source-revision-view-v1", snapshot.workspaceId(),
+            appendFields(material, "source-revision-view-v2", snapshot.workspaceId(),
                     historicalEventId == null ? "CURRENT" : "HISTORICAL_DOCUMENT", historicalEventId);
             snapshot.sourceRevisionSelections().stream()
                     .sorted(java.util.Comparator.comparing(io.matrix.knowledge.SourceRevisionSelection::documentKey))
