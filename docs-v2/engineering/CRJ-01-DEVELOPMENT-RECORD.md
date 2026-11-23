@@ -268,8 +268,8 @@ after each; the frozen zones (`CONSTITUTION.md`, `AGENTS.md`,
 | the **evaluator's gold** and frozen cases | the mandate forbids publishing hidden gold, and a blind evaluation that publishes its answers is not blind | **Only to the owner** — the digests let the owner verify the retained evidence against the gold they hold |
 | the **native-image binary** and the `native-binary` test scope | the build excludes the `native-binary` tag from the ordinary suite; the executable has never been built here | **No** — the scope is excluded by the build's own rules |
 | the `integration` test scope | excluded unless `-PincludeIntegration`; those tests need **Docker** | **No** — the same |
-| `data/crj01-demo/` (2.4 MB) | runtime demonstration data, gitignored | **No** |
-| `.jqwik-database`, `matrix-api-gateway/data/` | runtime state: the gateway's task store and the jqwik property database | **No** |
+| the `crj01-demo` directory under the repository's `data` directory (2.4 MB) | runtime demonstration data, gitignored | **No** |
+| the jqwik property database at the repository root, and the API gateway's **task store** — the SQLite store that `RemoteTaskStore` creates in the gateway's working directory, with its WAL and SHM beside it | runtime state, gitignored | **No** |
 
 **If you want the gold and the evaluator's fixtures on the new machine**, copy them from the
 old one — the owner's copies are under the session directories listed above, and their
