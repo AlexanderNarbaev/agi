@@ -1,0 +1,10 @@
+matrix-core/src/test/java/io/matrix/crj/runner/Crj01Metrics.java: OK
+matrix-core/src/test/java/io/matrix/crj/runner/Crj01MetricsTest.java: OK
+matrix-core/src/test/java/io/matrix/crj/runner/Crj01EpistemicMetricsControlTest.java: OK
+matrix-core/src/test/java/io/matrix/crj/runner/Crj01ArmRunner.java: OK
+matrix-core/src/test/java/io/matrix/crj/runner/Crj01ProvenanceTest.java: OK
+matrix-core/src/test/java/io/matrix/crj/runner/Crj01ProspectiveProbeTest.java: OK
+matrix-core/src/test/java/io/matrix/crj/evidence/SourceSpanOracle.java: OK
+matrix-core/src/main/java/io/matrix/knowledge/ArtifactReportResource.java: OK
+matrix-core/src/main/java/io/matrix/knowledge/acquisition/DocumentImporter.java: OK
+staged-payload-isolation-passed

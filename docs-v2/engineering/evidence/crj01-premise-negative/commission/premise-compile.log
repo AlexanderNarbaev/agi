@@ -1,0 +1,23 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.6.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+
+> Task :matrix-core:generateBuildInfo
+matrix-build-info: 9353 @Test methods across 1375 test files
+
+> Task :matrix-core:processResources
+> Task :matrix-core:quarkusGenerateAppModel
+> Task :matrix-core:quarkusGenerateCode
+
+> Task :matrix-core:compileJava
+warning: [incubating] using incubating module(s): jdk.incubator.vector
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+1 warning
+
+[Incubating] Problems report is available at: file:///home/alexandr-narbaev/Projects/agi/matrix-crj-provenance.5BER3h/premise-worktree/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 15s
+5 actionable tasks: 5 executed
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.6.0/userguide/configuration_cache_enabling.html

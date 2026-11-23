@@ -1,0 +1,62 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.6.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+
+> Task :matrix-core:generateBuildInfo
+matrix-build-info: 9353 @Test methods across 1375 test files
+
+> Task :matrix-core:processResources UP-TO-DATE
+> Task :matrix-core:quarkusGenerateAppModel UP-TO-DATE
+> Task :matrix-core:quarkusGenerateCode UP-TO-DATE
+> Task :matrix-core:compileJava UP-TO-DATE
+> Task :matrix-core:classes UP-TO-DATE
+> Task :matrix-core:compileQuarkusTestGeneratedSourcesJava NO-SOURCE
+> Task :matrix-core:quarkusGenerateTestAppModel
+> Task :matrix-core:quarkusGenerateCodeTests
+
+> Task :matrix-core:compileTestJava
+warning: [incubating] using incubating module(s): jdk.incubator.vector
+Note: /tmp/matrix-premise-evaluation.i0U60ECt/baseline/matrix-core/src/test/java/io/matrix/crj/runner/FrozenPremiseJourneyTest.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+1 warning
+
+> Task :matrix-core:processTestResources UP-TO-DATE
+> Task :matrix-core:testClasses
+
+> Task :matrix-core:test FAILED
+WARNING: Using incubator modules: jdk.incubator.vector
+
+FrozenPremiseJourneyTest > servedReference() > 01_explicit_and_scoped_contradiction FAILED
+    org.gradle.internal.exceptions.DefaultMultiCauseException at FrozenPremiseJourneyTest.java:98
+        Caused by: org.opentest4j.AssertionFailedError at FrozenPremiseJourneyTest.java:164
+
+FrozenPremiseJourneyTest > servedReference() > 02_competing_readings FAILED
+    org.opentest4j.MultipleFailuresError at FrozenPremiseJourneyTest.java:98
+        Caused by: org.opentest4j.AssertionFailedError at FrozenPremiseJourneyTest.java:164
+
+FrozenPremiseJourneyTest > servedReference() > 05_workspace_local_identity FAILED
+    org.gradle.internal.exceptions.DefaultMultiCauseException at FrozenPremiseJourneyTest.java:98
+        Caused by: org.opentest4j.AssertionFailedError at FrozenPremiseJourneyTest.java:164
+
+FrozenPremiseJourneyTest > servedReference() > 06_revision_invalidates_stale_evidence FAILED
+    org.opentest4j.MultipleFailuresError at FrozenPremiseJourneyTest.java:98
+        Caused by: org.opentest4j.AssertionFailedError at FrozenPremiseJourneyTest.java:158
+
+FrozenPremiseJourneyTest > servedReference() > 07_correct_source_wrong_span FAILED
+    org.opentest4j.MultipleFailuresError at FrozenPremiseJourneyTest.java:98
+        Caused by: org.opentest4j.AssertionFailedError at FrozenPremiseJourneyTest.java:164
+
+7 tests completed, 5 failed
+
+[Incubating] Problems report is available at: file:///tmp/matrix-premise-evaluation.i0U60ECt/baseline/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':matrix-core:test'.
+> There were failing tests. See the report at: file:///tmp/matrix-premise-evaluation.i0U60ECt/baseline/matrix-core/build/reports/tests/test/index.html
+
+* Try:
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+
+BUILD FAILED in 10s
+10 actionable tasks: 5 executed, 5 up-to-date

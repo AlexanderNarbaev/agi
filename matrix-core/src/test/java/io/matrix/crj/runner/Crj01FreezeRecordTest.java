@@ -142,6 +142,82 @@ class Crj01FreezeRecordTest {
     }
 
     /**
+     * The freeze record's HEAD must resolve in a LINKED WORKTREE too, not only in the main
+     * checkout.
+     *
+     * <p><b>Why this test exists.</b> The repository's own consolidation (2026-11-23)
+     * gave the two writing tools ONE canonical repository and a separate DISPOSABLE
+     * worktree each, so that concurrent writers never share a working tree. In a linked
+     * worktree {@code .git} is a FILE that names the worktree's administrative directory,
+     * and the refs live in the COMMON directory. A resolver that assumed {@code .git} is
+     * a directory read nothing and reported "UNKNOWN" — so a freeze taken from a
+     * disposable worktree recorded no commit at all, and the record's most important
+     * field was silently empty.</p>
+     *
+     * <p>The test builds the shape on disk — a {@code .git} file pointing at a gitdir
+     * with its own {@code HEAD} and a {@code commondir} naming the shared refs — and
+     * asserts the resolver reads the SHA from it. It is a NEGATIVE control: the shape it
+     * builds is exactly what a real linked worktree looks like, and the OLD resolver
+     * would have answered "UNKNOWN" for it.</p>
+     */
+    @Test
+    @DisplayName("the HEAD resolves in a LINKED WORKTREE, where .git is a file")
+    void theHeadResolvesInALinkedWorktree() throws Exception {
+        Path root = Files.createTempDirectory("crj01-linked-worktree");
+        Path common = root.resolve("common-git");
+        Path worktreeGit = common.resolve("worktrees").resolve("writer");
+        Files.createDirectories(worktreeGit);
+        Files.createDirectories(common.resolve("refs").resolve("heads"));
+
+        // The shared ref, in the COMMON directory.
+        Files.writeString(common.resolve("refs/heads/writer"),
+                "a".repeat(40) + "\n", StandardCharsets.UTF_8);
+        // The worktree's OWN HEAD, and the pointer to the common directory.
+        Files.writeString(worktreeGit.resolve("HEAD"), "ref: refs/heads/writer\n",
+                StandardCharsets.UTF_8);
+        Files.writeString(worktreeGit.resolve("commondir"), "../..\n",
+                StandardCharsets.UTF_8);
+        // The checkout's .git is a FILE, as a linked worktree's is.
+        Files.writeString(root.resolve(".git"),
+                "gitdir: " + worktreeGit + "\n", StandardCharsets.UTF_8);
+
+        assertThat(Crj01FreezeRecord.headSha(root))
+                .as("the HEAD of a linked worktree resolves to the shared ref's SHA")
+                .isEqualTo("a".repeat(40));
+
+        // And a DETACHED linked worktree — a HEAD that holds the SHA itself.
+        Files.writeString(worktreeGit.resolve("HEAD"), "b".repeat(40) + "\n",
+                StandardCharsets.UTF_8);
+        assertThat(Crj01FreezeRecord.headSha(root))
+                .as("a detached linked worktree resolves to the SHA its HEAD holds")
+                .isEqualTo("b".repeat(40));
+
+        // And a PACKED ref, which lives in the common directory too.
+        Files.deleteIfExists(common.resolve("refs/heads/writer"));
+        Files.writeString(common.resolve("packed-refs"),
+                "# pack-refs with: peeled\n"
+                        + "c".repeat(40) + " refs/heads/packed-writer\n",
+                StandardCharsets.UTF_8);
+        Files.writeString(worktreeGit.resolve("HEAD"), "ref: refs/heads/packed-writer\n",
+                StandardCharsets.UTF_8);
+        assertThat(Crj01FreezeRecord.headSha(root))
+                .as("a packed ref in the common directory resolves")
+                .isEqualTo("c".repeat(40));
+
+        // And the MAIN checkout's shape — .git as a DIRECTORY — still works.
+        Path main = Files.createTempDirectory("crj01-main-worktree");
+        Path mainGit = main.resolve(".git");
+        Files.createDirectories(mainGit.resolve("refs/heads"));
+        Files.writeString(mainGit.resolve("refs/heads/main"), "d".repeat(40) + "\n",
+                StandardCharsets.UTF_8);
+        Files.writeString(mainGit.resolve("HEAD"), "ref: refs/heads/main\n",
+                StandardCharsets.UTF_8);
+        assertThat(Crj01FreezeRecord.headSha(main))
+                .as("the main checkout's shape still resolves")
+                .isEqualTo("d".repeat(40));
+    }
+
+    /**
      * The repository's HEAD, resolved from the shell — an INDEPENDENT derivation of what
      * the record computed, so the two can be compared.
      *

@@ -1,0 +1,66 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.6.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+
+> Task :matrix-core:generateBuildInfo
+matrix-build-info: 9355 @Test methods across 1377 test files
+
+> Task :matrix-core:processResources
+> Task :matrix-core:quarkusGenerateAppModel
+> Task :matrix-core:quarkusGenerateCode
+
+> Task :matrix-core:compileJava
+warning: [incubating] using incubating module(s): jdk.incubator.vector
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+1 warning
+
+> Task :matrix-core:classes
+> Task :matrix-core:compileQuarkusTestGeneratedSourcesJava NO-SOURCE
+> Task :matrix-core:quarkusGenerateTestAppModel
+> Task :matrix-core:quarkusGenerateCodeTests
+
+> Task :matrix-core:compileTestJava
+warning: [incubating] using incubating module(s): jdk.incubator.vector
+/home/alexandr-narbaev/Projects/agi/matrix-revision-evaluator.teFBiFtH/baseline/matrix-core/src/test/java/io/matrix/integration/MctsIntegrationTest.java:60: warning: non-varargs call of varargs method with inexact argument type for last parameter;
+        assertThat(bestAction.type()).isIn(MctsAction.ActionType.values());
+                                                                       ^
+  cast to Object for a varargs call
+  cast to Object[] for a non-varargs call and to suppress this warning
+/home/alexandr-narbaev/Projects/agi/matrix-revision-evaluator.teFBiFtH/baseline/matrix-core/src/test/java/io/matrix/mcts/MctsLatsConvergenceTest.java:49: warning: non-varargs call of varargs method with inexact argument type for last parameter;
+        assertThat(best.type()).isIn(MctsAction.ActionType.values());
+                                                                 ^
+  cast to Object for a varargs call
+  cast to Object[] for a non-varargs call and to suppress this warning
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+3 warnings
+
+> Task :matrix-core:processTestResources
+> Task :matrix-core:testClasses
+
+> Task :matrix-core:test FAILED
+WARNING: Using incubator modules: jdk.incubator.vector
+
+SourceRevisionBaselineTest > workspaceLocalChangedSourceRetainsOldRefuterOnCurrentRoute(Path) FAILED
+    org.gradle.internal.exceptions.DefaultMultiCauseException at SourceRevisionBaselineTest.java:72
+        Caused by: org.opentest4j.AssertionFailedError at SourceRevisionBaselineTest.java:72
+
+1 test completed, 1 failed
+
+[Incubating] Problems report is available at: file:///home/alexandr-narbaev/Projects/agi/matrix-revision-evaluator.teFBiFtH/baseline/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':matrix-core:test'.
+> There were failing tests. See the report at: file:///home/alexandr-narbaev/Projects/agi/matrix-revision-evaluator.teFBiFtH/baseline/matrix-core/build/reports/tests/test/index.html
+
+* Try:
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+
+BUILD FAILED in 21s
+10 actionable tasks: 10 executed

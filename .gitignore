@@ -10,6 +10,12 @@ build/
 # place on 2026-11-06, so a download is not an immutable source any more.
 !/tools/tla2tools.jar
 *.log
+# The RETAINED EVIDENCE's build logs ARE evidence, not machine state: their digests are
+# PUBLISHED in the CHECKSUMS and MANIFEST files beside them, so a manifest that names a
+# file the repository does not carry CANNOT BE VERIFIED on another machine - and the
+# owner's portability requirement is exactly that it can. The `*.log` rule above is for
+# the machine's own logs; these are the record of the run that produced the result.
+!docs-v2/engineering/evidence/**/*.log
 *.tmp
 *.swp
 *.swo

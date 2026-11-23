@@ -1,0 +1,51 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.6.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+
+> Task :matrix-core:generateBuildInfo
+matrix-build-info: 9356 @Test methods across 1378 test files
+
+> Task :matrix-core:processResources
+> Task :matrix-core:quarkusGenerateAppModel UP-TO-DATE
+> Task :matrix-core:quarkusGenerateCode UP-TO-DATE
+
+> Task :matrix-core:compileJava
+warning: [incubating] using incubating module(s): jdk.incubator.vector
+1 warning
+
+> Task :matrix-core:classes
+> Task :matrix-core:compileQuarkusTestGeneratedSourcesJava NO-SOURCE
+> Task :matrix-core:quarkusGenerateTestAppModel UP-TO-DATE
+> Task :matrix-core:quarkusGenerateCodeTests UP-TO-DATE
+
+> Task :matrix-core:compileTestJava
+warning: [incubating] using incubating module(s): jdk.incubator.vector
+Note: /home/alexandr-narbaev/Projects/agi/matrix-source-revision-20261123/matrix-core/src/test/java/io/matrix/knowledge/KnowledgeWorkbenchTest.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+1 warning
+
+> Task :matrix-core:processTestResources UP-TO-DATE
+> Task :matrix-core:testClasses
+
+> Task :matrix-core:test
+WARNING: Using incubator modules: jdk.incubator.vector
+
+SourceObservationTest > resolvesApplicableObservationWithoutPromotingItsStoredClaim(Path) FAILED
+    java.util.NoSuchElementException at SourceObservationTest.java:36
+
+41 tests completed, 1 failed
+
+> Task :matrix-core:test FAILED
+
+[Incubating] Problems report is available at: file:///home/alexandr-narbaev/Projects/agi/matrix-source-revision-20261123/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':matrix-core:test'.
+> There were failing tests. See the report at: file:///home/alexandr-narbaev/Projects/agi/matrix-source-revision-20261123/matrix-core/build/reports/tests/test/index.html
+
+* Try:
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+
+BUILD FAILED in 17s
+10 actionable tasks: 5 executed, 5 up-to-date
