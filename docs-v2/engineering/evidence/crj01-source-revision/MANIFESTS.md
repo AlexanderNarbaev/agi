@@ -21,9 +21,12 @@ broken on any machine but the one that produced them.
 ### `evidence/<run>/CHECKSUMS.sha256` — RETAINED (six runs)
 
 Each of the six runs (`baseline`, `green-03ca971`, `green-916a471`, `green-2ffa2cb`,
-`green-de3cb24`, `green-f68ec49`) carries its own `CHECKSUMS.sha256` over nine files:
+`green-de3cb24`, `green-f68ec49`) carries its own `CHECKSUMS.sha256`, and **every one of them
+verifies in full** in a clean checkout. The five **green** runs carry nine files each —
 `command.txt`, `exit-status.txt`, `gradle.log`, `resource.txt`, the JUnit XML, the request
-traces, `RESULT.md`, the audit script and the audit JSON.
+traces, `RESULT.md`, the audit script and the audit JSON; the **baseline** run carries
+**seven**, because the audit script and the audit JSON were the evaluator's later addition
+and the baseline has no counterpart.
 
 ```
 cd docs-v2/engineering/evidence/crj01-source-revision/evidence/green-f68ec49
