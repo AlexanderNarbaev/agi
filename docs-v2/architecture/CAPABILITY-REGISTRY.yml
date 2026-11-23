@@ -2406,15 +2406,20 @@ capabilities:
       - "matrix-core/src/main/java/io/matrix/actions/ArtifactAction.java"
       - "matrix-core/src/main/java/io/matrix/actions/ArtifactActionService.java"
       - "matrix-core/src/main/java/io/matrix/knowledge/ArtifactReportResource.java"
+      - "matrix-core/src/main/java/io/matrix/knowledge/SourceRevisionView.java"
+      - "matrix-core/src/main/java/io/matrix/knowledge/SourceObservation.java"
       - "matrix-core/src/main/resources/application.properties"
     production_callers: []
     test_paths:
       - "matrix-core/src/test/java/io/matrix/actions/EvidenceToActionTest.java"
       - "matrix-core/src/test/java/io/matrix/actions/ArtifactWriterConcurrencyTest.java"
       - "matrix-core/src/test/java/io/matrix/knowledge/ArtifactReportResourceTest.java"
+      - "matrix-core/src/test/java/io/matrix/knowledge/SourceRevisionSelectionTest.java"
+      - "matrix-core/src/test/java/io/matrix/knowledge/SourceObservationTest.java"
+      - "matrix-core/src/test/java/io/matrix/cognitive/report/HistoricalReportLearningTest.java"
       - "matrix-core/src/test/java/io/matrix/knowledge/KnowledgeWorkbenchConcurrencyTest.java"
       - "scripts/artifact-writer-negative-control.sh"
-    test_evidence: "29 writer tests, 13 writer-concurrency tests, 14 route tests and 2 asking-path concurrency tests, all green on 2026-11-15. The route tests pin the feature disabled (503), a missing or false consent (403), an unknown workspace (404), a report name that leaves the root (400), a network-exposed process (403), a missing or unsafe output root (503), the written report and its digest, the replayed repeat, the concurrent pair, the absence of an absolute path in the response, and the replaced root (500). The negative control mutates the writer's lease out of the source and the concurrency test goes red: the guard is load-bearing."
+    test_evidence: "29 writer tests, 13 writer-concurrency tests, 14 route tests and 2 asking-path concurrency tests, all green on 2026-11-15. The route tests pin the feature disabled (503), a missing or false consent (403), an unknown workspace (404), a report name that leaves the root (400), a network-exposed process (403), a missing or unsafe output root (503), the written report and its digest, the replayed repeat, the concurrent pair, the absence of an absolute path in the response, and the replaced root (500). The negative control mutates the writer's lease out of the source and the concurrency test goes red: the guard is load-bearing. On 2026-11-23, source revision applicability passed 43 targeted developer tests and 7 independently evaluated synthetic groups on the in-process report route. See docs-v2/engineering/CRJ-01-SOURCE-REVISION-APPLICABILITY.md for exact revisions, evidence and scope."
     benchmark_evidence: "the real HTTP demonstration (docs-v2/engineering/C2A-HTTP-DEMONSTRATION.json, 2026-11-15): the packaged server answered 201, wrote a 52 971-byte report whose SHA-256 eba139f74ad250acc5b8511b32786d207ab7dd73e119043572d12d915c6909ec equals the digest the response reported and the digest of the file on disk; the repeat answered 200 REPLAYED with one artifact; a request without consent answered 403 and wrote nothing; four concurrent requests with one identity produced one WRITTEN and three REPLAYED with exactly one STAGED and one COMMITTED record; after a restart of the server the repeat answered 200 REPLAYED with the same digest and no new artifact."
     formal_spec: "none"
     dependencies:
@@ -2428,9 +2433,9 @@ capabilities:
       - "the route inherits the workbench's one-question-at-a-time contract: concurrent asks are serialised"
     owner: "the owner (CONCEPT-TO-ACTION, 2026-11-15)"
     decision_ref: "docs-v2/engineering/C2A-EXECUTION-PLAN.md; docs-v2/engineering/C2A-HTTP-DEMONSTRATION.json"
-    last_verified_commit: "26c549c4"
-    last_verified_at: "2026-11-15"
-    next_verification_condition: "a change to the writer's lease, to the route's contract or to the workbench's asking path requires the demonstration to be re-run and its report regenerated"
-    notes: "ADDED IN CONCEPT-TO-ACTION. The row distinguishes what was measured from what was not: the action is IMPLEMENTED, it is SERVED through one named route, it is VERIFIED by a real HTTP demonstration, and it is NOT operational — no deployment has been observed."
+    last_verified_commit: "b226a5e45cd5e8fecb6a7bad0c3980ec8122e3f4"
+    last_verified_at: "2026-11-23"
+    next_verification_condition: "a change to the writer's lease, to the route's contract or to the workbench's asking path requires the demonstration to be re-run and its report regenerated. A change to revision selection, evidence projection, observation identity or revision-bound learning and replay requires repeating the frozen source-revision controls."
+    notes: "ADDED IN CONCEPT-TO-ACTION. The row distinguishes what was measured from what was not: the action is IMPLEMENTED, it is SERVED through one named route, it is VERIFIED by a real HTTP demonstration, and it is NOT operational — no deployment has been observed. The later synthetic measurement verifies explicit source selection for Chain A reports, including document-specific historical retrieval, workspace-local observations and stale replay refusal. It does not measure deployment or generalization."
 
 # =============================================================================
