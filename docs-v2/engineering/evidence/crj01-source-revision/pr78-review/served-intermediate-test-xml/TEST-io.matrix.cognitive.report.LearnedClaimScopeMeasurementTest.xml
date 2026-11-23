@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.cognitive.report.LearnedClaimScopeMeasurementTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-23T09:15:06.345Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="6.132">
+  <properties/>
+  <testcase name="the coarse rule over-applied the learned claims, and the narrowed rule does not" classname="io.matrix.cognitive.report.LearnedClaimScopeMeasurementTest" time="6.132"/>
+  <system-out><![CDATA[[CRJ-01] the learned claims' scope: 7 claim(s) over 7 document(s)
+[CRJ-01] the questions asked: 13
+[CRJ-01] the coarse rule would add 25 claim(s); the narrowed rule adds 20; the coarse rule over-applied 5 claim(s) from documents the answer never drew on
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,130 @@
+diff --git a/matrix-core/src/main/java/io/matrix/knowledge/PremiseAssessment.java b/matrix-core/src/main/java/io/matrix/knowledge/PremiseAssessment.java
+index 62b8df70..54cb74bd 100644
+--- a/matrix-core/src/main/java/io/matrix/knowledge/PremiseAssessment.java
++++ b/matrix-core/src/main/java/io/matrix/knowledge/PremiseAssessment.java
+@@ -8,6 +8,8 @@ import java.util.List;
+ import java.util.Locale;
+ import java.util.Map;
+ import java.util.Set;
++import java.util.regex.Matcher;
++import java.util.regex.Pattern;
+ 
+ /**
+  * Assesses a USER ASSERTION against the workspace's own stored knowledge.
+@@ -247,6 +249,18 @@ public final class PremiseAssessment {
+     private static final List<String> RESTRICTION_MARKERS = List.of(
+             "only", "merely", "minor", "side effect", "minor side");
+ 
++    private static final String CAUSAL_SUBJECT = "^(.+?) (?:is|are) ";
++    private static final String NAME = "[\\p{L}\\p{N}'’-]+(?: [\\p{L}\\p{N}'’-]+)*";
++    private static final Pattern EXCLUSIVE_CAUSE = Pattern.compile(
++            CAUSAL_SUBJECT + "(?:entirely driven|driven entirely) by (" + NAME + ")$");
++    private static final Pattern PARTIAL_CAUSE = Pattern.compile(
++            CAUSAL_SUBJECT + "(?:partly driven|driven partly) by (" + NAME
++                    + "?) and (?:partly(?: driven)?|driven partly) by (" + NAME + ")$");
++    private static final Pattern CAUSE_QUALIFIER = Pattern.compile(
++            "\\b(?:after|although|and|as|at|before|but|can|could|during|except|for|from|if|in"
++                    + "|may|might|of|on|or|since|that|through|to|unless|until|via|when|where"
++                    + "|which|while|with|without|would)\\b");
++
+     /**
+      * The single words that are markers and therefore carry no subject.
+      *
+@@ -457,7 +471,7 @@ public final class PremiseAssessment {
+         String disputedClause = null;
+         for (Candidate candidate : candidates) {
+             Claim claim = candidate.claim();
+-            Reading reading = read(premise, claim);
++            Reading reading = read(premise, claim, snapshot);
+             EvidenceRef ref = evidenceRef(claim, reading.relation(), snapshot);
+             if ("CONTRADICTS".equals(reading.relation())) {
+                 contradicting.add(ref);
+@@ -557,11 +571,28 @@ public final class PremiseAssessment {
+      * @return the relation and, for a contradiction, the clause of the
+      *     premise the claim disputes
+      */
+-    private static Reading read(String premise, Claim claim) {
++    private static Reading read(String premise, Claim claim, KnowledgeSnapshot snapshot) {
+         String proposition = claim.proposition();
+         Set<String> premiseStems = distinctiveStems(premise);
+         Set<String> claimStems = distinctiveStems(proposition);
+ 
++        // A scoped causal exclusivity is read before generic polarity and subject rules.
++        // Both sides must name the same mechanism and scope, use the same causal relation,
++        // and name the same contributor in the exclusive claim as one of the two explicit
++        // partial contributors. A plain positive causal claim is not such a contradiction.
++        if (causalExclusivityContradiction(premise, proposition)) {
++            Evidence evidence = backingEvidence(claim, snapshot);
++            Source source = evidence == null ? null : sourceById(snapshot, evidence.sourceId());
++            if (source != null && source.contentHash() != null
++                    && evidence.relation() == EvidenceRelation.SUPPORTS
++                    && evidence.sourceId().equals(claim.introducedBySourceId())
++                    && evidence.excerpt() != null
++                    && evidence.excerpt().contains(proposition.replaceFirst("[.]$", ""))) {
++                return new Reading("CONTRADICTS", premise);
++            }
++            return new Reading("MENTIONS", null);
++        }
++
+         // A denial counts only when it is ABOUT the other side's subject.
+         String premiseDenial = denialAbout(premise, claimStems);
+         String claimDenial = denialAbout(proposition, premise);
+@@ -637,6 +668,35 @@ public final class PremiseAssessment {
+         return new Reading("MENTIONS", null);
+     }
+ 
++    /**
++     * Recognize explicit, unqualified causal partitions. The subject carries the scope,
++     * and contributor phrases that could carry an additional condition are excluded.
++     */
++    static boolean causalExclusivityContradiction(String premise, String proposition) {
++        if (premise == null || proposition == null || denied(premise) || denied(proposition)) {
++            return false;
++        }
++        Matcher exclusive = EXCLUSIVE_CAUSE.matcher(causalText(premise));
++        Matcher partial = PARTIAL_CAUSE.matcher(causalText(proposition));
++        if (!exclusive.matches() || !partial.matches()
++                || !causalName(exclusive.group(1)).equals(causalName(partial.group(1)))) {
++            return false;
++        }
++        String sole = causalName(exclusive.group(2));
++        String first = causalName(partial.group(2));
++        String second = causalName(partial.group(3));
++        return !CAUSE_QUALIFIER.matcher(first).find() && !CAUSE_QUALIFIER.matcher(second).find()
++                && !first.equals(second) && (sole.equals(first) || sole.equals(second));
++    }
++
++    private static String causalText(String text) {
++        return text.strip().toLowerCase(Locale.ROOT).replaceAll("\\s+", " ").replaceFirst("[.]$", "");
++    }
++
++    private static String causalName(String text) {
++        return text.replaceFirst("^(?:a|an|the) ", "");
++    }
++
+     /**
+      * The clause of the text that LIMITS the other side's subject.
+      *
+diff --git a/matrix-core/src/main/java/io/matrix/knowledge/PremiseSemantics.java b/matrix-core/src/main/java/io/matrix/knowledge/PremiseSemantics.java
+index 346e530a..adea6952 100644
+--- a/matrix-core/src/main/java/io/matrix/knowledge/PremiseSemantics.java
++++ b/matrix-core/src/main/java/io/matrix/knowledge/PremiseSemantics.java
+@@ -353,7 +353,17 @@ public final class PremiseSemantics {
+                     reason = finding.reason();
+                 }
+                 case CONTRADICTED -> {
+-                    if (denialIsAboutThePremise(evidence, premise, null)
++                    boolean causalExclusivity = false;
++                    for (PremiseAssessment.EvidenceRef reference : evidence) {
++                        if ("CONTRADICTS".equals(reference.relation())
++                                && PremiseAssessment.causalExclusivityContradiction(
++                                        premise, reference.proposition())) {
++                            causalExclusivity = true;
++                            break;
++                        }
++                    }
++                    if (causalExclusivity
++                            || denialIsAboutThePremise(evidence, premise, null)
+                             || !assertedProposition(kind)) {
+                         status = Status.REFUTED;
+                         reason = finding.reason();

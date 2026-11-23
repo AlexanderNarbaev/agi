@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.cognitive.report.ReportClaimLearningTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-11-23T09:15:26.103Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="43.803">
+  <properties/>
+  <testcase name="too few held-out cases refuse the promotion" classname="io.matrix.cognitive.report.ReportClaimLearningTest" time="5.484"/>
+  <testcase name="a proposition that is a paraphrase of its document is refused" classname="io.matrix.cognitive.report.ReportClaimLearningTest" time="5.568"/>
+  <testcase name="a claim the reference does not carry is refused, naming the case" classname="io.matrix.cognitive.report.ReportClaimLearningTest" time="5.584"/>
+  <testcase name="a validation case that is one of the observed episodes is not held out" classname="io.matrix.cognitive.report.ReportClaimLearningTest" time="5.296"/>
+  <testcase name="the quarantine gate fails closed when the list is absent" classname="io.matrix.cognitive.report.ReportClaimLearningTest" time="5.411"/>
+  <testcase name="a quarantined episode is not learning-eligible" classname="io.matrix.cognitive.report.ReportClaimLearningTest" time="5.344"/>
+  <testcase name="a validation case that asks the proposed question is not held out" classname="io.matrix.cognitive.report.ReportClaimLearningTest" time="5.343"/>
+  <testcase name="a claim the reference carries on every held-out case is promoted, with a version" classname="io.matrix.cognitive.report.ReportClaimLearningTest" time="5.771"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

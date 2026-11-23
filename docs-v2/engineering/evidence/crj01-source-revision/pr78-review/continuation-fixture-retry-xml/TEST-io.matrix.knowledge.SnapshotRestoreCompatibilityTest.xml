@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.SnapshotRestoreCompatibilityTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-11-23T14:59:59.419Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.766">
+  <properties/>
+  <testcase name="a legacy snapshot says what it does not carry" classname="io.matrix.knowledge.SnapshotRestoreCompatibilityTest" time="0.073"/>
+  <testcase name="a legacy payload does NOT restore an observation history it does not carry" classname="io.matrix.knowledge.SnapshotRestoreCompatibilityTest" time="0.06"/>
+  <testcase name="a legacy payload restores a target that holds none of the missing rows" classname="io.matrix.knowledge.SnapshotRestoreCompatibilityTest" time="0.079"/>
+  <testcase name="a snapshot that holds only learning rows is not empty" classname="io.matrix.knowledge.SnapshotRestoreCompatibilityTest" time="0.065"/>
+  <testcase name="a version-2 payload without the learning family is refused the same way" classname="io.matrix.knowledge.SnapshotRestoreCompatibilityTest" time="0.061"/>
+  <testcase name="a complete payload restores all eight learning tables" classname="io.matrix.knowledge.SnapshotRestoreCompatibilityTest" time="0.067"/>
+  <testcase name="a payload from a newer build is refused" classname="io.matrix.knowledge.SnapshotRestoreCompatibilityTest" time="0.053"/>
+  <testcase name="a failure during the restore leaves no partial replacement" classname="io.matrix.knowledge.SnapshotRestoreCompatibilityTest" time="0.06"/>
+  <testcase name="a corrupt payload is refused" classname="io.matrix.knowledge.SnapshotRestoreCompatibilityTest" time="0.057"/>
+  <testcase name="the restored observation history stays referentially consistent" classname="io.matrix.knowledge.SnapshotRestoreCompatibilityTest" time="0.063"/>
+  <testcase name="a legacy payload is refused when the target holds learning rows" classname="io.matrix.knowledge.SnapshotRestoreCompatibilityTest" time="0.06"/>
+  <testcase name="a restore does not touch another workspace" classname="io.matrix.knowledge.SnapshotRestoreCompatibilityTest" time="0.063"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

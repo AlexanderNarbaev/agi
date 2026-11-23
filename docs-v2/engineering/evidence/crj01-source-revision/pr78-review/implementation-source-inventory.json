@@ -1,0 +1,78 @@
+{
+  "base": "3fcbfdc10ed32d6c7a5bc8856f309a2b55f4babe",
+  "status": "local-only candidate source inventory; select task-relevant excerpts before dispatch",
+  "files": {
+    "matrix-core/src/main/java/io/matrix/actions/ArtifactWriter.java": {
+      "sha256": "a7c592bb1c212f9397c6f3227850880af3c4c439691013093a632b14135dcd54",
+      "bytes": 49173
+    },
+    "matrix-core/src/main/java/io/matrix/cognitive/report/LearnedClaims.java": {
+      "sha256": "6ec161279ecf8a62f932b2a08b869caec485ac52f42cc47e6639b3e69588cd12",
+      "bytes": 7643
+    },
+    "matrix-core/src/main/java/io/matrix/cognitive/report/ReportJourneyPlanner.java": {
+      "sha256": "fb0e8037fe5fe15c5156ab7eb1efdf78fd183f3613ec8c95107e73a78537f463",
+      "bytes": 10641
+    },
+    "matrix-core/src/main/java/io/matrix/cognitive/report/ReportProcedureLearner.java": {
+      "sha256": "12c987cd71c59f7c9e9ea8d452341764a20856d312f62f054d01b04bb938993d",
+      "bytes": 16188
+    },
+    "matrix-core/src/main/java/io/matrix/cognitive/report/ReportProcedureMethod.java": {
+      "sha256": "1e87dbaed9fb74f991843b6baec147d85272ae79bd0b91eb3b55cba746466800",
+      "bytes": 11950
+    },
+    "matrix-core/src/main/java/io/matrix/cognitive/report/WorkspaceFingerprint.java": {
+      "sha256": "f33191f6fa89eb643575b8aa42d035bd81d7209c312f058c55299c0d73834a90",
+      "bytes": 2806
+    },
+    "matrix-core/src/main/java/io/matrix/knowledge/ArtifactReportResource.java": {
+      "sha256": "6ba746414f3507f74f8adb57980bb453d4fe6a58e9c709aff834593fb6eca1a6",
+      "bytes": 51592
+    },
+    "matrix-core/src/main/java/io/matrix/knowledge/KnowledgeRetriever.java": {
+      "sha256": "420fb79a36c3a8f084180515cf782d78365c539d76786e7c0d85969640232216",
+      "bytes": 43826
+    },
+    "matrix-core/src/main/java/io/matrix/knowledge/KnowledgeRevision.java": {
+      "sha256": "35074ebe9b9dc61441c70692f15c5da0517d2b70a735f8a146caf1eac5b0f53b",
+      "bytes": 1830
+    },
+    "matrix-core/src/main/java/io/matrix/knowledge/KnowledgeSnapshot.java": {
+      "sha256": "e5f21963343dfc82c5642ab182c50db66292e688ad1738149911a426b8292aac",
+      "bytes": 5382
+    },
+    "matrix-core/src/main/java/io/matrix/knowledge/KnowledgeStore.java": {
+      "sha256": "e6f61b0ee289e95f9c0009191e0986eaa40c8a175b7a7ae798601da31bc6058b",
+      "bytes": 278626
+    },
+    "matrix-core/src/main/java/io/matrix/knowledge/KnowledgeWorkbench.java": {
+      "sha256": "f601b0772256675ec6f70f7141594e3a10d8f66873fc420a0387b4b9e3cacbe2",
+      "bytes": 123121
+    },
+    "matrix-core/src/main/java/io/matrix/knowledge/PremiseAssessment.java": {
+      "sha256": "0153b7677538bcab2fad0dd05cf362ade0a8df359a60509a5dcbc8ffee96ca7c",
+      "bytes": 66928
+    },
+    "matrix-core/src/main/java/io/matrix/knowledge/RevisionKind.java": {
+      "sha256": "e5af29164da314299219df261e5889d56100fbefc3d86751eaabeaa825feccf4",
+      "bytes": 1195
+    },
+    "matrix-core/src/main/java/io/matrix/knowledge/acquisition/DocumentImporter.java": {
+      "sha256": "11ef84d3be2f8035ab6e2ff0deadf19459438cdb328920400abf815851e53e20",
+      "bytes": 25007
+    },
+    "matrix-core/src/test/java/io/matrix/knowledge/KnowledgeStoreMigrationTest.java": {
+      "sha256": "055f5260b35e38c70d8fe4b831e97cc5c6b76ac73e7a4cb2445ed9bb6f074194",
+      "bytes": 6389
+    },
+    "matrix-core/src/test/java/io/matrix/knowledge/SchemaMigrationTest.java": {
+      "sha256": "02957244b0efb8cbb3a3df15446fa78932fce463f496faf0644daf293601b15c",
+      "bytes": 4553
+    },
+    "matrix-core/src/test/java/io/matrix/knowledge/WorkspaceSnapshotMigrationTest.java": {
+      "sha256": "43e566184e29a56787b5fb869fe59440a05be10da8ccf53288f585379cf4e302",
+      "bytes": 18221
+    }
+  }
+}

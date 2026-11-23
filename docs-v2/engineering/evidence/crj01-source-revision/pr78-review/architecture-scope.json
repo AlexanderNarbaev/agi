@@ -1,0 +1,90 @@
+{
+  "revision": "3fcbfdc10ed32d6c7a5bc8856f309a2b55f4babe",
+  "files": {
+    "matrix-core/src/main/java/io/matrix/knowledge/RevisionKind.java": {
+      "file_sha256": "e5af29164da314299219df261e5889d56100fbefc3d86751eaabeaa825feccf4",
+      "ranges": [
+        [
+          1,
+          100,
+          "e5af29164da314299219df261e5889d56100fbefc3d86751eaabeaa825feccf4"
+        ]
+      ]
+    },
+    "matrix-core/src/main/java/io/matrix/knowledge/KnowledgeRevision.java": {
+      "file_sha256": "35074ebe9b9dc61441c70692f15c5da0517d2b70a735f8a146caf1eac5b0f53b",
+      "ranges": [
+        [
+          1,
+          100,
+          "35074ebe9b9dc61441c70692f15c5da0517d2b70a735f8a146caf1eac5b0f53b"
+        ]
+      ]
+    },
+    "matrix-core/src/main/java/io/matrix/knowledge/KnowledgeSnapshot.java": {
+      "file_sha256": "e5f21963343dfc82c5642ab182c50db66292e688ad1738149911a426b8292aac",
+      "ranges": [
+        [
+          1,
+          78,
+          "7d6193ae9ae1c3c26e1485b7c25b173105f7181d37bc25f42322941b8af9e75c"
+        ]
+      ]
+    },
+    "matrix-core/src/main/java/io/matrix/knowledge/KnowledgeStore.java": {
+      "file_sha256": "e6f61b0ee289e95f9c0009191e0986eaa40c8a175b7a7ae798601da31bc6058b",
+      "ranges": [
+        [
+          2869,
+          2893,
+          "07845b06af8a725ba9a7dad570adcdae2fa33df1ce07f7be4351b50ef06645e5"
+        ],
+        [
+          5151,
+          5194,
+          "753deba134fe8b546cf81b1aac873ea4ed5fdda2f09a59bea366abc93aeddbab"
+        ]
+      ]
+    },
+    "matrix-core/src/main/java/io/matrix/knowledge/KnowledgeWorkbench.java": {
+      "file_sha256": "f601b0772256675ec6f70f7141594e3a10d8f66873fc420a0387b4b9e3cacbe2",
+      "ranges": [
+        [
+          432,
+          456,
+          "487b72804505dc7719c7dd931b284ba6e84da99e8a5fbcb8ffcf43b8d5b4c00d"
+        ],
+        [
+          710,
+          728,
+          "257f92d20c66d3e7b1f7e431aaa116aca1c149d6dd68241c81db3836515d4a36"
+        ],
+        [
+          952,
+          979,
+          "6b81ba3531325db25038d82abc967c9ce2d5d1739b9cf6f997205365db9a2ead"
+        ]
+      ]
+    },
+    "matrix-core/src/main/java/io/matrix/knowledge/acquisition/DocumentImporter.java": {
+      "file_sha256": "11ef84d3be2f8035ab6e2ff0deadf19459438cdb328920400abf815851e53e20",
+      "ranges": [
+        [
+          153,
+          187,
+          "6f9c3d9b41eb778dc76e47ef00c07cd19f2bd20a00b0f2b06ac423610071d269"
+        ],
+        [
+          229,
+          253,
+          "353a9047f6e5c360e497ba68ac4937bf305299172ef9c8f3ed9e5dcc6ca0a6e1"
+        ],
+        [
+          459,
+          484,
+          "c60c53260ab6dc3992a2bf3a1ab43c1b74c99da6b8a59e7a37642ec33caee612"
+        ]
+      ]
+    }
+  }
+}

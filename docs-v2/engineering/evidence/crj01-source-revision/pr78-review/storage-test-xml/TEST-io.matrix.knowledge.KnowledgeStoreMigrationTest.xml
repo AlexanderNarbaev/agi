@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.KnowledgeStoreMigrationTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-23T09:09:42.147Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.641">
+  <properties/>
+  <testcase name="a database at v5 migrates to v6 and gains the epistemic axes" classname="io.matrix.knowledge.KnowledgeStoreMigrationTest" time="0.476"/>
+  <testcase name="a database at v4 migrates to v6 and its provenance arrives honestly" classname="io.matrix.knowledge.KnowledgeStoreMigrationTest" time="0.102"/>
+  <testcase name="a fresh database is built by the migration chain, not by a shortcut" classname="io.matrix.knowledge.KnowledgeStoreMigrationTest" time="0.051"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

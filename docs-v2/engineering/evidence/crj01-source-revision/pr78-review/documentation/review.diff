@@ -1,0 +1,178 @@
+diff --git a/docs-v2/architecture/CAPABILITY-REGISTRY.yml b/docs-v2/architecture/CAPABILITY-REGISTRY.yml
+index 847d3b8f..50a0b0b5 100644
+--- a/docs-v2/architecture/CAPABILITY-REGISTRY.yml
++++ b/docs-v2/architecture/CAPABILITY-REGISTRY.yml
+@@ -2406,15 +2406,20 @@ capabilities:
+       - "matrix-core/src/main/java/io/matrix/actions/ArtifactAction.java"
+       - "matrix-core/src/main/java/io/matrix/actions/ArtifactActionService.java"
+       - "matrix-core/src/main/java/io/matrix/knowledge/ArtifactReportResource.java"
++      - "matrix-core/src/main/java/io/matrix/knowledge/SourceRevisionView.java"
++      - "matrix-core/src/main/java/io/matrix/knowledge/SourceObservation.java"
+       - "matrix-core/src/main/resources/application.properties"
+     production_callers: []
+     test_paths:
+       - "matrix-core/src/test/java/io/matrix/actions/EvidenceToActionTest.java"
+       - "matrix-core/src/test/java/io/matrix/actions/ArtifactWriterConcurrencyTest.java"
+       - "matrix-core/src/test/java/io/matrix/knowledge/ArtifactReportResourceTest.java"
++      - "matrix-core/src/test/java/io/matrix/knowledge/SourceRevisionSelectionTest.java"
++      - "matrix-core/src/test/java/io/matrix/knowledge/SourceObservationTest.java"
++      - "matrix-core/src/test/java/io/matrix/cognitive/report/HistoricalReportLearningTest.java"
+       - "matrix-core/src/test/java/io/matrix/knowledge/KnowledgeWorkbenchConcurrencyTest.java"
+       - "scripts/artifact-writer-negative-control.sh"
+-    test_evidence: "29 writer tests, 13 writer-concurrency tests, 14 route tests and 2 asking-path concurrency tests, all green on 2026-11-15. The route tests pin the feature disabled (503), a missing or false consent (403), an unknown workspace (404), a report name that leaves the root (400), a network-exposed process (403), a missing or unsafe output root (503), the written report and its digest, the replayed repeat, the concurrent pair, the absence of an absolute path in the response, and the replaced root (500). The negative control mutates the writer's lease out of the source and the concurrency test goes red: the guard is load-bearing."
++    test_evidence: "29 writer tests, 13 writer-concurrency tests, 14 route tests and 2 asking-path concurrency tests, all green on 2026-11-15. The route tests pin the feature disabled (503), a missing or false consent (403), an unknown workspace (404), a report name that leaves the root (400), a network-exposed process (403), a missing or unsafe output root (503), the written report and its digest, the replayed repeat, the concurrent pair, the absence of an absolute path in the response, and the replaced root (500). The negative control mutates the writer's lease out of the source and the concurrency test goes red: the guard is load-bearing. On 2026-11-23, source revision applicability passed 43 targeted developer tests and 7 independently evaluated synthetic groups on the in-process report route. See docs-v2/engineering/CRJ-01-SOURCE-REVISION-APPLICABILITY.md for exact revisions, evidence and scope."
+     benchmark_evidence: "the real HTTP demonstration (docs-v2/engineering/C2A-HTTP-DEMONSTRATION.json, 2026-11-15): the packaged server answered 201, wrote a 52 971-byte report whose SHA-256 eba139f74ad250acc5b8511b32786d207ab7dd73e119043572d12d915c6909ec equals the digest the response reported and the digest of the file on disk; the repeat answered 200 REPLAYED with one artifact; a request without consent answered 403 and wrote nothing; four concurrent requests with one identity produced one WRITTEN and three REPLAYED with exactly one STAGED and one COMMITTED record; after a restart of the server the repeat answered 200 REPLAYED with the same digest and no new artifact."
+     formal_spec: "none"
+     dependencies:
+@@ -2428,9 +2433,9 @@ capabilities:
+       - "the route inherits the workbench's one-question-at-a-time contract: concurrent asks are serialised"
+     owner: "the owner (CONCEPT-TO-ACTION, 2026-11-15)"
+     decision_ref: "docs-v2/engineering/C2A-EXECUTION-PLAN.md; docs-v2/engineering/C2A-HTTP-DEMONSTRATION.json"
+-    last_verified_commit: "26c549c4"
+-    last_verified_at: "2026-11-15"
+-    next_verification_condition: "a change to the writer's lease, to the route's contract or to the workbench's asking path requires the demonstration to be re-run and its report regenerated"
+-    notes: "ADDED IN CONCEPT-TO-ACTION. The row distinguishes what was measured from what was not: the action is IMPLEMENTED, it is SERVED through one named route, it is VERIFIED by a real HTTP demonstration, and it is NOT operational — no deployment has been observed."
++    last_verified_commit: "b226a5e45cd5e8fecb6a7bad0c3980ec8122e3f4"
++    last_verified_at: "2026-11-23"
++    next_verification_condition: "a change to the writer's lease, to the route's contract or to the workbench's asking path requires the demonstration to be re-run and its report regenerated. A change to revision selection, evidence projection, observation identity or revision-bound learning and replay requires repeating the frozen source-revision controls."
++    notes: "ADDED IN CONCEPT-TO-ACTION. The row distinguishes what was measured from what was not: the action is IMPLEMENTED, it is SERVED through one named route, it is VERIFIED by a real HTTP demonstration, and it is NOT operational — no deployment has been observed. The later synthetic measurement verifies explicit source selection for Chain A reports, including document-specific historical retrieval, workspace-local observations and stale replay refusal. It does not measure deployment or generalization."
+ 
+ # =============================================================================
+diff --git a/docs-v2/engineering/CRJ-01-SOURCE-REVISION-APPLICABILITY.md b/docs-v2/engineering/CRJ-01-SOURCE-REVISION-APPLICABILITY.md
+new file mode 100644
+index 00000000..6796aa68
+--- /dev/null
++++ b/docs-v2/engineering/CRJ-01-SOURCE-REVISION-APPLICABILITY.md
+@@ -0,0 +1,119 @@
++# CRJ-01 — Source revision applicability
++
++**Status:** `CANONICAL`
++
++**Measurement date:** 2026-11-23
++
++**Classification:** PRODUCT_GAIN · **Decision:** CONTINUE
++
++## Measured result
++
++The final [implementation PR](https://github.com/AlexanderNarbaev/agi/pull/78)
++head `f68ec498a6a6a50a34eecf0653a64385ed9d6c78` passed all seven JUnit groups
++in the unchanged frozen v2 evaluator. The earlier `2ffa2cb82a14869f5598bc6c0c98f085707633d2`
++candidate also passed all seven.
++The evaluator covered the primary two-workspace case and all ten reliability
++controls. It invoked the production `ArtifactReportResource` in process using
++synthetic workspaces.
++
++Workspace A switched explicitly from V1 to V2 while B retained its own V1
++refutation. A retained both historical views and reconstructed the refutation
++from its V1 view. The checks covered import idempotency, same-filename
++coexistence, independent corroboration, workspace-local identity rejection,
++competing successor selection, rollback after insertion, restart, snapshot
++exchange, invalidation of a learned trace, and refusal to replay a stale
++report while retaining its historical artifact.
++
++The evaluator audited 12 refuted and seven unsupported responses using frozen
++source bytes and importer records made before the query. It verified the
++canonical claim, source observation claim, evidence identity, source hash and
++literal excerpt. One refuted response carried distinct canonical and
++observation identities. The typed coordinates identify the enclosing source
++segment. The unique literal excerpt within that segment reconstructs the
++independently frozen exact sentence coordinates. Unsupported responses carried
++zero refuting observations. The retained trace contains 65 import, selection,
++served-response and diagnostic records.
++
++The applicability policy is explicit. The workbench appends a workspace-local
++selection event naming the logical document key, selected source ID and content
++hash, and predecessor event. The current view uses the terminal event in each
++document chain. A report request with `sourceRevisionEventId` substitutes one
++named historical event for its document and leaves other document selections
++current. This is document-specific historical reconstruction. Historical
++requests are excluded from both report learner routes.
++
++The final head also passed **43 developer tests across nine suites** and
++received independent AI source review. That targeted scope exercised the v21
++to v22 upgrade in synthetic SQLite, malformed observation rejection and
++historical exclusion from both learner routes.
++
++## Prior outcomes and limits
++
++The pre-implementation run on `3fcbfdc10ed32d6c7a5bc8856f309a2b55f4babe`
++observed both workspaces still relying on V1 after an ordinary V2 import in A
++and a restart. Import preserved both sources and established no explicit
++supersession. The first implementation run on `03ca971c9db69eda078a53d811df9059a4ff6965`
++passed 4/7 groups and exposed evaluator setup defects. The corrected runner
++preserved frozen source and gold bytes. The next candidate,
++`916a4719987f6034f3e039297ea66c1402c5752c`, passed 6/7 and failed the exact
++independent source-claim identity check. The earlier text-matching
++experiment also remains recorded. [NR-038](../research/CRJ-01-PREMISE-TEXT-MATCHING-NEGATIVE-RESULT.md)
++
++Projecting sources and evidence edges alone was insufficient. When an archived
++canonical introducer had an applicable independent support edge, the
++canonical identity and the supporting observation could refer to different
++claims. The evaluated response carries both identities so consumers can
++verify which observation supplied the literal span.
++
++This is an independent AI-assisted internal measurement of a synthetic
++Chain A report path. The experimental results concern applicability of
++explicit source revisions and exact refuting provenance in the tested view.
++The scope is synthetic source revision applicability and exact observation
++provenance. General premise reasoning, learning transfer, cross-chain behavior,
++live database migration and the full CRJ-01 freeze remain outside the measured
++scope. Exact-head [GitHub CI](https://github.com/AlexanderNarbaev/agi/actions/runs/45200890619)
++passed. PR #78 merged normally at `b226a5e45cd5e8fecb6a7bad0c3980ec8122e3f4`,
++whose tree matches the independently evaluated head.
++
++## Evidence and expenditure
++
++The retained evaluator directory is
++`/home/alexandr-narbaev/Projects/agi/matrix-revision-evaluator.teFBiFtH/evidence`.
++Its frozen cases and gold remain under evaluator custody. The v2 runner
++manifest SHA-256 is
++`75a578d76b0a59f515f969f48f5a402b94f197133174cf4cdda32c2eeca9a55b`.
++
++| Evidence under the evaluator directory | SHA-256 |
++|---|---|
++| `green-f68ec49/CHECKSUMS.sha256` | `f9d2a3d051e2594f12d32ff417d5e481ae5ccde8a12e449b12f2683caa44ee56` |
++| `green-f68ec49/RESULT.md` | `9c0dbca8a841c82b41350df5cc9998574c48e8f269e79a17647c516efdf45123` |
++| `green-f68ec49/TEST-io.matrix.crj.runner.FrozenSourceRevisionTest.xml` | `e926501d4890356e8c90ecd21b5668b7245350aef4d5e2940235721c2e21c74a` |
++| `green-f68ec49/refuting-observation-audit.json` | `7e22d029c05b780a3ad1cc5ee18e5331bb79ea4d1da575b57eab6f17984733d1` |
++| `green-f68ec49/command.txt` | `9ba40b789ded0db403c034cc013a6a332e327ec07298efe6e3ab305d28d87552` |
++| `green-2ffa2cb/RESULT.md` | `79b14e2f578469cc07068c48b230a45020c7076a02e93342269d9c5c0f22f6b1` |
++| `green-2ffa2cb/TEST-io.matrix.crj.runner.FrozenSourceRevisionTest.xml` | `a9ae74c8cd1fb0c02f3da3f38081385f754a9ca75f9ee6306ecbe8188b2e37b1` |
++| `green-2ffa2cb/refuting-observation-audit.json` | `7e22d029c05b780a3ad1cc5ee18e5331bb79ea4d1da575b57eab6f17984733d1` |
++| `green-2ffa2cb/command.txt` | `76a5d3960daf953644f9ba605f06c033e2bf3235fa260c3be187b575c7e08d2c` |
++
++The evaluator used Gradle 9.6.0 with
++`--offline --no-daemon --no-build-cache --max-workers=2 :matrix-core:test --tests io.matrix.crj.runner.FrozenSourceRevisionTest`.
++The commands, JUnit XML, resource measurements and request traces for the
++earlier runs are in the `baseline`, `green-03ca971`, `green-916a471` and
++`green-2ffa2cb` evaluator subdirectories. The initial architecture and measured failures are
++in the retained
++`/home/alexandr-narbaev/Projects/agi/matrix-source-revision-evidence-20261123/CHECKPOINT.md`.
++
++| Task | Observed expenditure | Measured outcome |
++|---|---|---|
++| Architecture, storage and projection dispatches | 26,003 reported MiniMax tokens in three calls, 163.131 seconds provider-turn wall time | Architecture mapping and candidate implementation input |
++| First sealed implementation run | 28.73 seconds wall, 91.79 seconds CPU | 4/7 |
++| Corrected sealed run before exact observation identity | 23.40 seconds wall, 93.69 seconds CPU | 6/7 |
++| Sealed run on `2ffa2cb` | 24.51 seconds wall, 93.56 seconds CPU, 2,000,360 KiB peak RSS, zero provider tokens | 7/7, zero failures |
++| Sealed run on final PR head `f68ec49` | 23.41 seconds wall, 93.27 seconds CPU, 2,053,860 KiB peak RSS, zero provider tokens | 7/7, zero failures |
++
++The developer-count source is `integration-head-test-xml` beside the
++checkpoint. The independent source review is retained in the implementation PR
++and in the review note beside the checkpoint.
++
++The resource times include compilation and fixture work. Provider monetary
++cost and allocation per case were `NOT_INSTRUMENTED`.
+diff --git a/docs-v2/governance/ROADMAP.md b/docs-v2/governance/ROADMAP.md
+index 1ec95743..b69b91c7 100644
+--- a/docs-v2/governance/ROADMAP.md
++++ b/docs-v2/governance/ROADMAP.md
+@@ -18,7 +18,7 @@ This section is a **proposed direction awaiting owner review**, not evidence tha
+ | COG-00 — source-grounded reachability | Read live callers, owners, Chain A/B Bridge and capability statuses; publish intended/implemented/served/verified map | No invented paths; existing `CAPABILITY-REGISTRY.yml` remains sole status registry | **DONE (measured)** — `docs-v2/engineering/CRJ-01-REACHABILITY.md`; the verdict is **PARTIAL**: one connected served path (Chain A's report journey) and five named break points |
+ | COG-01 — preregister CRJ-01 | Two independent domains, A/B/C arms, oracle, frozen novel cases, resource and stopping budgets | No use of developer-inspected evaluations as new held-out data | **DRAFT WRITTEN, NOT FROZEN** — `docs-v2/engineering/CRJ-01-PROTOCOL.md`; five owner decisions (D1–D5) are open, and the protocol becomes a contract only after the owner accepts it and an independent reviewer freezes the set |
+ | COG-02 — reliability and epistemic boundary | Reproduce idempotency changed-payload case; evaluate R-EPIS-10 and R-EPIS-11 | Failing negative control before remediation; owner RFC for frozen gate changes | **DONE for the two named items** — the changed-payload case is **REPRODUCED** (red before the fix) and **FIXED** under OD-079; R-EPIS-10 is **CLOSED** under OD-080 with a negative control; R-EPIS-11 is **classified** (11 classes, 51 methods, 0 pure gates) and stays a labelled gap |
+-| COG-03 — minimum served cognitive journey | Existing workbench/kernel/permissioned writer/observation/trace/restart | Real packaged request/response, independent effect and durable trace | **the LOCAL milestone is demonstrated** over the packaged route (`docs-v2/engineering/CRJ-01-JOURNEY-DEMONSTRATION.json`, **20/20** checks, including RESTART and the arm C leg); the **developmental** milestone — a measured advantage on a *sealed* set against arms A and B — is still BLOCKED on COG-01 |
++| COG-03 — minimum served cognitive journey | Existing workbench/kernel/permissioned writer/observation/trace/restart | Real packaged request/response, independent effect and durable trace | **the LOCAL milestone is demonstrated** over the packaged route (`docs-v2/engineering/CRJ-01-JOURNEY-DEMONSTRATION.json`, **20/20** checks, including RESTART and the arm C leg); the **developmental** milestone — a measured advantage on a *sealed* set against arms A and B — is still BLOCKED on COG-01. The Chain A report path now applies explicit source revisions with document-specific historical reconstruction and exact observation provenance. **7/7 synthetic control groups passed** with independent AI-assisted evaluation. [Source revision applicability](../engineering/CRJ-01-SOURCE-REVISION-APPLICABILITY.md) |
+ | COG-04 — learning beyond exact replay | Versioned candidate rules/procedures compared against no-memory and cache baselines on different tasks | Independently measured gain or honest falsification; never call replay generalization | **the MECHANISM is built and gated** (`docs-v2/engineering/CRJ-01-ARM-C.md`): a promoted, versioned, provenance-carrying procedure answers a **different** question after a restart, with four gates that can each refuse. The **measured advantage is not claimed**: the saving is **2.7 %** on a 17-claim workspace, the selection rested on a *declared* cost, and the learned-claims half is not built. The **full suite** is green (1359 suites / 9808 tests / 0 failures) and it found a **pre-existing** defect of the served path — a busy database was reported as a broken output root — which is **fixed and proven** (`R-EPIS-13`). The comparison against arms A and B on a **sealed** set stays BLOCKED on COG-01 |
+ | COG-05 — federated cognitive journey | Two local-first nodes with approved Bridge contracts and independent evaluation | Owner-authorized network boundary, conflict/revocation/duplicate tests | CONDITIONAL; do not activate yet |
+ | COG-06 — measured substrate optimization | CPU reference, measured workload, candidate native/GPU/FPGA path | End-to-end improvement without quality regression | CONDITIONAL on demonstrated bottleneck |

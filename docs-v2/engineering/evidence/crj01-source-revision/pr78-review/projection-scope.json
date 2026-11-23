@@ -1,0 +1,61 @@
+{
+  "base": "f4ad32d8bb35a6229122f97195c6af2e0817400b",
+  "task": "source applicability view and fingerprint",
+  "provider": "minimax",
+  "model": "MiniMax-M3.1-Flash",
+  "endpoint": "https://api.minimax.io/v1",
+  "tools": [],
+  "source": {
+    "matrix-core/src/main/java/io/matrix/knowledge/KnowledgeWorkbench.java": {
+      "sha256": "f601b0772256675ec6f70f7141594e3a10d8f66873fc420a0387b4b9e3cacbe2",
+      "excerpts": [
+        [
+          402,
+          449,
+          "847a8e14d99704f264de89950dc5904606273b7e76ade61522994e279828920a"
+        ],
+        [
+          510,
+          539,
+          "8be4434512953a8fcf9b63d086913fffd1be4971880fc708cbfbcf448b5797e3"
+        ]
+      ]
+    },
+    "matrix-core/src/main/java/io/matrix/cognitive/report/ReportJourney.java": {
+      "sha256": "9bb8c3dd5520161252546ae69eb05a0fb9985887769c31c322ada346f58aad59",
+      "excerpts": [
+        [
+          1,
+          160,
+          "9bb8c3dd5520161252546ae69eb05a0fb9985887769c31c322ada346f58aad59"
+        ]
+      ]
+    },
+    "matrix-core/src/main/java/io/matrix/knowledge/ArtifactReportResource.java": {
+      "sha256": "6ba746414f3507f74f8adb57980bb453d4fe6a58e9c709aff834593fb6eca1a6",
+      "excerpts": [
+        [
+          136,
+          153,
+          "40ebeade0870586c4a6afdf29f2afab48049dc5f63ca9bdfd81f13cfff085b50"
+        ],
+        [
+          321,
+          355,
+          "c60a9f20767f9e5efa76998bf945c3bdddc26df10348d54dea22aea5f3cba469"
+        ]
+      ]
+    },
+    "matrix-core/src/main/java/io/matrix/cognitive/report/WorkspaceFingerprint.java": {
+      "sha256": "f33191f6fa89eb643575b8aa42d035bd81d7209c312f058c55299c0d73834a90",
+      "excerpts": [
+        [
+          18,
+          65,
+          "40cce8716cbfd1f4b72877d81d16f30fdd259f1612cfb37e07231c09832f69d4"
+        ]
+      ]
+    }
+  },
+  "max_output": 6200
+}

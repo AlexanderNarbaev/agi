@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.cognitive.report.LearnedClaimScopeTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-23T09:15:12.478Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.002">
+  <properties/>
+  <testcase name="the claim of the same concept from an unrelated document does NOT apply" classname="io.matrix.cognitive.report.LearnedClaimScopeTest" time="0.001"/>
+  <testcase name="the rule fails closed when the data needed to compare is missing" classname="io.matrix.cognitive.report.LearnedClaimScopeTest" time="0.0"/>
+  <testcase name="a claim of a DIFFERENT concept never applies, whatever its support" classname="io.matrix.cognitive.report.LearnedClaimScopeTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

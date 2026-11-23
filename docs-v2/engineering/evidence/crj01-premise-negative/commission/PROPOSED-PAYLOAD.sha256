@@ -1,0 +1,9 @@
+37ca602f82ab5a1aa5859577d8ca4c78252dda70cc1c3f7f0d628e590b2898cd  matrix-core/src/test/java/io/matrix/crj/runner/Crj01Metrics.java
+d6d55f962d6b23a3662f3a1a442caf635867cae28bc4b232c990adee396ec1ae  matrix-core/src/test/java/io/matrix/crj/runner/Crj01MetricsTest.java
+a0a5071c653797d415d7f5705f28fc62ac801b99a2fbb610648657aedaee5b95  matrix-core/src/test/java/io/matrix/crj/runner/Crj01EpistemicMetricsControlTest.java
+11903009c5129a260fa6fecc2ae4090a756e55768e999787657a9d46e1226b8a  matrix-core/src/test/java/io/matrix/crj/runner/Crj01ArmRunner.java
+26a7ad86a11c87310156e509b7becee0d15096bcb87cec4a7369bde5c2f5dc19  matrix-core/src/test/java/io/matrix/crj/runner/Crj01ProvenanceTest.java
+cf2d7dabdf933ddcda5c1e363129ce4781ab7d8a4c15e85923e6358005cd3ea0  matrix-core/src/test/java/io/matrix/crj/runner/Crj01ProspectiveProbeTest.java
+dda2e3e8a3a5713a8da5e6cb0be4442fcf0c2979cd4ff4f114935eb3c0494522  matrix-core/src/test/java/io/matrix/crj/evidence/SourceSpanOracle.java
+6ba746414f3507f74f8adb57980bb453d4fe6a58e9c709aff834593fb6eca1a6  matrix-core/src/main/java/io/matrix/knowledge/ArtifactReportResource.java
+11ef84d3be2f8035ab6e2ff0deadf19459438cdb328920400abf815851e53e20  matrix-core/src/main/java/io/matrix/knowledge/acquisition/DocumentImporter.java

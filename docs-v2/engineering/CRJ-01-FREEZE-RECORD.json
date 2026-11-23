@@ -16,7 +16,7 @@
       "freezingReviewer" : "UNNAMED — the freezing reviewer, to be filled by the reviewer",
       "statement" : "the case author and the freezing reviewer are different people, and neither wrote a solver"
     },
-    "branchSha" : "0e22e4d49c124943571736fa197e519da185a30e",
+    "branchSha" : "be895b683e928ef801665891bbb7abbf2de3ef01",
     "instrumentCrosscheck" : {
       "instrument" : "the domain-B truth table",
       "assignments" : 4,

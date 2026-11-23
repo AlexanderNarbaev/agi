@@ -1,0 +1,179 @@
+Revise your tool-free candidate patch for MATRIX. Your previous compiled and preserved 17 existing tests, but new served test expected REFUTED and got UNSUPPORTED. Input was explicitly 'Since the greenhouse heating system is driven entirely by solar collectors, how does it warm the building?' with claim 'The greenhouse heating system is driven partly by solar collectors and partly by a geothermal pump.' Previous patterns only allowed entirely/partly before 'driven' and repeated full second verb. Handle qualifiers either before 'driven' or after 'driven', and shared verb ellipsis in the two explicitly partial contributors. Compare roles separately, ordered normalized surface strings to preserve subject and condition/scope instead of bag-of-stems equality; reject differing and trailing qualification/sites, negative/mixed modality; accept contributors in either order when distinct and clearly attached. Treat a plain statement as compatible, not confirmation of exclusivity. Do not loosen the asserted-proposition guard for other refutations. Prefer simpler bounded anchored grammar; avoid broad single-word rules and topical hardcoding. Output only JSON in fenced json, object edits with each exact {"path","before","after"} against FIRST CANDIDATE (the plus lines shown are current source). Fix only needed production replacements. No tools. You are the implementation author.
+
+diff --git a/matrix-core/src/main/java/io/matrix/knowledge/PremiseAssessment.java b/matrix-core/src/main/java/io/matrix/knowledge/PremiseAssessment.java
+index 62b8df70..661d5beb 100644
+--- a/matrix-core/src/main/java/io/matrix/knowledge/PremiseAssessment.java
++++ b/matrix-core/src/main/java/io/matrix/knowledge/PremiseAssessment.java
+@@ -8,6 +8,8 @@ import java.util.List;
+ import java.util.Locale;
+ import java.util.Map;
+ import java.util.Set;
++import java.util.regex.Matcher;
++import java.util.regex.Pattern;
+ 
+ /**
+  * Assesses a USER ASSERTION against the workspace's own stored knowledge.
+@@ -247,6 +249,23 @@ public final class PremiseAssessment {
+     private static final List<String> RESTRICTION_MARKERS = List.of(
+             "only", "merely", "minor", "side effect", "minor side");
+ 
++    /** An explicit claim that one mechanism is entirely driven by one contributor. */
++    private static final Pattern EXCLUSIVE_CAUSAL_PATTERN = Pattern.compile(
++            "^\\s*(.+?)\\s+(?:is|are)\\s+(?:entirely|exclusively|wholly|only|solely)"
++                    + "\\s+driven\\s+by\\s+(.+?)\\s*$",
++            Pattern.CASE_INSENSITIVE);
++
++    /** An explicit claim that one mechanism is driven partly by two distinct contributors. */
++    private static final Pattern PARTIAL_CAUSAL_PATTERN = Pattern.compile(
++            "^\\s*(.+?)\\s+(?:is|are)\\s+(?:partly|partially)\\s+driven\\s+by\\s+"
++                    + "(.+?)\\s+and\\s+(?:partly|partially)\\s+driven\\s+by\\s+(.+?)\\s*$",
++            Pattern.CASE_INSENSITIVE);
++
++    /** A plain positive causal claim, without either exclusivity or partiality. */
++    private static final Pattern PLAIN_CAUSAL_PATTERN = Pattern.compile(
++            "^\\s*(.+?)\\s+(?:is|are)\\s+driven\\s+by\\s+(.+?)\\s*$",
++            Pattern.CASE_INSENSITIVE);
++
+     /**
+      * The single words that are markers and therefore carry no subject.
+      *
+@@ -562,6 +581,14 @@ public final class PremiseAssessment {
+         Set<String> premiseStems = distinctiveStems(premise);
+         Set<String> claimStems = distinctiveStems(proposition);
+ 
++        // A scoped causal exclusivity is read before generic polarity and subject rules.
++        // Both sides must name the same mechanism and scope, use the same causal relation,
++        // and name the same contributor in the exclusive claim as one of the two explicit
++        // partial contributors. A plain positive causal claim is not such a contradiction.
++        if (causalExclusivityContradiction(premise, proposition)) {
++            return new Reading("CONTRADICTS", premise);
++        }
++
+         // A denial counts only when it is ABOUT the other side's subject.
+         String premiseDenial = denialAbout(premise, claimStems);
+         String claimDenial = denialAbout(proposition, premise);
+@@ -619,6 +646,12 @@ public final class PremiseAssessment {
+         if (premiseLimitation != null && claimLimitation == null) {
+             return new Reading("CONTRADICTS", premiseLimitation);
+         }
++        // A plain positive causal statement is compatible with a partial cause. It must
++        // not become support for an exclusive causal premise merely because it names the
++        // same contributor.
++        if (exclusiveCausalReading(premise) != null && plainCausalReading(proposition) != null) {
++            return new Reading("MENTIONS", null);
++        }
+         if (sameAssertion(premiseStems, claimStems)) {
+             // A RESTRICTION DOES NOT CARRY A BROADER STATEMENT.
+             //
+@@ -637,6 +670,88 @@ public final class PremiseAssessment {
+         return new Reading("MENTIONS", null);
+     }
+ 
++    /** A causal statement read with its mechanism/scope and contributor. */
++    private record CausalReading(Set<String> mechanismAndScope, Set<String> contributor,
++            Set<String> secondContributor) {
++
++        CausalReading {
++            mechanismAndScope = Set.copyOf(mechanismAndScope);
++            contributor = Set.copyOf(contributor);
++            secondContributor = Set.copyOf(secondContributor);
++        }
++
++        CausalReading(Set<String> mechanismAndScope, Set<String> contributor) {
++            this(mechanismAndScope, contributor, Set.of());
++        }
++    }
++
++    /**
++     * Whether a premise and a claim contradict through scoped causal exclusivity.
++     *
++     * <p>The premise must say that one mechanism and scope is entirely driven by one
++     * contributor. The claim must say that the same mechanism and scope is partly driven by
++     * that contributor and partly by a distinct contributor. Both relations are literal causal
++     * relations; a bare topic overlap, a non-causal use of "partly", or a plain positive causal
++     * statement does not qualify.</p>
++     */
++    static boolean causalExclusivityContradiction(String premise, String proposition) {
++        CausalReading exclusive = exclusiveCausalReading(premise);
++        CausalReading partial = partialCausalReading(proposition);
++        if (exclusive == null || partial == null) {
++            return false;
++        }
++        return exclusive.mechanismAndScope().equals(partial.mechanismAndScope())
++                && exclusive.contributor().equals(partial.contributor())
++                && partial.secondContributor().size() >= 1
++                && !partial.secondContributor().containsAll(exclusive.contributor());
++    }
++
++    /** The exclusive causal reading of a text, or null when it does not state one. */
++    private static CausalReading exclusiveCausalReading(String text) {
++        if (text == null || denied(text)) {
++            return null;
++        }
++        Matcher matcher = EXCLUSIVE_CAUSAL_PATTERN.matcher(text.strip());
++        if (!matcher.matches()) {
++            return null;
++        }
++        Set<String> mechanismAndScope = distinctiveStems(matcher.group(1));
++        Set<String> contributor = distinctiveStems(matcher.group(2));
++        return mechanismAndScope.isEmpty() || contributor.isEmpty()
++                ? null : new CausalReading(mechanismAndScope, contributor);
++    }
++
++    /** The partial causal reading of a text, or null when it does not state one. */
++    private static CausalReading partialCausalReading(String text) {
++        if (text == null || denied(text)) {
++            return null;
++        }
++        Matcher matcher = PARTIAL_CAUSAL_PATTERN.matcher(text.strip());
++        if (!matcher.matches()) {
++            return null;
++        }
++        Set<String> mechanismAndScope = distinctiveStems(matcher.group(1));
++        Set<String> contributor = distinctiveStems(matcher.group(2));
++        Set<String> secondContributor = distinctiveStems(matcher.group(3));
++        return mechanismAndScope.isEmpty() || contributor.isEmpty() || secondContributor.isEmpty()
++                ? null : new CausalReading(mechanismAndScope, contributor, secondContributor);
++    }
++
++    /** The plain positive causal reading of a text, or null when it does not state one. */
++    private static CausalReading plainCausalReading(String text) {
++        if (text == null || denied(text)) {
++            return null;
++        }
++        Matcher matcher = PLAIN_CAUSAL_PATTERN.matcher(text.strip());
++        if (!matcher.matches()) {
++            return null;
++        }
++        Set<String> mechanismAndScope = distinctiveStems(matcher.group(1));
++        Set<String> contributor = distinctiveStems(matcher.group(2));
++        return mechanismAndScope.isEmpty() || contributor.isEmpty()
++                ? null : new CausalReading(mechanismAndScope, contributor);
++    }
++
+     /**
+      * The clause of the text that LIMITS the other side's subject.
+      *
+diff --git a/matrix-core/src/main/java/io/matrix/knowledge/PremiseSemantics.java b/matrix-core/src/main/java/io/matrix/knowledge/PremiseSemantics.java
+index 346e530a..adea6952 100644
+--- a/matrix-core/src/main/java/io/matrix/knowledge/PremiseSemantics.java
++++ b/matrix-core/src/main/java/io/matrix/knowledge/PremiseSemantics.java
+@@ -353,7 +353,17 @@ public final class PremiseSemantics {
+                     reason = finding.reason();
+                 }
+                 case CONTRADICTED -> {
+-                    if (denialIsAboutThePremise(evidence, premise, null)
++                    boolean causalExclusivity = false;
++                    for (PremiseAssessment.EvidenceRef reference : evidence) {
++                        if ("CONTRADICTS".equals(reference.relation())
++                                && PremiseAssessment.causalExclusivityContradiction(
++                                        premise, reference.proposition())) {
++                            causalExclusivity = true;
++                            break;
++                        }
++                    }
++                    if (causalExclusivity
++                            || denialIsAboutThePremise(evidence, premise, null)
+                             || !assertedProposition(kind)) {
+                         status = Status.REFUTED;
+                         reason = finding.reason();

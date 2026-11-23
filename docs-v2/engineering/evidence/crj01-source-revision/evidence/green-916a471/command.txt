@@ -1,0 +1,3 @@
+2026-11-23T12:17:57+03:00
+916a4719987f6034f3e039297ea66c1402c5752c
+/home/alexandr-narbaev/.gradle/wrapper/dists/gradle-9.6.0-bin/42k10rwplmzkhuboz9kdazi7s/gradle-9.6.0/bin/gradle --offline --no-daemon --no-build-cache --max-workers=2 :matrix-core:test --tests io.matrix.crj.runner.FrozenSourceRevisionTest 

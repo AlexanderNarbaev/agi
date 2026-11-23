@@ -1,0 +1,1 @@
+aa3fe6b2d75651005daab5585e697af8d90a3010 1996f85fbbad007fd02b1e994b98bd2ea81456fa WAL: record verified Chain A source revision applicability (#79)

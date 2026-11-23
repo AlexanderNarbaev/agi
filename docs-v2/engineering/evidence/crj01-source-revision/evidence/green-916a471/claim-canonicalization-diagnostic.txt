@@ -1,0 +1,2 @@
+introducer=v1 claim=clm-4c0632a9 storedStatus=VERIFIED sameScope=true observerEvidence=[SUPPORTS] inView=true
+introducer=observer claim=clm-f21f678 storedStatus=SUPERSEDED sameScope=true observerEvidence=[SUPPORTS] inView=true

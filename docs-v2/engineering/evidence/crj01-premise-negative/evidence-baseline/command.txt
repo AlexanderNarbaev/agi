@@ -1,0 +1,3 @@
+commit=0549d27ee561afdf94214cbabe661c2532e08bae
+root=/tmp/matrix-premise-evaluation.i0U60ECt/baseline
+/home/alexandr-narbaev/.gradle/wrapper/dists/gradle-9.6.0-bin/42k10rwplmzkhuboz9kdazi7s/gradle-9.6.0/bin/gradle --offline --no-daemon --no-build-cache --max-workers=2 :matrix-core:test --tests io.matrix.crj.runner.FrozenPremiseJourneyTest 

@@ -77,13 +77,26 @@ whose tree matches the independently evaluated head.
 
 ## Evidence and expenditure
 
-The retained evaluator directory is
-`/home/alexandr-narbaev/Projects/agi/matrix-revision-evaluator.teFBiFtH/evidence`.
-Its frozen cases and gold remain under evaluator custody. The v2 runner
-manifest SHA-256 is
+**The retained evidence now resides IN THE REPOSITORY**, at
+`docs-v2/engineering/evidence/crj01-source-revision/` — so a reader on another machine
+does not need the session's temporary directory, and this record cannot point at a path
+that only ever existed on one machine. The per-run records, the JUnit XMLs, the audit and
+the traces are all there, and the accepted run's `CHECKSUMS.sha256` verifies (**9 of 9
+files OK**).
+
+**What is deliberately NOT retained.** The evaluator's frozen cases and **gold** remain
+under evaluator custody — the mandate requires it ("do not expose ... hidden gold"), and a
+blind evaluation that publishes its answers is not blind. The evaluator's **working
+copies** (seven runs, about 130 MB each) are machine state and are not carried either.
+What the repository publishes is the **verifiable record**: the per-run commands, the
+JUnit XMLs, the audits and the digests of the runner and the fixture, so that the owner
+can check the retained evidence against the gold they hold, and a reader can check the
+result without the repository publishing the answers.
+
+The v2 runner manifest SHA-256 is
 `75a578d76b0a59f515f969f48f5a402b94f197133174cf4cdda32c2eeca9a55b`.
 
-| Evidence under the evaluator directory | SHA-256 |
+| Evidence under the retained directory (`evidence/`) | SHA-256 |
 |---|---|
 | `green-f68ec49/CHECKSUMS.sha256` | `f9d2a3d051e2594f12d32ff417d5e481ae5ccde8a12e449b12f2683caa44ee56` |
 | `green-f68ec49/RESULT.md` | `9c0dbca8a841c82b41350df5cc9998574c48e8f269e79a17647c516efdf45123` |
@@ -98,10 +111,11 @@ manifest SHA-256 is
 The evaluator used Gradle 9.6.0 with
 `--offline --no-daemon --no-build-cache --max-workers=2 :matrix-core:test --tests io.matrix.crj.runner.FrozenSourceRevisionTest`.
 The commands, JUnit XML, resource measurements and request traces for the
-earlier runs are in the `baseline`, `green-03ca971`, `green-916a471` and
-`green-2ffa2cb` evaluator subdirectories. The initial architecture and measured failures are
-in the retained
-`/home/alexandr-narbaev/Projects/agi/matrix-source-revision-evidence-20261123/CHECKPOINT.md`.
+earlier runs are in the retained `evidence/baseline`, `evidence/green-03ca971`,
+`evidence/green-916a471` and `evidence/green-2ffa2cb` subdirectories. The initial architecture and measured failures are
+in the retained `docs-v2/engineering/evidence/crj01-source-revision/pr78-review/`
+directory — the implementation PR's review evidence, the continuation's checkpoints and
+the served-path test XMLs.
 
 | Task | Observed expenditure | Measured outcome |
 |---|---|---|
@@ -111,8 +125,8 @@ in the retained
 | Sealed run on `2ffa2cb` | 24.51 seconds wall, 93.56 seconds CPU, 2,000,360 KiB peak RSS, zero provider tokens | 7/7, zero failures |
 | Sealed run on final PR head `f68ec49` | 23.41 seconds wall, 93.27 seconds CPU, 2,053,860 KiB peak RSS, zero provider tokens | 7/7, zero failures |
 
-The developer-count source is `integration-head-test-xml` beside the
-checkpoint. The independent source review is retained in the implementation PR
+The developer-count source is `pr78-review/served-intermediate-test-xml` in the
+retained directory. The independent source review is retained in the implementation PR
 and in the review note beside the checkpoint.
 
 The resource times include compilation and fixture work. Provider monetary

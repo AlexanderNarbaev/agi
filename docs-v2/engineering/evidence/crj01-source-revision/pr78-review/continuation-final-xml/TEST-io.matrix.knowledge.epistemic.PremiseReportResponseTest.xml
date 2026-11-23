@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.epistemic.PremiseReportResponseTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-23T15:01:12.414Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.259">
+  <properties/>
+  <testcase name="the report body names the premise and the claim that denies it" classname="io.matrix.knowledge.epistemic.PremiseReportResponseTest" time="0.085"/>
+  <testcase name="no response body carries an absolute path of the server" classname="io.matrix.knowledge.epistemic.PremiseReportResponseTest" time="0.09"/>
+  <testcase name="the response carries the status of the premise, the kind and the reason" classname="io.matrix.knowledge.epistemic.PremiseReportResponseTest" time="0.083"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
