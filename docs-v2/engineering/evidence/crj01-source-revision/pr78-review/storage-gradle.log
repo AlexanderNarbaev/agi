@@ -1,0 +1,48 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.6.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+
+> Task :matrix-core:generateBuildInfo
+matrix-build-info: 9355 @Test methods across 1377 test files
+
+> Task :matrix-core:processResources
+> Task :matrix-core:quarkusGenerateAppModel UP-TO-DATE
+> Task :matrix-core:quarkusGenerateCode UP-TO-DATE
+
+> Task :matrix-core:compileJava
+warning: [incubating] using incubating module(s): jdk.incubator.vector
+1 warning
+
+> Task :matrix-core:classes
+> Task :matrix-core:compileQuarkusTestGeneratedSourcesJava NO-SOURCE
+> Task :matrix-core:quarkusGenerateTestAppModel
+> Task :matrix-core:quarkusGenerateCodeTests
+
+> Task :matrix-core:compileTestJava
+warning: [incubating] using incubating module(s): jdk.incubator.vector
+/home/alexandr-narbaev/Projects/agi/matrix-source-revision-20261123/matrix-core/src/test/java/io/matrix/integration/MctsIntegrationTest.java:60: warning: non-varargs call of varargs method with inexact argument type for last parameter;
+        assertThat(bestAction.type()).isIn(MctsAction.ActionType.values());
+                                                                       ^
+  cast to Object for a varargs call
+  cast to Object[] for a non-varargs call and to suppress this warning
+/home/alexandr-narbaev/Projects/agi/matrix-source-revision-20261123/matrix-core/src/test/java/io/matrix/mcts/MctsLatsConvergenceTest.java:49: warning: non-varargs call of varargs method with inexact argument type for last parameter;
+        assertThat(best.type()).isIn(MctsAction.ActionType.values());
+                                                                 ^
+  cast to Object for a varargs call
+  cast to Object[] for a non-varargs call and to suppress this warning
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+3 warnings
+
+> Task :matrix-core:processTestResources
+> Task :matrix-core:testClasses
+
+> Task :matrix-core:test
+WARNING: Using incubator modules: jdk.incubator.vector
+
+[Incubating] Problems report is available at: file:///home/alexandr-narbaev/Projects/agi/matrix-source-revision-20261123/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 20s
+10 actionable tasks: 8 executed, 2 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.6.0/userguide/configuration_cache_enabling.html

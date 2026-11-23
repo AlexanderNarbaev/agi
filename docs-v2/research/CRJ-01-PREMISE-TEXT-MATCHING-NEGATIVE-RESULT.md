@@ -51,6 +51,24 @@ build output. The evaluator's **gold** stays with the evaluator, as the mandate 
 ("do not expose ... hidden gold"); the digests above let the owner verify the retained
 evidence against the gold they hold, without the repository publishing it.
 
+**The manifests are classified, so a reader knows what verifies where.**
+`docs-v2/engineering/evidence/crj01-premise-negative/MANIFESTS.md` says, for every manifest,
+whether it is **RETAINED** (every named file is in the repository), **HELD BACK** (the
+digests are published, the evaluator's cases are not), or **POINT-IN-TIME** (it records a
+payload as it was proposed, and the tree has since moved). The consolidation audit of
+2026-11-24 found this classification was missing, and found that the retained set was
+**incomplete**: the `gradle.log` of each run was excluded by the repository's `*.log` rule,
+so three manifests named a file the repository did not carry and could not be verified on
+another machine. The `.gitignore` now excepts the retained evidence's logs explicitly, and
+every manifest that names only retained files verifies in full.
+
+**One artifact of the baseline run is not on this machine at all.** The baseline's
+`FrozenPremiseJourneyTest.java` (digest `6b7c3779…`) was replaced in the evaluator's
+working directory when the correction was applied, and its original bytes were not kept
+anywhere. Its **digest** survives in `evidence-baseline/RUNNER.sha256` and in the table
+above; the baseline's **result** — JUnit XML, rendered evidence, command, exit status and
+resource measurement — is fully retained.
+
 | Evidence | SHA-256 |
 |---|---|
 | `PREMISE-MILESTONE-CHECKPOINT.md` | `f461176938ee1d1655321ff7ae3f0cdf4096fa896e4f532adadb69975655cc72` |

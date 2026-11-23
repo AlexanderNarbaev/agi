@@ -207,22 +207,34 @@ final class Crj01FreezeRecord {
      * {@code .git/HEAD} — which names the branch, or holds the SHA itself — and then that
      * branch's ref, loose or packed.</p>
      *
+     * <p><b>Why a LINKED WORKTREE is resolved too.</b> In a linked worktree {@code .git}
+     * is a FILE that names the worktree's own administrative directory, and that
+     * directory's {@code HEAD} is the worktree's HEAD; the REFS are shared, so they live
+     * in the COMMON directory the worktree's {@code commondir} names. A reader that
+     * assumed {@code .git} is a directory would read nothing and report "UNKNOWN" — which
+     * is exactly what happened the first time this record was taken from a disposable
+     * worktree. So the resolution is: {@code .git} as a directory, or {@code .git} as a
+     * file pointing at the worktree's gitdir; then HEAD in the gitdir, and the ref in the
+     * common directory.</p>
+     *
      * @param repositoryRoot the repository's root
      * @return the commit SHA, or "UNKNOWN" when it cannot be read
      */
     static String headSha(Path repositoryRoot) {
         try {
-            String head = Files.readString(repositoryRoot.resolve(".git/HEAD"),
+            Path gitDir = resolveGitDir(repositoryRoot);
+            String head = Files.readString(gitDir.resolve("HEAD"),
                     StandardCharsets.UTF_8).trim();
             if (!head.startsWith("ref:")) {
                 return head;
             }
             String ref = head.substring("ref:".length()).trim();
-            Path loose = repositoryRoot.resolve(".git").resolve(ref);
+            Path common = commonDir(gitDir);
+            Path loose = common.resolve(ref);
             if (Files.exists(loose)) {
                 return Files.readString(loose, StandardCharsets.UTF_8).trim();
             }
-            Path packed = repositoryRoot.resolve(".git/packed-refs");
+            Path packed = common.resolve("packed-refs");
             if (Files.exists(packed)) {
                 for (String line : Files.readAllLines(packed, StandardCharsets.UTF_8)) {
                     if (line.startsWith("#") || line.startsWith("^")) {
@@ -237,6 +249,51 @@ final class Crj01FreezeRecord {
         } catch (IOException unreadable) {
             return "UNKNOWN";
         }
+    }
+
+    /**
+     * The administrative directory of a checkout — the {@code .git} DIRECTORY of the main
+     * worktree, or the gitdir a LINKED worktree's {@code .git} FILE names.
+     *
+     * @param repositoryRoot the repository's root
+     * @return the administrative directory
+     * @throws IOException when the {@code .git} file cannot be read
+     */
+    private static Path resolveGitDir(Path repositoryRoot) throws IOException {
+        Path dotGit = repositoryRoot.resolve(".git");
+        if (Files.isDirectory(dotGit)) {
+            return dotGit;
+        }
+        String text = Files.readString(dotGit, StandardCharsets.UTF_8).trim();
+        final String marker = "gitdir:";
+        if (text.startsWith(marker)) {
+            return Path.of(text.substring(marker.length()).trim());
+        }
+        return dotGit;
+    }
+
+    /**
+     * The COMMON directory — where the refs live. For the main worktree it is the
+     * administrative directory itself; for a linked worktree it is what the worktree's
+     * {@code commondir} names.
+     *
+     * @param gitDir the administrative directory
+     * @return the common directory
+     */
+    private static Path commonDir(Path gitDir) {
+        Path commondir = gitDir.resolve("commondir");
+        if (Files.exists(commondir)) {
+            try {
+                String relative = Files.readString(commondir, StandardCharsets.UTF_8).trim();
+                Path resolved = gitDir.resolve(relative).normalize();
+                if (Files.isDirectory(resolved)) {
+                    return resolved;
+                }
+            } catch (IOException unreadable) {
+                return gitDir;
+            }
+        }
+        return gitDir;
     }
 
     /**
