@@ -1,6 +1,8 @@
 # CRJ-01 — Premise text matching negative result
 
-**Status:** CANONICAL · **Recorded:** 2026-11-23 · **Finding:** `refuted-toy` · **Decision:** PIVOT
+**Status:** `CANONICAL`
+
+**Recorded:** 2026-11-23 · **Finding:** `refuted-toy` · **Decision:** PIVOT
 
 The tested text-matching candidate failed to establish claim-level premise refutation on
 the independently authored synthetic served-path controls. The baseline and candidate each
