@@ -3,7 +3,9 @@ package io.matrix.cognitive.report;
 import io.matrix.actions.ArtifactWriter;
 import io.matrix.knowledge.AbstractionLevel;
 import io.matrix.knowledge.Answer;
+import io.matrix.knowledge.KnowledgeSnapshot;
 import io.matrix.knowledge.KnowledgeWorkbench;
+import io.matrix.knowledge.SourceRevisionView;
 
 import java.util.List;
 
@@ -42,7 +44,10 @@ public final class ReportJourney {
      * @param workbench   the workspace the question is asked of
      * @param writer      the bounded writer, over the server's own output root
      * @param retained    what the last journey for this identity left behind, or null
-     * @param workspaceFingerprint the fingerprint of the workspace as it is now
+     * @param workspaceFingerprint the fingerprint of the evidence view
+     * @param learnedClaims the learned claims available to the request
+     * @param evidenceView the evidence snapshot pinned by the route
+     * @param historical whether this request selects a historical document revision
      */
     public record Problem(
             String workspaceId,
@@ -54,7 +59,9 @@ public final class ReportJourney {
             ArtifactWriter writer,
             Retained retained,
             String workspaceFingerprint,
-            List<LearnedClaim> learnedClaims) {
+            List<LearnedClaim> learnedClaims,
+            KnowledgeSnapshot evidenceView,
+            boolean historical) {
 
         public Problem {
             if (workspaceId == null || workspaceId.isBlank()) {
@@ -64,6 +71,19 @@ public final class ReportJourney {
                 throw new IllegalArgumentException("the action identity must not be blank");
             }
             learnedClaims = List.copyOf(learnedClaims == null ? List.of() : learnedClaims);
+        }
+
+        public Problem(String workspaceId, String question, String identity, String reportName,
+                AbstractionLevel level, KnowledgeWorkbench workbench, ArtifactWriter writer,
+                Retained retained, String workspaceFingerprint, List<LearnedClaim> learnedClaims) {
+            this(workspaceId, question, identity, reportName, level, workbench, writer, retained,
+                    workspaceFingerprint, learnedClaims, null, false);
+        }
+
+        public KnowledgeSnapshot selectedEvidence() {
+            return evidenceView == null
+                    ? SourceRevisionView.project(workbench.workspace(workspaceId), null)
+                    : evidenceView;
         }
 
         /** A problem without any learned claim — the shape a caller that knows of none uses. */

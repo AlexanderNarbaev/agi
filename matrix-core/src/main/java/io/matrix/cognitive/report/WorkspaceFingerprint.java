@@ -46,6 +46,10 @@ public final class WorkspaceFingerprint {
      * @return the fingerprint
      */
     public static String of(KnowledgeSnapshot snapshot) {
+        return of(snapshot, null);
+    }
+
+    public static String of(KnowledgeSnapshot snapshot, String historicalEventId) {
         StringBuilder material = new StringBuilder();
         for (Claim claim : snapshot.claims()) {
             material.append(claim.id())
@@ -63,6 +67,28 @@ public final class WorkspaceFingerprint {
                     .append(claim.version())
                     .append(CLAIM_SEPARATOR);
         }
+        if (!snapshot.sourceRevisionSelections().isEmpty()) {
+            appendFields(material, "source-revision-view-v1", snapshot.workspaceId(),
+                    historicalEventId == null ? "CURRENT" : "HISTORICAL_DOCUMENT", historicalEventId);
+            snapshot.sourceRevisionSelections().stream()
+                    .sorted(java.util.Comparator.comparing(io.matrix.knowledge.SourceRevisionSelection::documentKey))
+                    .forEach(event -> appendFields(material, event.documentKey(), event.eventId(),
+                            event.sourceId(), event.contentHash()));
+            snapshot.sources().stream().sorted(java.util.Comparator.comparing(io.matrix.knowledge.Source::id))
+                    .forEach(source -> appendFields(material, source.id(), source.contentHash()));
+            snapshot.evidence().stream().sorted(java.util.Comparator.comparing(io.matrix.knowledge.Evidence::id))
+                    .forEach(row -> appendFields(material, row.id(), row.claimId(),
+                            row.sourceId(), row.relation().name(), row.excerpt()));
+        }
         return ArtifactObserver.sha256(material.toString());
+    }
+
+    private static void appendFields(StringBuilder material, String... fields) {
+        for (String field : fields) {
+            material.append(field == null ? -1 : field.length()).append(':');
+            if (field != null) {
+                material.append(field);
+            }
+        }
     }
 }

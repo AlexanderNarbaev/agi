@@ -141,7 +141,11 @@ public class ArtifactReportResource {
 
     /** The body of a report request. */
     public record ReportRequest(String question, String reportName, Boolean consent,
-                                String idempotencyKey, String level) {
+                                String idempotencyKey, String level, String sourceRevisionEventId) {
+        public ReportRequest(String question, String reportName, Boolean consent,
+                String idempotencyKey, String level) {
+            this(question, reportName, consent, idempotencyKey, level, null);
+        }
     }
 
     /** One cited piece of evidence. */
@@ -334,8 +338,14 @@ public class ArtifactReportResource {
         // the workspace is read ONCE: the fingerprint is computed from the snapshot, and the
         // snapshot also says which sources are present — which is what a procedure's
         // applicability domain is checked against
-        KnowledgeSnapshot snapshot = workbench.workspace(workspaceId);
-        String fingerprint = WorkspaceFingerprint.of(snapshot);
+        KnowledgeSnapshot snapshot;
+        try {
+            snapshot = SourceRevisionView.project(workbench.workspace(workspaceId),
+                    request.sourceRevisionEventId());
+        } catch (IllegalArgumentException invalidRevision) {
+            return refused(400, "invalid_source_revision", invalidRevision.getMessage());
+        }
+        String fingerprint = WorkspaceFingerprint.of(snapshot, request.sourceRevisionEventId());
         Set<String> facts = journeyFacts(identity, retained, fingerprint, reportName,
                 request.question(), level);
         List<Procedure> procedures = proceduresOf(workspaceId);
@@ -343,11 +353,12 @@ public class ArtifactReportResource {
         // the LEARNED CLAIMS of the workspace: claims the system has validated, with their
         // provenance. They are evidence, not authority: a claim that is not applicable to
         // the question's concept is not added, and a claim whose source is gone is not added.
-        List<LearnedClaim> learnedClaims = learnedClaimsOf(workspaceId);
+        List<LearnedClaim> learnedClaims = request.sourceRevisionEventId() == null
+                ? learnedClaimsOf(workspaceId) : List.of();
 
         ReportJourney.Problem problem = new ReportJourney.Problem(workspaceId, request.question(),
                 identity, reportName, level, workbench, actions.writer(), retained, fingerprint,
-                learnedClaims);
+                learnedClaims, snapshot, request.sourceRevisionEventId() != null);
         ProblemRequest planRequest = new ProblemRequest(AlgorithmFamilies.KNOWLEDGE_REPORT, problem,
                 facts, budget);
         ReportJourneyPlanner.Plan plan = planner.plan(planRequest, forcedMethodId,
@@ -444,7 +455,7 @@ public class ArtifactReportResource {
         try {
             response = result.replayed()
                     ? replayedResponse(retained, written, traceFailures)
-                    : response(workspaceId, result, written, traceFailures);
+                    : response(snapshot, learnedClaims, result, written, traceFailures);
         } catch (IllegalStateException unreadable) {
             return refused(503, "output_root_unavailable", unreadable.getMessage());
         }
@@ -457,7 +468,8 @@ public class ArtifactReportResource {
                                 written.fileName(), json(response))))));
 
         int status = written.disposition() == ArtifactWriter.Disposition.REPLAYED ? 200 : 201;
-        return Response.status(status).entity(response).build();
+        return Response.status(status).entity(response)
+                .header("X-Matrix-Revision-View", fingerprint).build();
     }
 
     /**
@@ -549,24 +561,33 @@ public class ArtifactReportResource {
     /**
      * The response of a journey that asked the workspace and wrote the report.
      *
-     * @param workspaceId the workspace the question was asked over
-     * @param question    the question
+     * @param snapshot    the evidence view pinned for this request
+     * @param learnedClaims the learned claims available to the request
      * @param result      what the chosen method produced
      * @param written     the writer's own result
      * @return the response
      */
-    private ReportResponse response(String workspaceId, ReportJourney.Result result,
-            ArtifactWriter.Result written, List<String> traceFailures) {
+    private ReportResponse response(KnowledgeSnapshot snapshot, List<LearnedClaim> learnedClaims,
+            ReportJourney.Result result, ArtifactWriter.Result written, List<String> traceFailures) {
         Answer answer = result.answer();
         List<EvidenceReference> evidence = new ArrayList<>();
         Map<String, String> sourceTitles = new LinkedHashMap<>();
         for (Source source : answer.sources()) {
             sourceTitles.put(source.id(), source.title());
         }
+        if (!snapshot.sourceRevisionSelections().isEmpty()) {
+            snapshot.sources().forEach(source -> sourceTitles.putIfAbsent(source.id(), source.title()));
+        }
         for (Claim claim : answer.claims()) {
+            String sourceId = claim.introducedBySourceId();
+            if (!snapshot.sourceRevisionSelections().isEmpty() && !sourceTitles.containsKey(sourceId)) {
+                sourceId = snapshot.evidence().stream()
+                        .filter(row -> row.claimId().equals(claim.id())
+                                && row.relation() == EvidenceRelation.SUPPORTS)
+                        .map(Evidence::sourceId).sorted().findFirst().orElse(null);
+            }
             evidence.add(new EvidenceReference(claim.id(), claim.proposition(),
-                    String.valueOf(claim.status()), claim.introducedBySourceId(),
-                    sourceTitles.get(claim.introducedBySourceId())));
+                    String.valueOf(claim.status()), sourceId, sourceTitles.get(sourceId)));
         }
 
         List<String> limitations = new ArrayList<>(answer.limitations());
@@ -575,7 +596,7 @@ public class ArtifactReportResource {
         // the LEARNED CLAIMS that contributed are named: a caller that reads the evidence
         // has to be able to tell which of it the retrieval found and which of it the system
         // learned and validated
-        for (LearnedClaim learned : learnedClaimsOf(workspaceId)) {
+        for (LearnedClaim learned : learnedClaims) {
             if (answer.claims().stream().anyMatch(claim -> claim.id().equals(learned.claimId()))) {
                 limitations.add("the evidence includes the learned claim " + learned.claimId()
                         + ", which the system validated on " + learned.validationCases()

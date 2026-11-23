@@ -42,6 +42,18 @@ class SourceRevisionSelectionTest {
             assertThat(store.exportWorkspace("workspace-a").sources()).hasSize(2);
             assertThat(store.sourceRevisionSelections("workspace-a")).isEmpty();
             assertThat(store.selectSourceRevision(first)).isEqualTo(first);
+            try (var connection = DriverManager.getConnection("jdbc:sqlite:" + database);
+                    var statement = connection.createStatement()) {
+                statement.execute("""
+                        CREATE TRIGGER refuse_revision BEFORE INSERT ON source_revision_selection
+                        WHEN NEW.event_id = 'event-v2'
+                        BEGIN SELECT RAISE(ABORT, 'synthetic interruption'); END
+                        """);
+                assertThatThrownBy(() -> store.selectSourceRevision(second))
+                        .isInstanceOf(IllegalStateException.class);
+                assertThat(store.sourceRevisionSelections("workspace-a")).containsExactly(first);
+                statement.execute("DROP TRIGGER refuse_revision");
+            }
             assertThat(store.selectSourceRevision(second)).isEqualTo(second);
             assertThat(store.selectSourceRevision(first)).isEqualTo(first);
             assertThatThrownBy(() -> store.selectSourceRevision(new SourceRevisionSelection(
@@ -55,6 +67,17 @@ class SourceRevisionSelectionTest {
             assertThat(reopened.exportWorkspace("workspace-a").sourceRevisionSelections())
                     .containsExactly(first, second);
             assertThat(reopened.sourceRevisionSelections("workspace-b")).isEmpty();
+            KnowledgeSnapshot archive = reopened.exportWorkspace("workspace-a");
+            assertThat(archive.sources()).hasSize(2);
+            KnowledgeSnapshot current = SourceRevisionView.project(archive, null);
+            KnowledgeSnapshot history = SourceRevisionView.project(archive, first.eventId());
+            assertThat(current.sources()).extracting(Source::id).containsExactly(second.sourceId());
+            assertThat(history.sources()).extracting(Source::id).containsExactly(first.sourceId());
+            assertThat(current.evidence()).isNotEmpty().allMatch(row -> row.sourceId().equals(second.sourceId()));
+            assertThat(history.evidence()).isNotEmpty().allMatch(row -> row.sourceId().equals(first.sourceId()));
+            assertThatThrownBy(() -> SourceRevisionView.project(
+                    reopened.exportWorkspace("workspace-b"), first.eventId()))
+                    .isInstanceOf(IllegalArgumentException.class);
         }
     }
 }

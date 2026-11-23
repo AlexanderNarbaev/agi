@@ -205,7 +205,7 @@ public final class ReportProcedureMethod
         }
         // the domain must still hold: the support set's sources must be in the workspace
         // as it is now, and the question must be one the workspace can be read for
-        Set<String> present = input.workbench().workspace(input.workspaceId()).sources().stream()
+        Set<String> present = input.selectedEvidence().sources().stream()
                 .map(Source::id)
                 .collect(java.util.stream.Collectors.toSet());
         return present.containsAll(support);
@@ -219,12 +219,13 @@ public final class ReportProcedureMethod
                     + "so the reference method must answer");
         }
         AbstractionLevel level = input.level();
-        Answer answer = input.workbench().ask(input.workspaceId(), input.question(), level, support);
+        var snapshot = input.selectedEvidence();
+        Answer answer = input.workbench().askInView(snapshot, input.question(), level, support, input.historical());
         // the learned claims of the workspace join the evidence, exactly as they do on the
         // reference path: a validated claim is evidence of the question's concept, and the
         // path that answered does not change that
-        answer = LearnedClaims.apply(input.workbench(), input.workspaceId(), answer,
-                input.learnedClaims());
+        answer = answer.withAdditionalClaims(LearnedClaims.additions(
+                snapshot, answer, input.learnedClaims()));
         byte[] content = ReportBuilder.markdown(input.workspaceId(), input.question(), answer)
                 .getBytes(java.nio.charset.StandardCharsets.UTF_8);
         var write = input.writer().write(input.identity(), input.reportName(), content);

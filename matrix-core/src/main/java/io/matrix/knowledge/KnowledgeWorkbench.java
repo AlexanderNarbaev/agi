@@ -431,18 +431,58 @@ public class KnowledgeWorkbench implements AutoCloseable {
      */
     public synchronized Answer ask(String workspaceId, String question, AbstractionLevel level,
             Set<String> sourceIds) {
-        KnowledgeSnapshot snapshot = workspace(workspaceId);
+        return ask(workspaceId, question, level, sourceIds, null);
+    }
+
+    /**
+     * Asks a question over the source revision visible at the requested event.
+     *
+     * <p>A null event selects the current view. A non-null event must be present in the
+     * workspace's local source-revision history. Source restrictions are applied after the
+     * historical projection, so they restrict the selected view rather than selecting a
+     * different lineage.</p>
+     *
+     * @param workspaceId      the workspace the question is addressed to
+     * @param question         the question
+     * @param level            the abstraction level of the answer
+     * @param sourceIds        the sources the selected view may be read as, or empty for all
+     * @param historicalEventId the source-revision event, or null for the current view
+     * @return the answer
+     */
+    public synchronized Answer ask(String workspaceId, String question, AbstractionLevel level,
+            Set<String> sourceIds, String historicalEventId) {
+        return askInView(SourceRevisionView.project(workspace(workspaceId), historicalEventId),
+                question, level, sourceIds, historicalEventId != null);
+    }
+
+    /** Applies an explicitly authorized local document revision to this workspace. */
+    public synchronized SourceRevisionSelection selectSourceRevision(SourceRevisionSelection selection) {
+        return store().selectSourceRevision(selection);
+    }
+
+    /** Runs the normal answer pipeline over a view already pinned for the request. */
+    public synchronized Answer askInView(KnowledgeSnapshot snapshot, String question,
+            AbstractionLevel level, Set<String> sourceIds) {
+        return askInView(snapshot, question, level, sourceIds, false);
+    }
+
+    public synchronized Answer askInView(KnowledgeSnapshot snapshot, String question,
+            AbstractionLevel level, Set<String> sourceIds, boolean historical) {
+        String workspaceId = snapshot.workspaceId();
         if (sourceIds != null && !sourceIds.isEmpty()) {
-            snapshot = restrictedTo(snapshot, sourceIds);
+            snapshot = snapshot.sourceRevisionSelections().isEmpty()
+                    ? restrictedTo(snapshot, sourceIds)
+                    : SourceRevisionView.restrict(snapshot, sourceIds, snapshot.sourceRevisionSelections());
         }
         // The conversation resolves the reference BEFORE the retrieval, so
         // that "Explain this in more detail" reaches the concept the last
         // turn was about. The original question is what the answer carries.
-        DialogueContext context = context(workspaceId);
+        DialogueContext context = historical ? new DialogueContext(workspaceId) : context(workspaceId);
         String expanded = context.expand(question);
         String resolvedSubject = expanded.equals(question) ? null : context.resolveSubject(question);
         Answer answer = new KnowledgeRetriever(snapshot,
-                KnowledgeRetriever.configuredMinimumCoverage(), weakenedBindings(workspaceId))
+                KnowledgeRetriever.configuredMinimumCoverage(),
+                historical ? Map.of() : weakenedBindings(workspaceId))
                 .answer(expanded.equals(question) ? question : expanded, level);
 
 
@@ -485,10 +525,12 @@ public class KnowledgeWorkbench implements AutoCloseable {
         }
         answer = applyCorrection(context, question, answer);
         answer = applyLanguageNote(question, answer);
-        answer = applyWeakenedBindings(workspaceId, answer);
-        recordAsk(workspaceId, question, answer.unmatchedTerms(), answer.answered());
-        context.record(question, answer);
-        persistTurn(workspaceId, context);
+        if (!historical) {
+            answer = applyWeakenedBindings(workspaceId, answer);
+            recordAsk(workspaceId, question, answer.unmatchedTerms(), answer.answered());
+            context.record(question, answer);
+            persistTurn(workspaceId, context);
+        }
         return answer;
     }
 
@@ -2195,7 +2237,7 @@ public class KnowledgeWorkbench implements AutoCloseable {
             + "it records WHEN the check ran, and the verdict itself is computed from the claims "
             + "and not from the clock")
     public ReasoningEngine.Result reason(String workspaceId, String question, AbstractionLevel level) {
-        KnowledgeSnapshot snapshot = workspace(workspaceId);
+        KnowledgeSnapshot snapshot = SourceRevisionView.project(workspace(workspaceId), null);
         ReasoningEngine.Result result = new ReasoningEngine().reason(snapshot, question, level);
 
         // WHAT WAS CHECKED IS NOW RECORDED.
