@@ -45,6 +45,8 @@
 | CRJ-01 the source-revision applicability gain (PRODUCT_GAIN) | [engineering/CRJ-01-SOURCE-REVISION-APPLICABILITY.md](engineering/CRJ-01-SOURCE-REVISION-APPLICABILITY.md) |
 | CRJ-01 the retained evidence of the source-revision gain | [engineering/evidence/crj01-source-revision/README.md](engineering/evidence/crj01-source-revision/README.md) |
 | CRJ-01 the retained evidence of the premise-refutation negative result | [engineering/evidence/crj01-premise-negative/README.md](engineering/evidence/crj01-premise-negative/README.md) |
+| CRJ-01 the checkout consolidation: two checkouts → one canonical repository | [engineering/CRJ-01-CHECKOUT-CONSOLIDATION-REPORT.md](engineering/CRJ-01-CHECKOUT-CONSOLIDATION-REPORT.md) |
+| CRJ-01 the retained manifests, classified: what verifies where, and what is held back | [engineering/evidence/crj01-source-revision/MANIFESTS.md](engineering/evidence/crj01-source-revision/MANIFESTS.md) |
 | текущее состояние проекта | [governance/PROJECT-STATE.md](governance/PROJECT-STATE.md) |
 | дорожная карта и задачи | [governance/ROADMAP.md](governance/ROADMAP.md) |
 | принятые решения | [governance/DECISION-REGISTER.md](governance/DECISION-REGISTER.md) |
