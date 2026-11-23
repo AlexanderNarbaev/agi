@@ -120,6 +120,7 @@ public final class ReportJourney {
      * @param sha256              the digest of the committed artifact
      * @param fileName            the artifact's plain file name
      * @param responseJson        the response that was served, as JSON
+     * @param historical          whether the episode selected an older document revision
      */
     public record Retained(
             String methodId,
@@ -128,7 +129,13 @@ public final class ReportJourney {
             String workspaceFingerprint,
             String sha256,
             String fileName,
-            String responseJson) {
+            String responseJson,
+            boolean historical) {
+
+        public Retained(String methodId, String question, String level, String workspaceFingerprint,
+                String sha256, String fileName, String responseJson) {
+            this(methodId, question, level, workspaceFingerprint, sha256, fileName, responseJson, false);
+        }
 
         public Retained {
             if (methodId == null || methodId.isBlank()) {

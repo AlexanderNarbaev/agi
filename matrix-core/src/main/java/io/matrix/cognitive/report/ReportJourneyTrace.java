@@ -74,6 +74,7 @@ public final class ReportJourneyTrace {
     private static final String RETAINED_SHA256 = "sha256";
     private static final String RETAINED_FILE_NAME = "fileName";
     private static final String RETAINED_RESPONSE = "responseJson";
+    private static final String RETAINED_HISTORICAL = "historical";
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -200,7 +201,8 @@ public final class ReportJourneyTrace {
                     RETAINED_FINGERPRINT, retained.workspaceFingerprint(),
                     RETAINED_SHA256, retained.sha256(),
                     RETAINED_FILE_NAME, retained.fileName(),
-                    RETAINED_RESPONSE, retained.responseJson()));
+                    RETAINED_RESPONSE, retained.responseJson(),
+                    RETAINED_HISTORICAL, Boolean.toString(retained.historical())));
         } catch (IOException e) {
             throw new IllegalStateException("failed to write the retained journey", e);
         }
@@ -220,7 +222,8 @@ public final class ReportJourneyTrace {
                     question == null || question.isBlank() ? null : question,
                     level == null || level.isBlank() ? null : level,
                     fields.get(RETAINED_FINGERPRINT), fields.get(RETAINED_SHA256),
-                    fields.get(RETAINED_FILE_NAME), fields.get(RETAINED_RESPONSE));
+                    fields.get(RETAINED_FILE_NAME), fields.get(RETAINED_RESPONSE),
+                    Boolean.parseBoolean(fields.get(RETAINED_HISTORICAL)));
         } catch (IOException e) {
             throw new IllegalStateException("failed to read the retained journey", e);
         }

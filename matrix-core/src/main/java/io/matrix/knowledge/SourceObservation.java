@@ -1,11 +1,12 @@
 package io.matrix.knowledge;
 
+import io.matrix.contract.Provenance;
 import io.matrix.knowledge.acquisition.DocumentImporter;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Resolves a canonical claim's source-specific observation in a selected evidence view. */
-record SourceObservation(Claim claim, Source source, Evidence support) {
+record SourceObservation(Claim claim, Source source, Evidence support, Provenance.Span span) {
 
     static Optional<SourceObservation> resolve(KnowledgeSnapshot view, Claim canonical, String sourceId) {
         if (sourceId == null) {
@@ -30,9 +31,22 @@ record SourceObservation(Claim claim, Source source, Evidence support) {
         if (observation == null || !supports(view, canonical.id(), sourceId, canonical.proposition())) {
             return Optional.empty();
         }
+        Provenance.Span span = boundedSpan(observation.context());
+        if (span == null) {
+            return Optional.empty();
+        }
         return view.evidence().stream()
                 .filter(row -> isSupport(view, row, observationId, sourceId, observation.proposition()))
-                .findFirst().map(row -> new SourceObservation(observation, source, row));
+                .findFirst().map(row -> new SourceObservation(observation, source, row, span));
+    }
+
+    private static Provenance.Span boundedSpan(String context) {
+        try {
+            Provenance.Span span = ClaimSpan.parse(context);
+            return span != null && span.bounded() ? span : null;
+        } catch (IllegalArgumentException malformedSpan) {
+            return null;
+        }
     }
 
     private static boolean supports(KnowledgeSnapshot view, String claimId, String sourceId, String proposition) {

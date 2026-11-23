@@ -363,17 +363,17 @@ public class ArtifactReportResource {
         String fingerprint = WorkspaceFingerprint.of(snapshot, request.sourceRevisionEventId());
         Set<String> facts = journeyFacts(identity, retained, fingerprint, reportName,
                 request.question(), level);
-        List<Procedure> procedures = proceduresOf(workspaceId);
+        boolean historical = request.sourceRevisionEventId() != null;
+        List<Procedure> procedures = historical ? List.of() : proceduresOf(workspaceId);
         facts.addAll(procedureFacts(procedures, snapshot));
         // the LEARNED CLAIMS of the workspace: claims the system has validated, with their
         // provenance. They are evidence, not authority: a claim that is not applicable to
         // the question's concept is not added, and a claim whose source is gone is not added.
-        List<LearnedClaim> learnedClaims = request.sourceRevisionEventId() == null
-                ? learnedClaimsOf(workspaceId) : List.of();
+        List<LearnedClaim> learnedClaims = historical ? List.of() : learnedClaimsOf(workspaceId);
 
         ReportJourney.Problem problem = new ReportJourney.Problem(workspaceId, request.question(),
                 identity, reportName, level, workbench, actions.writer(), retained, fingerprint,
-                learnedClaims, snapshot, request.sourceRevisionEventId() != null);
+                learnedClaims, snapshot, historical);
         ProblemRequest planRequest = new ProblemRequest(AlgorithmFamilies.KNOWLEDGE_REPORT, problem,
                 facts, budget);
         ReportJourneyPlanner.Plan plan = planner.plan(planRequest, forcedMethodId,
@@ -480,7 +480,7 @@ public class ArtifactReportResource {
                         : ReportJourneyTrace.payload(new ReportJourney.Retained(
                                 plan.method().capability().id(), request.question(), level.name(),
                                 fingerprint, written.sha256(),
-                                written.fileName(), json(response))))));
+                                written.fileName(), json(response), historical)))));
 
         int status = written.disposition() == ArtifactWriter.Disposition.REPLAYED ? 200 : 201;
         return Response.status(status).entity(response)
@@ -936,7 +936,7 @@ public class ArtifactReportResource {
                 SourceObservation local = observation.get();
                 observations.add(new RefutingObservation(reference.claimId(), local.claim().id(),
                         local.support().id(), local.source().id(), local.source().contentHash(),
-                        local.support().excerpt(), ClaimSpan.parse(local.claim().context())));
+                        local.support().excerpt(), local.span()));
                 claimIds.add(local.claim().id());
                 sourceIds.add(local.source().id());
             } else if (snapshot.sourceRevisionSelections().isEmpty() || canonical != null

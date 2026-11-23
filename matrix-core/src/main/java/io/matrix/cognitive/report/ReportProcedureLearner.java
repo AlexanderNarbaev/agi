@@ -274,7 +274,7 @@ public final class ReportProcedureLearner {
         }
         for (String episodeId : episodeIds) {
             ReportJourney.Retained retained = ReportJourneyTrace.retained(store, episodeId);
-            if (retained == null || retained.responseJson() == null) {
+            if (retained == null || retained.historical() || retained.responseJson() == null) {
                 continue;
             }
             List<String> claimIds = new ArrayList<>();
