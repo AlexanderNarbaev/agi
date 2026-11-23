@@ -59,12 +59,15 @@ public final class SourceRevisionView {
         Set<String> affectedConcepts = archive.claims().stream()
                 .filter(claim -> !claimIds.contains(claim.id()))
                 .map(Claim::conceptId).collect(Collectors.toSet());
+        Set<String> knownSources = archive.sources().stream().map(Source::id).collect(Collectors.toSet());
         return new KnowledgeSnapshot(archive.workspaceId(), archive.workspaceName(),
                 archive.concepts().stream().filter(concept -> conceptIds.contains(concept.id())).toList(),
                 sources, claims,
                 availableEvidence.stream().filter(row -> claimIds.contains(row.claimId())).toList(),
                 archive.representations().stream().filter(row -> conceptIds.contains(row.conceptId())
-                        && !affectedConcepts.contains(row.conceptId())).toList(),
+                        && (row.scope() != null && knownSources.contains(row.scope())
+                                ? allowed.contains(row.scope()) : !affectedConcepts.contains(row.conceptId())))
+                        .toList(),
                 archive.prerequisites(), archive.revisions(), archive.derivations().stream()
                         .filter(row -> claimIds.contains(row.conclusionClaimId())
                                 && claimIds.containsAll(row.premiseClaimIds())).toList(),

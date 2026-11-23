@@ -2282,7 +2282,7 @@ public final class KnowledgeStore implements AutoCloseable {
         }
         for (Source s : snapshot.sources()) {
             try (PreparedStatement ps = connection.prepareStatement(
-                    "INSERT OR REPLACE INTO source(id, workspace_id, kind, title, locator, authority, "
+                    "INSERT INTO source(id, workspace_id, kind, title, locator, authority, "
                             + "freshness, excerpt, added_at, content_hash, published_at) "
                             + "VALUES (?,?,?,?,?,?,?,?,?,?,?)")) {
                 ps.setString(1, s.id());
@@ -2301,7 +2301,7 @@ public final class KnowledgeStore implements AutoCloseable {
         }
         for (Claim c : snapshot.claims()) {
             try (PreparedStatement ps = connection.prepareStatement(
-                    "INSERT OR REPLACE INTO claim(id, workspace_id, concept_id, proposition, scope, "
+                    "INSERT INTO claim(id, workspace_id, concept_id, proposition, scope, "
                             + "context, status, confidence, version, introduced_by_source_id, "
                             + "extraction_method, validation_method, warrant, derivation_status, "
                             + "created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
@@ -2353,7 +2353,7 @@ public final class KnowledgeStore implements AutoCloseable {
         }
         for (Evidence e : snapshot.evidence()) {
             try (PreparedStatement ps = connection.prepareStatement(
-                    "INSERT OR REPLACE INTO evidence(id, workspace_id, claim_id, source_id, relation, "
+                    "INSERT INTO evidence(id, workspace_id, claim_id, source_id, relation, "
                             + "excerpt, quality, recorded_at) VALUES (?,?,?,?,?,?,?,?)")) {
                 ps.setString(1, e.id());
                 ps.setString(2, e.workspaceId());
@@ -2485,12 +2485,18 @@ public final class KnowledgeStore implements AutoCloseable {
         }
         Set<String> sourceIds = new HashSet<>();
         for (Source s : snapshot.sources()) {
+            if (!snapshot.workspaceId().equals(s.workspaceId())) {
+                throw new IllegalArgumentException("snapshot contains foreign source");
+            }
             if (!sourceIds.add(s.id())) {
                 throw new IllegalArgumentException("duplicate source id: " + s.id());
             }
         }
         Set<String> claimIds = new HashSet<>();
         for (Claim c : snapshot.claims()) {
+            if (!snapshot.workspaceId().equals(c.workspaceId())) {
+                throw new IllegalArgumentException("snapshot contains foreign claim");
+            }
             if (!claimIds.add(c.id())) {
                 throw new IllegalArgumentException("duplicate claim id: " + c.id());
             }
@@ -2523,6 +2529,9 @@ public final class KnowledgeStore implements AutoCloseable {
         }
         Map<String, Integer> evidencePerClaim = new HashMap<>();
         for (Evidence e : snapshot.evidence()) {
+            if (!snapshot.workspaceId().equals(e.workspaceId())) {
+                throw new IllegalArgumentException("snapshot contains foreign evidence");
+            }
             if (!claimIds.contains(e.claimId())) {
                 throw new IllegalArgumentException(
                         "evidence " + e.id() + " references unknown claim " + e.claimId());
