@@ -234,18 +234,49 @@ changed since, and one never landed).
 
 ---
 
-## 7. The proposed deletion scope — **awaiting the owner's approval**
+## 7. The deletion — **APPROVED AND EXECUTED**
 
-**Nothing has been deleted.** The redundant checkout has been **renamed**, not removed, and
-it is a valid repository that can still be inspected.
+The owner approved the deletion on 2026-11-24. Before it ran, four things were checked
+again, because a deletion is irreversible:
 
-If the owner approves, the deletion scope is exactly:
+| the check | the result |
+|---|---|
+| the files in the checkout that exist **nowhere else** | **exactly one** — the owner's Codex commission, which is in **Git** and in the **backup** |
+| the commits **not published** on the remote | **zero** — the 64 commits that `--not --remotes` reports are reachable through the **45 tags**, and every one of those tags is on the remote with an **identical target** |
+| the objects the checkout held that the canonical repository lacked | **two** — and neither was lost: the annotated tag object is now **in the canonical repository** (see below), and the second was an **orphan tree** left by an index operation, whose **5 477 blobs are all present** in the canonical repository |
+| a process with the directory open or as its working directory | **none** |
+
+**Then, and only then:**
 
 ```
-~/Projects/matrix-codex-research.quarantine-20261123        211 MB
+~/Projects/matrix-codex-research.quarantine-20261123        211 MB    DELETED
 ```
 
-**and nothing else.** Specifically **NOT** in scope:
+### The one thing the deletion audit found, and fixed
+
+**The canonical repository's local `v17.2.0-mind` tag did not match the published one.**
+Its local message read *"This tag is retained unchanged because a published tag is
+immutable and force-pushing a correction is denied by policy"* — but the tag had in fact
+been **overwritten locally**, with a later tagger timestamp and a short note in place of
+the release message. **GitHub held the original**: the full *"MATRIX v17.2.0-mind — Truthfully
+Fixed"* message, with the benchmark headline, the nine fixes and the named open items.
+
+So the local repository misrepresented a published release tag, and would have reported a
+different release record than the one the owner's readers see. The local tag was
+**restored to the published object** (`3ff54201…`), and it now matches the remote
+**exactly**. Both messages — the published one and the replaced one — are kept in
+`~/Projects/matrix-consolidation-backup/tags/`.
+
+**The commit is unaffected:** both tags point at `a8322a12…`, and only the annotated tag's
+*wrapper* differed.
+
+### The deletion scope, as executed
+
+```
+~/Projects/matrix-codex-research.quarantine-20261123        211 MB    DELETED
+```
+
+**and nothing else.** Specifically **not** touched:
 
 - the canonical repository `~/Projects/agi` — untouched;
 - the ten worktrees, their heads and their indexes — **migrated, not deleted**;
@@ -256,27 +287,28 @@ If the owner approves, the deletion scope is exactly:
 - the evaluator's gold, the databases (`data/`, `matrix-api-gateway/data/`), and every
   session state directory — **not** in scope.
 
-**Before that deletion, one thing is worth the owner's attention:** the quarantine holds the
-Codex repository's own `.git` — 85 MB of objects that are **byte-identical** to the
-canonical repository's and to GitHub's. Nothing unique is in it. The only file of value in
-it, the commission, is already in Git **and** in the backup. So the deletion is safe — and
-it is also the one operation in this whole consolidation that is **irreversible**, which is
-why it is put to the owner rather than done.
+**The verification after the deletion.** The canonical repository is at `f683c32e` and
+identical to the remote; **all thirteen** worktrees resolve — the ten migrated ones at
+their own commits with clean trees, and the two disposable writers at the merged head; the
+CRJ-01 suites are **green in both** disposable worktrees; and the retained evidence still
+verifies from them (**11 of 11** and **9 of 9**).
 
 ---
 
 ## 8. The standing configuration
 
 ```
-ONE canonical repository:   ~/Projects/agi          (origin/develop = 3765280c)
+ONE canonical repository:   ~/Projects/agi          (origin/develop = f683c32e)
   ├── the main checkout    — the canonical state, the integrations, the merges
   ├── codex-writer         — a DISPOSABLE worktree, Codex writes here
   ├── dsh-writer           — a DISPOSABLE worktree, DeepSeek Harness writes here
   └── ten retained worktrees — the evaluator's cases and the session's measurements
 
-A quarantine:              ~/Projects/matrix-codex-research.quarantine-20261123
 A backup:                  ~/Projects/matrix-consolidation-backup/
 ```
+
+**The second checkout is gone.** It was quarantined, audited against the canonical
+repository and the remote, and deleted on the owner's approval (§7).
 
 **The rules that follow from it:**
 
@@ -297,15 +329,16 @@ A backup:                  ~/Projects/matrix-consolidation-backup/
 
 ## 9. The decision
 
-**CONTINUE.** The consolidation is complete and verified: one canonical repository, both
-tools configured against it with disposable worktrees, the ten worktrees migrated and
-verified, the one unique artifact preserved in Git, and two real defects found and fixed by
-using the configuration rather than reading about it.
+**CONTINUE.** The consolidation is complete and verified: **one** canonical repository,
+both tools configured against it with disposable worktrees, the ten worktrees migrated and
+verified, the one unique artifact preserved in Git, the redundant checkout audited and
+deleted on approval, and **three** real defects found and fixed by *using* the
+configuration rather than reading about it.
 
-**The owner is asked for two decisions:**
+**The owner approved the deletion on 2026-11-24**, and the standing configuration in §8 is
+confirmed: the evaluator's gold stays with the evaluator, and the ten retained worktrees
+stay until the evaluations that need them are closed.
 
-1. **Approve the deletion** of `~/Projects/matrix-codex-research.quarantine-20261123`
-   (211 MB) — the exact scope is in §7, and nothing else would be touched.
-2. **Confirm the standing configuration** in §8, in particular that the evaluator's gold
-   stays with the evaluator and that the ten retained worktrees stay until the evaluations
-   that need them are closed.
+**What remains open is not the consolidation.** It is the CRJ-01 programme itself: the
+sealed split's author, the freezing reviewer's name, the storage bound, the review rule
+that the new ruleset has now replaced, and the next capability.
