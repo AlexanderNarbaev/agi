@@ -1190,3 +1190,22 @@ evidence is a suspicion, and it is marked as such.
   **changed** scripts. **All three touch `.github/workflows/**`, which is a FROZEN zone** and needs an explicit
   RFC from the owner.
 - **status**: **OPEN — an owner decision**, with the measurement and the workaround both done.
+
+### R-EPIS-25 — the code-owner review gate was unsatisfiable, and it was replaced (RESOLVED 2026-11-24)
+
+- **the finding (as it stood)**: the repository's `develop` ruleset required a **code-owner review**
+  (`require_code_owner_review: true`, `required_approving_review_count: 1`) — and **no one could give it**: there was
+  no `CODEOWNERS` file, and the repository's only collaborator was the pull request's own author, whom GitHub does not
+  let approve their own pull request. Every merge therefore had to be an **administrative bypass**, which CD-057 and
+  CD-058 recorded rather than hid.
+- **the resolution (2026-11-23/24)**: the ruleset was **replaced**. `develop` is now protected by *Develop protected —
+  single-owner AI-assisted review*, which sets `require_code_owner_review: false`,
+  `required_approving_review_count: 0`, `require_extra_approval_for_unattributed_changes: false` and
+  `require_last_push_approval: false`, keeps the six required status checks, allows squash only, and **requires every
+  change to arrive through a pull request** with every review thread resolved.
+- **what that means in practice**: a **direct push to `develop` is now rejected** by the repository rule, and the six
+  required checks are the **whole** gate — which is **satisfiable**. The bypass is no longer needed and is not used
+  again.
+- **what does not change**: the register keeps the history. The merges of 2026-11-21 and 2026-11-22 were **bypasses of
+  an unsatisfiable gate**, and the later replacement of the gate does not rewrite what those merges were.
+- **status**: **RESOLVED** — the gate is satisfiable and the bypass is obsolete.

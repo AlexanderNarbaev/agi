@@ -191,7 +191,7 @@ that was found and fixed.
 | 1 | **the sealed split's author** — the 18 domain-A cases, written by someone who **implements no arm**. The protocol's §5.6 requires it, and this agent implemented arm C, so it is disqualified. The constraints are now **measured**: a large corpus, a support of about 1/6, a gold that is a **verbatim span** and **fresh**, subjects whose accounts do **not** disagree, and a comparison that scores the **disposition** as well as the grounding | **the owner** |
 | 2 | **the freezing reviewer's name** — the freeze record is computed and re-derivable, and it **refuses to be written without its roles**; the two role fields are placeholders until a person is named | **the owner** |
 | 3 | the **storage bound** — the excerpt now holds the document's text (2.06× over the pool, about 53 KB over seven documents). The alternative is a hard cap, which would hide spans again | **the owner** |
-| 4 | the **review rule** — the repository's ruleset requires a code-owner review that **no one can give**: there is no `CODEOWNERS` file and the only collaborator is the pull request's own author. Every merge has therefore been an **administrative bypass, not a satisfied gate** (CD-057, CD-058) | **the owner** |
+| 4 | the **review rule** — **RESOLVED on 2026-11-23/24**: the ruleset changed. `develop` is now protected by the *Develop protected — single-owner AI-assisted review* ruleset, which sets `require_code_owner_review: false` and `required_approving_review_count: 0` — so the gate that **nobody could satisfy** is gone, and a change reaches `develop` **through a pull request** with the six required checks green and no unresolved review thread. **The merges before that change were administrative bypasses of an unsatisfiable gate** (CD-057, CD-058), and that history stays in the register — but it is no longer the state | — |
 | 5 | **domain B** — either a micro-world with a **larger input domain**, or restate the domain-B metrics to measure the episode rather than the transfer (R-EPIS-21) | **the owner** |
 | 6 | **R-EPIS-24** — the ShellCheck gate is **dormant** (it only runs when a pull request touches a script) and is armed with about 100 pre-existing findings in 25 scripts. Fixing it means touching `.github/workflows/**`, a **FROZEN** zone, so it needs an RFC | **the owner** |
 | 7 | the open defects that are **not** the owner's: the applicability of a learned claim is still the concept **and** a common document (R-EPIS-16, closed but bounded); the learner promotes every candidate that passes the gates and **4.2 %** of the observation triples make the agreement gate satisfiable at all; the arm C saving is measured at **26.1 %** on a dev split, not on the sealed one | the programme |
@@ -298,8 +298,12 @@ with its alternatives and its evidence. The three that shape everything else:
   production claim id embeds the workspace id and the protocol requires each arm to have
   its own workspace; comparing against the id the set froze would make at most **one** arm
   groundable.
-- **CD-057** — the merges are an **administrative bypass of an unsatisfiable gate**, not a
-  satisfied requirement. That is stated in plain words rather than hidden.
+- **CD-057** — the merges of 2026-11-21 and 2026-11-22 were an **administrative bypass of an
+  unsatisfiable gate**, not a satisfied requirement. That is stated in plain words rather
+  than hidden. **The gate itself was replaced on 2026-11-23/24** — the *single-owner
+  AI-assisted review* ruleset requires no code-owner approval — so a change now reaches
+  `develop` through a pull request with the six required checks green, and the bypass is
+  no longer needed.
 
 ---
 
