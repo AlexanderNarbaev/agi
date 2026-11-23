@@ -819,39 +819,31 @@ class Checker:
         return normalised in self._ignored_paths
 
     def load_ignored_paths(self) -> set:
-        """The paths git ignores, as a set of repository-relative directories.
+        """The paths git ignores, as a set of repository-relative paths.
 
-        <p>The set is computed from git's own index and its own ignore rules, so
-        it is exact: a path is in it when git says the path is excluded. The
-        query is a single {@code git check-ignore} over the repository's
-        tracked-and-ignored directories, and it is computed ONCE.</p>
+        <p>The set is computed from git's OWN ignore rules, so it is exact: a path
+        is in it when git says that path would be excluded. The candidates are
+        the path-like tokens the documents actually use — gathered in one pass
+        over the collected documents, with the SAME rules the walk applies — and
+        they are asked about in ONE batched {@code git check-ignore}. So the
+        whole question is asked once, and it is asked of git.</p>
+
+        <p>It has to be asked of git rather than of a list, because the owner's
+        own documents name the runtime's live directories, and the set of those
+        changes with the owner's machine.</p>
 
         :return: the ignored paths, or the empty set when git is not available
         """
         import subprocess
-        try:
-            probe = subprocess.run(
-                ["git", "check-ignore", "--stdin", "-z", "--no-index"],
-                cwd=str(self.root), input="", capture_output=True,
-                text=True, timeout=60, check=False)
-        except (OSError, subprocess.SubprocessError):
-            return set()
-        if probe.returncode not in (0, 1):
-            return set()
-        # The candidates are gathered from the working tree: every top-level
-        # directory the repository has, plus the paths the runtime owns.
-        candidates = set()
-        for name in sorted(self.load_tracked_roots()):
-            candidates.add(name)
-        for prefix in RUNTIME_PREFIXES:
-            candidates.add(prefix.rstrip("/"))
+        candidates = self.path_like_tokens()
         if not candidates:
             return set()
         try:
             result = subprocess.run(
                 ["git", "check-ignore", "--stdin", "-z", "--no-index"],
-                cwd=str(self.root), input="\0".join(sorted(candidates)) + "\0",
-                capture_output=True, text=True, timeout=60, check=False)
+                cwd=str(self.root),
+                input="\0".join(sorted(candidates)) + "\0",
+                capture_output=True, text=True, timeout=120, check=False)
         except (OSError, subprocess.SubprocessError):
             return set()
         ignored = set()
@@ -860,6 +852,35 @@ class Checker:
             if entry:
                 ignored.add(entry.rstrip("/"))
         return ignored
+
+    def path_like_tokens(self) -> set:
+        """The path-like tokens the documents use, under the walk's own rules.
+
+        :return: the candidates
+        """
+        candidates = set()
+        for path in self.documents:
+            try:
+                text = path.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            for line in text.splitlines():
+                for match in BACKTICK_RE.finditer(line):
+                    token = match.group("token").strip()
+                    if not token or " " in token or "/" not in token:
+                        continue
+                    if looks_like_a_url(token) or looks_like_a_route(token):
+                        continue
+                    if looks_like_a_glob(token) or is_a_placeholder(token):
+                        continue
+                    if looks_like_a_class_name(token) or "..." in token:
+                        continue
+                    if not self.looks_like_a_repository_path(token):
+                        continue
+                    candidate = LINE_REFERENCE_RE.sub("", token).rstrip(".,;:")
+                    if candidate:
+                        candidates.add(candidate)
+        return candidates
 
     def remember(self, bucket: str, token: str) -> None:
         if len(self.excluded_samples[bucket]) < 5:
