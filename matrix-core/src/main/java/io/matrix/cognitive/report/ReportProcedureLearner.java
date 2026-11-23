@@ -187,6 +187,13 @@ public final class ReportProcedureLearner {
                     null);
         }
 
+        var selectedView = io.matrix.knowledge.SourceRevisionView.project(workbench.workspace(workspaceId), null);
+        Set<String> applicableSources = selectedView.sources().stream().map(io.matrix.knowledge.Source::id)
+                .collect(java.util.stream.Collectors.toSet());
+        if (!applicableSources.containsAll(support)) {
+            return new Outcome(false, "an observed support source is no longer applicable", null);
+        }
+
         int agreements = 0;
         // the restricted reading is TIMED as it runs: the promotion is the one moment that
         // knows what the narrower reading costs before the method has ever run, and a
@@ -194,14 +201,13 @@ public final class ReportProcedureLearner {
         // validation's own measurement makes that first decision rest on a measurement.
         List<Long> restrictedNanos = new ArrayList<>();
         for (Case heldOutCase : heldOut) {
-            Answer reference = workbench.ask(workspaceId, heldOutCase.question(), heldOutCase.level());
+            Answer reference = workbench.askInView(selectedView, heldOutCase.question(), heldOutCase.level(), Set.of());
             // the WARMUP pass: the first reading of a path pays the JIT's warmup, and a
             // cost measured on a cold path is not the cost the method will pay when the
             // serving process runs it. The warmup is not timed and not judged.
-            workbench.ask(workspaceId, heldOutCase.question(), heldOutCase.level(), support);
+            workbench.askInView(selectedView, heldOutCase.question(), heldOutCase.level(), support);
             long start = System.nanoTime();
-            Answer restricted = workbench.ask(workspaceId, heldOutCase.question(),
-                    heldOutCase.level(), support);
+            Answer restricted = workbench.askInView(selectedView, heldOutCase.question(), heldOutCase.level(), support);
             restrictedNanos.add(System.nanoTime() - start);
             if (!agrees(reference, restricted)) {
                 return new Outcome(false, "the candidate disagreed with the reference on the "
@@ -218,6 +224,10 @@ public final class ReportProcedureLearner {
                 heldOut.size(), agreement, episodeIds(observed),
                 "validated on " + heldOut.size() + " held-out case(s) against the reference, "
                         + "over the support set of " + support.size() + " source(s)", promotedAt);
+        if (!WorkspaceFingerprint.of(selectedView).equals(WorkspaceFingerprint.of(
+                io.matrix.knowledge.SourceRevisionView.project(workbench.workspace(workspaceId), null)))) {
+            return new Outcome(false, "the applicable source view changed during validation", null);
+        }
         store.recordProcedure(workspaceId, procedure, measuredCostNanos);
         return new Outcome(true, "the candidate agreed with the reference on all "
                 + heldOut.size() + " held-out case(s) and was promoted", procedure);
@@ -264,7 +274,7 @@ public final class ReportProcedureLearner {
         }
         for (String episodeId : episodeIds) {
             ReportJourney.Retained retained = ReportJourneyTrace.retained(store, episodeId);
-            if (retained == null || retained.responseJson() == null) {
+            if (retained == null || retained.historical() || retained.responseJson() == null) {
                 continue;
             }
             List<String> claimIds = new ArrayList<>();

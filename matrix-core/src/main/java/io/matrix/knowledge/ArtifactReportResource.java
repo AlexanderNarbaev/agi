@@ -22,6 +22,7 @@ import io.matrix.cognitive.report.ReportJourneyPlanner;
 import io.matrix.cognitive.report.ReportProcedure;
 import io.matrix.cognitive.report.ReportProcedureMethod;
 import io.matrix.cognitive.report.ReportJourneyTrace;
+import io.matrix.contract.Provenance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
@@ -141,7 +142,11 @@ public class ArtifactReportResource {
 
     /** The body of a report request. */
     public record ReportRequest(String question, String reportName, Boolean consent,
-                                String idempotencyKey, String level) {
+                                String idempotencyKey, String level, String sourceRevisionEventId) {
+        public ReportRequest(String question, String reportName, Boolean consent,
+                String idempotencyKey, String level) {
+            this(question, reportName, consent, idempotencyKey, level, null);
+        }
     }
 
     /** One cited piece of evidence. */
@@ -158,13 +163,27 @@ public class ArtifactReportResource {
      * caller that wants to know whether the answer was given reads the disposition.
      */
     public record PremiseStatus(String status, String kind, String premise, String reason,
-                                 List<String> refutingClaimIds, List<String> refutingSourceIds) {
+                                 List<String> refutingClaimIds, List<String> refutingSourceIds,
+                                 List<RefutingObservation> refutingObservations) {
+
+        public PremiseStatus(String status, String kind, String premise, String reason,
+                List<String> refutingClaimIds, List<String> refutingSourceIds) {
+            this(status, kind, premise, reason, refutingClaimIds, refutingSourceIds, List.of());
+        }
 
         public PremiseStatus {
             refutingClaimIds = List.copyOf(refutingClaimIds == null ? List.of() : refutingClaimIds);
             refutingSourceIds =
                     List.copyOf(refutingSourceIds == null ? List.of() : refutingSourceIds);
+            refutingObservations =
+                    List.copyOf(refutingObservations == null ? List.of() : refutingObservations);
         }
+    }
+
+    /** The reasoning claim and the exact local observation that supports it. */
+    public record RefutingObservation(String canonicalClaimId, String observationClaimId,
+            String evidenceId, String sourceId, String sourceSha256, String excerpt,
+            Provenance.Span segmentSpan) {
     }
 
     /** One side of a conflict the corpus holds, with its provenance. */
@@ -334,20 +353,27 @@ public class ArtifactReportResource {
         // the workspace is read ONCE: the fingerprint is computed from the snapshot, and the
         // snapshot also says which sources are present — which is what a procedure's
         // applicability domain is checked against
-        KnowledgeSnapshot snapshot = workbench.workspace(workspaceId);
-        String fingerprint = WorkspaceFingerprint.of(snapshot);
+        KnowledgeSnapshot snapshot;
+        try {
+            snapshot = SourceRevisionView.project(workbench.workspace(workspaceId),
+                    request.sourceRevisionEventId());
+        } catch (IllegalArgumentException invalidRevision) {
+            return refused(400, "invalid_source_revision", invalidRevision.getMessage());
+        }
+        String fingerprint = WorkspaceFingerprint.of(snapshot, request.sourceRevisionEventId());
         Set<String> facts = journeyFacts(identity, retained, fingerprint, reportName,
                 request.question(), level);
-        List<Procedure> procedures = proceduresOf(workspaceId);
+        boolean historical = request.sourceRevisionEventId() != null;
+        List<Procedure> procedures = historical ? List.of() : proceduresOf(workspaceId);
         facts.addAll(procedureFacts(procedures, snapshot));
         // the LEARNED CLAIMS of the workspace: claims the system has validated, with their
         // provenance. They are evidence, not authority: a claim that is not applicable to
         // the question's concept is not added, and a claim whose source is gone is not added.
-        List<LearnedClaim> learnedClaims = learnedClaimsOf(workspaceId);
+        List<LearnedClaim> learnedClaims = historical ? List.of() : learnedClaimsOf(workspaceId);
 
         ReportJourney.Problem problem = new ReportJourney.Problem(workspaceId, request.question(),
                 identity, reportName, level, workbench, actions.writer(), retained, fingerprint,
-                learnedClaims);
+                learnedClaims, snapshot, historical);
         ProblemRequest planRequest = new ProblemRequest(AlgorithmFamilies.KNOWLEDGE_REPORT, problem,
                 facts, budget);
         ReportJourneyPlanner.Plan plan = planner.plan(planRequest, forcedMethodId,
@@ -444,7 +470,7 @@ public class ArtifactReportResource {
         try {
             response = result.replayed()
                     ? replayedResponse(retained, written, traceFailures)
-                    : response(workspaceId, result, written, traceFailures);
+                    : response(snapshot, learnedClaims, result, written, traceFailures);
         } catch (IllegalStateException unreadable) {
             return refused(503, "output_root_unavailable", unreadable.getMessage());
         }
@@ -454,10 +480,11 @@ public class ArtifactReportResource {
                         : ReportJourneyTrace.payload(new ReportJourney.Retained(
                                 plan.method().capability().id(), request.question(), level.name(),
                                 fingerprint, written.sha256(),
-                                written.fileName(), json(response))))));
+                                written.fileName(), json(response), historical)))));
 
         int status = written.disposition() == ArtifactWriter.Disposition.REPLAYED ? 200 : 201;
-        return Response.status(status).entity(response).build();
+        return Response.status(status).entity(response)
+                .header("X-Matrix-Revision-View", fingerprint).build();
     }
 
     /**
@@ -549,24 +576,30 @@ public class ArtifactReportResource {
     /**
      * The response of a journey that asked the workspace and wrote the report.
      *
-     * @param workspaceId the workspace the question was asked over
-     * @param question    the question
+     * @param snapshot    the evidence view pinned for this request
+     * @param learnedClaims the learned claims available to the request
      * @param result      what the chosen method produced
      * @param written     the writer's own result
      * @return the response
      */
-    private ReportResponse response(String workspaceId, ReportJourney.Result result,
-            ArtifactWriter.Result written, List<String> traceFailures) {
+    private ReportResponse response(KnowledgeSnapshot snapshot, List<LearnedClaim> learnedClaims,
+            ReportJourney.Result result, ArtifactWriter.Result written, List<String> traceFailures) {
         Answer answer = result.answer();
         List<EvidenceReference> evidence = new ArrayList<>();
         Map<String, String> sourceTitles = new LinkedHashMap<>();
         for (Source source : answer.sources()) {
             sourceTitles.put(source.id(), source.title());
         }
+        if (!snapshot.sourceRevisionSelections().isEmpty()) {
+            snapshot.sources().forEach(source -> sourceTitles.putIfAbsent(source.id(), source.title()));
+        }
         for (Claim claim : answer.claims()) {
+            String sourceId = claim.introducedBySourceId();
+            if (!snapshot.sourceRevisionSelections().isEmpty() && !sourceTitles.containsKey(sourceId)) {
+                sourceId = null;
+            }
             evidence.add(new EvidenceReference(claim.id(), claim.proposition(),
-                    String.valueOf(claim.status()), claim.introducedBySourceId(),
-                    sourceTitles.get(claim.introducedBySourceId())));
+                    String.valueOf(claim.status()), sourceId, sourceTitles.get(sourceId)));
         }
 
         List<String> limitations = new ArrayList<>(answer.limitations());
@@ -575,7 +608,7 @@ public class ArtifactReportResource {
         // the LEARNED CLAIMS that contributed are named: a caller that reads the evidence
         // has to be able to tell which of it the retrieval found and which of it the system
         // learned and validated
-        for (LearnedClaim learned : learnedClaimsOf(workspaceId)) {
+        for (LearnedClaim learned : learnedClaims) {
             if (answer.claims().stream().anyMatch(claim -> claim.id().equals(learned.claimId()))) {
                 limitations.add("the evidence includes the learned claim " + learned.claimId()
                         + ", which the system validated on " + learned.validationCases()
@@ -612,7 +645,7 @@ public class ArtifactReportResource {
                 "artifact-index:" + written.actionId(),
                 limitations,
                 refusals,
-                premiseStatus(answer),
+                premiseStatus(answer, snapshot),
                 conflicts(answer),
                 readings(answer));
     }
@@ -883,24 +916,39 @@ public class ArtifactReportResource {
      * @param answer the answer the workspace gave
      * @return the status, or null when the question asserted no premise
      */
-    private PremiseStatus premiseStatus(Answer answer) {
+    private PremiseStatus premiseStatus(Answer answer, KnowledgeSnapshot snapshot) {
         PremiseSemantics.Disposition disposition = answer.premise();
         if (disposition == null || disposition.status() == PremiseSemantics.Status.NO_PREMISE) {
             return null;
         }
         List<String> claimIds = new ArrayList<>();
         List<String> sourceIds = new ArrayList<>();
+        List<RefutingObservation> observations = new ArrayList<>();
         for (PremiseAssessment.EvidenceRef reference : disposition.evidence()) {
             if (!"CONTRADICTS".equals(reference.relation())) {
                 continue;
             }
-            claimIds.add(reference.claimId());
-            if (reference.sourceId() != null) {
-                sourceIds.add(reference.sourceId());
+            Claim canonical = snapshot.claims().stream()
+                    .filter(claim -> reference.claimId().equals(claim.id())).findFirst().orElse(null);
+            var observation = canonical == null ? java.util.Optional.<SourceObservation>empty()
+                    : SourceObservation.resolve(snapshot, canonical, reference.sourceId());
+            if (observation.isPresent()) {
+                SourceObservation local = observation.get();
+                observations.add(new RefutingObservation(reference.claimId(), local.claim().id(),
+                        local.support().id(), local.source().id(), local.source().contentHash(),
+                        local.support().excerpt(), local.span()));
+                claimIds.add(local.claim().id());
+                sourceIds.add(local.source().id());
+            } else if (snapshot.sourceRevisionSelections().isEmpty() || canonical != null
+                    && java.util.Objects.equals(canonical.introducedBySourceId(), reference.sourceId())) {
+                claimIds.add(reference.claimId());
+                if (reference.sourceId() != null) {
+                    sourceIds.add(reference.sourceId());
+                }
             }
         }
         return new PremiseStatus(disposition.status().name(), disposition.kind().name(),
-                disposition.premise(), disposition.reason(), claimIds, sourceIds);
+                disposition.premise(), disposition.reason(), claimIds, sourceIds, observations);
     }
 
     /**

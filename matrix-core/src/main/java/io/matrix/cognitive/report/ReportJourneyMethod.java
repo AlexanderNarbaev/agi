@@ -242,12 +242,13 @@ public final class ReportJourneyMethod
     }
 
     private ReportJourney.Result reference(ReportJourney.Problem input) {
-        Answer answer = input.workbench().ask(input.workspaceId(), input.question(), input.level());
+        var snapshot = input.selectedEvidence();
+        Answer answer = input.workbench().askInView(snapshot, input.question(), input.level(), Set.of(), input.historical());
         // the learned claims of the workspace join the evidence: a claim the system has
         // validated belongs in the evidence of a question about its concept, even when the
         // question's words did not point at it
-        answer = LearnedClaims.apply(input.workbench(), input.workspaceId(), answer,
-                input.learnedClaims());
+        answer = answer.withAdditionalClaims(LearnedClaims.additions(
+                snapshot, answer, input.learnedClaims()));
         byte[] content = ReportBuilder.markdown(input.workspaceId(), input.question(), answer)
                 .getBytes(StandardCharsets.UTF_8);
         ArtifactWriter.Result write = input.writer().write(input.identity(), input.reportName(),

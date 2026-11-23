@@ -114,11 +114,17 @@ public final class LearnedClaims {
      */
     public static List<Claim> additions(KnowledgeWorkbench workbench, String workspaceId,
                                         Answer answer, List<LearnedClaim> learned) {
+        return workbench == null ? List.of() : additions(
+                io.matrix.knowledge.SourceRevisionView.project(workbench.workspace(workspaceId), null),
+                answer, learned);
+    }
+
+    static List<Claim> additions(io.matrix.knowledge.KnowledgeSnapshot snapshot,
+            Answer answer, List<LearnedClaim> learned) {
         List<LearnedClaim> applicable = applicableTo(answer, learned);
-        if (applicable.isEmpty() || workbench == null) {
+        if (applicable.isEmpty()) {
             return List.of();
         }
-        var snapshot = workbench.workspace(workspaceId);
         List<String> sourceIds = snapshot.sources().stream().map(s -> s.id()).toList();
         List<Claim> additions = new ArrayList<>();
         for (LearnedClaim claim : applicable) {

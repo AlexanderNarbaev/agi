@@ -52,7 +52,19 @@ public record KnowledgeSnapshot(
         List<Derivation> derivations,
         List<Contradiction> contradictions,
         List<LearningGoal> goals,
+        List<SourceRevisionSelection> sourceRevisionSelections,
         String exportedAt) {
+
+    /** The original thirteen-argument canonical form, without source revision events. */
+    public KnowledgeSnapshot(String workspaceId, String workspaceName,
+            List<Concept> concepts, List<Source> sources, List<Claim> claims,
+            List<Evidence> evidence, List<Representation> representations,
+            List<Prerequisite> prerequisites, List<KnowledgeRevision> revisions,
+            List<Derivation> derivations, List<Contradiction> contradictions,
+            List<LearningGoal> goals, String exportedAt) {
+        this(workspaceId, workspaceName, concepts, sources, claims, evidence, representations,
+                prerequisites, revisions, derivations, contradictions, goals, List.of(), exportedAt);
+    }
 
     /**
      * A snapshot without recorded derivations.
@@ -68,7 +80,7 @@ public record KnowledgeSnapshot(
             List<Prerequisite> prerequisites, List<KnowledgeRevision> revisions,
             String exportedAt) {
         this(workspaceId, workspaceName, concepts, sources, claims, evidence, representations,
-                prerequisites, revisions, List.of(), List.of(), List.of(), exportedAt);
+                prerequisites, revisions, List.of(), List.of(), List.of(), List.of(), exportedAt);
     }
 
     /**
@@ -83,7 +95,7 @@ public record KnowledgeSnapshot(
             List<Prerequisite> prerequisites, List<KnowledgeRevision> revisions,
             List<Derivation> derivations, String exportedAt) {
         this(workspaceId, workspaceName, concepts, sources, claims, evidence, representations,
-                prerequisites, revisions, derivations, List.of(), List.of(), exportedAt);
+                prerequisites, revisions, derivations, List.of(), List.of(), List.of(), exportedAt);
     }
 
     public KnowledgeSnapshot {
@@ -97,12 +109,14 @@ public record KnowledgeSnapshot(
         derivations = List.copyOf(derivations == null ? List.of() : derivations);
         contradictions = List.copyOf(contradictions == null ? List.of() : contradictions);
         goals = List.copyOf(goals == null ? List.of() : goals);
+        sourceRevisionSelections = List.copyOf(
+                sourceRevisionSelections == null ? List.of() : sourceRevisionSelections);
     }
 
     /** An empty workspace. */
     public static KnowledgeSnapshot empty(String workspaceId, String workspaceName) {
         return new KnowledgeSnapshot(workspaceId, workspaceName,
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
-                List.of(), List.of(), List.of(), null);
+                List.of(), List.of(), List.of(), List.of(), null);
     }
 }

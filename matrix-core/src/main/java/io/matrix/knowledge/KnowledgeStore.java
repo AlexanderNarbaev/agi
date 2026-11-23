@@ -89,7 +89,7 @@ public final class KnowledgeStore implements AutoCloseable {
      * decision is that the reload fails closed and that the contradiction history is never
      * silently erased.</p>
      */
-    public static final int SCHEMA_VERSION = 21;
+    public static final int SCHEMA_VERSION = 22;
 
     /**
      * The disposition a prediction error carries when no hypothesis of the model explained the
@@ -138,7 +138,7 @@ public final class KnowledgeStore implements AutoCloseable {
      * carry because the erasure set did not yet erase them. A version 1 payload is still
      * readable: a snapshot taken before this wave restores exactly as it did before.</p>
      */
-    private static final int SNAPSHOT_PAYLOAD_VERSION = 2;
+    private static final int SNAPSHOT_PAYLOAD_VERSION = 3;
 
     /**
      * W48-07 — the system property that configures the bound on the size of a snapshot payload.
@@ -244,6 +244,7 @@ public final class KnowledgeStore implements AutoCloseable {
             new ErasedTable("hebbian_binding", "workspace_id = ?", false),
             new ErasedTable("claim", "workspace_id = ?", true),
             new ErasedTable("epistemic_case", "workspace_id = ?", false),
+            new ErasedTable("source_revision_selection", "workspace_id = ?", true),
             new ErasedTable("source", "workspace_id = ?", true),
             new ErasedTable("concept", "workspace_id = ?", true));
 
@@ -454,6 +455,9 @@ public final class KnowledgeStore implements AutoCloseable {
                     + "key TEXT PRIMARY KEY, value TEXT NOT NULL)");
         }
         int version = readSchemaVersion();
+        if (version > SCHEMA_VERSION) {
+            throw new SQLException("knowledge schema " + version + " is newer than " + SCHEMA_VERSION);
+        }
         if (version == 0) {
             createSchemaV1();
             // The version is recorded as 1 and the migration path then runs,
@@ -936,6 +940,40 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     private int migrateFrom(int version) throws SQLException {
+        if (version == 21) {
+            // SQLite takes an IMMEDIATE write lock before rechecking the version.
+            connection.setAutoCommit(false);
+            try {
+                if (readSchemaVersion() == 21) {
+                    try (Statement st = connection.createStatement()) {
+                        st.execute("CREATE TABLE IF NOT EXISTS source_revision_selection ("
+                                + "workspace_id TEXT NOT NULL,"
+                                + "event_id TEXT NOT NULL,"
+                                + "document_key TEXT NOT NULL,"
+                                + "source_id TEXT NOT NULL,"
+                                + "content_hash TEXT NOT NULL,"
+                                + "previous_event_id TEXT,"
+                                + "PRIMARY KEY (workspace_id, event_id))");
+                        st.execute("CREATE UNIQUE INDEX IF NOT EXISTS source_revision_selection_root "
+                                + "ON source_revision_selection(workspace_id, document_key) "
+                                + "WHERE previous_event_id IS NULL");
+                        st.execute("CREATE UNIQUE INDEX IF NOT EXISTS source_revision_selection_successor "
+                                + "ON source_revision_selection(workspace_id, document_key, previous_event_id) "
+                                + "WHERE previous_event_id IS NOT NULL");
+                        st.execute("CREATE INDEX IF NOT EXISTS source_revision_selection_document "
+                                + "ON source_revision_selection(workspace_id, document_key, event_id)");
+                    }
+                    writeSchemaVersion(22);
+                }
+                connection.commit();
+                return 22;
+            } catch (SQLException | RuntimeException error) {
+                connection.rollback();
+                throw error;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        }
         if (version == 20) {
             // v21 adds the MIGRATION LINEAGE of the concept layer.
             //
@@ -1583,6 +1621,11 @@ public final class KnowledgeStore implements AutoCloseable {
                 // The write lock comes first, so that the content the snapshot holds is the
                 // content this very transaction replaces.
                 lockWorkspace(snapshot.workspaceId());
+                if (snapshot.sourceRevisionSelections().isEmpty()
+                        && !sourceRevisionSelections(snapshot.workspaceId()).isEmpty()) {
+                    throw new WorkspaceReplacementRefused(snapshot.workspaceId(),
+                            "a snapshot without source revision history cannot replace this workspace");
+                }
                 WorkspaceSnapshot taken = null;
                 if (!isWorkspaceEmpty(snapshot.workspaceId())) {
                     // A snapshot of nothing is a snapshot of a moment in which there was
@@ -1689,6 +1732,10 @@ public final class KnowledgeStore implements AutoCloseable {
             connection.setAutoCommit(false);
             try {
                 lockWorkspace(content.workspaceId());
+                if (payload.version() < 3 && !sourceRevisionSelections(content.workspaceId()).isEmpty()) {
+                    throw new WorkspaceReplacementRefused(content.workspaceId(),
+                            "a legacy snapshot cannot replace source revision history");
+                }
                 WorkspaceSnapshot taken = null;
                 if (!isWorkspaceEmpty(content.workspaceId())) {
                     taken = writeSnapshot(content.workspaceId(),
@@ -2235,7 +2282,7 @@ public final class KnowledgeStore implements AutoCloseable {
         }
         for (Source s : snapshot.sources()) {
             try (PreparedStatement ps = connection.prepareStatement(
-                    "INSERT OR REPLACE INTO source(id, workspace_id, kind, title, locator, authority, "
+                    "INSERT INTO source(id, workspace_id, kind, title, locator, authority, "
                             + "freshness, excerpt, added_at, content_hash, published_at) "
                             + "VALUES (?,?,?,?,?,?,?,?,?,?,?)")) {
                 ps.setString(1, s.id());
@@ -2254,7 +2301,7 @@ public final class KnowledgeStore implements AutoCloseable {
         }
         for (Claim c : snapshot.claims()) {
             try (PreparedStatement ps = connection.prepareStatement(
-                    "INSERT OR REPLACE INTO claim(id, workspace_id, concept_id, proposition, scope, "
+                    "INSERT INTO claim(id, workspace_id, concept_id, proposition, scope, "
                             + "context, status, confidence, version, introduced_by_source_id, "
                             + "extraction_method, validation_method, warrant, derivation_status, "
                             + "created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
@@ -2306,7 +2353,7 @@ public final class KnowledgeStore implements AutoCloseable {
         }
         for (Evidence e : snapshot.evidence()) {
             try (PreparedStatement ps = connection.prepareStatement(
-                    "INSERT OR REPLACE INTO evidence(id, workspace_id, claim_id, source_id, relation, "
+                    "INSERT INTO evidence(id, workspace_id, claim_id, source_id, relation, "
                             + "excerpt, quality, recorded_at) VALUES (?,?,?,?,?,?,?,?)")) {
                 ps.setString(1, e.id());
                 ps.setString(2, e.workspaceId());
@@ -2375,6 +2422,23 @@ public final class KnowledgeStore implements AutoCloseable {
                 ps.executeUpdate();
             }
         }
+        for (SourceRevisionSelection selection : snapshot.sourceRevisionSelections()) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT INTO source_revision_selection(workspace_id, event_id, document_key, "
+                            + "source_id, content_hash, previous_event_id) VALUES (?,?,?,?,?,?)")) {
+                ps.setString(1, selection.workspaceId());
+                ps.setString(2, selection.eventId());
+                ps.setString(3, selection.documentKey());
+                ps.setString(4, selection.sourceId());
+                ps.setString(5, selection.contentHash());
+                if (selection.previousEventId() == null) {
+                    ps.setNull(6, java.sql.Types.VARCHAR);
+                } else {
+                    ps.setString(6, selection.previousEventId());
+                }
+                ps.executeUpdate();
+            }
+        }
         // W45.2: the recorded conflicts are part of the content. A replacement that dropped
         // them would drop the evidence that the system had found a conflict at all.
         for (Contradiction contradiction : snapshot.contradictions()) {
@@ -2408,6 +2472,8 @@ public final class KnowledgeStore implements AutoCloseable {
      * claim's status mean something.
      */
     static void validate(KnowledgeSnapshot snapshot) {
+        SourceRevisionSelection.validateChainAndSources(snapshot.workspaceId(),
+                snapshot.sourceRevisionSelections(), snapshot.sources());
         if (snapshot.workspaceId() == null || snapshot.workspaceId().isBlank()) {
             throw new IllegalArgumentException("workspace id must not be blank");
         }
@@ -2419,12 +2485,18 @@ public final class KnowledgeStore implements AutoCloseable {
         }
         Set<String> sourceIds = new HashSet<>();
         for (Source s : snapshot.sources()) {
+            if (!snapshot.workspaceId().equals(s.workspaceId())) {
+                throw new IllegalArgumentException("snapshot contains foreign source");
+            }
             if (!sourceIds.add(s.id())) {
                 throw new IllegalArgumentException("duplicate source id: " + s.id());
             }
         }
         Set<String> claimIds = new HashSet<>();
         for (Claim c : snapshot.claims()) {
+            if (!snapshot.workspaceId().equals(c.workspaceId())) {
+                throw new IllegalArgumentException("snapshot contains foreign claim");
+            }
             if (!claimIds.add(c.id())) {
                 throw new IllegalArgumentException("duplicate claim id: " + c.id());
             }
@@ -2457,6 +2529,9 @@ public final class KnowledgeStore implements AutoCloseable {
         }
         Map<String, Integer> evidencePerClaim = new HashMap<>();
         for (Evidence e : snapshot.evidence()) {
+            if (!snapshot.workspaceId().equals(e.workspaceId())) {
+                throw new IllegalArgumentException("snapshot contains foreign evidence");
+            }
             if (!claimIds.contains(e.claimId())) {
                 throw new IllegalArgumentException(
                         "evidence " + e.id() + " references unknown claim " + e.claimId());
@@ -2885,6 +2960,68 @@ public final class KnowledgeStore implements AutoCloseable {
             ps.setString(12, rev.recordedAt());
             ps.executeUpdate();
         }
+    }
+
+    /**
+     * Records an immutable source revision selection. The transaction checks the
+     * predecessor, source ownership and digest before appending the event.
+     */
+    public synchronized SourceRevisionSelection selectSourceRevision(
+            SourceRevisionSelection request) {
+        java.util.Objects.requireNonNull(request, "request");
+        try {
+            connection.setAutoCommit(false);
+            try {
+                List<SourceRevisionSelection> events = sourceRevisionSelections(request.workspaceId());
+                for (SourceRevisionSelection event : events) {
+                    if (event.eventId().equals(request.eventId())) {
+                        if (!event.equals(request)) {
+                            throw new IllegalArgumentException("source revision event ID already names another selection");
+                        }
+                        connection.commit();
+                        return event;
+                    }
+                }
+                List<SourceRevisionSelection> appended = new ArrayList<>(events);
+                appended.add(request);
+                SourceRevisionSelection.validateChainAndSources(request.workspaceId(), appended,
+                        sources(request.workspaceId()));
+                try (PreparedStatement ps = connection.prepareStatement(
+                        "INSERT INTO source_revision_selection(workspace_id, event_id, document_key, "
+                                + "source_id, content_hash, previous_event_id) VALUES (?,?,?,?,?,?)")) {
+                    ps.setString(1, request.workspaceId());
+                    ps.setString(2, request.eventId());
+                    ps.setString(3, request.documentKey());
+                    ps.setString(4, request.sourceId());
+                    ps.setString(5, request.contentHash());
+                    if (request.previousEventId() == null) {
+                        ps.setNull(6, java.sql.Types.VARCHAR);
+                    } else {
+                        ps.setString(6, request.previousEventId());
+                    }
+                    ps.executeUpdate();
+                }
+                connection.commit();
+                return request;
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to select source revision", e);
+        }
+    }
+
+    public synchronized List<SourceRevisionSelection> sourceRevisionSelections(String workspaceId) {
+        return query("SELECT event_id, workspace_id, document_key, source_id, content_hash, "
+                        + "previous_event_id FROM source_revision_selection "
+                        + "WHERE workspace_id = ? ORDER BY document_key, event_id", workspaceId,
+                rs -> new SourceRevisionSelection(
+                        rs.getString("event_id"), rs.getString("workspace_id"),
+                        rs.getString("document_key"), rs.getString("source_id"),
+                        rs.getString("content_hash"), rs.getString("previous_event_id")));
     }
 
     // ── the episodic log of asked questions ───────────────────────────────────
@@ -5164,13 +5301,34 @@ public final class KnowledgeStore implements AutoCloseable {
 
     /** Export the whole workspace as one snapshot. */
     public synchronized KnowledgeSnapshot exportWorkspace(String workspaceId) {
+        try {
+            if (!connection.getAutoCommit()) {
+                return readWorkspace(workspaceId);
+            }
+            connection.setAutoCommit(false);
+            try {
+                KnowledgeSnapshot snapshot = readWorkspace(workspaceId);
+                connection.commit();
+                return snapshot;
+            } catch (SQLException | RuntimeException error) {
+                connection.rollback();
+                throw error;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException error) {
+            throw new IllegalStateException("Failed to read workspace " + workspaceId, error);
+        }
+    }
+
+    private KnowledgeSnapshot readWorkspace(String workspaceId) {
         String name = queryOne("SELECT name FROM workspace WHERE id = ?", workspaceId,
                 rs -> rs.getString("name"));
         return new KnowledgeSnapshot(workspaceId, name,
                 concepts(workspaceId), sources(workspaceId), claims(workspaceId), evidence(workspaceId),
                 representations(workspaceId), prerequisites(workspaceId), revisions(workspaceId),
                 derivations(workspaceId), contradictions(workspaceId), goalsWithSubtasks(workspaceId),
-                now());
+                sourceRevisionSelections(workspaceId), now());
     }
 
     /** The workspace identifiers this store holds. */
