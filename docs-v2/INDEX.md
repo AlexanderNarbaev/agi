@@ -41,6 +41,10 @@
 | CRJ-01 packaged journey demonstration (the local milestone) | [engineering/CRJ-01-JOURNEY-DEMONSTRATION.json](engineering/CRJ-01-JOURNEY-DEMONSTRATION.json) |
 | CRJ-01 arm C: the governed learned competence, built and measured | [engineering/CRJ-01-ARM-C.md](engineering/CRJ-01-ARM-C.md) |
 | CRJ-01 the instruments: the two oracles, built and proven | [engineering/CRJ-01-INSTRUMENTS.md](engineering/CRJ-01-INSTRUMENTS.md) |
+| CRJ-01 **the development record: everything needed to continue on another machine** | [engineering/CRJ-01-DEVELOPMENT-RECORD.md](engineering/CRJ-01-DEVELOPMENT-RECORD.md) |
+| CRJ-01 the source-revision applicability gain (PRODUCT_GAIN) | [engineering/CRJ-01-SOURCE-REVISION-APPLICABILITY.md](engineering/CRJ-01-SOURCE-REVISION-APPLICABILITY.md) |
+| CRJ-01 the retained evidence of the source-revision gain | [engineering/evidence/crj01-source-revision/README.md](engineering/evidence/crj01-source-revision/README.md) |
+| CRJ-01 the retained evidence of the premise-refutation negative result | [engineering/evidence/crj01-premise-negative/README.md](engineering/evidence/crj01-premise-negative/README.md) |
 | текущее состояние проекта | [governance/PROJECT-STATE.md](governance/PROJECT-STATE.md) |
 | дорожная карта и задачи | [governance/ROADMAP.md](governance/ROADMAP.md) |
 | принятые решения | [governance/DECISION-REGISTER.md](governance/DECISION-REGISTER.md) |
