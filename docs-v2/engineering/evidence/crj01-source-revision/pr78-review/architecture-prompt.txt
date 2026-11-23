@@ -1,0 +1,406 @@
+MATRIX bounded architecture role. Review the following exact approved excerpts. Determine whether the existing durable KnowledgeRevision ledger is sufficient for explicit workspace-local source-revision selection with atomic rollback and restart, without schema migration. Compare reuse with a typed storage migration. Address logical identity vs content ids, stable scope, concurrency, snapshots, historical selection, independent support and invalidation of outputs. Identify the smallest testable architecture, the strongest unsafe shortcut and one clear decision criterion for escalation. The prior text recognizer is falsified and out of scope. Short structured reply, 650 words max; no implementation and do not assume APIs outside the excerpts. No tools.
+
+matrix-core/src/main/java/io/matrix/knowledge/RevisionKind.java:1-100
+package io.matrix.knowledge;
+
+/**
+ * The kind of change a knowledge revision records (owner directive §13).
+ *
+ * <p>The distinction matters because a revision that adds resolution is not a
+ * correction, and a correction is not a refutation of the earlier record.
+ */
+public enum RevisionKind {
+    /** A later, more detailed representation of the same concept. */
+    /**
+     * RECON-W43.0. A refinement was PROPOSED and REJECTED. The original
+     * claim stands, the proposal is kept, and the fact that it was considered
+     * is not lost — a refinement that was rejected is still a thing that
+     * happened.
+     */
+    REJECTED_REFINEMENT,
+    REFINEMENT,
+    /** A new representation at a different abstraction level. */
+    DIFFERENT_ABSTRACTION,
+    /** A correction: the earlier representation was wrong. */
+    CORRECTION,
+    /** A different scope or boundary condition. */
+    SCOPE_CHANGE,
+    /** Sources disagree and both accounts are kept. */
+    CONFLICTING_SCHOOLS,
+    /** The evidence was insufficient to decide. */
+    INCOMPLETE_EVIDENCE,
+    /** The measurement was uncertain. */
+    MEASUREMENT_UNCERTAINTY,
+    /** The claim was withdrawn. */
+    SUPERSESSION
+}
+
+matrix-core/src/main/java/io/matrix/knowledge/KnowledgeRevision.java:1-100
+package io.matrix.knowledge;
+
+import java.util.List;
+
+/**
+ * An immutable record of how a previous representation changed
+ * (owner directive §13, §14).
+ *
+ * <p>Historical revisions are never deleted. The record says WHAT changed,
+ * WHICH earlier assumptions remain valid, WHICH simplifications no longer
+ * apply, WHICH new cases the refined model explains, and WHICH evidence
+ * supports the change — so a reader can see the reasoning, not just the
+ * outcome.
+ */
+public record KnowledgeRevision(
+        String id,
+        String workspaceId,
+        String targetType,
+        String targetId,
+        RevisionKind kind,
+        String summary,
+        List<String> addedFacts,
+        List<String> stillValidAssumptions,
+        List<String> noLongerValidAssumptions,
+        List<String> newlyExplainedCases,
+        List<String> evidenceIds,
+        String recordedAt) {
+
+    public KnowledgeRevision {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("revision id must not be blank");
+        }
+        if (targetId == null || targetId.isBlank()) {
+            throw new IllegalArgumentException("revision target id must not be blank");
+        }
+        if (kind == null) {
+            throw new IllegalArgumentException("revision kind must not be null");
+        }
+        addedFacts = List.copyOf(addedFacts == null ? List.of() : addedFacts);
+        stillValidAssumptions = List.copyOf(stillValidAssumptions == null ? List.of() : stillValidAssumptions);
+        noLongerValidAssumptions = List.copyOf(noLongerValidAssumptions == null ? List.of() : noLongerValidAssumptions);
+        newlyExplainedCases = List.copyOf(newlyExplainedCases == null ? List.of() : newlyExplainedCases);
+        evidenceIds = List.copyOf(evidenceIds == null ? List.of() : evidenceIds);
+    }
+}
+
+matrix-core/src/main/java/io/matrix/knowledge/KnowledgeSnapshot.java:1-78
+package io.matrix.knowledge;
+
+import java.util.List;
+
+/**
+ * The complete content of one workspace, in one immutable aggregate.
+ *
+ * <p>This is the unit of import, export and persistence. A snapshot is
+ * self-contained: every evidence record names a claim and a source that are
+ * inside it, every representation names a concept that is inside it, and the
+ * refinement chain points at representations that are inside it. Importing a
+ * snapshot is therefore an atomic operation — either the whole workspace
+ * arrives or none of it does.
+ *
+ * <p>Identifiers are DETERMINISTIC: importing the same pack twice produces
+ * the same identifiers, so re-importing is idempotent rather than
+ * duplicative. That is a requirement of the product, not a convenience: a
+ * user who imports a pack twice must not end up with two copies of every
+ * concept.
+ *
+ * <h2>W45.2 — the recorded conflicts are part of the content</h2>
+ *
+ * <p>The snapshot used to leave the {@code contradiction} rows out, and that
+ * was a hole with a name: a workspace's conflicts are records ABOUT two
+ * claims, and a replacement that erased them erased the evidence that the
+ * system had found a conflict at all. The owner's decision is that a
+ * destructive reload leaves a recoverable snapshot, and a snapshot that
+ * drops the conflicts is not a snapshot of the workspace.</p>
+ *
+ * <p>The two older constructors are kept, so that the callers that never
+ * reason about inferences — and the callers that never reason about
+ * conflicts — do not have to say so. A snapshot without conflicts is a
+ * workspace in which no conflict was ever recorded, and that is not the same
+ * thing as a workspace whose conflicts were lost.</p>
+ *
+ * <p><b>The goals are in the snapshot for the same reason.</b> A goal and its
+ * subtasks are records of what was being attempted, and a replacement that
+ * dropped them would drop the plan with the knowledge — which is exactly what
+ * the mission warns against when it says that restoring a knowledge database
+ * is not the same as restoring an active goal.</p>
+ */
+public record KnowledgeSnapshot(
+        String workspaceId,
+        String workspaceName,
+        List<Concept> concepts,
+        List<Source> sources,
+        List<Claim> claims,
+        List<Evidence> evidence,
+        List<Representation> representations,
+        List<Prerequisite> prerequisites,
+        List<KnowledgeRevision> revisions,
+        List<Derivation> derivations,
+        List<Contradiction> contradictions,
+        List<LearningGoal> goals,
+        String exportedAt) {
+
+    /**
+     * A snapshot without recorded derivations.
+     *
+     * <p>The ten-component form is kept so that the callers that never
+     * reason about inferences do not have to say so. A snapshot without
+     * derivations is a workspace whose rules are not recorded, and the
+     * reasoning engine reports exactly that.
+     */
+    public KnowledgeSnapshot(String workspaceId, String workspaceName,
+            List<Concept> concepts, List<Source> sources, List<Claim> claims,
+            List<Evidence> evidence, List<Representation> representations,
+            List<Prerequisite> prerequisites, List<KnowledgeRevision> revisions,
+            String exportedAt) {
+        this(workspaceId, workspaceName, concepts, sources, claims, evidence, representations,
+                prerequisites, revisions, List.of(), List.of(), List.of(), exportedAt);
+    }
+
+    /**
+     * A snapshot without recorded derivations and without recorded conflicts.
+     *
+     * <p>The nine-component form is kept so that the callers that never
+     * reason about inferences do not have to say so.
+
+matrix-core/src/main/java/io/matrix/knowledge/KnowledgeStore.java:2869-2893
+    private void insertRevision(KnowledgeRevision rev) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO revision(id, workspace_id, target_type, target_id, kind, "
+                        + "summary, added_facts, still_valid, no_longer_valid, newly_explained, "
+                        + "evidence_ids, recorded_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, rev.id());
+            ps.setString(2, rev.workspaceId());
+            ps.setString(3, rev.targetType());
+            ps.setString(4, rev.targetId());
+            ps.setString(5, rev.kind().name());
+            ps.setString(6, rev.summary());
+            ps.setString(7, writeJson(rev.addedFacts()));
+            ps.setString(8, writeJson(rev.stillValidAssumptions()));
+            ps.setString(9, writeJson(rev.noLongerValidAssumptions()));
+            ps.setString(10, writeJson(rev.newlyExplainedCases()));
+            ps.setString(11, writeJson(rev.evidenceIds()));
+            ps.setString(12, rev.recordedAt());
+            ps.executeUpdate();
+        }
+    }
+
+    // ── the episodic log of asked questions ───────────────────────────────────
+
+    /**
+     * Record that a question was asked, and fold it into the record of its
+
+matrix-core/src/main/java/io/matrix/knowledge/KnowledgeStore.java:5151-5194
+    public List<KnowledgeRevision> revisions(String workspaceId) {
+        return query("SELECT id, workspace_id, target_type, target_id, kind, summary, added_facts, "
+                + "still_valid, no_longer_valid, newly_explained, evidence_ids, recorded_at "
+                + "FROM revision WHERE workspace_id = ? ORDER BY recorded_at, id", workspaceId,
+                rs -> new KnowledgeRevision(
+                        rs.getString("id"), rs.getString("workspace_id"), rs.getString("target_type"),
+                        rs.getString("target_id"), RevisionKind.valueOf(rs.getString("kind")),
+                        rs.getString("summary"), readJsonList(rs.getString("added_facts")),
+                        readJsonList(rs.getString("still_valid")),
+                        readJsonList(rs.getString("no_longer_valid")),
+                        readJsonList(rs.getString("newly_explained")),
+                        readJsonList(rs.getString("evidence_ids")), rs.getString("recorded_at")));
+    }
+
+    /** Export the whole workspace as one snapshot. */
+    public synchronized KnowledgeSnapshot exportWorkspace(String workspaceId) {
+        String name = queryOne("SELECT name FROM workspace WHERE id = ?", workspaceId,
+                rs -> rs.getString("name"));
+        return new KnowledgeSnapshot(workspaceId, name,
+                concepts(workspaceId), sources(workspaceId), claims(workspaceId), evidence(workspaceId),
+                representations(workspaceId), prerequisites(workspaceId), revisions(workspaceId),
+                derivations(workspaceId), contradictions(workspaceId), goalsWithSubtasks(workspaceId),
+                now());
+    }
+
+    /** The workspace identifiers this store holds. */
+    public synchronized List<String> workspaces() {
+        List<String> ids = new ArrayList<>();
+        try (Statement st = connection.createStatement();
+             ResultSet rs = st.executeQuery("SELECT id FROM workspace ORDER BY id")) {
+            while (rs.next()) {
+                ids.add(rs.getString(1));
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to list workspaces", e);
+        }
+        return ids;
+    }
+
+    // ── plumbing ──────────────────────────────────────────────────────────────
+
+    private interface RowMapper<T> {
+        T map(ResultSet rs) throws SQLException;
+    }
+
+matrix-core/src/main/java/io/matrix/knowledge/KnowledgeWorkbench.java:432-456
+    public synchronized Answer ask(String workspaceId, String question, AbstractionLevel level,
+            Set<String> sourceIds) {
+        KnowledgeSnapshot snapshot = workspace(workspaceId);
+        if (sourceIds != null && !sourceIds.isEmpty()) {
+            snapshot = restrictedTo(snapshot, sourceIds);
+        }
+        // The conversation resolves the reference BEFORE the retrieval, so
+        // that "Explain this in more detail" reaches the concept the last
+        // turn was about. The original question is what the answer carries.
+        DialogueContext context = context(workspaceId);
+        String expanded = context.expand(question);
+        String resolvedSubject = expanded.equals(question) ? null : context.resolveSubject(question);
+        Answer answer = new KnowledgeRetriever(snapshot,
+                KnowledgeRetriever.configuredMinimumCoverage(), weakenedBindings(workspaceId))
+                .answer(expanded.equals(question) ? question : expanded, level);
+
+
+        // WHAT THE QUESTION DEMANDS IS CHECKED BEFORE THE ANSWER IS.
+        //
+        // RECON-W42.1. The support score could not tell an answerable
+        // question from an unanswerable one: on the W42 benchmark the two
+        // distributions overlap (the answerable items scored 0.25 to 0.88,
+        // the unanswerable ones the system wrongly answered scored 0.22 to
+        // 0.63), so no threshold separates them. The decision needs
+        // information the score does not carry - what KIND of answer the
+
+matrix-core/src/main/java/io/matrix/knowledge/KnowledgeWorkbench.java:710-728
+     * status, not a limitation and not a refusal reason, and a caller that wants to know what
+     * the workspace made of the premise reads it there.
+     *
+     * @param answer the answer the retrieval produced
+     * @param question the question as the user wrote it
+     * @param workspaceId the workspace the question is addressed to
+     * @param snapshot the workspace
+     * @return the answer, carrying the disposition
+     */
+    private Answer applyPremise(Answer answer, String question, KnowledgeSnapshot snapshot) {
+        PremiseSemantics.Disposition disposition =
+                PremiseSemantics.resolve(snapshot, question, answer.claims());
+        boolean nothingToReport = disposition.status() == PremiseSemantics.Status.NO_PREMISE
+                && disposition.conflicts().isEmpty()
+                && disposition.readings().isEmpty();
+        if (nothingToReport) {
+            // There is no premise and nothing to say about one. The disposition is still
+            // carried, so that a caller can read what the workspace made of the question
+            // without having to infer it from the absence of a note.
+
+matrix-core/src/main/java/io/matrix/knowledge/KnowledgeWorkbench.java:952-979
+    public io.matrix.knowledge.acquisition.DocumentImporter.ImportResult importDocument(
+            String workspaceId, java.nio.file.Path path, String declaredLanguage) {
+        return importDocument(workspaceId, path, path.getFileName().toString(), declaredLanguage);
+    }
+
+    /**
+     * Imports a document into a workspace, under a known file name.
+     *
+     * @param workspaceId the workspace
+     * @param path the document
+     * @param filename the name the document was uploaded under
+     * @param declaredLanguage the declared language, or null
+     * @return what the import did
+     */
+    public io.matrix.knowledge.acquisition.DocumentImporter.ImportResult importDocument(
+            String workspaceId, java.nio.file.Path path, String filename, String declaredLanguage) {
+        try {
+            io.matrix.knowledge.acquisition.DocumentImporter.ImportResult result =
+                    new io.matrix.knowledge.acquisition.DocumentImporter(store())
+                            .importDocument(workspaceId, path, filename, declaredLanguage);
+            // The concept the document brought in has to be PRACTISABLE:
+            // the assessment items are generated for the concepts the
+            // dataset does not cover.
+            generateAssessment(workspaceId);
+            return result;
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException("Failed to import the document " + path, e);
+        }
+
+matrix-core/src/main/java/io/matrix/knowledge/acquisition/DocumentImporter.java:153-187
+    public ImportResult importDocument(String workspaceId, Path path, String filename,
+                                       String declaredLanguage) throws IOException {
+        DocumentFormat format = DocumentFormat.of(filename);
+        if (format == null) {
+            throw new IOException("the format of " + path.getFileName() + " is not one this "
+                    + "pipeline reads");
+        }
+        if (format == DocumentFormat.JSON) {
+            throw new IOException("a knowledge package is imported through the package importer, "
+                    + "not through the document pipeline");
+        }
+        long size = Files.size(path);
+        if (size > MAXIMUM_DOCUMENT_BYTES) {
+            throw new IOException("the document is " + size + " bytes, which is over the limit of "
+                    + MAXIMUM_DOCUMENT_BYTES);
+        }
+        byte[] content = Files.readAllBytes(path);
+        String hash = sha256(content);
+
+        SourceRecord.Builder source = new SourceRecord.Builder(
+                sourceId(workspaceId, hash), filename, hash, format)
+                .importedAt(clock.instant().toString())
+                .processed("read " + size + " bytes")
+                // W51 §6 — THE EXTENT OF THE SOURCE IS SAID EXPLICITLY.
+                // The source IS the whole document, and the claim's own
+                // span says where in it the sentence sat. The locator used
+                // to be the bare constant "the whole document", which said
+                // the same thing and named nothing.
+                .location(filename + " (" + SourceRecord.WHOLE_DOCUMENT + ")");
+
+        ExtractedDocument document = new DocumentExtractorRegistry().extract(format, content,
+                filename, source);
+        if (declaredLanguage != null && !declaredLanguage.isBlank()) {
+            // The declaration wins: the caller has said what the document
+            // is, and the registry reports what the workspace was told.
+
+matrix-core/src/main/java/io/matrix/knowledge/acquisition/DocumentImporter.java:229-253
+                continue;
+            }
+            long end = span.end();
+            int codePoints = text.codePointCount(0, (int) Math.min(end, text.length()));
+            excerptLimit = Math.max(excerptLimit, codePoints);
+        }
+        String excerpt = text.length() > excerptLimit ? text.substring(0, excerptLimit) : text;
+        Source storeSource = new Source(record.sourceId(), workspaceId, SourceKind.HUMAN_ASSERTION,
+                record.filename(), record.location(), 50, 50, excerpt,
+                record.importedAt(), record.contentHash(), record.publicationDate(),
+                record.language(), record.format().name().toLowerCase(java.util.Locale.ROOT));
+
+        List<Claim> claims = new ArrayList<>();
+        List<Evidence> evidence = new ArrayList<>();
+        Set<String> conceptIds = new LinkedHashSet<>();
+        List<String> skipped = new ArrayList<>();
+        Set<String> conceptsBefore = new LinkedHashSet<>();
+        for (Concept concept : store.concepts(workspaceId)) {
+            conceptsBefore.add(concept.id());
+        }
+
+        // THE CONCEPTS ARE BUILT, NOT WRITTEN.
+        //
+        // The concepts were created by a write of their own, before the
+        // transaction of the claims began, so a failure in between left
+
+matrix-core/src/main/java/io/matrix/knowledge/acquisition/DocumentImporter.java:459-484
+     * <p>Derived from the content hash, so that the same document — under
+     * any name, in any file — is one source.
+     */
+    public static String sourceId(String workspaceId, String contentHash) {
+        return "src-" + Ids.digest(workspaceId + "|document|" + contentHash);
+    }
+
+    /** The claim id for a proposition from a document. */
+    /**
+     * The id of a concept of a workspace.
+     *
+     * <p>The id is a pure function of the workspace and the name, so it
+     * can be computed before the concept is written.
+     *
+     * @param workspaceId the workspace
+     * @param name the concept's name
+     * @return the id
+     */
+    static String conceptId(String workspaceId, String name) {
+        return io.matrix.knowledge.Ids.digest(workspaceId + "|concept|"
+                + name.strip().toLowerCase(java.util.Locale.ROOT));
+    }
+
+    public static String claimId(String workspaceId, String contentHash, String proposition) {
+        return "clm-" + Ids.digest(workspaceId + "|" + contentHash + "|"
+                + proposition.strip().toLowerCase(java.util.Locale.ROOT));

@@ -34,18 +34,30 @@ unfrozen and establishes no learning transfer.
 
 ## Retained primary evidence
 
-The retained evidence resides in the local CRJ-01 handoff directory
-`/home/alexandr-narbaev/Projects/agi/matrix-crj-provenance.5BER3h/handoff`.
-Paths below are relative to that directory. The report publishes group outcomes and
-digests. The evaluator retains the fixtures and gold.
+**The retained evidence now resides IN THE REPOSITORY**, at
+`docs-v2/engineering/evidence/crj01-premise-negative/` — so a reader on another machine
+does not need the session's temporary directory, and the record cannot point at a path
+that only existed on one machine. Paths below are relative to that directory. The report
+publishes group outcomes and digests.
+
+**What is retained, and what is deliberately not.** The manifest, the synthetic
+fixtures' manifest (`oracle.json`), the frozen documents, the evaluator's runner and
+frozen test, the **baseline and candidate JUnit XMLs**, the per-run `command.txt`,
+`resource.txt`, `exit-status.txt` and `gradle.log`, the evaluation report, and the
+session's own commission, checkpoint and dispatch record — all of it, with the manifest
+verifying (**11 of 11 files OK**). The evaluator's **candidate working copy** (174 MB of
+build output) is **not** retained: it is machine state, and the repository does not carry
+build output. The evaluator's **gold** stays with the evaluator, as the mandate requires
+("do not expose ... hidden gold"); the digests above let the owner verify the retained
+evidence against the gold they hold, without the repository publishing it.
 
 | Evidence | SHA-256 |
 |---|---|
 | `PREMISE-MILESTONE-CHECKPOINT.md` | `f461176938ee1d1655321ff7ae3f0cdf4096fa896e4f532adadb69975655cc72` |
-| `evaluator-evidence.KZ8jhJaC/MANIFEST.sha256` | `a2072ba21519b431abf999bb52acf4006029edfa65e886397dca82d08be6dc21` |
-| `evaluator-evidence.KZ8jhJaC/runner/RUNNER.sha256`, corrected baseline and candidate runner | `7a863083d63163563617ff468508047bcf3dedfcde176a48ed79d7f95f2e7563` |
-| Baseline `evidence-baseline-rendered/TEST-io.matrix.crj.runner.FrozenPremiseJourneyTest.xml` under the evaluator directory | `5ee482547f02316898c676b4ced435c4b59161bd882e13979897452d91a92d8a` |
-| Candidate `evidence-candidate/TEST-io.matrix.crj.runner.FrozenPremiseJourneyTest.xml` under the evaluator directory | `2bec4faa9daeb986d1954aacb896cdf6970da55b10ee3168b93af18f003d18f1` |
+| `MANIFEST.sha256` | `a2072ba21519b431abf999bb52acf4006029edfa65e886397dca82d08be6dc21` |
+| `runner/RUNNER.sha256`, corrected baseline and candidate runner | `7a863083d63163563617ff468508047bcf3dedfcde176a48ed79d7f95f2e7563` |
+| Baseline `evidence-baseline-rendered/TEST-io.matrix.crj.runner.FrozenPremiseJourneyTest.xml` | `5ee482547f02316898c676b4ced435c4b59161bd882e13979897452d91a92d8a` |
+| Candidate `evidence-candidate/TEST-io.matrix.crj.runner.FrozenPremiseJourneyTest.xml` | `2bec4faa9daeb986d1954aacb896cdf6970da55b10ee3168b93af18f003d18f1` |
 
 The paired baseline is `0549d27ee561afdf94214cbabe661c2532e08bae`. The local candidate is
 `b69c9aa7d0cd652bf7b349c862277786ecd766f5`. Both evaluator runs used Gradle 9.6.0 with

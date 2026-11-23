@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.cognitive.report.ReportClaimLearnerPrecisionTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-23T09:15:18.903Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="7.2">
+  <properties/>
+  <testcase name="the learner promotes every candidate, and the promotions are measured for redundancy" classname="io.matrix.cognitive.report.ReportClaimLearnerPrecisionTest" time="7.2"/>
+  <system-out><![CDATA[[CRJ-01]   the observation triples whose intersection is carried by five or more questions: 108
+[CRJ-01]   the questions whose answers carry EVERY candidate: 5 of 26
+[CRJ-01] the learner's precision over the research pool:
+[CRJ-01]   the outcome: promoted=true reason=2 candidate(s) were carried by the reference on all 5 held-out case(s) and were promoted
+[CRJ-01]   the candidate set (the claims the episodes had in common): 3
+[CRJ-01]   promoted: 2; distinct PROPOSITIONS: 2; distinct CONCEPTS: 2; distinct SUPPORTS: 1
+[CRJ-01]   the REDUNDANT promotions (the same proposition promoted more than once): 0
+[CRJ-01]   the store's learned claims: 2
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

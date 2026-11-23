@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.WorkspaceSnapshotMigrationTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-23T09:09:44.017Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.196">
+  <properties/>
+  <testcase name="the migration is safe to run again after an interruption" classname="io.matrix.knowledge.WorkspaceSnapshotMigrationTest" time="0.056"/>
+  <testcase name="a fresh database is built at the current version with the snapshot table" classname="io.matrix.knowledge.WorkspaceSnapshotMigrationTest" time="0.05"/>
+  <testcase name="a hand-written v18 database is migrated and keeps its content" classname="io.matrix.knowledge.WorkspaceSnapshotMigrationTest" time="0.044"/>
+  <testcase name="the migration changes no existing table's shape" classname="io.matrix.knowledge.WorkspaceSnapshotMigrationTest" time="0.042"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

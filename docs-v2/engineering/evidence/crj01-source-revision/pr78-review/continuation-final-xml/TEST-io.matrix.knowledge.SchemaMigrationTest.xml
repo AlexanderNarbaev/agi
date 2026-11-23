@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.SchemaMigrationTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-23T15:01:11.053Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.312">
+  <properties/>
+  <testcase name="the migration is idempotent: opening it twice changes nothing" classname="io.matrix.knowledge.SchemaMigrationTest" time="0.07"/>
+  <testcase name="the consolidation works on a database that was migrated" classname="io.matrix.knowledge.SchemaMigrationTest" time="0.173"/>
+  <testcase name="an existing v9 database gets the tombstone columns" classname="io.matrix.knowledge.SchemaMigrationTest" time="0.066"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

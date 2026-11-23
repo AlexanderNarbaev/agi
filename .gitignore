@@ -210,3 +210,19 @@ data/models/**/*.safetensors.sha256
 # directive and handoff record, not machine state.
 /.jqwik-database
 /matrix-api-gateway/data/
+
+# The PARALLEL SESSIONS' scratch directories (added 2026-11-24). A session keeps its
+# working copies, its evaluator's evidence and its build output at the repository root,
+# and those copies are MACHINE STATE: gigabytes of Gradle output and copies of the
+# repository inside the repository. The four prefixes below are the sessions' naming
+# convention and they name no real module (the modules are matrix-core, matrix-fpga,
+# matrix-micro, matrix-operator, matrix-quality, matrix-ros2, matrix-spigot,
+# matrix-tools-distill, matrix-web-ui, matrix-sdk-java, matrix-sdk-js, matrix-sdk-python,
+# matrix-api-gateway, matrix-audit, matrix-billing, matrix-brain-runtime and
+# matrix-observability). The documents' own evidence is RETAINED under
+# docs-v2/engineering/evidence/, so nothing that matters is lost by ignoring the
+# scratch itself. A NEW prefix must be added here.
+/matrix-crj-*/
+/matrix-dsh-*/
+/matrix-revision-*/
+/matrix-source-*/

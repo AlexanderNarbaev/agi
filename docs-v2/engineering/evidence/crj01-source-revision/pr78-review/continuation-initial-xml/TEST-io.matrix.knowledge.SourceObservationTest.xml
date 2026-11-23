@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.SourceObservationTest" tests="1" skipped="0" failures="1" errors="0" timestamp="2026-11-23T14:59:18.964Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.069">
+  <properties/>
+  <testcase name="resolvesApplicableObservationWithoutPromotingItsStoredClaim(Path)" classname="io.matrix.knowledge.SourceObservationTest" time="0.069">
+    <failure message="java.util.NoSuchElementException: No value present" type="java.util.NoSuchElementException">java.util.NoSuchElementException: No value present
+	at java.base/java.util.Optional.orElseThrow(Optional.java:377)
+	at io.matrix.knowledge.SourceObservationTest.resolvesApplicableObservationWithoutPromotingItsStoredClaim(SourceObservationTest.java:36)
+</failure>
+  </testcase>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

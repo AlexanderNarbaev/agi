@@ -415,6 +415,9 @@ class Checker:
         self.root = root
         self.scope = scope
         self.excludes = excludes
+        # The top-level directories git tracks, computed on first use. It is the
+        # precise discriminator between a MODULE and a scratch copy.
+        self._tracked_roots = None
         self.include_historical = include_historical
         self.include_planned_artefacts = include_planned_artefacts
         self.documents: list[Path] = []
@@ -428,6 +431,48 @@ class Checker:
         self.strict_classifications = False
 
     # -- the scope ---------------------------------------------------------
+
+    def skipped_untracked(self, dirpath: str) -> bool:
+        """Whether a directory is a scratch copy git tracks nothing in.
+
+        <p>The answer is computed ONCE from git's own index, so it is exact and it
+        needs no list of names to maintain: a directory the repository tracks is a
+        module, and a directory it does not track is somebody's scratch space.</p>
+
+        :param dirpath: the directory being walked
+        :return: true when git tracks nothing under it
+        """
+        if self._tracked_roots is None:
+            self._tracked_roots = self.load_tracked_roots()
+        if not self._tracked_roots:
+            return False
+        root = Path(dirpath)
+        try:
+            relative = root.relative_to(self.scope).parts
+        except ValueError:
+            return False
+        if len(relative) != 1:
+            return False
+        return relative[0] not in self._tracked_roots
+
+    def load_tracked_roots(self) -> set:
+        """The top-level directories git tracks.
+
+        :return: the names, or the empty set when git is not available
+        """
+        import subprocess
+        try:
+            output = subprocess.run(
+                ["git", "ls-files"], cwd=str(self.scope), capture_output=True,
+                text=True, timeout=60, check=False).stdout
+        except (OSError, subprocess.SubprocessError):
+            return set()
+        roots = set()
+        for line in output.splitlines():
+            name = line.split("/", 1)[0]
+            if name:
+                roots.add(name)
+        return roots
 
     def excluded(self, relative: str) -> bool:
         from fnmatch import fnmatch
@@ -448,6 +493,16 @@ class Checker:
             candidates = []
             for dirpath, dirnames, filenames in os.walk(self.scope):
                 dirnames.sort()
+                # A SCRATCH DIRECTORY IS NOT PART OF THE REPOSITORY. The parallel
+                # sessions keep their working copies at the repository root, and a copy
+                # of the repository inside the repository is never a document of it: it
+                # is machine state, and its own documents cite paths that exist in the
+                # copy and not here. The precise discriminator is GIT: a real module is
+                # TRACKED, and a scratch copy is not. So a top-level directory that git
+                # tracks nothing in is skipped.
+                if self.skipped_untracked(dirpath):
+                    dirnames[:] = []
+                    continue
                 for filename in sorted(filenames):
                     if filename.endswith(".md"):
                         candidates.append(Path(dirpath) / filename)

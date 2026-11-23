@@ -1,0 +1,82 @@
+{
+  "base": "f4ad32d8bb35a6229122f97195c6af2e0817400b",
+  "task": "approved additive source revision storage patch",
+  "provider": "minimax",
+  "model": "MiniMax-M3.1-Flash",
+  "endpoint": "https://api.minimax.io/v1",
+  "tools": [],
+  "source": {
+    "matrix-core/src/main/java/io/matrix/knowledge/KnowledgeStore.java": {
+      "file": "e6f61b0ee289e95f9c0009191e0986eaa40c8a175b7a7ae798601da31bc6058b",
+      "excerpts": [
+        [
+          85,
+          95,
+          "bb8253620a71877cb71fe3fe6a6e2a7fef985d9fc2f42529946adf7e45f7854a"
+        ],
+        [
+          366,
+          383,
+          "8589926479b6c46a127d04f6cd2e86cfd3b8bb00bbad25c0a916a2de1858b7ad"
+        ],
+        [
+          451,
+          473,
+          "735515ae7ba38ce29c729908427824b590cdb324b9bbb8ec735b5b92fffd5181"
+        ],
+        [
+          938,
+          943,
+          "5538dd9afb894b3345368cb7c701176d669aca1f555a9835b27be890e675026c"
+        ],
+        [
+          2030,
+          2098,
+          "ee0fa37f9d1af08ab8bc8451b5edba27a2ac7c0f4cf69faed8967d40a8dc6b46"
+        ],
+        [
+          2355,
+          2381,
+          "1179b55c656f16e96895f1c05fc7e3a1edcd7245f02c35c506d4aab2338059a7"
+        ],
+        [
+          2869,
+          2890,
+          "fc4791638d293373bb600dfe9528015cc72f608ece0502a5cf5557e5411a58cf"
+        ],
+        [
+          2915,
+          2946,
+          "ebfdf0b8d00e2bd0233f2e0512118e8b9426b3c2f82506e7ef5ffef054dbaf0c"
+        ],
+        [
+          5151,
+          5178,
+          "4aa17fa4353ff72d4729df9c8a23de40f97870bedbe59bf36783629dc163c2bc"
+        ]
+      ]
+    },
+    "matrix-core/src/main/java/io/matrix/knowledge/KnowledgeSnapshot.java": {
+      "file": "e5f21963343dfc82c5642ab182c50db66292e688ad1738149911a426b8292aac",
+      "excerpts": [
+        [
+          42,
+          130,
+          "99fd1669f4121ccb8627b10db24ba5ff87cdadee7390ec15dd006a28585a9e02"
+        ]
+      ]
+    }
+  },
+  "max_output": 8700,
+  "exit": 0,
+  "reason": "completed",
+  "usage": [
+    {
+      "inputTokens": 3932,
+      "outputTokens": 5999,
+      "totalTokens": 10128,
+      "cacheReadTokens": 197
+    }
+  ],
+  "wall_seconds": 29.978
+}

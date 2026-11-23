@@ -1,0 +1,20 @@
+{
+  "task": "architecture and persistence",
+  "provider": "minimax",
+  "model": "MiniMax-M3.1-Flash",
+  "endpoint": "https://api.minimax.io/v1",
+  "reasoning": "low",
+  "scope": "architecture-scope.json",
+  "tools": [],
+  "exit": 0,
+  "reason": "completed",
+  "usage": [
+    {
+      "inputTokens": 4466,
+      "outputTokens": 1774,
+      "totalTokens": 6439,
+      "cacheReadTokens": 199
+    }
+  ],
+  "wall_seconds": 14.895
+}

@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.crj.runner.FrozenPremiseJourneyTest" tests="7" skipped="0" failures="7" errors="0" timestamp="2026-11-22T19:20:56.797Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.818">
+  <properties/>
+  <testcase name="01_explicit_and_scoped_contradiction" classname="io.matrix.crj.runner.FrozenPremiseJourneyTest" time="0.419">
+    <failure message="org.opentest4j.MultipleFailuresError: 01_explicit_and_scoped_contradiction (2 failures)&#10;&#9;org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;&#10;&#9;org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;" type="org.opentest4j.MultipleFailuresError">org.opentest4j.MultipleFailuresError: 01_explicit_and_scoped_contradiction (2 failures)
+	org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;
+	org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:80)
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:54)
+	at org.junit.jupiter.api.Assertions.assertAll(Assertions.java:3100)
+	at io.matrix.crj.runner.FrozenPremiseJourneyTest.runGroup(FrozenPremiseJourneyTest.java:88)
+	at io.matrix.crj.runner.FrozenPremiseJourneyTest.lambda$servedReference$1(FrozenPremiseJourneyTest.java:54)
+	Suppressed: org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;
+		at org.junit.jupiter.api.Assertions.assertNotNull(Assertions.java:345)
+		at io.matrix.crj.runner.FrozenPremiseJourneyTest.runTrial(FrozenPremiseJourneyTest.java:147)
+		at io.matrix.crj.runner.FrozenPremiseJourneyTest.runGroup(FrozenPremiseJourneyTest.java:81)
+		... 1 more
+	Suppressed: org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;
+		at org.junit.jupiter.api.Assertions.assertNotNull(Assertions.java:345)
+		at io.matrix.crj.runner.FrozenPremiseJourneyTest.runTrial(FrozenPremiseJourneyTest.java:147)
+		at io.matrix.crj.runner.FrozenPremiseJourneyTest.runGroup(FrozenPremiseJourneyTest.java:81)
+		... 1 more
+</failure>
+  </testcase>
+  <testcase name="02_competing_readings" classname="io.matrix.crj.runner.FrozenPremiseJourneyTest" time="0.024">
+    <failure message="org.opentest4j.MultipleFailuresError: 02_competing_readings (1 failure)&#10;&#9;org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;" type="org.opentest4j.MultipleFailuresError">org.opentest4j.MultipleFailuresError: 02_competing_readings (1 failure)
+	org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:80)
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:54)
+	at org.junit.jupiter.api.Assertions.assertAll(Assertions.java:3100)
+	at io.matrix.crj.runner.FrozenPremiseJourneyTest.runGroup(FrozenPremiseJourneyTest.java:88)
+	at io.matrix.crj.runner.FrozenPremiseJourneyTest.lambda$servedReference$1(FrozenPremiseJourneyTest.java:54)
+	Suppressed: org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;
+		at org.junit.jupiter.api.Assertions.assertNotNull(Assertions.java:345)
+		at io.matrix.crj.runner.FrozenPremiseJourneyTest.runTrial(FrozenPremiseJourneyTest.java:147)
+		at io.matrix.crj.runner.FrozenPremiseJourneyTest.runGroup(FrozenPremiseJourneyTest.java:81)
+		... 1 more
+</failure>
+  </testcase>
+  <testcase name="03_missing_evidence" classname="io.matrix.crj.runner.FrozenPremiseJourneyTest" time="0.023">
+    <failure message="org.opentest4j.MultipleFailuresError: 03_missing_evidence (2 failures)&#10;&#9;org.opentest4j.AssertionFailedError: Unexpected type, expected: &lt;io.matrix.knowledge.ArtifactReportResource.ReportResponse&gt; but was: &lt;java.util.LinkedHashMap&gt;&#10;&#9;org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;" type="org.opentest4j.MultipleFailuresError">org.opentest4j.MultipleFailuresError: 03_missing_evidence (2 failures)
+	org.opentest4j.AssertionFailedError: Unexpected type, expected: &lt;io.matrix.knowledge.ArtifactReportResource.ReportResponse&gt; but was: &lt;java.util.LinkedHashMap&gt;
+	org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:80)
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:54)
+	at org.junit.jupiter.api.Assertions.assertAll(Assertions.java:3100)
+	at io.matrix.crj.runner.FrozenPremiseJourneyTest.runGroup(FrozenPremiseJourneyTest.java:88)
+	at io.matrix.crj.runner.FrozenPremiseJourneyTest.lambda$servedReference$1(FrozenPremiseJourneyTest.java:54)
+	Suppressed: org.opentest4j.AssertionFailedError: Unexpected type, expected: &lt;io.matrix.knowledge.ArtifactReportResource.ReportResponse&gt; but was: &lt;java.util.LinkedHashMap&gt;
+		at org.junit.jupiter.api.Assertions.assertInstanceOf(Assertions.java:3699)
+		at io.matrix.crj.runner.FrozenPremiseJourneyTest.runTrial(FrozenPremiseJourneyTest.java:135)
+		at io.matrix.crj.runner.FrozenPremiseJourneyTest.runGroup(FrozenPremiseJourneyTest.java:81)
+		... 1 more
+	Suppressed: org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;
+		at org.junit.jupiter.api.Assertions.assertNotNull(Assertions.java:345)
+		at io.matrix.crj.runner.FrozenPremiseJourneyTest.runTrial(FrozenPremiseJourneyTest.java:147)
+		at io.matrix.crj.runner.FrozenPremiseJourneyTest.runGroup(FrozenPremiseJourneyTest.java:81)
+		... 1 more
+</failure>
+  </testcase>
+  <testcase name="04_topic_without_contradiction" classname="io.matrix.crj.runner.FrozenPremiseJourneyTest" time="0.031">
+    <failure message="org.opentest4j.MultipleFailuresError: 04_topic_without_contradiction (2 failures)&#10;&#9;org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;&#10;&#9;org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;" type="org.opentest4j.MultipleFailuresError">org.opentest4j.MultipleFailuresError: 04_topic_without_contradiction (2 failures)
+	org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;
+	org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:80)
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:54)
+	at org.junit.jupiter.api.Assertions.assertAll(Assertions.java:3100)
+	at io.matrix.crj.runner.FrozenPremiseJourneyTest.runGroup(FrozenPremiseJourneyTest.java:88)
+	at io.matrix.crj.runner.FrozenPremiseJourneyTest.lambda$servedReference$1(FrozenPremiseJourneyTest.java:54)
+	Suppressed: org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;
+		at org.junit.jupiter.api.Assertions.assertNotNull(Assertions.java:345)
+		at io.matrix.crj.runner.FrozenPremiseJourneyTest.runTrial(FrozenPremiseJourneyTest.java:147)
+		at io.matrix.crj.runner.FrozenPremiseJourneyTest.runGroup(FrozenPremiseJourneyTest.java:81)
+		... 1 more
+	Suppressed: org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;
+		at org.junit.jupiter.api.Assertions.assertNotNull(Assertions.java:345)
+		at io.matrix.crj.runner.FrozenPremiseJourneyTest.runTrial(FrozenPremiseJourneyTest.java:147)
+		at io.matrix.crj.runner.FrozenPremiseJourneyTest.runGroup(FrozenPremiseJourneyTest.java:81)
+		... 1 more
+</failure>
+  </testcase>
+  <testcase name="05_workspace_local_identity" classname="io.matrix.crj.runner.FrozenPremiseJourneyTest" time="0.024">
+    <failure message="org.opentest4j.MultipleFailuresError: 05_workspace_local_identity (2 failures)&#10;&#9;org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;&#10;&#9;org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;" type="org.opentest4j.MultipleFailuresError">org.opentest4j.MultipleFailuresError: 05_workspace_local_identity (2 failures)
+	org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;
+	org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:80)
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:54)
+	at org.junit.jupiter.api.Assertions.assertAll(Assertions.java:3100)
+	at io.matrix.crj.runner.FrozenPremiseJourneyTest.runGroup(FrozenPremiseJourneyTest.java:88)
+	at io.matrix.crj.runner.FrozenPremiseJourneyTest.lambda$servedReference$1(FrozenPremiseJourneyTest.java:54)
+	Suppressed: org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;
+		at org.junit.jupiter.api.Assertions.assertNotNull(Assertions.java:345)
+		at io.matrix.crj.runner.FrozenPremiseJourneyTest.runTrial(FrozenPremiseJourneyTest.java:147)
+		at io.matrix.crj.runner.FrozenPremiseJourneyTest.runGroup(FrozenPremiseJourneyTest.java:81)
+		... 1 more
+	Suppressed: org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;
+		at org.junit.jupiter.api.Assertions.assertNotNull(Assertions.java:345)
+		at io.matrix.crj.runner.FrozenPremiseJourneyTest.runTrial(FrozenPremiseJourneyTest.java:147)
+		at io.matrix.crj.runner.FrozenPremiseJourneyTest.runGroup(FrozenPremiseJourneyTest.java:81)
+		... 1 more
+</failure>
+  </testcase>
+  <testcase name="06_revision_invalidates_stale_evidence" classname="io.matrix.crj.runner.FrozenPremiseJourneyTest" time="0.039">
+    <failure message="org.opentest4j.MultipleFailuresError: 06_revision_invalidates_stale_evidence (2 failures)&#10;&#9;org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;&#10;&#9;org.opentest4j.AssertionFailedError: UNVERIFIED: same-path reimport did not supersede old claims; no source revision operation tested" type="org.opentest4j.MultipleFailuresError">org.opentest4j.MultipleFailuresError: 06_revision_invalidates_stale_evidence (2 failures)
+	org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;
+	org.opentest4j.AssertionFailedError: UNVERIFIED: same-path reimport did not supersede old claims; no source revision operation tested
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:80)
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:54)
+	at org.junit.jupiter.api.Assertions.assertAll(Assertions.java:3100)
+	at io.matrix.crj.runner.FrozenPremiseJourneyTest.runGroup(FrozenPremiseJourneyTest.java:88)
+	at io.matrix.crj.runner.FrozenPremiseJourneyTest.lambda$servedReference$1(FrozenPremiseJourneyTest.java:54)
+	Suppressed: org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;
+		at org.junit.jupiter.api.Assertions.assertNotNull(Assertions.java:345)
+		at io.matrix.crj.runner.FrozenPremiseJourneyTest.runTrial(FrozenPremiseJourneyTest.java:147)
+		at io.matrix.crj.runner.FrozenPremiseJourneyTest.runGroup(FrozenPremiseJourneyTest.java:81)
+		... 1 more
+	Suppressed: org.opentest4j.AssertionFailedError: UNVERIFIED: same-path reimport did not supersede old claims; no source revision operation tested
+		at org.junit.jupiter.api.Assertions.fail(Assertions.java:142)
+		at io.matrix.crj.runner.FrozenPremiseJourneyTest.runTrial(FrozenPremiseJourneyTest.java:144)
+		at io.matrix.crj.runner.FrozenPremiseJourneyTest.runGroup(FrozenPremiseJourneyTest.java:81)
+		... 1 more
+</failure>
+  </testcase>
+  <testcase name="07_correct_source_wrong_span" classname="io.matrix.crj.runner.FrozenPremiseJourneyTest" time="0.016">
+    <failure message="org.opentest4j.MultipleFailuresError: 07_correct_source_wrong_span (1 failure)&#10;&#9;org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;" type="org.opentest4j.MultipleFailuresError">org.opentest4j.MultipleFailuresError: 07_correct_source_wrong_span (1 failure)
+	org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:80)
+	at org.junit.jupiter.api.AssertAll.assertAll(AssertAll.java:54)
+	at org.junit.jupiter.api.Assertions.assertAll(Assertions.java:3100)
+	at io.matrix.crj.runner.FrozenPremiseJourneyTest.runGroup(FrozenPremiseJourneyTest.java:88)
+	at io.matrix.crj.runner.FrozenPremiseJourneyTest.lambda$servedReference$1(FrozenPremiseJourneyTest.java:54)
+	Suppressed: org.opentest4j.AssertionFailedError: Expected an explicit premise assessment ==&gt; expected: not &lt;null&gt;
+		at org.junit.jupiter.api.Assertions.assertNotNull(Assertions.java:345)
+		at io.matrix.crj.runner.FrozenPremiseJourneyTest.runTrial(FrozenPremiseJourneyTest.java:147)
+		at io.matrix.crj.runner.FrozenPremiseJourneyTest.runGroup(FrozenPremiseJourneyTest.java:81)
+		... 1 more
+</failure>
+  </testcase>
+  <system-out><![CDATA[FROZEN-PREMISE {"ordinal":0,"workspace":"explicit","group":"01_explicit_and_scoped_contradiction","wallNs":111479954,"priorRevisionClaimsStillApplicable":false,"method":"report.journey.reference.v1","response":{"taskId":"c2a.report.v1.5397fd0bdd3189860ef3c149","actionName":"report.artifact.write","actionVersion":1,"disposition":"WRITTEN","artifactName":"report-89860ef3c149.md","artifactLocator":"report-89860ef3c149.md","sha256":"319f550762a87933ee92d6e54ddce98d09f96d9b350da81b33f454dd8bf6383f","evidence":[],"epistemicDisposition":"ABSTAINED","traceReference":"artifact-index:c2a.report.v1.5397fd0bdd3189860ef3c149","limitations":["the workspace holds 0 claims about 0 concepts","a written report is a record of what the workspace said; it is not independent evidence for the propositions it repeats","the question was not answered; the absence of an answer is the epistemic result, not a defect of the file action"],"refusalReasons":[],"premise":null,"conflicts":[],"readings":[]}}
+FROZEN-PREMISE {"ordinal":1,"workspace":"quantifier","group":"01_explicit_and_scoped_contradiction","wallNs":24723807,"priorRevisionClaimsStillApplicable":false,"method":"report.journey.reference.v1","response":{"taskId":"c2a.report.v1.b5104a9db8758e5e89291c27","actionName":"report.artifact.write","actionVersion":1,"disposition":"WRITTEN","artifactName":"report-8e5e89291c27.md","artifactLocator":"report-8e5e89291c27.md","sha256":"a3bfb088d4b731cc27dfe8cc652d176478e79be129889c63ad5c37d257817dc0","evidence":[{"claimId":"clm-57f60bfe","proposition":"The Arden kilns were powered partly by biomass and partly by tidal electricity in April.","status":"SUPPORTED","sourceId":"src-1afe53b5","sourceTitle":"energy-partial.txt"}],"epistemicDisposition":"ANSWERED","traceReference":"artifact-index:c2a.report.v1.b5104a9db8758e5e89291c27","limitations":["Supported but not independently verified: The Arden kilns were powered partly by biomass and partly by tidal electricity in April.","1 of the 1 cited claims carry no authored confidence: the support score is 0.0 for them, and the citation is not a probability.","Not covered by the workspace: entirely","a written report is a record of what the workspace said; it is not independent evidence for the propositions it repeats"],"refusalReasons":[],"premise":null,"conflicts":[],"readings":[]}}
+FROZEN-PREMISE {"ordinal":0,"workspace":"competing","group":"02_competing_readings","wallNs":6526985,"priorRevisionClaimsStillApplicable":false,"method":"report.journey.reference.v1","response":{"taskId":"c2a.report.v1.2b76110912870d10302fe554","actionName":"report.artifact.write","actionVersion":1,"disposition":"WRITTEN","artifactName":"report-0d10302fe554.md","artifactLocator":"report-0d10302fe554.md","sha256":"3d669d63bbc991684896e54e1effa92b59e8231d503bf50ae07e18aa402c6f17","evidence":[],"epistemicDisposition":"ABSTAINED","traceReference":"artifact-index:c2a.report.v1.2b76110912870d10302fe554","limitations":["the workspace holds 0 claims about 0 concepts","a written report is a record of what the workspace said; it is not independent evidence for the propositions it repeats","the question was not answered; the absence of an answer is the epistemic result, not a defect of the file action"],"refusalReasons":[],"premise":null,"conflicts":[],"readings":[]}}
+FROZEN-PREMISE {"ordinal":1,"workspace":"unrelated","group":"03_missing_evidence","wallNs":5676936,"priorRevisionClaimsStillApplicable":false,"method":"report.journey.reference.v1","response":{"taskId":"c2a.report.v1.c3aa9d2ec35fa2c49eb523ee","actionName":"report.artifact.write","actionVersion":1,"disposition":"WRITTEN","artifactName":"report-a2c49eb523ee.md","artifactLocator":"report-a2c49eb523ee.md","sha256":"06ce05975b3b2fb118ad0ce9235f69cbbdea743a77cc546816dad654c2571b11","evidence":[],"epistemicDisposition":"ABSTAINED","traceReference":"artifact-index:c2a.report.v1.c3aa9d2ec35fa2c49eb523ee","limitations":["the workspace holds 1 claims about 1 concepts","a written report is a record of what the workspace said; it is not independent evidence for the propositions it repeats","the question was not answered; the absence of an answer is the epistemic result, not a defect of the file action"],"refusalReasons":[],"premise":null,"conflicts":[],"readings":[]}}
+FROZEN-PREMISE {"ordinal":0,"workspace":"topic","group":"04_topic_without_contradiction","wallNs":6011505,"priorRevisionClaimsStillApplicable":false,"method":"report.journey.reference.v1","response":{"taskId":"c2a.report.v1.be9c9e28129d9b079fb48857","actionName":"report.artifact.write","actionVersion":1,"disposition":"WRITTEN","artifactName":"report-9b079fb48857.md","artifactLocator":"report-9b079fb48857.md","sha256":"51fdd212be4e433eb7e099a309c4d0a0351eed381d37928764d67eec30e85c8f","evidence":[{"claimId":"clm-91491244","proposition":"The Orval bridge was inspected on Tuesday.","status":"SUPPORTED","sourceId":"src-f9b93047","sourceTitle":"manifest-topic.txt"}],"epistemicDisposition":"ANSWERED","traceReference":"artifact-index:c2a.report.v1.be9c9e28129d9b079fb48857","limitations":["Supported but not independently verified: The Orval bridge was inspected on Tuesday.","1 of the 1 cited claims carry no authored confidence: the support score is 0.0 for them, and the citation is not a probability.","Not covered by the workspace: marden, convoy, cross","a written report is a record of what the workspace said; it is not independent evidence for the propositions it repeats"],"refusalReasons":[],"premise":null,"conflicts":[],"readings":[]}}
+FROZEN-PREMISE {"ordinal":1,"workspace":"wrong_scope","group":"04_topic_without_contradiction","wallNs":5976650,"priorRevisionClaimsStillApplicable":false,"method":"report.journey.reference.v1","response":{"taskId":"c2a.report.v1.a94c163e9689e6df46300211","actionName":"report.artifact.write","actionVersion":1,"disposition":"WRITTEN","artifactName":"report-e6df46300211.md","artifactLocator":"report-e6df46300211.md","sha256":"2f762db4a5d177f34d84f931afc96895b0ffd2736ba60d4d978c6b5d3af28cd0","evidence":[{"claimId":"clm-c8ea0390","proposition":"The Bracken kilns were powered partly by biomass and partly by tidal electricity in April.","status":"SUPPORTED","sourceId":"src-513150df","sourceTitle":"energy-other-site.txt"}],"epistemicDisposition":"ANSWERED","traceReference":"artifact-index:c2a.report.v1.a94c163e9689e6df46300211","limitations":["Supported but not independently verified: The Bracken kilns were powered partly by biomass and partly by tidal electricity in April.","1 of the 1 cited claims carry no authored confidence: the support score is 0.0 for them, and the citation is not a probability.","Not covered by the workspace: arden, entirely","a written report is a record of what the workspace said; it is not independent evidence for the propositions it repeats"],"refusalReasons":[],"premise":null,"conflicts":[],"readings":[]}}
+FROZEN-PREMISE {"ordinal":0,"workspace":"provenance_a","group":"05_workspace_local_identity","wallNs":4944507,"priorRevisionClaimsStillApplicable":false,"method":"report.journey.reference.v1","response":{"taskId":"c2a.report.v1.0166d22b5c4a3b186aff672a","actionName":"report.artifact.write","actionVersion":1,"disposition":"WRITTEN","artifactName":"report-3b186aff672a.md","artifactLocator":"report-3b186aff672a.md","sha256":"9bff4973e6b023e6b0efdb9c85eb193ed71ddbc11c1a069a4fefcb9099e99f19","evidence":[],"epistemicDisposition":"ABSTAINED","traceReference":"artifact-index:c2a.report.v1.0166d22b5c4a3b186aff672a","limitations":["the workspace holds 0 claims about 0 concepts","a written report is a record of what the workspace said; it is not independent evidence for the propositions it repeats","the question was not answered; the absence of an answer is the epistemic result, not a defect of the file action"],"refusalReasons":[],"premise":null,"conflicts":[],"readings":[]}}
+FROZEN-PREMISE {"ordinal":1,"workspace":"provenance_b","group":"05_workspace_local_identity","wallNs":3900842,"priorRevisionClaimsStillApplicable":false,"method":"report.journey.reference.v1","response":{"taskId":"c2a.report.v1.232160948c100a6177fa63ac","actionName":"report.artifact.write","actionVersion":1,"disposition":"WRITTEN","artifactName":"report-0a6177fa63ac.md","artifactLocator":"report-0a6177fa63ac.md","sha256":"5ac5e4b89609b17465c82fbadfa956a2b3fca9c3bfe28dad730e691a2fd7bbd7","evidence":[],"epistemicDisposition":"ABSTAINED","traceReference":"artifact-index:c2a.report.v1.232160948c100a6177fa63ac","limitations":["the workspace holds 0 claims about 0 concepts","a written report is a record of what the workspace said; it is not independent evidence for the propositions it repeats","the question was not answered; the absence of an answer is the epistemic result, not a defect of the file action"],"refusalReasons":[],"premise":null,"conflicts":[],"readings":[]}}
+FROZEN-PREMISE {"ordinal":0,"workspace":"revision","group":"06_revision_invalidates_stale_evidence","wallNs":4957481,"priorRevisionClaimsStillApplicable":false,"method":"report.journey.reference.v1","response":{"taskId":"c2a.report.v1.c6c6de65d89c79ed5dcc2b1d","actionName":"report.artifact.write","actionVersion":1,"disposition":"WRITTEN","artifactName":"report-79ed5dcc2b1d.md","artifactLocator":"report-79ed5dcc2b1d.md","sha256":"ca9fb60cfe1be833eb9e87afd0be8a70611d30f496f408481fbe4d27eef19edf","evidence":[{"claimId":"clm-81910ae8","proposition":"The Norlen waterworks was not supplied by the Fenn reservoir on Monday.","status":"SUPPORTED","sourceId":"src-fd1185fa","sourceTitle":"authoritative/log.txt"}],"epistemicDisposition":"ANSWERED","traceReference":"artifact-index:c2a.report.v1.c6c6de65d89c79ed5dcc2b1d","limitations":["Supported but not independently verified: The Norlen waterworks was not supplied by the Fenn reservoir on Monday.","1 of the 1 cited claims carry no authored confidence: the support score is 0.0 for them, and the citation is not a probability.","a written report is a record of what the workspace said; it is not independent evidence for the propositions it repeats"],"refusalReasons":[],"premise":null,"conflicts":[],"readings":[]}}
+FROZEN-PREMISE {"ordinal":1,"workspace":"revision","group":"06_revision_invalidates_stale_evidence","wallNs":14204356,"priorRevisionClaimsStillApplicable":true,"method":"report.journey.reference.v1","response":{"taskId":"c2a.report.v1.c88da3aa6bdf1aeb72166b1d","actionName":"report.artifact.write","actionVersion":1,"disposition":"WRITTEN","artifactName":"report-1aeb72166b1d.md","artifactLocator":"report-1aeb72166b1d.md","sha256":"7d043813ce5116e66987a4946d397e902436364dead24ecf38a8f5f19b87894c","evidence":[{"claimId":"clm-81910ae8","proposition":"The Norlen waterworks was not supplied by the Fenn reservoir on Monday.","status":"SUPPORTED","sourceId":"src-fd1185fa","sourceTitle":"authoritative/log.txt"},{"claimId":"clm-992d4c93","proposition":"The Norlen waterworks was supplied by the Fenn reservoir on Monday.","status":"SUPPORTED","sourceId":"src-6f992330","sourceTitle":"authoritative/log.txt"}],"epistemicDisposition":"ANSWERED","traceReference":"artifact-index:c2a.report.v1.c88da3aa6bdf1aeb72166b1d","limitations":["Supported but not independently verified: The Norlen waterworks was not supplied by the Fenn reservoir on Monday.","Supported but not independently verified: The Norlen waterworks was supplied by the Fenn reservoir on Monday.","2 of the 2 cited claims carry no authored confidence: the support score is 0.0 for them, and the citation is not a probability.","a written report is a record of what the workspace said; it is not independent evidence for the propositions it repeats"],"refusalReasons":[],"premise":{"status":"AMBIGUOUS","kind":"ASSERTED","premise":null,"reason":"The question is ambiguous: the corpus holds accounts of its subject that disagree with each other, and it does not choose between them. Claim clm-992d4c93 of \"authoritative/log.txt\" states \"The Norlen waterworks was supplied by the Fenn reservoir on Monday.\", and claim clm-81910ae8 of \"authoritative/log.txt\" states \"The Norlen waterworks was not supplied by the Fenn reservoir on Monday.\" — the two are about the same subject and cannot both hold. Both are reported with their provenance, the system does not decide between them, and none of them is chosen as the answer.","refutingClaimIds":[],"refutingSourceIds":[]},"conflicts":[{"reason":"the two accounts are about the same subject and one of them denies what the other asserts: \"The Norlen waterworks was not supplied by the Fenn reservoir on Monday.\"","sides":[{"claimId":"clm-992d4c93","proposition":"The Norlen waterworks was supplied by the Fenn reservoir on Monday.","sourceId":"src-6f992330","sourceTitle":"authoritative/log.txt","sourceLocator":"authoritative/log.txt (the whole document)","detail":"asserts the subject the other side denies"},{"claimId":"clm-81910ae8","proposition":"The Norlen waterworks was not supplied by the Fenn reservoir on Monday.","sourceId":"src-fd1185fa","sourceTitle":"authoritative/log.txt","sourceLocator":"authoritative/log.txt (the whole document)","detail":"denies it: \"The Norlen waterworks was not supplied by the Fenn reservoir on Monday.\""}]}],"readings":[{"reading":"The Norlen waterworks was supplied by the Fenn reservoir on Monday.","evidence":[{"claimId":"clm-992d4c93","proposition":"The Norlen waterworks was supplied by the Fenn reservoir on Monday.","status":"SUPPORTED","sourceId":"src-6f992330","sourceTitle":"authoritative/log.txt"}]},{"reading":"The Norlen waterworks was not supplied by the Fenn reservoir on Monday.","evidence":[{"claimId":"clm-81910ae8","proposition":"The Norlen waterworks was not supplied by the Fenn reservoir on Monday.","status":"SUPPORTED","sourceId":"src-fd1185fa","sourceTitle":"authoritative/log.txt"}]}]}}
+FROZEN-PREMISE {"ordinal":0,"workspace":"relevance","group":"07_correct_source_wrong_span","wallNs":4920081,"priorRevisionClaimsStillApplicable":false,"method":"report.journey.reference.v1","response":{"taskId":"c2a.report.v1.cf284f206536a0f562d802fc","actionName":"report.artifact.write","actionVersion":1,"disposition":"WRITTEN","artifactName":"report-a0f562d802fc.md","artifactLocator":"report-a0f562d802fc.md","sha256":"1d222fcbdf2c4a8bee7ff29b4a646396d0c0b5523a20b27dcf3dc9ec92f21017","evidence":[],"epistemicDisposition":"ABSTAINED","traceReference":"artifact-index:c2a.report.v1.cf284f206536a0f562d802fc","limitations":["the workspace holds 0 claims about 0 concepts","a written report is a record of what the workspace said; it is not independent evidence for the propositions it repeats","the question was not answered; the absence of an answer is the epistemic result, not a defect of the file action"],"refusalReasons":[],"premise":null,"conflicts":[],"readings":[]}}
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

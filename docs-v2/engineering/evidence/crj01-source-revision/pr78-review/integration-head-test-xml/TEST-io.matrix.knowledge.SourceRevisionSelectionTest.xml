@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.SourceRevisionSelectionTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-23T15:02:58.466Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.079">
+  <properties/>
+  <testcase name="migratesV21AndKeepsLocalSelectionHistoryAfterRestart()" classname="io.matrix.knowledge.SourceRevisionSelectionTest" time="0.079"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

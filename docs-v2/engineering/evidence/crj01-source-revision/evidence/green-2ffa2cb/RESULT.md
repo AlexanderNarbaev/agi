@@ -1,0 +1,7 @@
+# Independent accepted candidate evaluation of 2ffa2cb82a14869f5598bc6c0c98f085707633d2
+
+The unchanged v2 evaluator executed seven JUnit groups covering the primary two-workspace scenario and all ten reliability controls. All seven passed. The test recorded current and both historical source revision views, exact workspace-local refutations, restart and snapshot exchange, independent corroboration, invalid identity rejections, competing successor selection, post-insert rollback recovery, live learner trace invalidation and replay refusal with preservation of the historical artifact. An in-process invocation exercised the served ArtifactReportResource path.
+
+A separate inspection of the returned typed refutation observations joined them to frozen source bytes and pre-query importer records from the unchanged evaluator. Canonical and observation claim identity, evidence identity, source hash, literal excerpt and reconstructable sentence coordinates were verified. The reported coordinates describe the enclosing source segment. The unique literal excerpt reproduced the independently frozen exact sentence coordinates within that segment. Unsupported responses exposed no refuting observations. See the audit JSON for exact denominators.
+
+Gradle took 24.51 seconds wall time, 90.01 seconds user CPU, 3.55 seconds system CPU and 2,000,360 KiB peak RSS. No provider call was made by the evaluator.

@@ -1,0 +1,30 @@
+--- a/docs-v2/engineering/CRJ-01-PROTOCOL.md
++++ b/docs-v2/engineering/CRJ-01-PROTOCOL.md
+@@ -545,6 +545,27 @@
+ | `instrumentCrosscheck` | the 4-assignment agreement record of §4.2 |
+ | `roles` | the name of the case author, the name of the freezing reviewer, and the statement that they are different people and that neither wrote a solver |
+ 
++### 5.5a Internal evaluation amendment — SINGLE_OWNER_AI_ASSISTED
++
++Owner decision on 2026-11-22. For internal development review and experimental
++evaluation only, the sole human owner is accountable. Distinct, isolated AI
++roles may implement, author cases, review and freeze. Their model identities,
++access roles, prior exposure, contamination risk and validation limitations
++must be disclosed. No independent human authorship or review is claimed.
++
++Before execution, freeze the exact hidden dataset, corpus, oracle, scorer,
++solver revision, per-arm budgets, order and thresholds. Keep hidden cases and
++gold outside solver access until the preregistered run. Record immutable hashes
++and role/access attestations. Reissue the dataset and freeze on any change.
++The current split is NOT FROZEN. Earlier DEV inputs and results remain
++historical debugging evidence. The 18-case study remains an internal pilot.
++
++This amendment changes the human-role requirement for internal work. The
++remaining freeze controls in §5.6 still apply. The stronger external-evidence
++requirements and Git, security and data controls remain in force. The
++pre-amendment protocol is pinned at
++`0549d27ee561afdf94214cbabe661c2532e08bae`.
++
+ ### 5.6 The freeze procedure (binding)
+ 
+ 1. The **case author** (not a solver author) produces the corpus, the cases and the builder.

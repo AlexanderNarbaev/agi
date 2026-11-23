@@ -1,0 +1,294 @@
+{
+  "version": "synthetic-premise-eval-v1",
+  "documents": {
+    "manifest-denial": {
+      "filename": "manifest-denial.txt",
+      "sha256": "ea988ee2f51d652798ef2b88b7b283446e4bb4317f6b6ed36075f79c843a6ee2",
+      "bytes": 61
+    },
+    "energy-partial": {
+      "filename": "energy-partial.txt",
+      "sha256": "935bba8e5a032df2984a8e84180b2e0dc2efad25eccb9486a51595f2e74a5c0c",
+      "bytes": 89
+    },
+    "manifest-confirmation": {
+      "filename": "manifest-confirmation.txt",
+      "sha256": "57be6e2307751de6bf6ebc20f6b02322f5838c67933cf74f4a15868110be2fa7",
+      "bytes": 55
+    },
+    "inventory-unrelated": {
+      "filename": "inventory-unrelated.txt",
+      "sha256": "7d85312cf0b40f254643725359c3fd052a443cf2757fce16e506374ea01ae399",
+      "bytes": 49
+    },
+    "manifest-topic": {
+      "filename": "manifest-topic.txt",
+      "sha256": "f517fb69e39bc9d3a4c1ef745a3ac5c3a6f45f4f2ef23659b98d397a29fa675f",
+      "bytes": 43
+    },
+    "energy-other-site": {
+      "filename": "energy-other-site.txt",
+      "sha256": "84921cce6af01c14ca278db6e4f496b096281d3c923695a9478b854dd568068b",
+      "bytes": 91
+    },
+    "revision-one": {
+      "filename": "revision-one.txt",
+      "sha256": "436689b703ebc30c202b585223f747ec1cb9a7ec2f565b13e80b62aa07a6b031",
+      "bytes": 72
+    },
+    "revision-two": {
+      "filename": "revision-two.txt",
+      "sha256": "c7646523871ddd10781ba684d011913d617ebb437cd112cccb4b454c1ed5a99a",
+      "bytes": 68
+    },
+    "compound-evidence": {
+      "filename": "compound-evidence.txt",
+      "sha256": "e73254d8aa15461502b2c519613df728d437e2367974ee8d52c0445bf133dc6c",
+      "bytes": 109
+    }
+  },
+  "cases": {
+    "01_explicit_and_scoped_contradiction": [
+      {
+        "workspace": "explicit",
+        "question": "Why did the Marden convoy cross the Orval bridge on Tuesday?",
+        "gold_premise": "The Marden convoy crossed the Orval bridge on Tuesday.",
+        "source_keys": [
+          "manifest-denial"
+        ],
+        "expected_status": "REFUTED",
+        "refuting": [
+          {
+            "source_key": "manifest-denial",
+            "sha256": "ea988ee2f51d652798ef2b88b7b283446e4bb4317f6b6ed36075f79c843a6ee2",
+            "span_start": 0,
+            "span_end_exclusive": 60,
+            "span": "The Marden convoy did not cross the Orval bridge on Tuesday.",
+            "relation": "CONTRADICTS"
+          }
+        ],
+        "supporting": [],
+        "scope": "Tuesday bridge crossing by this convoy"
+      },
+      {
+        "workspace": "quantifier",
+        "question": "Why were the Arden kilns powered entirely by biomass in April?",
+        "gold_premise": "The Arden kilns were powered entirely by biomass in April.",
+        "source_keys": [
+          "energy-partial"
+        ],
+        "expected_status": "REFUTED",
+        "refuting": [
+          {
+            "source_key": "energy-partial",
+            "sha256": "935bba8e5a032df2984a8e84180b2e0dc2efad25eccb9486a51595f2e74a5c0c",
+            "span_start": 0,
+            "span_end_exclusive": 88,
+            "span": "The Arden kilns were powered partly by biomass and partly by tidal electricity in April.",
+            "relation": "CONTRADICTS"
+          }
+        ],
+        "supporting": [],
+        "scope": "April, Arden kilns, biomass as the exclusive power source"
+      }
+    ],
+    "02_competing_readings": [
+      {
+        "workspace": "competing",
+        "question": "Why did the Marden convoy cross the Orval bridge on Tuesday?",
+        "gold_premise": "The Marden convoy crossed the Orval bridge on Tuesday.",
+        "source_keys": [
+          "manifest-denial",
+          "manifest-confirmation"
+        ],
+        "expected_status": "AMBIGUOUS",
+        "refuting": [
+          {
+            "source_key": "manifest-denial",
+            "sha256": "ea988ee2f51d652798ef2b88b7b283446e4bb4317f6b6ed36075f79c843a6ee2",
+            "span_start": 0,
+            "span_end_exclusive": 60,
+            "span": "The Marden convoy did not cross the Orval bridge on Tuesday.",
+            "relation": "CONTRADICTS"
+          }
+        ],
+        "supporting": [
+          {
+            "source_key": "manifest-confirmation",
+            "sha256": "57be6e2307751de6bf6ebc20f6b02322f5838c67933cf74f4a15868110be2fa7",
+            "span_start": 0,
+            "span_end_exclusive": 54,
+            "span": "The Marden convoy crossed the Orval bridge on Tuesday.",
+            "relation": "SUPPORTS"
+          }
+        ],
+        "scope": "Identical crossing event, equal authority and same time, no evidence preference"
+      }
+    ],
+    "03_missing_evidence": [
+      {
+        "workspace": "absent",
+        "question": "Why did the Marden convoy cross the Orval bridge on Tuesday?",
+        "gold_premise": "The Marden convoy crossed the Orval bridge on Tuesday.",
+        "source_keys": [],
+        "expected_status": "UNSUPPORTED",
+        "refuting": [],
+        "supporting": []
+      },
+      {
+        "workspace": "unrelated",
+        "question": "Why did the Marden convoy cross the Orval bridge on Tuesday?",
+        "gold_premise": "The Marden convoy crossed the Orval bridge on Tuesday.",
+        "source_keys": [
+          "inventory-unrelated"
+        ],
+        "expected_status": "UNSUPPORTED",
+        "refuting": [],
+        "supporting": []
+      }
+    ],
+    "04_topic_without_contradiction": [
+      {
+        "workspace": "topic",
+        "question": "Why did the Marden convoy cross the Orval bridge on Tuesday?",
+        "gold_premise": "The Marden convoy crossed the Orval bridge on Tuesday.",
+        "source_keys": [
+          "manifest-topic"
+        ],
+        "expected_status": "UNSUPPORTED",
+        "refuting": [],
+        "supporting": []
+      },
+      {
+        "workspace": "wrong_scope",
+        "question": "Why were the Arden kilns powered entirely by biomass in April?",
+        "gold_premise": "The Arden kilns were powered entirely by biomass in April.",
+        "source_keys": [
+          "energy-other-site"
+        ],
+        "expected_status": "UNSUPPORTED",
+        "refuting": [],
+        "supporting": []
+      }
+    ],
+    "05_workspace_local_identity": [
+      {
+        "workspace": "provenance_a",
+        "question": "Why did the Marden convoy cross the Orval bridge on Tuesday?",
+        "gold_premise": "The Marden convoy crossed the Orval bridge on Tuesday.",
+        "source_keys": [
+          "manifest-denial"
+        ],
+        "expected_status": "REFUTED",
+        "refuting": [
+          {
+            "source_key": "manifest-denial",
+            "sha256": "ea988ee2f51d652798ef2b88b7b283446e4bb4317f6b6ed36075f79c843a6ee2",
+            "span_start": 0,
+            "span_end_exclusive": 60,
+            "span": "The Marden convoy did not cross the Orval bridge on Tuesday.",
+            "relation": "CONTRADICTS"
+          }
+        ],
+        "supporting": [],
+        "canonical_import_path": "east/log.txt"
+      },
+      {
+        "workspace": "provenance_b",
+        "question": "Why did the Marden convoy cross the Orval bridge on Tuesday?",
+        "gold_premise": "The Marden convoy crossed the Orval bridge on Tuesday.",
+        "source_keys": [
+          "manifest-denial"
+        ],
+        "expected_status": "REFUTED",
+        "refuting": [
+          {
+            "source_key": "manifest-denial",
+            "sha256": "ea988ee2f51d652798ef2b88b7b283446e4bb4317f6b6ed36075f79c843a6ee2",
+            "span_start": 0,
+            "span_end_exclusive": 60,
+            "span": "The Marden convoy did not cross the Orval bridge on Tuesday.",
+            "relation": "CONTRADICTS"
+          }
+        ],
+        "supporting": [],
+        "canonical_import_path": "west/log.txt"
+      }
+    ],
+    "06_revision_invalidates_stale_evidence": [
+      {
+        "workspace": "revision",
+        "question": "Why was the Norlen waterworks supplied by the Fenn reservoir on Monday?",
+        "gold_premise": "The Norlen waterworks was supplied by the Fenn reservoir on Monday.",
+        "source_keys": [
+          "revision-one"
+        ],
+        "expected_status": "REFUTED",
+        "refuting": [
+          {
+            "source_key": "revision-one",
+            "sha256": "436689b703ebc30c202b585223f747ec1cb9a7ec2f565b13e80b62aa07a6b031",
+            "span_start": 0,
+            "span_end_exclusive": 71,
+            "span": "The Norlen waterworks was not supplied by the Fenn reservoir on Monday.",
+            "relation": "CONTRADICTS"
+          }
+        ],
+        "supporting": [],
+        "epoch": 1,
+        "canonical_import_path": "authoritative/log.txt"
+      },
+      {
+        "workspace": "revision",
+        "question": "Why was the Norlen waterworks supplied by the Fenn reservoir on Monday?",
+        "gold_premise": "The Norlen waterworks was supplied by the Fenn reservoir on Monday.",
+        "source_keys": [
+          "revision-two"
+        ],
+        "expected_status": "SUPPORTED",
+        "refuting": [],
+        "supporting": [
+          {
+            "source_key": "revision-two",
+            "sha256": "c7646523871ddd10781ba684d011913d617ebb437cd112cccb4b454c1ed5a99a",
+            "span_start": 0,
+            "span_end_exclusive": 67,
+            "span": "The Norlen waterworks was supplied by the Fenn reservoir on Monday.",
+            "relation": "SUPPORTS"
+          }
+        ],
+        "epoch": 2,
+        "canonical_import_path": "authoritative/log.txt"
+      }
+    ],
+    "07_correct_source_wrong_span": [
+      {
+        "workspace": "relevance",
+        "question": "Why did the Marden convoy cross the Orval bridge on Tuesday?",
+        "gold_premise": "The Marden convoy crossed the Orval bridge on Tuesday.",
+        "source_keys": [
+          "compound-evidence"
+        ],
+        "expected_status": "REFUTED",
+        "refuting": [
+          {
+            "source_key": "compound-evidence",
+            "sha256": "e73254d8aa15461502b2c519613df728d437e2367974ee8d52c0445bf133dc6c",
+            "span_start": 48,
+            "span_end_exclusive": 108,
+            "span": "The Marden convoy did not cross the Orval bridge on Tuesday.",
+            "relation": "CONTRADICTS"
+          }
+        ],
+        "supporting": [],
+        "reject_refuting_span": {
+          "source_key": "compound-evidence",
+          "sha256": "e73254d8aa15461502b2c519613df728d437e2367974ee8d52c0445bf133dc6c",
+          "span_start": 0,
+          "span_end_exclusive": 47,
+          "span": "The Marden convoy loaded two crates on Tuesday."
+        }
+      }
+    ]
+  }
+}
