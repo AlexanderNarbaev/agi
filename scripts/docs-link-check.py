@@ -418,6 +418,9 @@ class Checker:
         # The top-level directories git tracks, computed on first use. It is the
         # precise discriminator between a MODULE and a scratch copy.
         self._tracked_roots = None
+        # The paths git IGNORES, computed on first use. It is the precise
+        # discriminator between a repository file and a runtime artefact.
+        self._ignored_paths = None
         self.include_historical = include_historical
         self.include_planned_artefacts = include_planned_artefacts
         self.documents: list[Path] = []
@@ -790,7 +793,73 @@ class Checker:
         nothing about it either.
         """
         normalised = candidate.replace("\\", "/")
-        return normalised.startswith(RUNTIME_PREFIXES)
+        if normalised.startswith(RUNTIME_PREFIXES):
+            return True
+        # A path that GIT IGNORES is a runtime artefact by the same argument, and
+        # the argument is the repository's own: the path is deliberately NOT in
+        # the repository, so its absence says nothing about the repository, and
+        # its presence on one machine says nothing about it either. The owner's
+        # own documents name such paths — the live database under the gateway,
+        # the runtime's scratch directories — and they are CORRECT documents,
+        # not broken links. The discriminator is git, which is exact and needs
+        # no list of names to maintain.
+        return self.is_git_ignored(candidate)
+
+    def is_git_ignored(self, candidate: str) -> bool:
+        """Whether a path is excluded from the repository by git's own rules.
+
+        :param candidate: the path as the document wrote it
+        :return: true when git ignores it
+        """
+        if self._ignored_paths is None:
+            self._ignored_paths = self.load_ignored_paths()
+        if not self._ignored_paths:
+            return False
+        normalised = candidate.replace("\\", "/").rstrip("/")
+        return normalised in self._ignored_paths
+
+    def load_ignored_paths(self) -> set:
+        """The paths git ignores, as a set of repository-relative directories.
+
+        <p>The set is computed from git's own index and its own ignore rules, so
+        it is exact: a path is in it when git says the path is excluded. The
+        query is a single {@code git check-ignore} over the repository's
+        tracked-and-ignored directories, and it is computed ONCE.</p>
+
+        :return: the ignored paths, or the empty set when git is not available
+        """
+        import subprocess
+        try:
+            probe = subprocess.run(
+                ["git", "check-ignore", "--stdin", "-z", "--no-index"],
+                cwd=str(self.root), input="", capture_output=True,
+                text=True, timeout=60, check=False)
+        except (OSError, subprocess.SubprocessError):
+            return set()
+        if probe.returncode not in (0, 1):
+            return set()
+        # The candidates are gathered from the working tree: every top-level
+        # directory the repository has, plus the paths the runtime owns.
+        candidates = set()
+        for name in sorted(self.load_tracked_roots()):
+            candidates.add(name)
+        for prefix in RUNTIME_PREFIXES:
+            candidates.add(prefix.rstrip("/"))
+        if not candidates:
+            return set()
+        try:
+            result = subprocess.run(
+                ["git", "check-ignore", "--stdin", "-z", "--no-index"],
+                cwd=str(self.root), input="\0".join(sorted(candidates)) + "\0",
+                capture_output=True, text=True, timeout=60, check=False)
+        except (OSError, subprocess.SubprocessError):
+            return set()
+        ignored = set()
+        for entry in result.stdout.split("\0"):
+            entry = entry.strip()
+            if entry:
+                ignored.add(entry.rstrip("/"))
+        return ignored
 
     def remember(self, bucket: str, token: str) -> None:
         if len(self.excluded_samples[bucket]) < 5:
