@@ -44,7 +44,7 @@ The three artefacts the rows are made of live **outside** this directory, in
 |---|---|---|
 | the corpus report | `docs-v2/engineering/CRJ-01-H2-CORPUS-REPORT.json` | `CRJ-01-H2-EVIDENCE.json` → `corpusReportSha256` |
 | the DEV split | `docs-v2/engineering/CRJ-01-H2-DEV-SPLIT.json` | `CRJ-01-H2-EVIDENCE.json` → `splitSha256` |
-| the rows | `docs-v2/engineering/CRJ-01-H2-EVIDENCE.json` (the **working** copy, rewritten by every run) and `docs-v2/engineering/evidence/crj01-h2-served-transfer/CRJ-01-H2-EVIDENCE.json` (the **retained** copy, the canonical one) | `CHECKSUMS.sha256` for the retained copy; this milestone's result document for both |
+| the rows | the generated CRJ-01-H2-EVIDENCE.json in the engineering directory (the **working** copy, rewritten by every run) and `docs-v2/engineering/evidence/crj01-h2-served-transfer/CRJ-01-H2-EVIDENCE.json` (the **retained** copy, the canonical one) | `CHECKSUMS.sha256` for the retained copy; this milestone's result document for both |
 
 ```
 sha256sum docs-v2/engineering/CRJ-01-H2-CORPUS-REPORT.json \

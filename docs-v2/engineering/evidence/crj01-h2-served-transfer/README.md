@@ -17,7 +17,7 @@ a number whose only witness is a machine that is about to be wiped is a recollec
 | `TEST-io.matrix.crj.corpus.Crj01H2DevSplitValidatorTest.xml` | the protocol's §5.4 rules (1–7) and the H2 subset structure, enforced on the split |
 | `CRJ-01-REPRODUCTION-restricted-reading-statistics.xml` | **the deliberate RED**: the same test with the pre-correction behaviour. All 7 tests fail, and the promotion is refused with "the candidate disagreed with the reference on the held-out case 'H2-A05', so it was not promoted" |
 | the remaining `TEST-io.matrix.*.xml` | the targeted regressions of the touched paths: the report journey, the procedure learning and its measured cost, the source-revision chain, the epistemic durability and the provenance |
-| `CRJ-01-H2-EVIDENCE.json` | the **retained** rows: one row per (case × arm × variant) and the per-metric summary. The test rewrites its working copy (`docs-v2/engineering/CRJ-01-H2-EVIDENCE.json`) on **every run**, so this frozen copy is the canonical one |
+| `CRJ-01-H2-EVIDENCE.json` | the **retained** rows: one row per (case × arm × variant) and the per-metric summary. The test rewrites its working copy (the generated CRJ-01-H2-EVIDENCE.json in the engineering directory) on **every run**, so this frozen copy is the canonical one |
 | `README.md`, `MANIFESTS.md` | what is here, what is deliberately not here, and which manifest verifies where |
 | `CRJ-01-REPRODUCTION-restricted-reading-statistics-pinned.xml` | **the sharp RED**: the correction's own regression with the correction reverted — **1 test, 1 failure**, and the failure names the defect in numbers (the unrestricted reading cited **4** claims, the restricted one **2**) |
 | `CHECKSUMS.sha256` | the digests of every file above — **and of nothing else**: the manifest does **not** list itself, so it verifies |
@@ -82,7 +82,7 @@ sha256sum -c CHECKSUMS.sha256     # 20 of 20 OK
 ```
 
 The measurement's own rows and per-variant summary are in
-`docs-v2/engineering/CRJ-01-H2-EVIDENCE.json`; the corpus the rows are scored against is in
+the generated CRJ-01-H2-EVIDENCE.json in the engineering directory; the corpus the rows are scored against is in
 `docs-v2/engineering/CRJ-01-H2-CORPUS-REPORT.json`; the cases are in
 `docs-v2/engineering/CRJ-01-H2-DEV-SPLIT.json`.
 
