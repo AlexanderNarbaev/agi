@@ -691,10 +691,43 @@ public class KnowledgeWorkbench implements AutoCloseable {
     public synchronized SupportAdequacy assessSupport(KnowledgeSnapshot view,
             KnowledgeSnapshot statistics, String question, AbstractionLevel level,
             Set<String> sourceIds, boolean historical) {
+        return assessScope(view, statistics, question, level, sourceIds, historical,
+                ScopeCriterion.ANCHOR).toAdequacy();
+    }
+
+    /**
+     * Whether a support set can answer a question, judged by a named rule.
+     *
+     * <p><b>What this is for.</b> The served path judges a support set by the
+     * {@link ScopeCriterion#ANCHOR} rule, and that rule was chosen because the tie rule was
+     * measured to be wrong — but it was never compared with a competitor, and the milestone that
+     * measured it named the comparison as the open decision. This method is the seam that makes
+     * the comparison possible without changing the served path's behaviour: the rule is a
+     * parameter, and the default is the incumbent.</p>
+     *
+     * <p><b>What is computed.</b> Exactly what {@link #assessSupport} computes — the same
+     * retriever, the same statistics view, the same question, the same coverage floor, the same
+     * weakened bindings — and then the named rule is applied to the two readings' OWN numbers.
+     * The rule never sees the question's words, the workspace's concepts or any case label.</p>
+     *
+     * @param view        the view the question is asked over
+     * @param statistics  the view whose claims define the relevance statistics; null means the
+     *                    view itself
+     * @param question    the question
+     * @param level       the abstraction level the answer would be asked for
+     * @param sourceIds   the support set, as source identifiers
+     * @param historical  whether the reading would be a historical one
+     * @param criterion   the rule the verdict is made by
+     * @return the assessment of the support set for this question
+     */
+    public synchronized ScopeAssessment assessScope(KnowledgeSnapshot view,
+            KnowledgeSnapshot statistics, String question, AbstractionLevel level,
+            Set<String> sourceIds, boolean historical, ScopeCriterion criterion) {
+        ScopeCriterion rule = criterion == null ? ScopeCriterion.ANCHOR : criterion;
         KnowledgeSnapshot restricted = restrictedView(view, sourceIds);
         if (restricted.claims().isEmpty()) {
-            return SupportAdequacy.none("the support set holds no claim of the workspace, so it "
-                    + "carries no evidence for this question");
+            return ScopeAssessment.none(rule, "the support set holds no claim of the workspace, so "
+                    + "it carries no evidence for this question");
         }
         String workspaceId = view.workspaceId();
         DialogueContext context = historical ? new DialogueContext(workspaceId)
@@ -729,8 +762,6 @@ public class KnowledgeWorkbench implements AutoCloseable {
             supportBest = Math.max(supportBest, coverage);
         }
         List<String> supportClaimIds = restricted.claims().stream().map(Claim::id).toList();
-        boolean carries = bestClaimId != null
-                && supportRelevance.relevantClaimIds().contains(bestClaimId);
         // A workspace whose own reading reaches no claim at all is answered by the concept
         // bridge, and the bridge reaches a concept's claims regardless of their own coverage
         // — so a support set cannot be shown to carry that evidence, and the reference
@@ -740,29 +771,17 @@ public class KnowledgeWorkbench implements AutoCloseable {
         // claim may reach exactly the workspace's best coverage and still be a DIFFERENT
         // claim — and then the restricted answer is anchored on other evidence, which is the
         // degradation the H2 milestone measured (one claim cited where the reference cited
-        // three, and the answer still said ANSWERED). The criterion is therefore the
-        // ANCHOR: the support set must hold the claim the workspace's own reading would
+        // three, and the answer still said ANSWERED). The incumbent criterion is therefore
+        // the ANCHOR: the support set must hold the claim the workspace's own reading would
         // cite first.
-        boolean applicable = bestClaimId != null && carries;
-        String reason = applicable
-                ? "the support set carries the workspace's own evidence for this question: the "
-                        + "workspace's reading would cite " + bestClaimId
-                        + " (coverage " + SupportAdequacy.round(bestCoverage)
-                        + ") and the support set holds that claim"
-                        + (supportBest > 0.0
-                                ? " and reaches " + SupportAdequacy.round(supportBest)
-                                : "")
-                : bestClaimId == null
-                        ? "the workspace's own reading of this question reaches no claim that may "
-                                + "be cited, so no support set can be shown to carry its evidence"
-                        : "the support set does not carry the workspace's own evidence for this "
-                                + "question: the workspace's reading would cite " + bestClaimId
-                                + " (coverage " + SupportAdequacy.round(bestCoverage)
-                                + ") and the support set's best evidence reaches "
-                                + SupportAdequacy.round(supportBest)
-                                + " (the coverage floor is " + SupportAdequacy.round(floor) + ")";
-        return new SupportAdequacy(applicable, reason, bestClaimId, bestCoverage, supportBest,
-                supportClaimIds, supportRelevance.relevantClaimIds());
+        //
+        // The COMPETITOR holds the same two readings and asks a different question of them:
+        // not whether the FIRST cited claim is carried, but whether EVERY cited claim is.
+        ScopeCriterion.Decision decision = rule.judge(workspaceRelevance, supportRelevance,
+                supportBest, floor);
+        return new ScopeAssessment(decision.applicable(), decision.reason(), rule, bestClaimId,
+                bestCoverage, supportBest, supportClaimIds, supportRelevance.relevantClaimIds(),
+                workspaceRelevance.relevantClaimIds(), decision.missingClaimIds());
     }
 
     /**
@@ -776,16 +795,25 @@ public class KnowledgeWorkbench implements AutoCloseable {
      * and dropping it would change what the asking path reasons with rather than how much it
      * reads.</p>
      *
+     * <p><b>A claim that no source introduced is in no support set.</b> A claim may name no
+     * introducing source at all, and a support set never names it — so the restricted view
+     * leaves it out. The check is written out rather than left to the set: an IMMUTABLE set
+     * (the immutable copy of a support set, for instance) throws when it is asked about a null
+     * key, and a workspace that holds such a claim would make the restriction throw instead of
+     * reading. The outcome is the one the null-tolerant set gave: the claim is not in the
+     * restricted view.</p>
+     *
      * @param snapshot  the workspace as it is
      * @param sourceIds the sources the workspace may be read as
      * @return the restricted snapshot
      */
     private KnowledgeSnapshot restrictedTo(KnowledgeSnapshot snapshot, Set<String> sourceIds) {
         List<Source> sources = snapshot.sources().stream()
-                .filter(source -> sourceIds.contains(source.id()))
+                .filter(source -> source.id() != null && sourceIds.contains(source.id()))
                 .toList();
         List<Claim> claims = snapshot.claims().stream()
-                .filter(claim -> sourceIds.contains(claim.introducedBySourceId()))
+                .filter(claim -> claim.introducedBySourceId() != null
+                        && sourceIds.contains(claim.introducedBySourceId()))
                 .toList();
         Set<String> claimIds = claims.stream().map(Claim::id).collect(Collectors.toSet());
         Set<String> conceptIds = claims.stream()

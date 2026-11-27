@@ -9,6 +9,7 @@ import io.matrix.cognitive.algorithms.ProcedureBacked;
 import io.matrix.knowledge.AbstractionLevel;
 import io.matrix.knowledge.Answer;
 import io.matrix.knowledge.Claim;
+import io.matrix.knowledge.ScopeAssessment;
 import io.matrix.knowledge.Source;
 import io.matrix.knowledge.SupportAdequacy;
 
@@ -70,10 +71,10 @@ public final class ReportProcedureMethod
     private final long measuredCostNanos;
 
     /**
-     * The adequacy verdict of the last question this method was asked about, and the key of
+     * The scope verdict of the last question this method was asked about, and the key of
      * the request it was made for.
      */
-    private SupportAdequacy adequacy;
+    private ScopeAssessment assessment;
 
     /** The reason of the last refusal, when the method was refused. */
     private String lastRefusal;
@@ -304,16 +305,31 @@ public final class ReportProcedureMethod
      * @return the adequacy of the support set for the request's question
      */
     private SupportAdequacy adequacyOf(ReportJourney.Problem input) {
+        return scopeOf(input).toAdequacy();
+    }
+
+    /**
+     * The scope assessment of the support set for this question.
+     *
+     * <p><b>Why the rule is read from the record.</b> The rule that decides whether the support
+     * set can carry the evidence is part of the domain the procedure may be used in, so it is
+     * carried by the procedure's own durable record. A procedure that names no rule is judged by
+     * the incumbent, and the served path's behaviour is unchanged for it.</p>
+     *
+     * @param input the request
+     * @return the assessment of the support set for the request's question
+     */
+    private ScopeAssessment scopeOf(ReportJourney.Problem input) {
         String key = input.question() + "|" + input.level() + "|" + input.workspaceFingerprint()
                 + "|" + String.join(",", support);
-        if (adequacy != null && adequacyKey != null && adequacyKey.equals(key)) {
-            return adequacy;
+        if (assessment != null && adequacyKey != null && adequacyKey.equals(key)) {
+            return assessment;
         }
-        adequacy = input.workbench().assessSupport(input.selectedEvidence(),
+        assessment = input.workbench().assessScope(input.selectedEvidence(),
                 input.selectedEvidence(), input.question(), input.level(), support,
-                input.historical());
+                input.historical(), ReportProcedure.criterionOf(procedure));
         adequacyKey = key;
-        return adequacy;
+        return assessment;
     }
 
     /**
@@ -327,7 +343,20 @@ public final class ReportProcedureMethod
      * @return the verdict, or null when the method was never asked
      */
     public SupportAdequacy lastAssessment() {
-        return adequacy;
+        return assessment == null ? null : assessment.toAdequacy();
+    }
+
+    /**
+     * The scope assessment of the last question this method was asked about.
+     *
+     * <p>It carries what the adequacy verdict does not: the claims the workspace's own reading
+     * would have cited, and the ones the support set does not carry. A reader who wants to know
+     * <i>which</i> evidence was missing gets it here rather than by parsing the reason.</p>
+     *
+     * @return the assessment, or null when the method was never asked
+     */
+    public ScopeAssessment lastScopeAssessment() {
+        return assessment;
     }
 
     @Override

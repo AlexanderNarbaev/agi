@@ -1,0 +1,4206 @@
+{
+  "cells" : [ {
+    "domain" : "wbe",
+    "condition" : "BASELINE",
+    "strategies" : [ {
+      "strategy" : "CITATION_DERIVED",
+      "scope" : [ "src-866bfb48", "src-c0bf3a24", "src-a0483458", "src-8b94e032" ],
+      "scopeSize" : 4,
+      "validated" : true,
+      "validationReason" : "the candidate agreed with the reference on all 5 held-out case(s)",
+      "validationAgreement" : 1.0,
+      "validationCases" : 5,
+      "proposalNanos" : 533156,
+      "validationNanos" : 52272924,
+      "arms" : {
+        "ANCHOR" : {
+          "cases" : 12,
+          "admissions" : 12,
+          "refusals" : 0,
+          "falseAdmissions" : 6,
+          "falseAdmissionDenominator" : 12,
+          "falseAdmissionRate" : 0.5,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 0,
+          "falseRejectionRate" : null,
+          "fallbacks" : 0,
+          "meanCompleteness" : 1.0,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.38,
+          "cost" : {
+            "selectionNanos" : 18575862,
+            "readNanos" : 45971972,
+            "fallbackNanos" : 0,
+            "totalNanos" : 64547834,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "cases" : 12,
+          "admissions" : 12,
+          "refusals" : 0,
+          "falseAdmissions" : 6,
+          "falseAdmissionDenominator" : 12,
+          "falseAdmissionRate" : 0.5,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 0,
+          "falseRejectionRate" : null,
+          "fallbacks" : 0,
+          "meanCompleteness" : 1.0,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.38,
+          "cost" : {
+            "selectionNanos" : 16847279,
+            "readNanos" : 45971972,
+            "fallbackNanos" : 0,
+            "totalNanos" : 62819251,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        }
+      },
+      "byKind" : {
+        "ANCHOR" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 2,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 2,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        }
+      },
+      "criterionDifference" : {
+        "admissions" : 0,
+        "falseAdmissions" : 0,
+        "falseRejections" : 0,
+        "meanCompleteness" : 0.0,
+        "verdict" : "NOT ESTABLISHED",
+        "note" : "the differences are SUFFICIENCY minus ANCHOR on the same scope and the same cases; the scope-sufficiency rule is STRICTLY STRONGER, so a negative difference in the false admissions and a positive one in the false rejections are its signature, not an accident"
+      }
+    }, {
+      "strategy" : "DECLARED",
+      "scope" : [ "src-866bfb48", "src-a0483458", "src-8b94e032" ],
+      "scopeSize" : 3,
+      "validated" : true,
+      "validationReason" : "the candidate agreed with the reference on all 5 held-out case(s)",
+      "validationAgreement" : 1.0,
+      "validationCases" : 5,
+      "proposalNanos" : 740767,
+      "validationNanos" : 49494324,
+      "arms" : {
+        "ANCHOR" : {
+          "cases" : 12,
+          "admissions" : 10,
+          "refusals" : 2,
+          "falseAdmissions" : 6,
+          "falseAdmissionDenominator" : 10,
+          "falseAdmissionRate" : 0.6,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 2,
+          "falseRejectionRate" : 0.0,
+          "fallbacks" : 2,
+          "meanCompleteness" : 0.95,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.385,
+          "cost" : {
+            "selectionNanos" : 17153437,
+            "readNanos" : 32955015,
+            "fallbackNanos" : 12288083,
+            "totalNanos" : 62396535,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "cases" : 12,
+          "admissions" : 8,
+          "refusals" : 4,
+          "falseAdmissions" : 5,
+          "falseAdmissionDenominator" : 8,
+          "falseAdmissionRate" : 0.625,
+          "falseRejections" : 1,
+          "falseRejectionDenominator" : 4,
+          "falseRejectionRate" : 0.25,
+          "fallbacks" : 4,
+          "meanCompleteness" : 1.0,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.38,
+          "cost" : {
+            "selectionNanos" : 16839033,
+            "readNanos" : 26481087,
+            "fallbackNanos" : 20142154,
+            "totalNanos" : 63462274,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        }
+      },
+      "byKind" : {
+        "ANCHOR" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 1,
+            "refusals" : 1,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 1
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 1,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 1,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 1
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 1,
+            "refusals" : 1,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 1
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 1,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 1
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        }
+      },
+      "criterionDifference" : {
+        "admissions" : -2,
+        "falseAdmissions" : -1,
+        "falseRejections" : 1,
+        "meanCompleteness" : 0.05,
+        "verdict" : "DIFFERENCE OBSERVED",
+        "note" : "the differences are SUFFICIENCY minus ANCHOR on the same scope and the same cases; the scope-sufficiency rule is STRICTLY STRONGER, so a negative difference in the false admissions and a positive one in the false rejections are its signature, not an accident"
+      }
+    }, {
+      "strategy" : "EVIDENCE_DERIVED",
+      "scope" : [ "src-866bfb48", "src-c0bf3a24", "src-a0483458", "src-8b94e032" ],
+      "scopeSize" : 4,
+      "validated" : true,
+      "validationReason" : "the candidate agreed with the reference on all 5 held-out case(s)",
+      "validationAgreement" : 1.0,
+      "validationCases" : 5,
+      "proposalNanos" : 6058194,
+      "validationNanos" : 55901657,
+      "arms" : {
+        "ANCHOR" : {
+          "cases" : 12,
+          "admissions" : 12,
+          "refusals" : 0,
+          "falseAdmissions" : 6,
+          "falseAdmissionDenominator" : 12,
+          "falseAdmissionRate" : 0.5,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 0,
+          "falseRejectionRate" : null,
+          "fallbacks" : 0,
+          "meanCompleteness" : 1.0,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.38,
+          "cost" : {
+            "selectionNanos" : 17361248,
+            "readNanos" : 46374660,
+            "fallbackNanos" : 0,
+            "totalNanos" : 63735908,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "cases" : 12,
+          "admissions" : 12,
+          "refusals" : 0,
+          "falseAdmissions" : 6,
+          "falseAdmissionDenominator" : 12,
+          "falseAdmissionRate" : 0.5,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 0,
+          "falseRejectionRate" : null,
+          "fallbacks" : 0,
+          "meanCompleteness" : 1.0,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.38,
+          "cost" : {
+            "selectionNanos" : 16952048,
+            "readNanos" : 46374660,
+            "fallbackNanos" : 0,
+            "totalNanos" : 63326708,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        }
+      },
+      "byKind" : {
+        "ANCHOR" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 2,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 2,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        }
+      },
+      "criterionDifference" : {
+        "admissions" : 0,
+        "falseAdmissions" : 0,
+        "falseRejections" : 0,
+        "meanCompleteness" : 0.0,
+        "verdict" : "NOT ESTABLISHED",
+        "note" : "the differences are SUFFICIENCY minus ANCHOR on the same scope and the same cases; the scope-sufficiency rule is STRICTLY STRONGER, so a negative difference in the false admissions and a positive one in the false rejections are its signature, not an accident"
+      }
+    } ]
+  }, {
+    "domain" : "wbe",
+    "condition" : "CHANGED_BINDINGS",
+    "strategies" : [ {
+      "strategy" : "CITATION_DERIVED",
+      "scope" : [ "src-a9d5f78", "src-8df329b4", "src-814bd8a8", "src-1194d1e2" ],
+      "scopeSize" : 4,
+      "validated" : true,
+      "validationReason" : "the candidate agreed with the reference on all 5 held-out case(s)",
+      "validationAgreement" : 1.0,
+      "validationCases" : 5,
+      "proposalNanos" : 504742,
+      "validationNanos" : 74386135,
+      "arms" : {
+        "ANCHOR" : {
+          "cases" : 12,
+          "admissions" : 12,
+          "refusals" : 0,
+          "falseAdmissions" : 6,
+          "falseAdmissionDenominator" : 12,
+          "falseAdmissionRate" : 0.5,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 0,
+          "falseRejectionRate" : null,
+          "fallbacks" : 0,
+          "meanCompleteness" : 1.0,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.378,
+          "cost" : {
+            "selectionNanos" : 19924092,
+            "readNanos" : 67280686,
+            "fallbackNanos" : 0,
+            "totalNanos" : 87204778,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "cases" : 12,
+          "admissions" : 12,
+          "refusals" : 0,
+          "falseAdmissions" : 6,
+          "falseAdmissionDenominator" : 12,
+          "falseAdmissionRate" : 0.5,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 0,
+          "falseRejectionRate" : null,
+          "fallbacks" : 0,
+          "meanCompleteness" : 1.0,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.378,
+          "cost" : {
+            "selectionNanos" : 18529443,
+            "readNanos" : 67280686,
+            "fallbackNanos" : 0,
+            "totalNanos" : 85810129,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        }
+      },
+      "byKind" : {
+        "ANCHOR" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 2,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 2,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        }
+      },
+      "criterionDifference" : {
+        "admissions" : 0,
+        "falseAdmissions" : 0,
+        "falseRejections" : 0,
+        "meanCompleteness" : 0.0,
+        "verdict" : "NOT ESTABLISHED",
+        "note" : "the differences are SUFFICIENCY minus ANCHOR on the same scope and the same cases; the scope-sufficiency rule is STRICTLY STRONGER, so a negative difference in the false admissions and a positive one in the false rejections are its signature, not an accident"
+      }
+    }, {
+      "strategy" : "DECLARED",
+      "scope" : [ "src-a9d5f78", "src-814bd8a8", "src-1194d1e2" ],
+      "scopeSize" : 3,
+      "validated" : true,
+      "validationReason" : "the candidate agreed with the reference on all 5 held-out case(s)",
+      "validationAgreement" : 1.0,
+      "validationCases" : 5,
+      "proposalNanos" : 506515,
+      "validationNanos" : 60266258,
+      "arms" : {
+        "ANCHOR" : {
+          "cases" : 12,
+          "admissions" : 10,
+          "refusals" : 2,
+          "falseAdmissions" : 6,
+          "falseAdmissionDenominator" : 10,
+          "falseAdmissionRate" : 0.6,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 2,
+          "falseRejectionRate" : 0.0,
+          "fallbacks" : 2,
+          "meanCompleteness" : 0.95,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.383,
+          "cost" : {
+            "selectionNanos" : 19066003,
+            "readNanos" : 42944943,
+            "fallbackNanos" : 14032771,
+            "totalNanos" : 76043717,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "cases" : 12,
+          "admissions" : 8,
+          "refusals" : 4,
+          "falseAdmissions" : 5,
+          "falseAdmissionDenominator" : 8,
+          "falseAdmissionRate" : 0.625,
+          "falseRejections" : 1,
+          "falseRejectionDenominator" : 4,
+          "falseRejectionRate" : 0.25,
+          "fallbacks" : 4,
+          "meanCompleteness" : 1.0,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.378,
+          "cost" : {
+            "selectionNanos" : 17089717,
+            "readNanos" : 33271461,
+            "fallbackNanos" : 25595445,
+            "totalNanos" : 75956623,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        }
+      },
+      "byKind" : {
+        "ANCHOR" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 1,
+            "refusals" : 1,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 1
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 1,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 1,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 1
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 1,
+            "refusals" : 1,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 1
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 1,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 1
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        }
+      },
+      "criterionDifference" : {
+        "admissions" : -2,
+        "falseAdmissions" : -1,
+        "falseRejections" : 1,
+        "meanCompleteness" : 0.05,
+        "verdict" : "DIFFERENCE OBSERVED",
+        "note" : "the differences are SUFFICIENCY minus ANCHOR on the same scope and the same cases; the scope-sufficiency rule is STRICTLY STRONGER, so a negative difference in the false admissions and a positive one in the false rejections are its signature, not an accident"
+      }
+    }, {
+      "strategy" : "EVIDENCE_DERIVED",
+      "scope" : [ "src-a9d5f78", "src-8df329b4", "src-814bd8a8", "src-1194d1e2" ],
+      "scopeSize" : 4,
+      "validated" : true,
+      "validationReason" : "the candidate agreed with the reference on all 5 held-out case(s)",
+      "validationAgreement" : 1.0,
+      "validationCases" : 5,
+      "proposalNanos" : 6363340,
+      "validationNanos" : 62873224,
+      "arms" : {
+        "ANCHOR" : {
+          "cases" : 12,
+          "admissions" : 12,
+          "refusals" : 0,
+          "falseAdmissions" : 6,
+          "falseAdmissionDenominator" : 12,
+          "falseAdmissionRate" : 0.5,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 0,
+          "falseRejectionRate" : null,
+          "fallbacks" : 0,
+          "meanCompleteness" : 1.0,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.378,
+          "cost" : {
+            "selectionNanos" : 19646759,
+            "readNanos" : 60929747,
+            "fallbackNanos" : 0,
+            "totalNanos" : 80576506,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "cases" : 12,
+          "admissions" : 12,
+          "refusals" : 0,
+          "falseAdmissions" : 6,
+          "falseAdmissionDenominator" : 12,
+          "falseAdmissionRate" : 0.5,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 0,
+          "falseRejectionRate" : null,
+          "fallbacks" : 0,
+          "meanCompleteness" : 1.0,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.378,
+          "cost" : {
+            "selectionNanos" : 17634215,
+            "readNanos" : 60929747,
+            "fallbackNanos" : 0,
+            "totalNanos" : 78563962,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        }
+      },
+      "byKind" : {
+        "ANCHOR" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 2,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 2,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        }
+      },
+      "criterionDifference" : {
+        "admissions" : 0,
+        "falseAdmissions" : 0,
+        "falseRejections" : 0,
+        "meanCompleteness" : 0.0,
+        "verdict" : "NOT ESTABLISHED",
+        "note" : "the differences are SUFFICIENCY minus ANCHOR on the same scope and the same cases; the scope-sufficiency rule is STRICTLY STRONGER, so a negative difference in the false admissions and a positive one in the false rejections are its signature, not an accident"
+      }
+    } ]
+  }, {
+    "domain" : "wbe",
+    "condition" : "SUPERSEDED",
+    "strategies" : [ {
+      "strategy" : "CITATION_DERIVED",
+      "scope" : [ "src-6bb14557", "src-362836c7", "src-b7b0489d" ],
+      "scopeSize" : 3,
+      "validated" : false,
+      "validationReason" : "the candidate disagreed with the reference on the held-out case 'RC-WBE-07', so it was not promoted",
+      "validationAgreement" : 0.0,
+      "validationCases" : 5,
+      "proposalNanos" : 652951,
+      "validationNanos" : 40056237,
+      "arms" : {
+        "ANCHOR" : {
+          "cases" : 12,
+          "admissions" : 8,
+          "refusals" : 4,
+          "falseAdmissions" : 4,
+          "falseAdmissionDenominator" : 8,
+          "falseAdmissionRate" : 0.5,
+          "falseRejections" : 1,
+          "falseRejectionDenominator" : 4,
+          "falseRejectionRate" : 0.25,
+          "fallbacks" : 4,
+          "meanCompleteness" : 0.813,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.396,
+          "cost" : {
+            "selectionNanos" : 19957285,
+            "readNanos" : 27722067,
+            "fallbackNanos" : 14874339,
+            "totalNanos" : 62553691,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "cases" : 12,
+          "admissions" : 4,
+          "refusals" : 8,
+          "falseAdmissions" : 2,
+          "falseAdmissionDenominator" : 4,
+          "falseAdmissionRate" : 0.5,
+          "falseRejections" : 3,
+          "falseRejectionDenominator" : 8,
+          "falseRejectionRate" : 0.375,
+          "fallbacks" : 8,
+          "meanCompleteness" : 0.875,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.393,
+          "cost" : {
+            "selectionNanos" : 21137490,
+            "readNanos" : 12100458,
+            "fallbackNanos" : 34066531,
+            "totalNanos" : 67304479,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        }
+      },
+      "byKind" : {
+        "ANCHOR" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 0,
+            "refusals" : 2,
+            "falseAdmissions" : 0,
+            "falseRejections" : 1,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 2
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 1,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 1
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 0,
+            "refusals" : 2,
+            "falseAdmissions" : 0,
+            "falseRejections" : 1,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 2
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 1,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 1
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 1,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 1,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 1
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 1,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          }
+        }
+      },
+      "criterionDifference" : {
+        "admissions" : -4,
+        "falseAdmissions" : -2,
+        "falseRejections" : 2,
+        "meanCompleteness" : 0.062,
+        "verdict" : "DIFFERENCE OBSERVED",
+        "note" : "the differences are SUFFICIENCY minus ANCHOR on the same scope and the same cases; the scope-sufficiency rule is STRICTLY STRONGER, so a negative difference in the false admissions and a positive one in the false rejections are its signature, not an accident"
+      }
+    }, {
+      "strategy" : "DECLARED",
+      "scope" : [ "src-54aba107", "src-362836c7", "src-b7b0489d" ],
+      "scopeSize" : 3,
+      "validated" : false,
+      "validationReason" : "an observed support source is no longer applicable",
+      "validationAgreement" : 0.0,
+      "validationCases" : 5,
+      "proposalNanos" : 800129,
+      "validationNanos" : 664824,
+      "arms" : {
+        "ANCHOR" : {
+          "cases" : 12,
+          "admissions" : 10,
+          "refusals" : 2,
+          "falseAdmissions" : 8,
+          "falseAdmissionDenominator" : 10,
+          "falseAdmissionRate" : 0.8,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 2,
+          "falseRejectionRate" : 0.0,
+          "fallbacks" : 2,
+          "meanCompleteness" : 0.5,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.398,
+          "cost" : {
+            "selectionNanos" : 21126570,
+            "readNanos" : 33779660,
+            "fallbackNanos" : 10678918,
+            "totalNanos" : 65585148,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "cases" : 12,
+          "admissions" : 8,
+          "refusals" : 4,
+          "falseAdmissions" : 7,
+          "falseAdmissionDenominator" : 8,
+          "falseAdmissionRate" : 0.875,
+          "falseRejections" : 1,
+          "falseRejectionDenominator" : 4,
+          "falseRejectionRate" : 0.25,
+          "fallbacks" : 4,
+          "meanCompleteness" : 0.438,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.393,
+          "cost" : {
+            "selectionNanos" : 19177866,
+            "readNanos" : 27125502,
+            "fallbackNanos" : 18742454,
+            "totalNanos" : 65045822,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        }
+      },
+      "byKind" : {
+        "ANCHOR" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 1,
+            "refusals" : 1,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 1
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 1,
+            "refusals" : 1,
+            "falseAdmissions" : 1,
+            "falseRejections" : 1,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 1
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 1,
+            "refusals" : 1,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 1
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 1,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 1
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        }
+      },
+      "criterionDifference" : {
+        "admissions" : -2,
+        "falseAdmissions" : -1,
+        "falseRejections" : 1,
+        "meanCompleteness" : -0.062,
+        "verdict" : "DIFFERENCE OBSERVED",
+        "note" : "the differences are SUFFICIENCY minus ANCHOR on the same scope and the same cases; the scope-sufficiency rule is STRICTLY STRONGER, so a negative difference in the false admissions and a positive one in the false rejections are its signature, not an accident"
+      }
+    }, {
+      "strategy" : "EVIDENCE_DERIVED",
+      "scope" : [ "src-6bb14557", "src-362836c7", "src-b7b0489d", "src-54aba107" ],
+      "scopeSize" : 4,
+      "validated" : false,
+      "validationReason" : "an observed support source is no longer applicable",
+      "validationAgreement" : 0.0,
+      "validationCases" : 5,
+      "proposalNanos" : 4952258,
+      "validationNanos" : 643424,
+      "arms" : {
+        "ANCHOR" : {
+          "cases" : 12,
+          "admissions" : 12,
+          "refusals" : 0,
+          "falseAdmissions" : 7,
+          "falseAdmissionDenominator" : 12,
+          "falseAdmissionRate" : 0.583,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 0,
+          "falseRejectionRate" : null,
+          "fallbacks" : 0,
+          "meanCompleteness" : 0.625,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.393,
+          "cost" : {
+            "selectionNanos" : 19896760,
+            "readNanos" : 45572670,
+            "fallbackNanos" : 0,
+            "totalNanos" : 65469430,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "cases" : 12,
+          "admissions" : 12,
+          "refusals" : 0,
+          "falseAdmissions" : 7,
+          "falseAdmissionDenominator" : 12,
+          "falseAdmissionRate" : 0.583,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 0,
+          "falseRejectionRate" : null,
+          "fallbacks" : 0,
+          "meanCompleteness" : 0.625,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.393,
+          "cost" : {
+            "selectionNanos" : 17926053,
+            "readNanos" : 45572670,
+            "fallbackNanos" : 0,
+            "totalNanos" : 63498723,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        }
+      },
+      "byKind" : {
+        "ANCHOR" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        }
+      },
+      "criterionDifference" : {
+        "admissions" : 0,
+        "falseAdmissions" : 0,
+        "falseRejections" : 0,
+        "meanCompleteness" : 0.0,
+        "verdict" : "NOT ESTABLISHED",
+        "note" : "the differences are SUFFICIENCY minus ANCHOR on the same scope and the same cases; the scope-sufficiency rule is STRICTLY STRONGER, so a negative difference in the false admissions and a positive one in the false rejections are its signature, not an accident"
+      }
+    } ]
+  }, {
+    "domain" : "hpd",
+    "condition" : "BASELINE",
+    "strategies" : [ {
+      "strategy" : "CITATION_DERIVED",
+      "scope" : [ "src-e17cb578", "src-6af75d5a", "src-7657cc8f", "src-fb468a14" ],
+      "scopeSize" : 4,
+      "validated" : true,
+      "validationReason" : "the candidate agreed with the reference on all 5 held-out case(s)",
+      "validationAgreement" : 1.0,
+      "validationCases" : 5,
+      "proposalNanos" : 537504,
+      "validationNanos" : 59707565,
+      "arms" : {
+        "ANCHOR" : {
+          "cases" : 12,
+          "admissions" : 11,
+          "refusals" : 1,
+          "falseAdmissions" : 6,
+          "falseAdmissionDenominator" : 11,
+          "falseAdmissionRate" : 0.545,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 1,
+          "falseRejectionRate" : 0.0,
+          "fallbacks" : 1,
+          "meanCompleteness" : 1.0,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.439,
+          "cost" : {
+            "selectionNanos" : 21026662,
+            "readNanos" : 56423378,
+            "fallbackNanos" : 4646062,
+            "totalNanos" : 82096102,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "cases" : 12,
+          "admissions" : 11,
+          "refusals" : 1,
+          "falseAdmissions" : 6,
+          "falseAdmissionDenominator" : 11,
+          "falseAdmissionRate" : 0.545,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 1,
+          "falseRejectionRate" : 0.0,
+          "fallbacks" : 1,
+          "meanCompleteness" : 1.0,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.439,
+          "cost" : {
+            "selectionNanos" : 18967328,
+            "readNanos" : 56423378,
+            "fallbackNanos" : 4646062,
+            "totalNanos" : 80036768,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        }
+      },
+      "byKind" : {
+        "ANCHOR" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 2,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 2,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        }
+      },
+      "criterionDifference" : {
+        "admissions" : 0,
+        "falseAdmissions" : 0,
+        "falseRejections" : 0,
+        "meanCompleteness" : 0.0,
+        "verdict" : "NOT ESTABLISHED",
+        "note" : "the differences are SUFFICIENCY minus ANCHOR on the same scope and the same cases; the scope-sufficiency rule is STRICTLY STRONGER, so a negative difference in the false admissions and a positive one in the false rejections are its signature, not an accident"
+      }
+    }, {
+      "strategy" : "DECLARED",
+      "scope" : [ "src-e17cb578", "src-6af75d5a", "src-7657cc8f" ],
+      "scopeSize" : 3,
+      "validated" : true,
+      "validationReason" : "the candidate agreed with the reference on all 5 held-out case(s)",
+      "validationAgreement" : 1.0,
+      "validationCases" : 5,
+      "proposalNanos" : 788526,
+      "validationNanos" : 55944017,
+      "arms" : {
+        "ANCHOR" : {
+          "cases" : 12,
+          "admissions" : 9,
+          "refusals" : 3,
+          "falseAdmissions" : 6,
+          "falseAdmissionDenominator" : 9,
+          "falseAdmissionRate" : 0.667,
+          "falseRejections" : 1,
+          "falseRejectionDenominator" : 3,
+          "falseRejectionRate" : 0.333,
+          "fallbacks" : 3,
+          "meanCompleteness" : 0.833,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.436,
+          "cost" : {
+            "selectionNanos" : 19190339,
+            "readNanos" : 41211485,
+            "fallbackNanos" : 13234287,
+            "totalNanos" : 73636111,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "cases" : 12,
+          "admissions" : 5,
+          "refusals" : 7,
+          "falseAdmissions" : 2,
+          "falseAdmissionDenominator" : 5,
+          "falseAdmissionRate" : 0.4,
+          "falseRejections" : 3,
+          "falseRejectionDenominator" : 7,
+          "falseRejectionRate" : 0.429,
+          "fallbacks" : 7,
+          "meanCompleteness" : 1.0,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.439,
+          "cost" : {
+            "selectionNanos" : 17958015,
+            "readNanos" : 20664047,
+            "fallbackNanos" : 39228807,
+            "totalNanos" : 77850869,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        }
+      },
+      "byKind" : {
+        "ANCHOR" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 2,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 1,
+            "refusals" : 1,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 1
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 1,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 0,
+            "refusals" : 2,
+            "falseAdmissions" : 0,
+            "falseRejections" : 1,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 2
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 0,
+            "refusals" : 2,
+            "falseAdmissions" : 0,
+            "falseRejections" : 1,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 2
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 1,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          }
+        }
+      },
+      "criterionDifference" : {
+        "admissions" : -4,
+        "falseAdmissions" : -4,
+        "falseRejections" : 2,
+        "meanCompleteness" : 0.167,
+        "verdict" : "DIFFERENCE OBSERVED",
+        "note" : "the differences are SUFFICIENCY minus ANCHOR on the same scope and the same cases; the scope-sufficiency rule is STRICTLY STRONGER, so a negative difference in the false admissions and a positive one in the false rejections are its signature, not an accident"
+      }
+    }, {
+      "strategy" : "EVIDENCE_DERIVED",
+      "scope" : [ "src-e17cb578", "src-6af75d5a", "src-7657cc8f", "src-fb468a14" ],
+      "scopeSize" : 4,
+      "validated" : true,
+      "validationReason" : "the candidate agreed with the reference on all 5 held-out case(s)",
+      "validationAgreement" : 1.0,
+      "validationCases" : 5,
+      "proposalNanos" : 4514633,
+      "validationNanos" : 54914756,
+      "arms" : {
+        "ANCHOR" : {
+          "cases" : 12,
+          "admissions" : 11,
+          "refusals" : 1,
+          "falseAdmissions" : 6,
+          "falseAdmissionDenominator" : 11,
+          "falseAdmissionRate" : 0.545,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 1,
+          "falseRejectionRate" : 0.0,
+          "fallbacks" : 1,
+          "meanCompleteness" : 1.0,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.439,
+          "cost" : {
+            "selectionNanos" : 20422704,
+            "readNanos" : 53062985,
+            "fallbackNanos" : 4646062,
+            "totalNanos" : 78131751,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "cases" : 12,
+          "admissions" : 11,
+          "refusals" : 1,
+          "falseAdmissions" : 6,
+          "falseAdmissionDenominator" : 11,
+          "falseAdmissionRate" : 0.545,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 1,
+          "falseRejectionRate" : 0.0,
+          "fallbacks" : 1,
+          "meanCompleteness" : 1.0,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.439,
+          "cost" : {
+            "selectionNanos" : 18703810,
+            "readNanos" : 53062985,
+            "fallbackNanos" : 4646062,
+            "totalNanos" : 76412857,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        }
+      },
+      "byKind" : {
+        "ANCHOR" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 2,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 2,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        }
+      },
+      "criterionDifference" : {
+        "admissions" : 0,
+        "falseAdmissions" : 0,
+        "falseRejections" : 0,
+        "meanCompleteness" : 0.0,
+        "verdict" : "NOT ESTABLISHED",
+        "note" : "the differences are SUFFICIENCY minus ANCHOR on the same scope and the same cases; the scope-sufficiency rule is STRICTLY STRONGER, so a negative difference in the false admissions and a positive one in the false rejections are its signature, not an accident"
+      }
+    } ]
+  }, {
+    "domain" : "hpd",
+    "condition" : "CHANGED_BINDINGS",
+    "strategies" : [ {
+      "strategy" : "CITATION_DERIVED",
+      "scope" : [ "src-587304c0", "src-ab983422", "src-f6795407", "src-fcd3222c" ],
+      "scopeSize" : 4,
+      "validated" : true,
+      "validationReason" : "the candidate agreed with the reference on all 5 held-out case(s)",
+      "validationAgreement" : 1.0,
+      "validationCases" : 5,
+      "proposalNanos" : 516935,
+      "validationNanos" : 79924438,
+      "arms" : {
+        "ANCHOR" : {
+          "cases" : 12,
+          "admissions" : 11,
+          "refusals" : 1,
+          "falseAdmissions" : 6,
+          "falseAdmissionDenominator" : 11,
+          "falseAdmissionRate" : 0.545,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 1,
+          "falseRejectionRate" : 0.0,
+          "fallbacks" : 1,
+          "meanCompleteness" : 1.0,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.439,
+          "cost" : {
+            "selectionNanos" : 21210836,
+            "readNanos" : 71736789,
+            "fallbackNanos" : 3271459,
+            "totalNanos" : 96219084,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "cases" : 12,
+          "admissions" : 11,
+          "refusals" : 1,
+          "falseAdmissions" : 6,
+          "falseAdmissionDenominator" : 11,
+          "falseAdmissionRate" : 0.545,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 1,
+          "falseRejectionRate" : 0.0,
+          "fallbacks" : 1,
+          "meanCompleteness" : 1.0,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.439,
+          "cost" : {
+            "selectionNanos" : 19707534,
+            "readNanos" : 71736789,
+            "fallbackNanos" : 3271459,
+            "totalNanos" : 94715782,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        }
+      },
+      "byKind" : {
+        "ANCHOR" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 2,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 2,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        }
+      },
+      "criterionDifference" : {
+        "admissions" : 0,
+        "falseAdmissions" : 0,
+        "falseRejections" : 0,
+        "meanCompleteness" : 0.0,
+        "verdict" : "NOT ESTABLISHED",
+        "note" : "the differences are SUFFICIENCY minus ANCHOR on the same scope and the same cases; the scope-sufficiency rule is STRICTLY STRONGER, so a negative difference in the false admissions and a positive one in the false rejections are its signature, not an accident"
+      }
+    }, {
+      "strategy" : "DECLARED",
+      "scope" : [ "src-587304c0", "src-ab983422", "src-f6795407" ],
+      "scopeSize" : 3,
+      "validated" : true,
+      "validationReason" : "the candidate agreed with the reference on all 5 held-out case(s)",
+      "validationAgreement" : 1.0,
+      "validationCases" : 5,
+      "proposalNanos" : 494974,
+      "validationNanos" : 81436661,
+      "arms" : {
+        "ANCHOR" : {
+          "cases" : 12,
+          "admissions" : 9,
+          "refusals" : 3,
+          "falseAdmissions" : 6,
+          "falseAdmissionDenominator" : 9,
+          "falseAdmissionRate" : 0.667,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 3,
+          "falseRejectionRate" : 0.0,
+          "fallbacks" : 3,
+          "meanCompleteness" : 0.944,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.439,
+          "cost" : {
+            "selectionNanos" : 20701826,
+            "readNanos" : 52498939,
+            "fallbackNanos" : 13698332,
+            "totalNanos" : 86899097,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "cases" : 12,
+          "admissions" : 5,
+          "refusals" : 7,
+          "falseAdmissions" : 2,
+          "falseAdmissionDenominator" : 5,
+          "falseAdmissionRate" : 0.4,
+          "falseRejections" : 3,
+          "falseRejectionDenominator" : 7,
+          "falseRejectionRate" : 0.429,
+          "fallbacks" : 7,
+          "meanCompleteness" : 1.0,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.439,
+          "cost" : {
+            "selectionNanos" : 18482265,
+            "readNanos" : 27766461,
+            "fallbackNanos" : 47352544,
+            "totalNanos" : 93601270,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        }
+      },
+      "byKind" : {
+        "ANCHOR" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 1,
+            "refusals" : 1,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 1
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 1,
+            "refusals" : 1,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 1
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 0,
+            "refusals" : 2,
+            "falseAdmissions" : 0,
+            "falseRejections" : 1,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 2
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 0,
+            "refusals" : 2,
+            "falseAdmissions" : 0,
+            "falseRejections" : 1,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 2
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 1,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          }
+        }
+      },
+      "criterionDifference" : {
+        "admissions" : -4,
+        "falseAdmissions" : -4,
+        "falseRejections" : 3,
+        "meanCompleteness" : 0.056,
+        "verdict" : "DIFFERENCE OBSERVED",
+        "note" : "the differences are SUFFICIENCY minus ANCHOR on the same scope and the same cases; the scope-sufficiency rule is STRICTLY STRONGER, so a negative difference in the false admissions and a positive one in the false rejections are its signature, not an accident"
+      }
+    }, {
+      "strategy" : "EVIDENCE_DERIVED",
+      "scope" : [ "src-587304c0", "src-ab983422", "src-f6795407", "src-fcd3222c" ],
+      "scopeSize" : 4,
+      "validated" : true,
+      "validationReason" : "the candidate agreed with the reference on all 5 held-out case(s)",
+      "validationAgreement" : 1.0,
+      "validationCases" : 5,
+      "proposalNanos" : 5338157,
+      "validationNanos" : 90418949,
+      "arms" : {
+        "ANCHOR" : {
+          "cases" : 12,
+          "admissions" : 11,
+          "refusals" : 1,
+          "falseAdmissions" : 6,
+          "falseAdmissionDenominator" : 11,
+          "falseAdmissionRate" : 0.545,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 1,
+          "falseRejectionRate" : 0.0,
+          "fallbacks" : 1,
+          "meanCompleteness" : 1.0,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.439,
+          "cost" : {
+            "selectionNanos" : 21004347,
+            "readNanos" : 69310239,
+            "fallbackNanos" : 3271459,
+            "totalNanos" : 93586045,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "cases" : 12,
+          "admissions" : 11,
+          "refusals" : 1,
+          "falseAdmissions" : 6,
+          "falseAdmissionDenominator" : 11,
+          "falseAdmissionRate" : 0.545,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 1,
+          "falseRejectionRate" : 0.0,
+          "fallbacks" : 1,
+          "meanCompleteness" : 1.0,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.439,
+          "cost" : {
+            "selectionNanos" : 19427073,
+            "readNanos" : 69310239,
+            "fallbackNanos" : 3271459,
+            "totalNanos" : 92008771,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        }
+      },
+      "byKind" : {
+        "ANCHOR" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 2,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 2,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        }
+      },
+      "criterionDifference" : {
+        "admissions" : 0,
+        "falseAdmissions" : 0,
+        "falseRejections" : 0,
+        "meanCompleteness" : 0.0,
+        "verdict" : "NOT ESTABLISHED",
+        "note" : "the differences are SUFFICIENCY minus ANCHOR on the same scope and the same cases; the scope-sufficiency rule is STRICTLY STRONGER, so a negative difference in the false admissions and a positive one in the false rejections are its signature, not an accident"
+      }
+    } ]
+  }, {
+    "domain" : "hpd",
+    "condition" : "SUPERSEDED",
+    "strategies" : [ {
+      "strategy" : "CITATION_DERIVED",
+      "scope" : [ "src-9fe189d5", "src-f4e04e28", "src-91157013" ],
+      "scopeSize" : 3,
+      "validated" : false,
+      "validationReason" : "the candidate disagreed with the reference on the held-out case 'RC-HPD-07', so it was not promoted",
+      "validationAgreement" : 0.0,
+      "validationCases" : 5,
+      "proposalNanos" : 988845,
+      "validationNanos" : 42340204,
+      "arms" : {
+        "ANCHOR" : {
+          "cases" : 12,
+          "admissions" : 7,
+          "refusals" : 5,
+          "falseAdmissions" : 4,
+          "falseAdmissionDenominator" : 7,
+          "falseAdmissionRate" : 0.571,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 5,
+          "falseRejectionRate" : 0.0,
+          "fallbacks" : 5,
+          "meanCompleteness" : 0.643,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.433,
+          "cost" : {
+            "selectionNanos" : 20195034,
+            "readNanos" : 25873311,
+            "fallbackNanos" : 19370057,
+            "totalNanos" : 65438402,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "cases" : 12,
+          "admissions" : 1,
+          "refusals" : 11,
+          "falseAdmissions" : 0,
+          "falseAdmissionDenominator" : 1,
+          "falseAdmissionRate" : 0.0,
+          "falseRejections" : 3,
+          "falseRejectionDenominator" : 11,
+          "falseRejectionRate" : 0.273,
+          "fallbacks" : 11,
+          "meanCompleteness" : 1.0,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.428,
+          "cost" : {
+            "selectionNanos" : 18560844,
+            "readNanos" : 3654161,
+            "fallbackNanos" : 49018427,
+            "totalNanos" : 71233432,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        }
+      },
+      "byKind" : {
+        "ANCHOR" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 1,
+            "refusals" : 1,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 1
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 1,
+            "refusals" : 1,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 1
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 0,
+            "refusals" : 2,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 2
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 0,
+            "refusals" : 2,
+            "falseAdmissions" : 0,
+            "falseRejections" : 1,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 2
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 1,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 1
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 1,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 1,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          }
+        }
+      },
+      "criterionDifference" : {
+        "admissions" : -6,
+        "falseAdmissions" : -4,
+        "falseRejections" : 3,
+        "meanCompleteness" : 0.357,
+        "verdict" : "DIFFERENCE OBSERVED",
+        "note" : "the differences are SUFFICIENCY minus ANCHOR on the same scope and the same cases; the scope-sufficiency rule is STRICTLY STRONGER, so a negative difference in the false admissions and a positive one in the false rejections are its signature, not an accident"
+      }
+    }, {
+      "strategy" : "DECLARED",
+      "scope" : [ "src-e40daf3b", "src-9fe189d5", "src-f4e04e28" ],
+      "scopeSize" : 3,
+      "validated" : false,
+      "validationReason" : "an observed support source is no longer applicable",
+      "validationAgreement" : 0.0,
+      "validationCases" : 5,
+      "proposalNanos" : 848490,
+      "validationNanos" : 788086,
+      "arms" : {
+        "ANCHOR" : {
+          "cases" : 12,
+          "admissions" : 8,
+          "refusals" : 4,
+          "falseAdmissions" : 7,
+          "falseAdmissionDenominator" : 8,
+          "falseAdmissionRate" : 0.875,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 4,
+          "falseRejectionRate" : 0.0,
+          "fallbacks" : 4,
+          "meanCompleteness" : 0.25,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.429,
+          "cost" : {
+            "selectionNanos" : 19856807,
+            "readNanos" : 30138865,
+            "fallbackNanos" : 15239359,
+            "totalNanos" : 65235031,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "cases" : 12,
+          "admissions" : 5,
+          "refusals" : 7,
+          "falseAdmissions" : 4,
+          "falseAdmissionDenominator" : 5,
+          "falseAdmissionRate" : 0.8,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 7,
+          "falseRejectionRate" : 0.0,
+          "fallbacks" : 7,
+          "meanCompleteness" : 0.2,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.428,
+          "cost" : {
+            "selectionNanos" : 18209268,
+            "readNanos" : 17209623,
+            "fallbackNanos" : 31012874,
+            "totalNanos" : 66431765,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        }
+      },
+      "byKind" : {
+        "ANCHOR" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 2,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 1,
+            "refusals" : 1,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 1
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 1,
+            "refusals" : 1,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 1
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 2,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 0,
+            "refusals" : 2,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 2
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 0,
+            "refusals" : 2,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 2
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          }
+        }
+      },
+      "criterionDifference" : {
+        "admissions" : -3,
+        "falseAdmissions" : -3,
+        "falseRejections" : 0,
+        "meanCompleteness" : -0.05,
+        "verdict" : "DIFFERENCE OBSERVED",
+        "note" : "the differences are SUFFICIENCY minus ANCHOR on the same scope and the same cases; the scope-sufficiency rule is STRICTLY STRONGER, so a negative difference in the false admissions and a positive one in the false rejections are its signature, not an accident"
+      }
+    }, {
+      "strategy" : "EVIDENCE_DERIVED",
+      "scope" : [ "src-e40daf3b", "src-9fe189d5", "src-f4e04e28", "src-91157013" ],
+      "scopeSize" : 4,
+      "validated" : false,
+      "validationReason" : "an observed support source is no longer applicable",
+      "validationAgreement" : 0.0,
+      "validationCases" : 5,
+      "proposalNanos" : 5243107,
+      "validationNanos" : 746407,
+      "arms" : {
+        "ANCHOR" : {
+          "cases" : 12,
+          "admissions" : 11,
+          "refusals" : 1,
+          "falseAdmissions" : 8,
+          "falseAdmissionDenominator" : 11,
+          "falseAdmissionRate" : 0.727,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 1,
+          "falseRejectionRate" : 0.0,
+          "fallbacks" : 1,
+          "meanCompleteness" : 0.409,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.428,
+          "cost" : {
+            "selectionNanos" : 21340464,
+            "readNanos" : 47224965,
+            "fallbackNanos" : 3320652,
+            "totalNanos" : 71886081,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "cases" : 12,
+          "admissions" : 11,
+          "refusals" : 1,
+          "falseAdmissions" : 8,
+          "falseAdmissionDenominator" : 11,
+          "falseAdmissionRate" : 0.727,
+          "falseRejections" : 0,
+          "falseRejectionDenominator" : 1,
+          "falseRejectionRate" : 0.0,
+          "fallbacks" : 1,
+          "meanCompleteness" : 0.409,
+          "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
+          "meanCoverage" : 0.428,
+          "cost" : {
+            "selectionNanos" : 18223266,
+            "readNanos" : 47224965,
+            "fallbackNanos" : 3320652,
+            "totalNanos" : 68768883,
+            "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
+          }
+        }
+      },
+      "byKind" : {
+        "ANCHOR" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 2,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 2,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        },
+        "CLAIM_SUFFICIENCY" : {
+          "PLAIN" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "PARAPHRASE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 2,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MISLEADING_RELEVANCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 2,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "MULTI_SOURCE" : {
+            "cases" : 2,
+            "admissions" : 2,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 2,
+            "falseRejectionDenominator" : 0
+          },
+          "AMBIGUOUS" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "INCOMPLETE" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "UNSUPPORTED" : {
+            "cases" : 1,
+            "admissions" : 0,
+            "refusals" : 1,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 0,
+            "falseRejectionDenominator" : 1
+          },
+          "CONFLICT" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 0,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          },
+          "CORROBORATED" : {
+            "cases" : 1,
+            "admissions" : 1,
+            "refusals" : 0,
+            "falseAdmissions" : 1,
+            "falseRejections" : 0,
+            "falseAdmissionDenominator" : 1,
+            "falseRejectionDenominator" : 0
+          }
+        }
+      },
+      "criterionDifference" : {
+        "admissions" : 0,
+        "falseAdmissions" : 0,
+        "falseRejections" : 0,
+        "meanCompleteness" : 0.0,
+        "verdict" : "NOT ESTABLISHED",
+        "note" : "the differences are SUFFICIENCY minus ANCHOR on the same scope and the same cases; the scope-sufficiency rule is STRICTLY STRONGER, so a negative difference in the false admissions and a positive one in the false rejections are its signature, not an accident"
+      }
+    } ]
+  } ],
+  "verdictVocabulary" : [ "DIFFERENCE OBSERVED", "NOT ESTABLISHED" ],
+  "denominatorNote" : "the false admissions are counted over the ADMISSIONS and the false rejections over the REFUSALS; the two denominators are separate and are never folded together",
+  "noWinnerNote" : "no arm is ranked here: the pre-registration forbids a universal threshold and a predetermined winner, and the verdict of a cell says only whether the two criteria differ on it"
+}

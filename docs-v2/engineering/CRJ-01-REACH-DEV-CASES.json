@@ -1,0 +1,1007 @@
+{
+ "split": "crj-01-reach-dev-cases",
+ "version": "1.0",
+ "date": "2026-11-27",
+ "sealed": false,
+ "sealedNote": "the sealed evaluation is NOT EXECUTED; this is a DEV split on synthetic, test-owned data",
+ "author": {
+  "role": "the IMPLEMENTER (the case author)",
+  "independence": "NONE - two separately commissioned DSH case-author subagents were given the corpus and the oracle contract and neither delivered a case set; these cases are the implementer's own, so they are NOT independent of the implementer's mechanism. The milestone says so wherever it states the roles. (A third subagent, the corpus-author, was given the CORPUS contract only - never the oracle contract - and wrote four of the eight corpus documents before it stopped.)",
+  "corpusRole": "the corpus was written by the IMPLEMENTER as well: a corpus-author subagent was commissioned and stopped after four of the eight documents, and the implementer wrote the other four and the repairs. The corpus carries no gold - the answers are extracted from it by the production acquisition path - so the corpus's authorship does not weaken the oracle, but the corpus's AUTHORSHIP is the implementer's and is stated here rather than attributed to the subagent."
+ },
+ "provenance": {
+  "corpusSha256": {
+   "wbe/wbe-a-erosion.md": "443cd9ee2b9ab441e0d5dde0bbfcdb1d2754e0112dd23fa6433e7b6f6f284f14",
+   "wbe/wbe-b-inspection.md": "3da3a0c3df3b9b9513f0dc1c897bdea8a9bd18a4f3c2ca4357a28e2bca9dffee",
+   "wbe/wbe-c-coatings.md": "5235bcf5fb2110fc691441a70d01da7b3904bfb15f188dd8fc793051a0c569c3",
+   "wbe/wbe-d-aerodynamics.md": "53ce59a71954d34504837a8a709a7c25ce700ba238eeff3cbad06c71b6a712f8",
+   "hpd/hpd-a-dispensing.md": "e3ce929a870bbae064aed9f82f137f8cf7557d98e99b995bf25bb6ec436da8ac",
+   "hpd/hpd-b-identification.md": "f939b9e44c2c8d890411ddc825367dfd48e285852aa4608c5afc8890d90404c1",
+   "hpd/hpd-c-reconciliation.md": "2b92f9c716ae94206b01d2b3796783901249934b39cd7200cd8807aa869ba999",
+   "hpd/hpd-d-labelling.md": "2d5ef5c7a8ae8f151f163c7fb7de752c1741b01d9204c4cd97e91250b57bbb95"
+  },
+  "corpusAuthor": "the IMPLEMENTER - a corpus-author subagent was commissioned and stopped after four of the eight documents; the rest and two repairs are the implementer's",
+  "authoring": "the layout is fixed by the measurement's needs (three disjoint slices; the validation golds in the identification document, and one of them in the reconciliation document, so that the declared scope reproduces the reference on every held-out case; the evaluation golds placed inside and outside the scope the learning episode builds), and every question and gold was written by the implementer"
+ },
+ "domains": [
+  {
+   "id": "wbe",
+   "subject": "wind-turbine blade leading-edge erosion",
+   "files": [
+    "wbe-a-erosion.md",
+    "wbe-b-inspection.md",
+    "wbe-c-coatings.md",
+    "wbe-d-aerodynamics.md"
+   ],
+   "declaredScope": [
+    "wbe-a-erosion.md",
+    "wbe-b-inspection.md",
+    "wbe-c-coatings.md"
+   ]
+  },
+  {
+   "id": "hpd",
+   "subject": "hospital pharmacy unit-dose dispensing",
+   "files": [
+    "hpd-a-dispensing.md",
+    "hpd-b-identification.md",
+    "hpd-c-reconciliation.md",
+    "hpd-d-labelling.md"
+   ],
+   "declaredScope": [
+    "hpd-a-dispensing.md",
+    "hpd-b-identification.md",
+    "hpd-c-reconciliation.md"
+   ]
+  }
+ ],
+ "slices": {
+  "PROPOSAL": "the learning episode's own cases; a competence may only be learned from them, and their golds sit in TWO documents so the episode draws on two sources",
+  "VALIDATION": "the held-out cases the promotion is decided on; their golds sit in the identification document (four of the five) and in the reconciliation document (one), and their questions use only the vocabulary of the DECLARED documents, so a restricted reading over the support reproduces the reference on every one of them",
+  "EVALUATION": "the measured cases; their golds sit where the arms can be told apart - inside the scope the learning episode built, outside it but inside the declared scope, or outside both"
+ },
+ "cases": [
+  {
+   "id": "RC-WBE-01",
+   "domain": "wbe",
+   "slice": "PROPOSAL",
+   "kind": "PLAIN",
+   "level": "INTRODUCTORY",
+   "question": "What happens to the leading edge of a wind-turbine blade when rain strikes it, and how does that affect the lift of the blade?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "wbe-a-erosion.md",
+     "proposition": "Rain that strikes a wind-turbine blade causes the leading edge of that blade to lose material."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "the learning episode's first case; its gold is in the erosion document, and its question also reaches the aerodynamics document — the citation that the citation-derived scope inherits"
+  },
+  {
+   "id": "RC-WBE-02",
+   "domain": "wbe",
+   "slice": "PROPOSAL",
+   "kind": "PLAIN",
+   "level": "INTRODUCTORY",
+   "question": "Why does sea air corrode the leading edge of a blade faster than the rest of it?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "wbe-a-erosion.md",
+     "proposition": "Salt carried in sea air causes the leading edge of a wind-turbine blade to corrode faster than the rest of that blade."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "the learning episode's second case; its gold is in the erosion document too"
+  },
+  {
+   "id": "RC-WBE-03",
+   "domain": "wbe",
+   "slice": "PROPOSAL",
+   "kind": "PLAIN",
+   "level": "INTRODUCTORY",
+   "question": "How does a drone find the small erosion pits on a blade?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "wbe-b-inspection.md",
+     "proposition": "A drone that photographs the leading edge of a wind-turbine blade produces images that reveal small erosion pits."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "the learning episode's third case; its gold is in the inspection document, so the episode draws on TWO documents"
+  },
+  {
+   "id": "RC-WBE-04",
+   "domain": "wbe",
+   "slice": "VALIDATION",
+   "kind": "PLAIN",
+   "level": "INTRODUCTORY",
+   "question": "How is the thickness of a blade measured without any contact with it?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "wbe-b-inspection.md",
+     "proposition": "An ultrasonic sensor measures the thickness of the leading edge of a wind-turbine blade without touching that blade."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "a held-out case whose gold is in the inspection document"
+  },
+  {
+   "id": "RC-WBE-05",
+   "domain": "wbe",
+   "slice": "VALIDATION",
+   "kind": "PLAIN",
+   "level": "INTRODUCTORY",
+   "question": "What do the photographs of an inspection reveal in millimetres?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "wbe-b-inspection.md",
+     "proposition": "The photographs of a blade inspection reveal an erosion depth of more than two millimetres when the leading edge has lost material."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "a held-out case whose gold is in the inspection document"
+  },
+  {
+   "id": "RC-WBE-06",
+   "domain": "wbe",
+   "slice": "VALIDATION",
+   "kind": "PLAIN",
+   "level": "INTRODUCTORY",
+   "question": "What decides how severe a pit is, given its depth and the width of the material around it?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "wbe-b-inspection.md",
+     "proposition": "The severity of an erosion pit depends on its depth and on the width of the material that surrounds it."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "a held-out case whose gold is in the inspection document"
+  },
+  {
+   "id": "RC-WBE-07",
+   "domain": "wbe",
+   "slice": "VALIDATION",
+   "kind": "PLAIN",
+   "level": "INTRODUCTORY",
+   "question": "What does an inspection compare with the previous inspection?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "wbe-b-inspection.md",
+     "proposition": "An inspection of a wind-turbine blade requires a comparison between the new measurement and the measurement of the previous inspection."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "a held-out case whose gold is in the inspection document"
+  },
+  {
+   "id": "RC-WBE-08",
+   "domain": "wbe",
+   "slice": "VALIDATION",
+   "kind": "PLAIN",
+   "level": "INTRODUCTORY",
+   "question": "What does the erosion rate depend on when sand grains strike a blade?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "wbe-b-inspection.md",
+     "proposition": "The erosion rate of a wind-turbine blade depends on the wind speed and on the size of the sand grains that strike it."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "a held-out case whose gold is in the inspection document"
+  },
+  {
+   "id": "RC-WBE-09",
+   "domain": "wbe",
+   "slice": "EVALUATION",
+   "kind": "PLAIN",
+   "level": "INTRODUCTORY",
+   "question": "How often is a blade inspected at a coastal site?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "wbe-a-erosion.md",
+     "proposition": "The inspection interval for a wind-turbine blade in a coastal site depends on the erosion rate that the site produces."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "the ordinary case; the gold is inside the scope the learning episode built"
+  },
+  {
+   "id": "RC-WBE-10",
+   "domain": "wbe",
+   "slice": "EVALUATION",
+   "kind": "PARAPHRASE",
+   "level": "INTRODUCTORY",
+   "question": "Where does the loss of material on a blade begin once a pit has formed on it?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "wbe-a-erosion.md",
+     "proposition": "Erosion pits on a wind-turbine blade act as the starting points for further material loss."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "a paraphrase that shares no rare term with the gold"
+  },
+  {
+   "id": "RC-WBE-11",
+   "domain": "wbe",
+   "slice": "EVALUATION",
+   "kind": "PARAPHRASE",
+   "level": "INTERMEDIATE",
+   "question": "What does the price of protecting a blade depend on?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "wbe-c-coatings.md",
+     "proposition": "The cost of a coating system for a wind-turbine blade depends on the size of the blade and on the number of leading edges that need protection."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "a paraphrase whose gold is OUTSIDE the scope the learning episode built, so a scope that cannot carry it must refuse"
+  },
+  {
+   "id": "RC-WBE-12",
+   "domain": "wbe",
+   "slice": "EVALUATION",
+   "kind": "MISLEADING_RELEVANCE",
+   "level": "INTRODUCTORY",
+   "question": "What does the rate at which a blade wears away depend on?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "wbe-a-erosion.md",
+     "proposition": "The erosion rate of a wind-turbine blade depends on the wind speed and on the size of the rain drops that strike it."
+    }
+   ],
+   "allowedEvidence": [
+    {
+     "corpusFile": "wbe-b-inspection.md",
+     "proposition": "The erosion rate of a wind-turbine blade depends on the wind speed and on the size of the sand grains that strike it."
+    }
+   ],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "the DECOY is the inspection document's sentence about the very same dependency, and it is the nearer one to the question; the gold is the erosion document's"
+  },
+  {
+   "id": "RC-WBE-13",
+   "domain": "wbe",
+   "slice": "EVALUATION",
+   "kind": "MISLEADING_RELEVANCE",
+   "level": "INTRODUCTORY",
+   "question": "How does the yearly energy of a turbine change when the blades grow rough?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "wbe-d-aerodynamics.md",
+     "proposition": "The yearly energy production of a wind-turbine decreases as the roughness of its blades increases."
+    }
+   ],
+   "allowedEvidence": [
+    {
+     "corpusFile": "wbe-d-aerodynamics.md",
+     "proposition": "The lift of a wind-turbine blade decreases as the roughness of its leading edge increases."
+    }
+   ],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "the DECOY is the aerodynamics document's sentence about the lift, which is the nearer one to the question; the gold is the other sentence of the same document, and the document is outside the declared scope"
+  },
+  {
+   "id": "RC-WBE-14",
+   "domain": "wbe",
+   "slice": "EVALUATION",
+   "kind": "MULTI_SOURCE",
+   "level": "INTERMEDIATE",
+   "question": "How does the service life of a coating depend on the thickness of the coating, and what does the yearly energy of a turbine do as the blades grow rough?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "wbe-c-coatings.md",
+     "proposition": "The service life of a coating depends on the thickness of that coating and on the number of erosion pits that reach it."
+    },
+    {
+     "corpusFile": "wbe-d-aerodynamics.md",
+     "proposition": "The yearly energy production of a wind-turbine decreases as the roughness of its blades increases."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "the answer needs BOTH documents; the scope the learning episode built holds the first and not the second"
+  },
+  {
+   "id": "RC-WBE-15",
+   "domain": "wbe",
+   "slice": "EVALUATION",
+   "kind": "MULTI_SOURCE",
+   "level": "INTERMEDIATE",
+   "question": "What does a hardener do inside a coating, and what does a crack do to the metal under it?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "wbe-c-coatings.md",
+     "proposition": "A hardener inside a polyurethane coating binds the resin of that coating to the surface of the blade."
+    },
+    {
+     "corpusFile": "wbe-c-coatings.md",
+     "proposition": "A crack in a coating causes sea spray to reach the metal of the wind-turbine blade under that coating."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "the answer needs BOTH documents; the second one is outside the scope the learning episode built"
+  },
+  {
+   "id": "RC-WBE-16",
+   "domain": "wbe",
+   "slice": "EVALUATION",
+   "kind": "AMBIGUOUS",
+   "level": "INTERMEDIATE",
+   "question": "What does a rough leading edge do to the airflow of a blade, and what does an erosion pit do to the lift of that blade?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "wbe-d-aerodynamics.md",
+     "proposition": "A rough leading edge causes the airflow of a wind-turbine blade to separate from that edge at a lower angle."
+    },
+    {
+     "corpusFile": "wbe-d-aerodynamics.md",
+     "proposition": "The noise of a wind-turbine increases when the leading edge of one of its blades becomes rough."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "QUALIFIED",
+    "ABSTAINED",
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "the corpus supports two readings of the question - the separation of the airflow and the loss of lift - and a correct answer must carry both"
+  },
+  {
+   "id": "RC-WBE-17",
+   "domain": "wbe",
+   "slice": "EVALUATION",
+   "kind": "INCOMPLETE",
+   "level": "INTERMEDIATE",
+   "question": "What does a repair of a damaged coating require, and which coating suits the alloy of the blade?",
+   "answerable": false,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "wbe-c-coatings.md",
+     "proposition": "A repair of a damaged coating requires the removal of the loose coating and the application of a fresh layer."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "QUALIFIED",
+    "ABSTAINED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "the corpus holds the first half of the answer and nothing about the second, so the workspace cannot carry the whole answer"
+  },
+  {
+   "id": "RC-WBE-18",
+   "domain": "wbe",
+   "slice": "EVALUATION",
+   "kind": "UNSUPPORTED",
+   "level": "INTRODUCTORY",
+   "question": "How does a geothermal plant measure the steam pressure of its well?",
+   "answerable": false,
+   "necessaryEvidence": [],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ABSTAINED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "the corpus says nothing about the subject; no scope can carry the evidence, so the workspace does NOT hold the answer and a refusal is CORRECT — the denominator of a false rejection is the refusals of ANSWERABLE cases only"
+  },
+  {
+   "id": "RC-WBE-19",
+   "domain": "wbe",
+   "slice": "EVALUATION",
+   "kind": "CONFLICT",
+   "level": "INTERMEDIATE",
+   "question": "Does the size of the rain drops change the rate at which a blade wears away at an exposed coastal site?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "wbe-a-erosion.md",
+     "proposition": "The size of the rain drops changes the erosion rate of a wind-turbine blade at an exposed coastal site."
+    },
+    {
+     "corpusFile": "wbe-c-coatings.md",
+     "proposition": "The size of the rain drops does not change the erosion rate of a wind-turbine blade at an exposed coastal site."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "QUALIFIED",
+    "ABSTAINED",
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "CONFLICTING_SOURCES",
+   "note": "two documents contradict each other on the point, and a correct answer must carry BOTH sides of the contradiction"
+  },
+  {
+   "id": "RC-WBE-20",
+   "domain": "wbe",
+   "slice": "EVALUATION",
+   "kind": "CORROBORATED",
+   "level": "INTRODUCTORY",
+   "question": "How does a protective coating change the rate at which a blade wears away?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "wbe-a-erosion.md",
+     "proposition": "A protective coating over the leading edge of a wind-turbine blade reduces the erosion rate of that edge."
+    }
+   ],
+   "allowedEvidence": [
+    {
+     "corpusFile": "wbe-c-coatings.md",
+     "proposition": "A coating of polyurethane reduces the erosion rate of the leading edge of a wind-turbine blade in sea spray."
+    }
+   ],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "TWO_SOURCES",
+   "contradiction": "NONE",
+   "note": "two documents state the same proposition; either one will do"
+  },
+  {
+   "id": "RC-HPD-01",
+   "domain": "hpd",
+   "slice": "PROPOSAL",
+   "kind": "PLAIN",
+   "level": "INTRODUCTORY",
+   "question": "What does a dispensing cabinet in a hospital pharmacy keep?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "hpd-a-dispensing.md",
+     "proposition": "A dispensing cabinet in a hospital pharmacy stores the unit doses of the medicines that the ward asks for."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "the learning episode's first case; its gold is in the dispensing document"
+  },
+  {
+   "id": "RC-HPD-02",
+   "domain": "hpd",
+   "slice": "PROPOSAL",
+   "kind": "PLAIN",
+   "level": "INTRODUCTORY",
+   "question": "What does the barcode on a unit dose allow the cabinet to check?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "hpd-a-dispensing.md",
+     "proposition": "A barcode on a unit dose of a medicine allows the cabinet to check that medicine against the prescription of the ward."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "the learning episode's second case; its gold is in the dispensing document"
+  },
+  {
+   "id": "RC-HPD-03",
+   "domain": "hpd",
+   "slice": "PROPOSAL",
+   "kind": "PLAIN",
+   "level": "INTRODUCTORY",
+   "question": "What must a medicine with two similar packages require before the unit dose leaves the cabinet?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "hpd-b-identification.md",
+     "proposition": "A medicine with two similar packages requires a check of the barcode before the unit dose leaves the cabinet."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "the learning episode's third case; its gold is in the identification document, so the episode draws on TWO documents"
+  },
+  {
+   "id": "RC-HPD-04",
+   "domain": "hpd",
+   "slice": "VALIDATION",
+   "kind": "PLAIN",
+   "level": "INTRODUCTORY",
+   "question": "How quickly is a barcode read on a scanner next to the cabinet?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "hpd-b-identification.md",
+     "proposition": "The reading of a barcode takes a fraction of a second on a scanner that sits beside the cabinet."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "a held-out case whose gold is in the identification document"
+  },
+  {
+   "id": "RC-HPD-05",
+   "domain": "hpd",
+   "slice": "VALIDATION",
+   "kind": "PLAIN",
+   "level": "INTRODUCTORY",
+   "question": "What does a mismatch between the strength on a barcode and another strength require?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "hpd-b-identification.md",
+     "proposition": "A mismatch between the strength on a barcode and the strength in a prescription requires a manual check."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "a held-out case whose gold is in the identification document"
+  },
+  {
+   "id": "RC-HPD-06",
+   "domain": "hpd",
+   "slice": "VALIDATION",
+   "kind": "PLAIN",
+   "level": "INTRODUCTORY",
+   "question": "What must a cabinet do when its scanner cannot read the barcode of a medicine?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "hpd-b-identification.md",
+     "proposition": "A scanner that cannot read the barcode of a medicine requires the cabinet to stop and to ask the pharmacist."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "a held-out case whose gold is in the identification document"
+  },
+  {
+   "id": "RC-HPD-07",
+   "domain": "hpd",
+   "slice": "VALIDATION",
+   "kind": "PLAIN",
+   "level": "INTRODUCTORY",
+   "question": "What does a recall require of the identification of every unit dose in the cabinets?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "hpd-b-identification.md",
+     "proposition": "The recall of a medicine in a hospital requires the identification of every unit dose of that medicine in the cabinets."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "a held-out case whose gold is in the identification document"
+  },
+  {
+   "id": "RC-HPD-08",
+   "domain": "hpd",
+   "slice": "VALIDATION",
+   "kind": "PLAIN",
+   "level": "INTRODUCTORY",
+   "question": "What does the record of an admission contain?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "hpd-c-reconciliation.md",
+     "proposition": "The record of an admission contains the list of medicines that the ward gives to the patient."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "a held-out case whose gold is in the reconciliation document; the four cases above carry their golds in the identification document, and this one keeps the reading inside the DECLARED scope as well"
+  },
+  {
+   "id": "RC-HPD-09",
+   "domain": "hpd",
+   "slice": "EVALUATION",
+   "kind": "PLAIN",
+   "level": "INTRODUCTORY",
+   "question": "What does the picking list of a ward contain?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "hpd-a-dispensing.md",
+     "proposition": "The picking list of a ward contains one line for every medicine that the ward needs during the day."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "the ordinary case; the gold is inside the scope the learning episode built"
+  },
+  {
+   "id": "RC-HPD-10",
+   "domain": "hpd",
+   "slice": "EVALUATION",
+   "kind": "PARAPHRASE",
+   "level": "INTRODUCTORY",
+   "question": "Which record accounts for the unit doses that left a pharmacy's cabinet?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "hpd-a-dispensing.md",
+     "proposition": "The dispensing log of a hospital pharmacy provides the record of every unit dose that left the cabinet."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "a paraphrase that shares no rare term with the gold"
+  },
+  {
+   "id": "RC-HPD-11",
+   "domain": "hpd",
+   "slice": "EVALUATION",
+   "kind": "PARAPHRASE",
+   "level": "INTRODUCTORY",
+   "question": "What must a prescription name before a hospital can dispense a unit dose?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "hpd-a-dispensing.md",
+     "proposition": "The unit-dose dispensing process of a hospital requires a prescription that names the medicine and its dose."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "a paraphrase of the dispensing requirement"
+  },
+  {
+   "id": "RC-HPD-12",
+   "domain": "hpd",
+   "slice": "EVALUATION",
+   "kind": "MISLEADING_RELEVANCE",
+   "level": "INTRODUCTORY",
+   "question": "What does the pharmacy do with the unit doses that a ward has asked for?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "hpd-a-dispensing.md",
+     "proposition": "A picking machine in a hospital pharmacy takes the unit dose from the cabinet and records that removal in the log."
+    }
+   ],
+   "allowedEvidence": [
+    {
+     "corpusFile": "hpd-a-dispensing.md",
+     "proposition": "A dispensing cabinet in a hospital pharmacy stores the unit doses of the medicines that the ward asks for."
+    }
+   ],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "the DECOY is the cabinet's own sentence about the medicines the ward asks for; the gold is the sentence about what the picking machine does with them"
+  },
+  {
+   "id": "RC-HPD-13",
+   "domain": "hpd",
+   "slice": "EVALUATION",
+   "kind": "MISLEADING_RELEVANCE",
+   "level": "INTRODUCTORY",
+   "question": "What does a label that the printer produced incorrectly require?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "hpd-d-labelling.md",
+     "proposition": "A label that the printer produced incorrectly requires the pharmacist to check it against the prescription."
+    }
+   ],
+   "allowedEvidence": [
+    {
+     "corpusFile": "hpd-a-dispensing.md",
+     "proposition": "A unit dose with a label that the printer produced incorrectly requires a manual check before the ward receives it."
+    }
+   ],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "the DECOY is the dispensing document's nearly identical sentence about a misprinted label; the gold is the labelling document's, and that document is outside the declared scope"
+  },
+  {
+   "id": "RC-HPD-14",
+   "domain": "hpd",
+   "slice": "EVALUATION",
+   "kind": "MULTI_SOURCE",
+   "level": "INTERMEDIATE",
+   "question": "What does a unit dose that does not match the barcode of its medicine require, and what happens when the ward and the pharmacist disagree about a medicine?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "hpd-a-dispensing.md",
+     "proposition": "A unit dose that does not match the barcode of its medicine requires a manual check before the ward receives it."
+    },
+    {
+     "corpusFile": "hpd-c-reconciliation.md",
+     "proposition": "A disagreement about a medicine during an admission requires the pharmacist and the ward to agree before the next dose."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "the answer needs BOTH documents; the scope the learning episode built holds the first and not the second"
+  },
+  {
+   "id": "RC-HPD-15",
+   "domain": "hpd",
+   "slice": "EVALUATION",
+   "kind": "MULTI_SOURCE",
+   "level": "INTERMEDIATE",
+   "question": "Which list acts as the reference for every dose that the ward gives later, and what does the wording of a label become when the amount is not printed next to its name?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "hpd-c-reconciliation.md",
+     "proposition": "The list of medicines at the admission of a patient acts as the reference for every dose that the ward gives later."
+    },
+    {
+     "corpusFile": "hpd-d-labelling.md",
+     "proposition": "The wording of a label becomes ambiguous when the amount is not printed next to its name."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "the answer needs BOTH documents; the second one is outside the scope the learning episode built"
+  },
+  {
+   "id": "RC-HPD-16",
+   "domain": "hpd",
+   "slice": "EVALUATION",
+   "kind": "AMBIGUOUS",
+   "level": "INTERMEDIATE",
+   "question": "What does a pharmacy check on a unit dose before it hands the dose over?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "hpd-b-identification.md",
+     "proposition": "A unit dose that does not match the barcode of its medicine requires a manual check before the ward dispenses it."
+    },
+    {
+     "corpusFile": "hpd-d-labelling.md",
+     "proposition": "The printed label acts as the last check on a preparation before the ward receives it."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "QUALIFIED",
+    "ABSTAINED",
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "the corpus supports two readings of the question - the barcode mismatch and the printed label - and a correct answer must carry both"
+  },
+  {
+   "id": "RC-HPD-17",
+   "domain": "hpd",
+   "slice": "EVALUATION",
+   "kind": "INCOMPLETE",
+   "level": "INTERMEDIATE",
+   "question": "What does an unrecorded unit dose cost a pharmacy, and which cabinet is the right one for it?",
+   "answerable": false,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "hpd-a-dispensing.md",
+     "proposition": "An unrecorded unit dose in a hospital pharmacy reduces the ability of the pharmacy to account for the medicines in its cabinets."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "QUALIFIED",
+    "ABSTAINED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "the corpus holds the first half of the answer and nothing about the second, so the workspace cannot carry the whole answer"
+  },
+  {
+   "id": "RC-HPD-18",
+   "domain": "hpd",
+   "slice": "EVALUATION",
+   "kind": "UNSUPPORTED",
+   "level": "INTRODUCTORY",
+   "question": "How does a railway interlocking system record the position of a signal?",
+   "answerable": false,
+   "necessaryEvidence": [],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "ABSTAINED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "NONE",
+   "note": "the corpus says nothing about the subject; no scope can carry the evidence, so the workspace does NOT hold the answer and a refusal is CORRECT — the denominator of a false rejection is the refusals of ANSWERABLE cases only"
+  },
+  {
+   "id": "RC-HPD-19",
+   "domain": "hpd",
+   "slice": "EVALUATION",
+   "kind": "CONFLICT",
+   "level": "INTERMEDIATE",
+   "question": "Does the barcode of a medicine carry the strength of that medicine?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "hpd-b-identification.md",
+     "proposition": "The barcode of a medicine provides the identifier of the product and the strength of that medicine."
+    },
+    {
+     "corpusFile": "hpd-c-reconciliation.md",
+     "proposition": "The barcode of a unit dose provides the batch number of that dose but not the strength of the medicine in it."
+    }
+   ],
+   "allowedEvidence": [],
+   "allowedDispositions": [
+    "QUALIFIED",
+    "ABSTAINED",
+    "ANSWERED"
+   ],
+   "corroboration": "NONE",
+   "contradiction": "CONFLICTING_SOURCES",
+   "note": "two documents contradict each other on the point, and a correct answer must carry BOTH sides of the contradiction"
+  },
+  {
+   "id": "RC-HPD-20",
+   "domain": "hpd",
+   "slice": "EVALUATION",
+   "kind": "CORROBORATED",
+   "level": "INTRODUCTORY",
+   "question": "What check stands between a unit dose and the ward that receives it?",
+   "answerable": true,
+   "necessaryEvidence": [
+    {
+     "corpusFile": "hpd-a-dispensing.md",
+     "proposition": "A unit dose in a hospital pharmacy has a label that the ward checks before the dose reaches the patient."
+    }
+   ],
+   "allowedEvidence": [
+    {
+     "corpusFile": "hpd-d-labelling.md",
+     "proposition": "A label on a unit dose is the last check on that dose before the ward receives it."
+    }
+   ],
+   "allowedDispositions": [
+    "ANSWERED"
+   ],
+   "corroboration": "TWO_SOURCES",
+   "contradiction": "NONE",
+   "note": "two documents state the same proposition; either one will do"
+  }
+ ]
+}
