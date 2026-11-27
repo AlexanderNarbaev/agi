@@ -332,11 +332,62 @@ def main():
         gate.check("the sealed evaluation is declared NOT EXECUTED",
                    served.get("sealed") is False, str(served.get("sealedNote", ""))[:120])
         summary = served.get("summary", {})
-        gate.check("the served path's grounding is at parity with the reference's",
-                   summary.get("parity") is True,
+        # THE PARITY, RE-DERIVED FROM THE ROWS. The artefact's own flag is a CLAIM about
+        # the rows; the gate checks the rows. A flag that says "parity" while the rows say
+        # otherwise is exactly the record this milestone exists to distrust.
+        rows = served.get("rows", [])
+        served_verdicts = {str(row.get("caseId")): bool(row.get("grounded")) for row in rows
+                           if row.get("arm") == "served"}
+        reference_verdicts = {str(row.get("caseId")): bool(row.get("grounded")) for row in rows
+                              if row.get("arm") == "reference"}
+        disagreements = sorted(case_id for case_id in reference_verdicts
+                                if served_verdicts.get(case_id) != reference_verdicts[case_id])
+        gate.check("the served path's grounding is at parity with the reference's, CASE BY CASE",
+                   not disagreements and bool(reference_verdicts),
+                   (str(len(disagreements)) + " disagreement(s): "
+                    + ", ".join(disagreements[:5]) if disagreements
+                    else str(len(reference_verdicts)) + " cases, the served path and the "
+                         + "reference agree on every one"))
+        gate.check("the artefact's parity flag agrees with its own rows",
+                   summary.get("parity") is True
+                   and summary.get("servedGrounded") == sum(served_verdicts.values())
+                   and summary.get("referenceGrounded") == sum(reference_verdicts.values()),
                    "served " + str(summary.get("servedGrounded")) + " reference "
                    + str(summary.get("referenceGrounded")) + " of "
                    + str(summary.get("cases")))
+        # ── THE DISTINCT SUBSEQUENT TASK ──
+        # The rows are checked HERE, not only in the suite that produced them: a row that
+        # says the exact revised procedure answered must BE the exact revised procedure,
+        # and the "before" row must be the fallback with its reason.
+        subsequent = served.get("distinctSubsequentTask", {})
+        gate.check("the distinct subsequent task is recorded for every domain",
+                   bool(subsequent) and len(subsequent) >= 2,
+                   str(len(subsequent)) + " domain(s)")
+        broken = []
+        for domain, row in subsequent.items():
+            before = row.get("before", {})
+            after = row.get("after", {})
+            revised = str(row.get("revisedProcedureId", ""))
+            if not revised:
+                broken.append(domain + ": no revision was promoted")
+                continue
+            if before.get("methodId") != "report.journey.reference.v1":
+                broken.append(domain + ": the 'before' row is not the reference")
+            if not str(before.get("planNoteOnTheProcedureThatDidNotRun", "")).strip():
+                broken.append(domain + ": the 'before' row names no fallback reason")
+            if before.get("grounded") is not True:
+                broken.append(domain + ": the 'before' row is not grounded")
+            if after.get("methodId") != "procedure." + revised:
+                broken.append(domain + ": the 'after' row is not the exact revised procedure")
+            if after.get("grounded") is not True:
+                broken.append(domain + ": the 'after' row is not grounded")
+            if after.get("effectVerified") is not True:
+                broken.append(domain + ": the 'after' row's effect is not verified")
+        gate.check("the distinct subsequent task's rows are what they claim", not broken,
+                   ("; ".join(broken[:4]) if broken
+                    else str(len(subsequent)) + " domains: the 'before' row is the fallback "
+                         + "with its reason, the 'after' row is the exact revised procedure, "
+                         + "grounded, with its effect verified"))
 
     # 3. the split's cases are all in the evidence
     split_path = REPO / SPLIT

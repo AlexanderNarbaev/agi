@@ -8,7 +8,6 @@ script re-derives it, and the document names the command.
 """
 
 import json
-import re
 from pathlib import Path
 
 EVIDENCE_DIR = Path(__file__).resolve().parent
@@ -66,11 +65,9 @@ def main():
     document = document[:start] + table + document[end:]
 
     not_established = len(cost["cells"]) - cheaper
-    document = re.sub(r"of the eight pre-registered grid cells, \*\*two\*\* are `CHEAPER` and "
-                      r"\*\*six\*\* are `NOT ESTABLISHED`",
-                      "of the eight pre-registered grid cells, **{}** are `CHEAPER` and **{}** "
-                      "are `NOT ESTABLISHED`".format(cheaper, not_established),
-                      document)
+    # ONLY THE TABLE IS REWRITTEN. The prose carries no count that a re-run could falsify,
+    # so there is nothing in it for this tool to keep in step — a tool that rewrites prose
+    # it does not understand is a tool that will one day rewrite prose wrongly.
     DOCUMENT.write_text(document, encoding="utf-8")
     print("the cost table is rendered from the retained artefact: {} CHEAPER, {} NOT "
           "ESTABLISHED".format(cheaper, not_established))

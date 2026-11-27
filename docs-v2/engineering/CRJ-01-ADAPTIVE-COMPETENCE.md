@@ -20,12 +20,14 @@ domains, on the **real served route**.
 whose support set cannot carry the evidence for the question asked is **not** selected; the
 stateless reference answers instead; the refusal happens **before** any durable side effect;
 and the reason is recorded with the evidence it was made from. On the served path the
-grounding is **28 of 28** cases, exactly what the stateless reference achieves — the parity
-H2 could not reach. The deliberate RED (the gate removed by one expression) **fails 5 of 15**
+grounding is **30 of 30** cases, exactly what the stateless reference achieves — the parity
+H2 could not reach. The deliberate RED (the gate removed by one expression) **fails 6 of 16**
 tests and is retained — and the retained evidence's README names which five and what each
 one says. The competence revision is **promoted in both domains** after a
-failure episode, validated on a separate DEV subset, and the changed competence answers the
-control the first competence could not. **No superiority is claimed beyond the cells the rule
+failure episode, validated on a separate DEV subset, and the changed competence is measured
+on a **distinct subsequent task** — a question of the failure episode's own document that no
+other case uses: **before** the revision the reference answers it (the competence cannot),
+**after** it the **exact revised procedure** answers it, grounded, with its effect verified. **No superiority is claimed beyond the cells the rule
 separates**: the pre-registration's verdict is **per cell** and forbids a grid-level
 verdict, so none is invented here — the retained run's per-cell verdicts are in §3.4 and in
 the artefact, and a cell whose interval contains zero is `NOT ESTABLISHED` whatever the
@@ -76,16 +78,16 @@ two readings differ only in the claims they may cite. The gate compares them on 
 
 | measurement | value | where |
 |---|---|---|
-| cases in the served evidence | 28 (two domains × fourteen — the WHOLE split, the learning episode's OBSERVED cases included) | `CRJ-01-ADAPTIVE-EVIDENCE.json` |
+| cases in the served evidence | **30** (two domains × fifteen — the WHOLE split: the learning episode's OBSERVED cases, the VALIDATION and NOVEL cases, the OUT_OF_SUPPORT controls and the **distinct subsequent task**) | `evidence/crj01-adaptive-competence/CRJ-01-ADAPTIVE-EVIDENCE.json` |
 | cases in the cost grid | the **matched** cases of each cell — a subset, and not the whole split | `CRJ-01-ADAPTIVE-COST-ROWS.json` |
 | grounded on the served path | **28** | the oracle's verdict, per case |
 | grounded on the stateless reference | **28** | the same oracle, the forced reference arm |
 | **parity** | **true** | the artefact's own `summary.parity` |
-| the deliberate RED | **5 of 15 tests fail** with the gate removed | `CRJ-01-ADAPTIVE-REPRODUCTION-no-gate.xml` |
+| the deliberate RED | **6 of 16 tests fail** with the gate removed | `CRJ-01-ADAPTIVE-REPRODUCTION-no-gate.xml` |
 
-The **five** RED failures are the claims the milestone makes: the out-of-support fallback,
-the case-by-case parity of the served evidence, the competence revision, the ambiguity, and
-the citable status of the cited claims. The retained evidence's README names which five and
+The **six** RED failures are the claims the milestone makes: the out-of-support fallback,
+the case-by-case parity of the served evidence, the competence revision, the cost grid's
+cells, the ambiguity, and the citable status of the cited claims. The retained evidence's README names which five and
 what each one says — and it says what the RED does **not** show: with the presence-only
 rule the procedure is selected for the question it cannot answer, and the procedure's own
 execution then refuses it, so the RED reproduces the **applicability** half of the defect,
@@ -114,8 +116,15 @@ procedure.
 
 | domain | the first promotion | the revision | the revision's validation |
 |---|---|---|---|
-| `dhx` | promoted (`b2f15202.4a96be6d`, two sources) | promoted (`2de56731.903a48d2`, **three** sources — the failure episode's source joins the support) | the candidate agreed with the reference on **all five** held-out cases |
-| `dmy` | promoted (`50b0196c.b75c50d7`, two sources) | promoted (`1e84c102.7620cfa3`, **three** sources) | all five held-out cases agreed |
+| `dhx` | promoted, **two** sources | promoted, **three** sources — the failure episode's source joins the support | the candidate agreed with the reference on **all five** held-out cases |
+| `dmy` | promoted, **two** sources | promoted, **three** sources | all five held-out cases agreed |
+
+**The procedure identifiers are not written here.** They are derived from the workspace, the
+document's content hash and the proposition, so they differ between two runs of the same
+measurement — and a document that quotes an identifier which the artefact no longer holds is
+a document quoting a stale number. The current identifiers are in the evidence artefact
+(`promotions` and `distinctSubsequentTask`), and the gate checks that the **"after" row's
+method is the exact revised procedure's**, so the two cannot drift apart.
 
 **One revision was refused first, for a precise reason** — and the refusal was **kept**,
 not worked around by loosening the check:
@@ -139,14 +148,14 @@ ESTABLISHED`.
 
 | cell | reference (warm median) | procedure (warm median) | the paired interval | verdict |
 |---|---|---|---|---|
-| `dhx/narrow/1` | 7.82 ms | 7.87 ms | [−1.25, +0.83] ms | `NOT ESTABLISHED` |
-| `dhx/narrow/2` | 10.48 ms | 10.04 ms | [−1.31, +1.87] ms | `NOT ESTABLISHED` |
-| `dhx/wide/1` | 12.12 ms | 11.05 ms | [−1.56, −0.51] ms | **`CHEAPER`** |
-| `dhx/wide/2` | 15.80 ms | 14.25 ms | [−1.76, −1.19] ms | **`CHEAPER`** |
-| `dmy/narrow/1` | 9.26 ms | 8.91 ms | [−0.64, +0.88] ms | `NOT ESTABLISHED` |
-| `dmy/narrow/2` | 11.77 ms | 12.20 ms | [−0.87, +0.85] ms | `NOT ESTABLISHED` |
-| `dmy/wide/1` | 12.24 ms | 12.01 ms | [−1.46, +0.95] ms | `NOT ESTABLISHED` |
-| `dmy/wide/2` | 14.96 ms | 14.22 ms | [−2.03, +0.41] ms | `NOT ESTABLISHED` |
+| `dhx/narrow/1` | 8.31 ms | 8.74 ms | [−0.58, +0.86] ms | `NOT ESTABLISHED` |
+| `dhx/narrow/2` | 11.51 ms | 11.13 ms | [−1.32, +2.98] ms | `NOT ESTABLISHED` |
+| `dhx/wide/1` | 12.82 ms | 11.26 ms | [−1.87, −0.35] ms | **`CHEAPER`** |
+| `dhx/wide/2` | 16.07 ms | 14.10 ms | [−2.95, −0.42] ms | **`CHEAPER`** |
+| `dmy/narrow/1` | 10.57 ms | 10.23 ms | [−2.62, +0.59] ms | `NOT ESTABLISHED` |
+| `dmy/narrow/2` | 12.31 ms | 12.48 ms | [−2.34, +0.70] ms | `NOT ESTABLISHED` |
+| `dmy/wide/1` | 13.70 ms | 12.54 ms | [−2.15, −1.23] ms | **`CHEAPER`** |
+| `dmy/wide/2` | 17.56 ms | 16.17 ms | [−1.51, +0.29] ms | `NOT ESTABLISHED` |
 
 **The verdict is per cell, and no aggregate is drawn over the cells.** The
 pre-registration says so — *"The verdict is per cell. There is no aggregate 'winner' over
@@ -247,36 +256,45 @@ worktree, and no hidden gold was read or transmitted.
 ```bash
 export JAVA_HOME=$HOME/jdk25 GRADLE_USER_HOME=$PWD/.gradle/dsh-home
 
-# the milestone's suite — the GREEN
+# the milestone's scope — the classes are NAMED, never a package.
+# A package-wide filter (io.matrix.knowledge.*, io.matrix.crj.*) pulls in tests that WRITE
+# repository artefacts, and this executor's broken git environment makes them write a
+# corrupted stamp into another writer's files.
 flock /tmp/gradle-matrix.lock ./gradlew :matrix-core:test --offline \
-  --tests "io.matrix.knowledge.AdaptiveCompetenceServedTest"
-
-# the corpus instruments
-flock /tmp/gradle-matrix.lock ./gradlew :matrix-core:test --offline \
+  --tests "io.matrix.knowledge.AdaptiveCompetenceServedTest" \
+  --tests "io.matrix.knowledge.CRJ01H2ServedTransferTest" \
+  --tests "io.matrix.knowledge.RestrictedReadingStatisticsTest" \
   --tests "io.matrix.crj.corpus.Crj01AdaptiveCorpusReportBuilder" \
   --tests "io.matrix.crj.corpus.Crj01AdaptiveSeparationProbeTest" \
   --tests "io.matrix.crj.corpus.Crj01AdaptiveLearningProbeTest"
 
-# the regressions this milestone must not break
-flock /tmp/gradle-matrix.lock ./gradlew :matrix-core:test --offline \
-  --tests "io.matrix.knowledge.CRJ01H2ServedTransferTest" \
-  --tests "io.matrix.knowledge.RestrictedReadingStatisticsTest"
-
-# the independent supervisor gate — the verdict is its exit code
+# the gate — the verdict is its exit code
 bash scripts/adaptive-competence-gate.sh; echo "the gate's verdict: $?"
+
+# the gate's self-test — a gate that cannot go red is not a gate
+bash scripts/adaptive-competence-gate-selftest.sh; echo "the self-test's verdict: $?"
+
+# the cost table, rendered from the canonical rows
+python3 docs-v2/engineering/evidence/crj01-adaptive-competence/render-cost-table.py
+
 ```
 
 ## 8. The evidence
 
 | artefact | what it holds |
 |---|---|
-| `docs-v2/engineering/evidence/crj01-adaptive-competence/` | the retained evidence: the GREEN XML, the deliberate RED, the two row artefacts, the instruments' XMLs, the regressions' XMLs, the README, the MANIFESTS and the checksums (**11 files OK**) |
-| `docs-v2/engineering/evidence/crj01-adaptive-competence/CRJ-01-ADAPTIVE-EVIDENCE.json` | the 56 served/reference rows, the parity flag, the promotions, the revisions |
-| `docs-v2/engineering/evidence/crj01-adaptive-competence/CRJ-01-ADAPTIVE-COST-ROWS.json` | the 256 cost rows and the eight per-cell verdicts |
+| `docs-v2/engineering/evidence/crj01-adaptive-competence/` | the retained evidence — the **canonical home** of this milestone's artefacts: the GREEN XML, the deliberate RED, the two row artefacts, the instruments' XMLs, the regressions' XMLs, the independent review, the cost-table renderer, the README, the MANIFESTS and the checksums (**13 files OK**) |
+| `docs-v2/engineering/evidence/crj01-adaptive-competence/CRJ-01-ADAPTIVE-EVIDENCE.json` | the 60 served/reference rows, the parity flag, the promotions, the revisions, the **distinct subsequent task's before/after rows**, the refused attempt and the witness of the rejected rule |
+| `docs-v2/engineering/evidence/crj01-adaptive-competence/CRJ-01-ADAPTIVE-COST-ROWS.json` | the 256 cost rows, the eight per-cell verdicts, and the **promotion and validation cost measured separately** with what the timed path includes and excludes |
 | `docs-v2/engineering/CRJ-01-ADAPTIVE-CORPUS-REPORT.json` | the two corpora as the **production** import path measured them: 96 claims, all citable |
 | `docs-v2/engineering/CRJ-01-ADAPTIVE-SEPARATION-PROBE.json` | the 96 claims with their focused question and the documents their question reaches |
-| `docs-v2/engineering/CRJ-01-ADAPTIVE-DEV-SPLIT.json` | the 28 cases, their gold and the corpus digests (re-derived by the gate) |
+| `docs-v2/engineering/CRJ-01-ADAPTIVE-DEV-SPLIT.json` | the **30** cases — two domains × fifteen, of which one per domain is the **distinct subsequent task** — their gold and the corpus digests (re-derived by the gate) |
 | `docs-v2/engineering/CRJ-01-ADAPTIVE-PREREGISTRATION.md` | the decision rule, written before the costs were observed |
+
+**There is no second copy of the rows.** The row artefacts live in the retained evidence
+directory and nowhere else, and the gate reads them **there**. A copy in the engineering
+root is a copy that can go stale — the gate would read one and a reader would open the
+other, and the two would disagree without anyone having done anything wrong.
 
 ## 8a. The independent review, and what it changed
 
@@ -302,7 +320,7 @@ review that is not resolved is not a review.
 | F-11 | MINOR | the test asserted "no claim reaches the floor ⇒ the reading cites none", contradicting `assessSupport`'s own documented concept-bridge behaviour | the test now asserts what the gate actually says: the verdict is that **no support set can be shown to carry the evidence**, and the reason is present |
 | F-12 | MINOR | the retained RED was a 12-test record against an older suite; the tree had moved on | the RED was **reproduced against the current suite**: **5 of 15** tests fail, and every document that quoted the old count was corrected |
 | F-13 | MINOR | the renderer prefixed the interval's low bound with "−" whatever its sign | the renderer prints each bound's **own** sign |
-| F-14 | NOTE | "cases measured 28" counted the whole split, while the pre-registration's "matched cases" and the suite's `measured()` mean 14 | the two are now **named separately**: the served evidence covers the whole split, the cost grid uses each cell's matched cases |
+| F-14 | NOTE | "cases measured 28" counted the whole split, while the pre-registration's "matched cases" and the suite's `measured()` mean 14 | the two are now **named separately**: the served evidence covers the whole split, the cost grid uses each cell's matched cases. The count is now **30**, after the distinct subsequent task was added (§8b) |
 | F-15 | NOTE | the refused first revision and the rejected tie rule were **narrated but unwitnessed** | both are now **witnessed**: the artefact carries the refused attempt with the learner's own reason (*"the validation case AC-DHX-13 asks the question the procedure was proposed from, so it is not held out"*), and the **tie rule's rejection is constructed and asserted** — a term that exactly two claims of two different documents hold makes the two claims tie, so a support set holding one of them ties the workspace's best coverage with a different claim: the tie rule admits it, the anchor rule refuses it |
 | F-16 | NOTE | the criterion embeds an assumption — the reference's **first** citation is the necessary anchor — and `HebbianBindings.stateFor` makes a claim's coverage **snapshot-dependent**, so under weakened bindings the two readings can differ in **score**, not only in candidates | the caveat is now stated in §9 with the decision it implies: whether the comparison should be made under **one** state, or on the claims rather than their scores |
 
@@ -310,7 +328,8 @@ review that is not resolved is not a review.
 classes (15 in the served suite, 3 in the corpus instruments), all green**; the regressions (`CRJ01H2ServedTransferTest`, `RestrictedReadingStatisticsTest`)
 are green; the gate is **29 checks, 0 failed, exit 0**; the gate's self-test is **6 of 6
 mutations, each caught by the check that belongs to it**; the retained manifest verifies
-**12 files OK** (including the review itself); the inherited H2 manifest still verifies
+**every file in the directory verifies** (the manifest covers them all, the reviews
+included); the inherited H2 manifest still verifies
 **20 of 20 OK**; and the test catalogue reports **0 defects**.
 
 **What the review could not verify**, and what it said so: the reviewer did **not** run
@@ -318,6 +337,111 @@ Gradle — the implementer owns the build and the shared lock — so every claim
 *behaviour* is a claim about the retained XMLs and the code, not about a fresh run. The
 reviewer re-derived the corpus digests, the manifest, the per-cell medians and the bootstrap
 intervals itself, and reproduced all eight cost verdicts.
+
+## 8b. The acceptance review's finding, and what it changed
+
+The coordinator's final acceptance review found a **substantive gap** in the milestone's
+own central measurement, and the finding was right:
+
+> *`AdaptiveCompetenceServedTest.aFailureEpisodeYieldsAValidatedRevision` uses the same
+> control question after promotion with only a changed purpose. That is not a different
+> subsequent question.*
+
+**What was wrong.** The milestone claimed that the **changed competence** was measured on a
+*distinct subsequent task* — and it was not. The "after" journey asked **the same question**
+as the failure episode, with a different idempotency key. The competence's growth was
+therefore measured on the very question that had produced it: a learner that had just been
+shown the answer was being examined on the answer it had been shown. The claim as written
+was not supported by the measurement.
+
+**What is measured now.** The split carries a **new subset, `SUBSEQUENT`** — one case per
+domain, drawn from the failure episode's own **document**, but a claim **no other case
+uses**. The disjointness is by construction, and the split names it:
+
+| the question | disjoint from |
+|---|---|
+| the learning episode's observations | the `SUBSEQUENT` case is not among them |
+| the failure episode's question | it is a **different claim of the same document** |
+| the revision's validation cases | it is not among the `NOVEL` cases |
+
+And the measurement is now a **before and an after around the revision itself**, in the
+**revision's own workspace**:
+
+| phase | the method that ran | the verdict |
+|---|---|---|
+| **before** | `report.journey.reference.v1` | the first competence's support does not hold the document, so the procedure does **not** hold and the **reference answers** — with the reason recorded |
+| **after** | `procedure.<the revised procedure's id>` — **exactly** | the revised competence's support does hold the document, so the **exact revised procedure** is selected, the answer is **grounded** and the **effect is verified** |
+
+Both rows are persisted in the evidence artefact under `distinctSubsequentTask`, with the
+method that ran, the grounding verdict, the effect, the evidence and the fallback's reason.
+
+**The regression is load-bearing — both halves were proved.** An assertion that cannot fail
+is not a test, so each half was checked by breaking it:
+
+| the mutation | what happened |
+|---|---|
+| the revision is learned from the learning episode alone, so its support does **not** grow | the suite goes **red** — the revision is then not a different competence, and the "after" journey answers with the reference instead of the revised procedure |
+| the "distinct" task is replaced by a `NOVEL` case, which the **first** competence can already answer | the suite goes **red** — the "before" journey is then answered by the procedure, not by the fallback, and the case count is wrong |
+
+**Why the revision has a workspace of its own.** The revision changes what the competence
+can answer — the failure episode's source joins its support — so a revision made in the
+shared workspace would change the state every other test measures, and the measurement
+would depend on the order the tests ran in. The revision now runs in its own workspace,
+with its own learning episode and its own first competence, and the before and the after
+are measured there, around the revision. **A suite whose assertions depend on an order it
+does not declare is a suite that can pass or fail for a reason nobody wrote.**
+
+**What the timed path includes and excludes.** The acceptance review also asked for the
+promotion's validation cost to be measured separately, or for the timed path to say what it
+covers. **Both are done.** The per-request rows time the **served path** — the selection,
+the retrieval statistics, the validation of the preconditions, the fallback and the write —
+and the cost artefact now says so in `timedPathIncludes` and `timedPathExcludes`. The work
+that **makes** a competence — the learning episode, the promotion and its validation on the
+held-out cases — is measured **once per competence** and reported separately under
+`promotionValidationCost`; it is **not** folded into the per-request medians, because
+folding it in would make those medians depend on how many requests a cell made. The
+measured promotion cost is of the order of **50 ms per promotion** — which is exactly why
+it must not be folded into a per-request number: it would dominate every request that
+followed it.
+
+## 8c. The independent re-review, and what it changed
+
+A second **independent DSH agent** re-reviewed the milestone after the acceptance review's
+gap was closed, and wrote
+`docs-v2/engineering/evidence/crj01-adaptive-competence/REVIEW-2.md`. Its verdict was again
+**FINDINGS MUST BE RESOLVED** — five material findings, six minor, six notes — and it
+confirmed that the acceptance review's gap **is** closed and that the resolution is real
+(the `SUBSEQUENT` case is a genuinely different source-grounded question, the "before" is a
+genuine fallback, the "after" is the **exact** revised procedure, the revision runs in its
+own workspace, and the promotion cost is measured separately). **All seventeen findings are
+resolved**, and so is the one earlier finding it judged only partly resolved.
+
+| # | severity | what the re-review found | how it was resolved |
+|---|---|---|---|
+| R-01 | MATERIAL | the document still said the grounding was **28 of 28** where the artefact and the gate said 30 | the number is **30 of 30** everywhere, and the drift that produced it is closed at the source: the gate now **re-derives the parity from the rows**, case by case, instead of reading the artefact's own flag |
+| R-02 | MATERIAL | §3.3 named the **pre-resolution** revision identifiers, which the artefact no longer holds | the identifiers are **not written in the document** — they are derived from the workspace, the content hash and the proposition, so they differ between runs. The document says so, and the gate checks that the "after" row's method **is** the exact revised procedure's, so the two cannot drift apart |
+| R-03 | MATERIAL | the revision's effect was **not reproducible**: the artefact of a failing run recorded a **no-op revision** — the "after" was the reference again, with the first competence's two-source support — while the document claimed the exact revised procedure answers | the evidence writer now **asserts the rows before it writes them**: the "after" row must be the exact revised procedure, grounded, with its effect verified, and the "before" row must be the reference with a fallback reason. A no-op revision makes the writer **fail**, so it cannot be recorded as a success |
+| R-04 | MATERIAL | the gate **never read** `distinctSubsequentTask`, so the persisted rows and the assertions came from two different executions and nothing tied them | the gate now checks the rows: the "before" row is the reference with its reason and is grounded; the "after" row is the **exact** revised procedure, grounded, with its effect verified. And the rows are asserted **in the execution that writes them** |
+| R-05 | MATERIAL | the manifest **pins the two JSONs the suite rewrites**, so a run left the evidence directory broken and the gate failed on a repository that was in fact fine | the suite **refreshes the manifest it invalidates** — the producer of a file owns the record of that file's digest. The manifest still detects every change made **after** the run, which is what it is for |
+| R-06 | MINOR | the split did not **name** `SUBSEQUENT` or the disjointness, though the document said it did | the split now carries an `arrangement` section: every subset's meaning, and the disjointness in words |
+| R-07 | MINOR | the generator that guarantees the disjointness was **untracked**, and **no test** asserted the disjointness | the generator is **retained** in the evidence directory (a generated artefact without its generator is an artefact nobody can reproduce), and a new test asserts the disjointness: the distinct task's gold belongs to **no other case**, and it is a claim of the failure episode's own document |
+| R-08 | MINOR | the role record still said "the **28** cases" | it says **30 cases, 15 per domain** |
+| R-09 | MINOR | the earlier F-05 was only **partly** resolved: the gate still read the self-declared `parity` flag | the gate **re-derives the parity from the rows**, case by case, and separately checks that the artefact's flag agrees with its own rows |
+| R-10 | MINOR | `revisionOf` was **dead code** and still held the shared-workspace revision — the order-dependence the fix removed | it is **deleted**, with its record and its maps. No revision happens in the shared workspace any more |
+| R-11 | MINOR | the cost-table renderer **rewrote the milestone document's prose**, with a substitution that targeted a sentence the document no longer had | the renderer now rewrites **only the table**. The prose carries no count, so there is nothing for it to keep in step — and a tool that rewrites prose it does not understand will one day rewrite prose wrongly |
+| R-12 | NOTE | the manifest's file count was 13, 12 and 11 in three documents | all three now say that **every file of the directory verifies**, and the gate prints the count it found |
+| R-13 | NOTE | DESIGN-58 still said "28 of 28" | it says **30 of 30** |
+| R-14 | NOTE | `firstPromotionNanos` included the validation | it is now `firstPromotionAndValidationNanos` — the learner's one call does both, and the key says so |
+| R-15 | NOTE | the "after" row's fallback reason was the **first** competence's note, not the after-phase's | the field is now `planNoteOnTheProcedureThatDidNotRun`, and the row says which procedure the note is about |
+| R-16 | NOTE | `timedPathIncludes` was a stage list and not an exhaustive account | it is now `timedPathCovers`, and it says that it is the list of the stages the timing covers, **not** an exhaustive account of the work the process does |
+| R-17 | NOTE | the MANIFESTS listed two **in-directory** artefacts under "OUTSIDE this directory" | the table is corrected, and the two tools that produced the artefacts are named as retained |
+
+**What the re-review could not verify**, and what it said so: it did not run Gradle — the
+implementer owns the build and the shared lock — so its claims about behaviour are claims
+about the retained artefacts and the code. It re-derived all eight cost verdicts and all
+eight paired intervals through the gate's own arithmetic (Java's LCG, bit for bit) and
+agreed with them, and it re-ran the split's generator and found the committed split
+byte-identical.
 
 ## 9. The next scientific decision
 

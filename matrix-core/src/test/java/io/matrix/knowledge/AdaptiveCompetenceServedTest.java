@@ -88,6 +88,19 @@ class AdaptiveCompetenceServedTest {
     private static final String CORPUS_REPORT =
             "docs-v2/engineering/CRJ-01-ADAPTIVE-CORPUS-REPORT.json";
 
+    /**
+     * The retained evidence directory — the CANONICAL home of this milestone's row
+     * artefacts.
+     *
+     * <p><b>Why the rows are written there and not in the engineering root.</b> A second
+     * copy of the same rows in the engineering root is a copy that can be stale: the gate
+     * reads one of them, a reader opens the other, and the two disagree without anyone
+     * having done anything wrong. The retained directory holds the rows, the manifest
+     * covers them, and the gate reads them where they are.</p>
+     */
+    private static final String EVIDENCE_DIRECTORY =
+            "docs-v2/engineering/evidence/crj01-adaptive-competence";
+
     /** The instant the promotions are recorded with — supplied, never read from a clock. */
     private static final String PROMOTED_AT = "2026-11-27T00:00:00Z";
 
@@ -136,16 +149,16 @@ class AdaptiveCompetenceServedTest {
     /** The corpus report, read once. */
     private Map<String, Map<String, Object>> corpusReportCache;
 
-    /** The outcome of each domain's competence revision. */
-    private final Map<String, ReportProcedureLearner.Outcome> revisionOutcomes =
-            new LinkedHashMap<>();
-
-    /** The revision of each domain, computed on demand. */
-    private final Map<String, Revision> revisions = new LinkedHashMap<>();
-
     /** The REFUSED attempt at each domain's revision — the one that held the proposed case. */
     private final Map<String, ReportProcedureLearner.Outcome> refusedOutcomes =
             new LinkedHashMap<>();
+
+    /** The revision experiment of each domain — its own workspace, before and after. */
+    private final Map<String, RevisionExperiment> revisionExperiments = new LinkedHashMap<>();
+
+    /** The cost of the PROMOTION and the VALIDATION, per domain — NOT part of the
+     * per-request timings of the served path. */
+    private final Map<String, Map<String, Long>> promotionValidationCosts = new LinkedHashMap<>();
 
     // ── the fixture ────────────────────────────────────────────────────────────
 
@@ -597,6 +610,49 @@ class AdaptiveCompetenceServedTest {
     }
 
     @Test
+    @DisplayName("the distinct subsequent task is DISJOINT from the observations, the failure "
+            + "question and the validation")
+    void theDistinctSubsequentTaskIsDisjoint() {
+        // The claim of the milestone is that the changed competence is measured on a
+        // DISTINCT subsequent task. "Distinct" is not a word: it is a property of the
+        // split, and this test is where the property is checked — the gold of the
+        // subsequent task belongs to NO other case, and it is a claim of the failure
+        // episode's own DOCUMENT, so that the revision's support can carry it.
+        for (String domain : domains) {
+            List<Case> subsequent = subset(domain, "SUBSEQUENT");
+            assertThat(subsequent)
+                    .as("the domain carries exactly one distinct subsequent task")
+                    .hasSize(1);
+            Case task = subsequent.get(0);
+            List<Case> others = new ArrayList<>();
+            for (Case other : cases) {
+                if (other.domain().equals(domain) && !other.id().equals(task.id())) {
+                    others.add(other);
+                }
+            }
+            for (Case other : others) {
+                for (String gold : task.goldPropositions()) {
+                    assertThat(other.goldPropositions())
+                            .as("the distinct subsequent task's gold is not another case's "
+                                    + "gold: %s against %s", task.id(), other.id())
+                            .doesNotContain(gold);
+                }
+            }
+            Case failure = subset(domain, "OUT_OF_SUPPORT").get(0);
+            assertThat(task.corpusFile())
+                    .as("the distinct subsequent task is a claim of the failure episode's own "
+                            + "document")
+                    .isEqualTo(failure.corpusFile());
+            assertThat(task.id())
+                    .as("the distinct subsequent task is not the failure question")
+                    .isNotEqualTo(failure.id());
+            assertThat(task.subset())
+                    .as("the distinct subsequent task is a case of its own subset")
+                    .isEqualTo("SUBSEQUENT");
+        }
+    }
+
+    @Test
     @DisplayName("the rejected tie rule is WITNESSED: it accepts a support set that holds the "
             + "wrong claim, and the kept rule refuses it")
     void theRejectedTieRuleIsWitnessed() {
@@ -830,6 +886,11 @@ class AdaptiveCompetenceServedTest {
         assertThat(rows)
                 .as("the grid produced rows: two domains, two corpus sizes, two support sizes")
                 .isNotEmpty();
+        // the promotion and its validation are measured where they happen, so the cost
+        // artefact can report them SEPARATELY from the per-request rows
+        for (String domain : domains) {
+            revisionExperiment(domain);
+        }
         writeCostEvidence(rows, cells);
     }
 
@@ -1176,6 +1237,50 @@ class AdaptiveCompetenceServedTest {
         evidence.put("timingNote", "the wall and CPU times are machine state; they are RECORDED "
                 + "and are NOT asserted by any test, and the verdicts are read against the "
                 + "pre-registered rule rather than against a preference");
+        // ── WHAT THE TIMED PATH INCLUDES AND EXCLUDES ──
+        // The per-request rows time the SERVED path: the selection, the statistics, the
+        // validation of the preconditions and the fallback. They do NOT time the work that
+        // MAKES a competence — the learning episode, the promotion and its validation —
+        // because that work happens once per competence and not once per request. The
+        // cost of that work is measured separately below, and it is NOT folded into the
+        // per-request numbers: folding it in would make the per-request medians depend on
+        // how many requests a cell made.
+        evidence.put("timedPathCovers", "the SERVED path of one request: the selection "
+                + "(the planner's scoring of the candidates), the retrieval statistics, the "
+                + "validation of the preconditions (the presence check and the "
+                + "question-specific adequacy check), the fallback and the writing of the "
+                + "artefact. This is the list of the stages the timing covers, NOT an "
+                + "exhaustive account of the work the process does");
+        evidence.put("timedPathExcludes", "the work that MAKES a competence: the learning "
+                + "episode, the promotion and the promotion's validation on the held-out "
+                + "cases. That work is measured once per competence, is reported under "
+                + "'promotionValidationCost', and is deliberately NOT folded into the "
+                + "per-request medians");
+        evidence.put("amortisationNote", "the cold premium of a cell is the cost of building "
+                + "the statistics once; the requestsToAmortiseColdStart count is how many "
+                + "requests pay it back, if the warm difference holds");
+        // ── THE PROMOTION AND VALIDATION COST, MEASURED SEPARATELY ──
+        Map<String, Object> promotionCost = new LinkedHashMap<>();
+        for (Map.Entry<String, Map<String, Long>> entry : promotionValidationCosts.entrySet()) {
+            Map<String, Object> line = new LinkedHashMap<>();
+            line.put("firstPromotionAndValidationNanos",
+                    entry.getValue().get("firstPromotionAndValidationNanos"));
+            line.put("revisionPromotionAndValidationNanos",
+                    entry.getValue().get("revisionPromotionAndValidationNanos"));
+            line.put("heldOutCasesValidated",
+                    separateValidationCases(entry.getKey()).size());
+            promotionCost.put(entry.getKey(), line);
+        }
+        evidence.put("promotionValidationCost", promotionCost);
+        evidence.put("promotionValidationNote", "the promotion and its validation are the "
+                + "work that MAKES a competence: the learner reads the retained journeys, "
+                + "derives the candidate's support, and checks the candidate against the "
+                + "held-out cases. The times are machine state, are RECORDED and are NOT "
+                + "asserted; they are reported separately because they happen once per "
+                + "competence and not once per request, and folding them into the "
+                + "per-request medians would make those medians depend on the number of "
+                + "requests a cell made");
+
         List<Map<String, Object>> written = new ArrayList<>();
         for (CostRow row : rows) {
             Map<String, Object> map = new LinkedHashMap<>();
@@ -1200,7 +1305,7 @@ class AdaptiveCompetenceServedTest {
         evidence.put("cells", cells);
         ObjectMapper json = JsonMapper.builder().build();
         Path artefact = RepositoryPaths.root()
-                .resolve("docs-v2/engineering/CRJ-01-ADAPTIVE-COST-ROWS.json");
+                .resolve(EVIDENCE_DIRECTORY + "/CRJ-01-ADAPTIVE-COST-ROWS.json");
         Files.createDirectories(artefact.getParent());
         Files.writeString(artefact, json.writerWithDefaultPrettyPrinter().writeValueAsString(evidence),
                 StandardCharsets.UTF_8);
@@ -1208,6 +1313,8 @@ class AdaptiveCompetenceServedTest {
         assertThat(((List<?>) reread.get("rows")).size())
                 .as("the artefact carries every measured row")
                 .isEqualTo(rows.size());
+        // the suite rewrote a file the manifest pins, so the manifest is refreshed here
+        refreshRetainedManifest();
     }
 
     /**
@@ -1268,24 +1375,20 @@ class AdaptiveCompetenceServedTest {
             + "subset, and the changed competence is measured on distinct subsequent tasks")
     void aFailureEpisodeYieldsAValidatedRevision() {
         for (String domain : domains) {
-            Procedure original = promotedProcedure(domain);
+            // The experiment runs in its OWN workspace, so that the revision's effect on
+            // what the competence can answer does not change the state the other tests
+            // measure. It is computed once per domain and shared with the evidence writer.
+            RevisionExperiment experiment = revisionExperiment(domain);
+            Procedure original = experiment.first().procedure();
             if (original == null) {
                 // no competence was promoted for this domain; there is nothing to revise.
                 // The reason is in the promotion outcome and is carried into the evidence.
+                assertThat(experiment.first().reason())
+                        .as("a domain without a competence says why")
+                        .isNotBlank();
                 continue;
             }
-            List<Case> controls = subset(domain, "OUT_OF_SUPPORT");
-            assertThat(controls)
-                    .as("the domain carries the control that the competence could not answer")
-                    .isNotEmpty();
-            Case control = controls.get(0);
-
-            // ── THE FAILURE EPISODE AND THE CANDIDATE REVISION ──
-            // The revision is computed ONCE per domain and shared: the evidence artefact and
-            // this test must see the same revision, and a test's order is not a guarantee.
-            Revision revision = revisionOf(domain);
-            ArtifactReportResource.JourneyResult failure = revision.failure();
-            ReportProcedureLearner.Outcome outcome = revision.outcome();
+            ReportProcedureLearner.Outcome outcome = experiment.outcome();
             if (!outcome.promoted()) {
                 // A REJECTION IS A LEGITIMATE OUTCOME. The reason is the evidence, and it is
                 // carried into the artefact; it is not worked around.
@@ -1303,15 +1406,42 @@ class AdaptiveCompetenceServedTest {
                     .as("the revision covers the failure episode's source as well")
                     .containsAll(ReportProcedure.supportOf(original));
 
-            // ── THE CHANGED COMPETENCE — on a distinct subsequent task ──
-            ArtifactReportResource.JourneyResult after = route.journey(workspaceOf(domain),
-                    request(control, revision.purpose() + "-after"), null);
+            // ── BEFORE: the distinct task the competence CANNOT answer ──
+            // The question is a different question — it is the failure episode's own
+            // DOCUMENT, but a claim no other case uses, and the first competence's support
+            // does not hold that document.
+            Case subsequent = experiment.subsequent();
+            assertThat(subsequent.subset())
+                    .as("the distinct subsequent task is a case of its own subset")
+                    .isEqualTo("SUBSEQUENT");
+            assertThat(subsequent.id())
+                    .as("the distinct subsequent task is not the failure question")
+                    .isNotEqualTo(subset(domain, "OUT_OF_SUPPORT").get(0).id());
+            ArtifactReportResource.JourneyResult before = experiment.before();
+            assertThat(before.outcome().methodId())
+                    .as("before the revision the competence cannot answer the distinct task, "
+                            + "so the reference answers: %s", subsequent.id())
+                    .isEqualTo(ReportJourneyMethod.REFERENCE_ID);
+            assertThat(planOf(before.outcome().taskId()))
+                    .as("the fallback names why the competence did not hold")
+                    .contains("was not applicable to this question");
+            assertThat(grounded(subsequent, domain, experiment.workspace(), before.response()))
+                    .as("the reference answers the distinct task with its own evidence: %s",
+                            subsequent.id())
+                    .isTrue();
+
+            // ── AFTER: the EXACT revised competence answers it ──
+            ArtifactReportResource.JourneyResult after = experiment.after();
             assertThat(after.outcome().methodId())
-                    .as("the control is now answered by a competence: %s", control.id())
-                    .startsWith("procedure.");
-            assertThat(grounded(control, domain, after.response()))
-                    .as("the changed competence answers the control with its evidence: %s",
-                            control.id())
+                    .as("after the revision the EXACT revised competence answers the distinct "
+                            + "task: %s", subsequent.id())
+                    .isEqualTo(ReportProcedureMethod.ID_PREFIX + revised.id());
+            assertThat(grounded(subsequent, domain, experiment.workspace(), after.response()))
+                    .as("the revised competence answers the distinct task with its evidence: %s",
+                            subsequent.id())
+                    .isTrue();
+            assertThat(after.outcome().effectVerified())
+                    .as("the revised competence's effect is verified: %s", subsequent.id())
                     .isTrue();
         }
     }
@@ -1491,7 +1621,8 @@ class AdaptiveCompetenceServedTest {
                         + "implementer's mechanism, and the questions are FORMULIC rather "
                         + "than natural. The split's gold is the production extraction's own "
                         + "sentence and the corpus digests are re-derived by the gate from "
-                        + "the corpus bytes, so the cases remain verifiable.",
+                        + "the corpus bytes, so the cases remain verifiable. The split holds 30 "
+                        + "cases: 15 per domain.",
                 "isolationInspector", "a SEPARATE DSH agent that probed the host's separation "
                         + "with synthetic canaries only",
                 "reviewer", "a SEPARATE DSH agent that read the diff and the evidence; its "
@@ -1501,10 +1632,10 @@ class AdaptiveCompetenceServedTest {
 
         Map<String, Object> promotionLines = new LinkedHashMap<>();
         Map<String, Object> revisions = new LinkedHashMap<>();
-        // the revision is computed here as well, so that the artefact carries it whatever
-        // order the tests ran in
+        // the revision experiment is computed here as well, so that the artefact carries it
+        // whatever order the tests ran in
         for (String domain : domains) {
-            revisionOf(domain);
+            revisionExperiment(domain);
             tieRuleWitnessOf(domain);
         }
         Map<String, Object> refusals = new LinkedHashMap<>();
@@ -1527,10 +1658,7 @@ class AdaptiveCompetenceServedTest {
             line.put("support", promotion == null || promotion.procedure() == null ? List.of()
                     : new ArrayList<>(ReportProcedure.supportOf(promotion.procedure())));
             promotionLines.put(domain, line);
-            ReportProcedureLearner.Outcome revision = revisionOutcomes.get(domain);
-            if (revision == null) {
-                continue;
-            }
+            ReportProcedureLearner.Outcome revision = revisionExperiment(domain).outcome();
             Map<String, Object> revisionLine = new LinkedHashMap<>();
             revisionLine.put("promoted", revision.promoted());
             revisionLine.put("reason", revision.reason());
@@ -1542,6 +1670,66 @@ class AdaptiveCompetenceServedTest {
         }
         evidence.put("promotions", promotionLines);
         evidence.put("refusedRevisionAttempts", refusals);
+        // ── THE DISTINCT SUBSEQUENT TASK, BEFORE AND AFTER THE REVISION ──
+        // The rows are persisted because a measurement nobody can read is not a
+        // measurement: each row names the question, the method that actually ran, the
+        // grounding verdict, the effect and the fallback's reason.
+        Map<String, Object> subsequentRows = new LinkedHashMap<>();
+        for (String domain : domains) {
+            RevisionExperiment experiment = revisionExperiment(domain);
+            Map<String, Object> line = new LinkedHashMap<>();
+            line.put("domain", experiment.domain());
+            line.put("workspace", experiment.workspace());
+            line.put("caseId", experiment.subsequent().id());
+            line.put("subset", experiment.subsequent().subset());
+            line.put("question", experiment.subsequent().question());
+            line.put("goldPropositions", experiment.subsequent().goldPropositions());
+            line.put("disjointFrom", "the learning episode's observations, the failure "
+                    + "episode's question and the revision's validation cases — the case is a "
+                    + "claim of the failure episode's own DOCUMENT that no other case uses");
+            line.put("before", subsequentRow(experiment, experiment.before(), true));
+            line.put("after", subsequentRow(experiment, experiment.after(), false));
+            line.put("revisedProcedureId",
+                    experiment.outcome().promoted() ? experiment.outcome().procedure().id() : "");
+            line.put("promoted", experiment.outcome().promoted());
+            line.put("promotionReason", experiment.outcome().reason());
+            // ── THE ROWS ARE ASSERTED BEFORE THEY ARE WRITTEN ──
+            // The evidence writer runs in its OWN execution, with its own workspace and its
+            // own store, and it must therefore verify the properties ITSELF: a row that
+            // says the exact revised procedure answered must BE the exact revised
+            // procedure answering, in this execution. A writer that recorded what it
+            // found without checking it would write a no-op revision's row as if it were a
+            // success — and the row would outlive the failure that produced it.
+            assertThat(experiment.outcome().promoted())
+                    .as("the distinct subsequent task's 'after' row is written only when the "
+                            + "revision was promoted: %s", domain)
+                    .isTrue();
+            String revisedId = experiment.outcome().procedure().id();
+            assertThat(String.valueOf(line.get("after")).isEmpty()).isFalse();
+            Map<String, Object> after = (Map<String, Object>) line.get("after");
+            Map<String, Object> before = (Map<String, Object>) line.get("before");
+            assertThat(after.get("methodId"))
+                    .as("the 'after' row is the EXACT revised procedure: %s", domain)
+                    .isEqualTo(ReportProcedureMethod.ID_PREFIX + revisedId);
+            assertThat(after.get("grounded"))
+                    .as("the 'after' row is grounded: %s", domain)
+                    .isEqualTo(Boolean.TRUE);
+            assertThat(after.get("effectVerified"))
+                    .as("the 'after' row's effect is verified: %s", domain)
+                    .isEqualTo(Boolean.TRUE);
+            assertThat(before.get("methodId"))
+                    .as("the 'before' row is the reference, which answers what the competence "
+                            + "cannot: %s", domain)
+                    .isEqualTo(ReportJourneyMethod.REFERENCE_ID);
+            assertThat(String.valueOf(before.get("planNoteOnTheProcedureThatDidNotRun")))
+                    .as("the 'before' row names the fallback's reason: %s", domain)
+                    .isNotBlank();
+            assertThat(before.get("grounded"))
+                    .as("the 'before' row is grounded: %s", domain)
+                    .isEqualTo(Boolean.TRUE);
+            subsequentRows.put(domain, line);
+        }
+        evidence.put("distinctSubsequentTask", subsequentRows);
         // THE WITNESS OF THE REJECTED RULE: the tie rule would have admitted a support set
         // that ties the workspace's best coverage with a DIFFERENT claim, and the kept rule
         // refuses it. The rejection is a measurement, not a recollection.
@@ -1566,7 +1754,7 @@ class AdaptiveCompetenceServedTest {
 
         ObjectMapper json = JsonMapper.builder().build();
         Path artefact = RepositoryPaths.root()
-                .resolve("docs-v2/engineering/CRJ-01-ADAPTIVE-EVIDENCE.json");
+                .resolve(EVIDENCE_DIRECTORY + "/CRJ-01-ADAPTIVE-EVIDENCE.json");
         Files.createDirectories(artefact.getParent());
         Files.writeString(artefact, json.writerWithDefaultPrettyPrinter().writeValueAsString(evidence),
                 StandardCharsets.UTF_8);
@@ -1574,6 +1762,8 @@ class AdaptiveCompetenceServedTest {
         assertThat(((List<?>) reread.get("rows")).size())
                 .as("the artefact carries every measured row")
                 .isEqualTo(rows.size());
+        // the suite rewrote a file the manifest pins, so the manifest is refreshed here
+        refreshRetainedManifest();
     }
 
     // ── the helpers ────────────────────────────────────────────────────────────
@@ -1592,6 +1782,131 @@ class AdaptiveCompetenceServedTest {
     /** The workspace a domain's corpus lives in. */
     private static String workspaceOf(String domain) {
         return WORKSPACE_PREFIX + domain;
+    }
+
+    /**
+     * The workspace the REVISION EXPERIMENT runs in.
+     *
+     * <p><b>Why the revision has a workspace of its own.</b> The revision changes what the
+     * competence can answer: the failure episode's source joins its support, so the
+     * questions of that document stop being out of support. A revision made in the shared
+     * workspace would therefore change the state every other test measures, and the
+     * measurement would depend on the order the tests ran in — a suite whose assertions
+     * depend on an order it does not declare is a suite that can pass or fail for a reason
+     * nobody wrote. The revision runs in its own workspace, with its own learning episode
+     * and its own first competence, and the BEFORE and the AFTER are both measured there,
+     * around the revision itself.</p>
+     *
+     * @param domain the domain
+     * @return the workspace
+     */
+    private static String revisionWorkspaceOf(String domain) {
+        return WORKSPACE_PREFIX + domain + "-revision";
+    }
+
+    /**
+     * The revision experiment of a domain: the distinct subsequent task BEFORE the revision
+     * and AFTER it.
+     *
+     * @param domain the domain
+     * @return the experiment
+     */
+    private RevisionExperiment revisionExperiment(String domain) {
+        RevisionExperiment cached = revisionExperiments.get(domain);
+        if (cached != null) {
+            return cached;
+        }
+        String workspace = revisionWorkspaceOf(domain);
+        for (String file : filesOf(domain)) {
+            bench.importDocument(workspace, corpusDirectory.resolve(file), file, "en");
+        }
+        // ── THE LEARNING EPISODE, in the revision's own workspace ──
+        List<String> observed = new ArrayList<>();
+        for (Case testCase : subset(domain, "OBSERVED")) {
+            ArtifactReportResource.JourneyResult result = route.journey(workspace,
+                    request(testCase, "revision-observed"), ReportJourneyMethod.REFERENCE_ID);
+            assertThat(result.response().getStatus())
+                    .as("the revision workspace's learning episode was served: %s", testCase.id())
+                    .isEqualTo(201);
+            observed.add(ReportJourneyTrace.episodeId(result.outcome().taskId()));
+        }
+        List<ReportProcedureLearner.Observation> observations =
+                ReportProcedureLearner.observationsFrom(cognitive.store(), observed);
+        long promotionStart = System.nanoTime();
+        ReportProcedureLearner.Outcome first = new ReportProcedureLearner(bench,
+                cognitive.store()).learn(workspace, observations, validationCases(domain),
+                Set.of(), PROMOTED_AT);
+        long promotionNanos = System.nanoTime() - promotionStart;
+
+        // ── THE DISTINCT SUBSEQUENT TASK ──
+        // A question of the failure episode's OWN document that no other case uses: the
+        // first competence's support does not hold that document, and the revision's does.
+        List<Case> subsequentCases = subset(domain, "SUBSEQUENT");
+        assertThat(subsequentCases)
+                .as("the domain carries a distinct subsequent task")
+                .hasSize(1);
+        Case subsequent = subsequentCases.get(0);
+
+        // ── BEFORE: the competence cannot answer it, and the reference answers ──
+        ArtifactReportResource.JourneyResult before = route.journey(workspace,
+                request(subsequent, "subsequent-before"), null);
+        assertThat(before.response().getStatus())
+                .as("the distinct subsequent task was served before the revision: %s",
+                        subsequent.id())
+                .isEqualTo(201);
+
+        // ── THE FAILURE EPISODE — the control the first competence cannot answer ──
+        List<Case> controls = subset(domain, "OUT_OF_SUPPORT");
+        assertThat(controls)
+                .as("the domain carries the control the competence cannot answer")
+                .isNotEmpty();
+        Case control = controls.get(0);
+        ArtifactReportResource.JourneyResult failure = route.journey(workspace,
+                request(control, "revision-failure"), null);
+
+        // ── THE CANDIDATE REVISION ──
+        List<String> episodeIds = new ArrayList<>(observed);
+        episodeIds.add(ReportJourneyTrace.episodeId(failure.outcome().taskId()));
+        List<ReportProcedureLearner.Observation> revisionObservations =
+                ReportProcedureLearner.observationsFrom(cognitive.store(), episodeIds);
+        List<ReportProcedureLearner.Case> separate = separateValidationCases(domain);
+        long validationStart = System.nanoTime();
+        ReportProcedureLearner.Outcome outcome = new ReportProcedureLearner(bench,
+                cognitive.store()).learn(workspace, revisionObservations, separate,
+                Set.of(), REVISION_PROMOTED_AT);
+        long validationNanos = System.nanoTime() - validationStart;
+
+        // ── THE REFUSED ATTEMPT, WITNESSED ──
+        // The first attempt validated the candidate on the case the candidate was PROPOSED
+        // from, and the learner refused it. The refusal is performed here and kept, so that
+        // the artefact carries the refusal itself and not a narration of it.
+        List<ReportProcedureLearner.Case> withTheProposedCase = new ArrayList<>(separate);
+        withTheProposedCase.add(new ReportProcedureLearner.Case(control.id(), control.question(),
+                AbstractionLevel.valueOf(control.level())));
+        ReportProcedureLearner.Outcome refused = new ReportProcedureLearner(bench,
+                cognitive.store()).learn(workspace, revisionObservations, withTheProposedCase,
+                Set.of(), REVISION_PROMOTED_AT);
+        refusedOutcomes.put(domain, refused);
+
+        // ── AFTER: the revised competence answers the SAME distinct task ──
+        ArtifactReportResource.JourneyResult after = route.journey(workspace,
+                request(subsequent, "subsequent-after"), null);
+        assertThat(after.response().getStatus())
+                .as("the distinct subsequent task was served after the revision: %s",
+                        subsequent.id())
+                .isEqualTo(201);
+
+        Map<String, Long> costs = new LinkedHashMap<>();
+            // the learner's ONE call does the promotion AND its validation, so
+            // the time carries both; the key says so
+            costs.put("firstPromotionAndValidationNanos", promotionNanos);
+        costs.put("revisionPromotionAndValidationNanos", validationNanos);
+        promotionValidationCosts.put(domain, costs);
+
+        RevisionExperiment experiment = new RevisionExperiment(domain, workspace, subsequent,
+                before, failure, after, first, outcome, refused);
+        revisionExperiments.put(domain, experiment);
+        return experiment;
     }
 
     /** The response's body. */
@@ -1673,6 +1988,39 @@ class AdaptiveCompetenceServedTest {
     private Set<String> supportOf(String domain) {
         Procedure procedure = promotedProcedure(domain);
         return procedure == null ? Set.of() : ReportProcedure.supportOf(procedure);
+    }
+
+    /**
+     * One row of the distinct subsequent task: the method that ran, the grounding verdict,
+     * the effect, the evidence and the fallback's reason.
+     *
+     * @param experiment the revision experiment
+     * @param journey    the journey that served the task
+     * @param before     whether this is the BEFORE row
+     * @return the row
+     */
+    private Map<String, Object> subsequentRow(RevisionExperiment experiment,
+            ArtifactReportResource.JourneyResult journey, boolean before) {
+        Map<String, Object> line = new LinkedHashMap<>();
+        Case subsequent = experiment.subsequent();
+        line.put("phase", before ? "before the revision" : "after the revision");
+        line.put("methodId", journey.outcome().methodId());
+        line.put("forced", journey.outcome().forced());
+        line.put("grounded", grounded(subsequent, experiment.domain(), experiment.workspace(),
+                journey.response()));
+        line.put("citations", citedOf(journey.response()).size());
+        line.put("citedClaimIds", citedOf(journey.response()));
+        line.put("effectVerified", journey.outcome().effectVerified());
+        line.put("artifactSha256", body(journey.response()).sha256());
+        line.put("plan", planOf(journey.outcome().taskId()));
+        // the plan's note about the procedure that did NOT run - in the "before" phase that
+        // is the first competence's refusal, and in the "after" phase it may be the same
+        // note, because the original competence is still offered and still does not hold
+        line.put("planNoteOnTheProcedureThatDidNotRun",
+                fallbackReason(planOf(journey.outcome().taskId())));
+        line.put("limitations", body(journey.response()).limitations());
+        line.put("tracePhases", journey.outcome().tracePhases());
+        return line;
     }
 
     /**
@@ -1799,61 +2147,6 @@ class AdaptiveCompetenceServedTest {
     }
 
     /**
-     * The competence revision of a domain: the failure episode and the candidate it yields.
-     *
-     * <p><b>Why it is computed once.</b> The revision writes to the durable store, and the
-     * evidence artefact and the revision test must see the SAME revision — and a test's
-     * order is not a guarantee. The revision is therefore computed on demand and kept.</p>
-     *
-     * @param domain the domain
-     * @return the revision
-     */
-    private Revision revisionOf(String domain) {
-        Revision cached = revisions.get(domain);
-        if (cached != null) {
-            return cached;
-        }
-        Procedure original = promotedProcedure(domain);
-        if (original == null) {
-            Revision none = new Revision(null, null, "none");
-            revisions.put(domain, none);
-            return none;
-        }
-        List<Case> controls = subset(domain, "OUT_OF_SUPPORT");
-        Case control = controls.get(0);
-        // the failure episode: the served path where the competence could not answer
-        ArtifactReportResource.JourneyResult failure = route.journey(workspaceOf(domain),
-                request(control, "failure-" + domain), null);
-        // the candidate revision: learned from the failure episode as well
-        List<String> episodeIds = new ArrayList<>(episodes.get(domain));
-        episodeIds.add(ReportJourneyTrace.episodeId(failure.outcome().taskId()));
-        List<ReportProcedureLearner.Observation> observations =
-                ReportProcedureLearner.observationsFrom(cognitive.store(), episodeIds);
-        // the validation subset is SEPARATE: the cases the first promotion did not use,
-        // and no sealed case is involved
-        List<ReportProcedureLearner.Case> separate = separateValidationCases(domain);
-        ReportProcedureLearner.Outcome outcome = new ReportProcedureLearner(bench,
-                cognitive.store()).learn(workspaceOf(domain), observations, separate,
-                Set.of(), REVISION_PROMOTED_AT);
-        revisionOutcomes.put(domain, outcome);
-        // ── THE REFUSED ATTEMPT, WITNESSED ──
-        // The first attempt validated the candidate on the case the candidate was PROPOSED
-        // from, and the learner refused it. The refusal is performed here and kept, so that
-        // the artefact carries the refusal itself and not a narration of it: a milestone
-        // that says "we were refused, and here is why" must be able to show the refusal.
-        List<ReportProcedureLearner.Case> withTheProposedCase = new ArrayList<>(separate);
-        withTheProposedCase.add(new ReportProcedureLearner.Case(control.id(), control.question(),
-                AbstractionLevel.valueOf(control.level())));
-        ReportProcedureLearner.Outcome refused = new ReportProcedureLearner(bench,
-                cognitive.store()).learn(workspaceOf(domain), observations, withTheProposedCase,
-                Set.of(), REVISION_PROMOTED_AT);
-        refusedOutcomes.put(domain, refused);
-        Revision revision = new Revision(failure, outcome, "failure-" + domain);
-        revisions.put(domain, revision);
-        return revision;
-    }
-
-    /**
      * The held-out cases of a domain's REVISION — the cases the first promotion did not use.
      *
      * @param domain the domain
@@ -1962,6 +2255,42 @@ class AdaptiveCompetenceServedTest {
         return read;
     }
 
+    /**
+     * Refreshes the retained evidence directory's manifest.
+     *
+     * <p><b>Why the suite owns it.</b> The suite rewrites the row artefacts on every run,
+     * and the manifest pins their digests — so a run that does not refresh the manifest
+     * leaves the evidence directory BROKEN, and the gate that verifies it fails on a
+     * repository that is in fact fine. The producer of a file owns the record of that
+     * file's digest; the manifest still detects every change made AFTER the run, which is
+     * what it is for.</p>
+     */
+    private void refreshRetainedManifest() throws IOException {
+        Path directory = RepositoryPaths.root().resolve(EVIDENCE_DIRECTORY);
+        if (!Files.isDirectory(directory)) {
+            return;
+        }
+        List<String> names = new ArrayList<>();
+        try (var entries = Files.list(directory)) {
+            entries.filter(path -> path.getFileName().toString().endsWith(".md")
+                            || path.getFileName().toString().endsWith(".json")
+                            || path.getFileName().toString().endsWith(".xml")
+                            || path.getFileName().toString().endsWith(".py"))
+                    .sorted()
+                    .forEach(path -> names.add(path.getFileName().toString()));
+        }
+        StringBuilder manifest = new StringBuilder();
+        for (String name : names) {
+            if ("CHECKSUMS.sha256".equals(name)) {
+                continue;
+            }
+            manifest.append(sha256(Files.readAllBytes(directory.resolve(name)))).append("  ")
+                    .append(name).append("\n");
+        }
+        Files.writeString(directory.resolve("CHECKSUMS.sha256"), manifest.toString(),
+                StandardCharsets.UTF_8);
+    }
+
     /** The digest of some bytes. */
     static String sha256(byte[] bytes) {
         try {
@@ -1973,14 +2302,26 @@ class AdaptiveCompetenceServedTest {
     }
 
     /**
-     * A competence revision: the failure episode and the candidate it yielded.
+     * The revision experiment of a domain: a DISTINCT subsequent task, answered before the
+     * revision and after it.
      *
-     * @param failure the failure episode's journey
-     * @param outcome the promotion outcome of the candidate
-     * @param purpose the key the failure episode's journey carried
+     * @param domain    the domain the experiment ran in
+     * @param workspace the workspace the experiment ran in
+     * @param subsequent the distinct subsequent task
+     * @param before    the journey that served the task BEFORE the revision
+     * @param failure   the failure episode's journey
+     * @param after     the journey that served the task AFTER the revision
+     * @param first     the outcome of the first promotion
+     * @param outcome   the outcome of the revision's promotion
+     * @param refused   the refused attempt at the revision
      */
-    private record Revision(ArtifactReportResource.JourneyResult failure,
-            ReportProcedureLearner.Outcome outcome, String purpose) {
+    private record RevisionExperiment(String domain, String workspace, Case subsequent,
+            ArtifactReportResource.JourneyResult before,
+            ArtifactReportResource.JourneyResult failure,
+            ArtifactReportResource.JourneyResult after,
+            ReportProcedureLearner.Outcome first,
+            ReportProcedureLearner.Outcome outcome,
+            ReportProcedureLearner.Outcome refused) {
     }
 
     /**

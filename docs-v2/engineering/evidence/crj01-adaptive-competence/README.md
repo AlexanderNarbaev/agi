@@ -46,12 +46,13 @@ question was. **Nothing else was touched** — the corpora, the split, the oracl
 the method and the route are all as they are in the tree.
 
 **Result — read from the retained XML, not from a recollection:** the suite goes red in
-**5 of 15** tests, and the five are:
+**6 of 16** tests, and the six are:
 
 | the failing test | what it says |
 |---|---|
 | *a question the support set cannot answer falls back to the reference, and the reason names the evidence* | the procedure was **served** for `AC-DHX-13`, a question its support cannot answer — the method the milestone exists to stop |
 | *the served evidence is written: the method that ran, the fallback reason, the evidence and the effect, case by case* | the served path's evidence is **not** the reference's own on the out-of-support cases, so the parity the milestone claims **fails case by case** |
+| *the pre-registered cost grid: the reference against the procedure, warm and cold, over two domains and two corpus sizes* | the grid's cells cannot be built on a competence that answers what it cannot — the **distinct subsequent task** has no separate "before" and "after" to compare |
 | *a failure episode yields a candidate revision, validated on a separate subset, and the changed competence is measured on distinct subsequent tasks* | *"a changed support set is a different competence, not a new version of the same one"* — with the presence-only rule the competence's support grows with the failure episode, and the revision path cannot be validated |
 | *an ambiguous question is not answered, by either path* | the ambiguous question was **answered** — the gate is what keeps it unanswered |
 | *every cited claim carries a citable status, and the evidence names its source* | the served response carried a body the route refused, so the evidence was never written |
@@ -79,9 +80,10 @@ cd docs-v2/engineering/evidence/crj01-adaptive-competence
 sha256sum -c CHECKSUMS.sha256
 ```
 
-The rows and the per-cell verdicts are in
-`docs-v2/engineering/evidence/crj01-adaptive-competence/CRJ-01-ADAPTIVE-EVIDENCE.json` and
-`docs-v2/engineering/evidence/crj01-adaptive-competence/CRJ-01-ADAPTIVE-COST-ROWS.json`; the corpora are measured in
+The rows and the per-cell verdicts are in **this directory** —
+`CRJ-01-ADAPTIVE-EVIDENCE.json` and `CRJ-01-ADAPTIVE-COST-ROWS.json` — **and nowhere
+else**: there is no second copy in the engineering root, because a copy that can go stale is
+a copy the gate and a reader can disagree about. The corpora are measured in
 `docs-v2/engineering/CRJ-01-ADAPTIVE-CORPUS-REPORT.json`; the cases are in
 `docs-v2/engineering/CRJ-01-ADAPTIVE-DEV-SPLIT.json`; and the rule the verdicts were read
 against is `docs-v2/engineering/CRJ-01-ADAPTIVE-PREREGISTRATION.md`.
@@ -100,6 +102,10 @@ against is `docs-v2/engineering/CRJ-01-ADAPTIVE-PREREGISTRATION.md`.
   (`CRJ-01-PROTOCOL.md` §5.5a: *"Deny the implementer read access before the frozen run"*)
   therefore **cannot be met here**. The measurement is a **DEV** run on the solver's own
   split, and the evidence artefacts say so in their own `sealed` field.
+- **A second copy of the rows.** The row artefacts live here and only here, and the gate
+  reads them here. An earlier arrangement kept a copy in the engineering root as well; it
+  was removed, because the two copies could disagree without anyone having done anything
+  wrong.
 - **The three legacy artefacts.** `CRJ-01-EVIDENCE.json`, `CRJ-01-EVIDENCE-DOMAIN-B.json` and
   `CRJ-01-FREEZE-RECORD.json` are rewritten by the legacy corpus-wide runners
   (`io.matrix.crj.runner.*`) whenever they run, and they carry **another writer's local

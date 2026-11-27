@@ -1,40 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="io.matrix.knowledge.AdaptiveCompetenceServedTest" tests="15" skipped="0" failures="5" errors="0" timestamp="2026-11-27T14:24:34.604Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="17.073">
+<testsuite name="io.matrix.knowledge.AdaptiveCompetenceServedTest" tests="16" skipped="0" failures="6" errors="0" timestamp="2026-11-27T15:15:40.824Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="20.185">
   <properties/>
-  <testcase name="a changed document invalidates the reused statistics, and the next request pays the cold cost again" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="1.582"/>
-  <testcase name="a question the support set cannot answer falls back to the reference, and the reason names the evidence" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.803">
+  <testcase name="a changed document invalidates the reused statistics, and the next request pays the cold cost again" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="1.738"/>
+  <testcase name="a question the support set cannot answer falls back to the reference, and the reason names the evidence" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.847">
     <failure message="org.opentest4j.AssertionFailedError: [the procedure is not applicable to an out-of-support question: AC-DHX-13] &#10;expected: &quot;report.journey.reference.v1&quot;&#10; but was: &quot;&quot;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: [the procedure is not applicable to an out-of-support question: AC-DHX-13] 
 expected: &quot;report.journey.reference.v1&quot;
  but was: &quot;&quot;
-	at io.matrix.knowledge.AdaptiveCompetenceServedTest.anUnsupportedQuestionFallsBackWithItsReason(AdaptiveCompetenceServedTest.java:283)
+	at io.matrix.knowledge.AdaptiveCompetenceServedTest.anUnsupportedQuestionFallsBackWithItsReason(AdaptiveCompetenceServedTest.java:296)
 </failure>
   </testcase>
-  <testcase name="the pre-registered cost grid: the reference against the procedure, warm and cold, over two domains and two corpus sizes" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="5.557"/>
-  <testcase name="the statistics of a view are reused, and a changed view invalidates them" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.69"/>
-  <testcase name="the gate's best claim is the claim the reference reading cites first" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.759"/>
-  <testcase name="the competence survives the restart, and the gate still holds afterwards" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.69"/>
-  <testcase name="a revision that changes the bytes but not the sentences still invalidates the reused statistics" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.793"/>
-  <testcase name="a procedure forced outside its domain is refused, and no artifact is written" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.701"/>
-  <testcase name="a failure episode yields a candidate revision, validated on a separate subset, and the changed competence is measured on distinct subsequent tasks" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.78">
-    <failure message="java.lang.AssertionError: [a changed support set is a different competence, not a new version of the same one] &#10;Expecting actual:&#10;  &quot;report.procedure.b2f15202.4a96be6d&quot;&#10;not to be equal to:&#10;  &quot;report.procedure.b2f15202.4a96be6d&quot;&#10;" type="java.lang.AssertionError">java.lang.AssertionError: [a changed support set is a different competence, not a new version of the same one] 
-Expecting actual:
-  &quot;report.procedure.b2f15202.4a96be6d&quot;
-not to be equal to:
-  &quot;report.procedure.b2f15202.4a96be6d&quot;
-
-	at io.matrix.knowledge.AdaptiveCompetenceServedTest.aFailureEpisodeYieldsAValidatedRevision(AdaptiveCompetenceServedTest.java:1301)
+  <testcase name="the distinct subsequent task is DISJOINT from the observations, the failure question and the validation" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.813"/>
+  <testcase name="the pre-registered cost grid: the reference against the procedure, warm and cold, over two domains and two corpus sizes" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="6.251">
+    <failure message="org.opentest4j.AssertionFailedError: [the distinct subsequent task was served before the revision: AC-DHX-15] &#10;expected: 201&#10; but was: 422" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: [the distinct subsequent task was served before the revision: AC-DHX-15] 
+expected: 201
+ but was: 422
+	at io.matrix.knowledge.AdaptiveCompetenceServedTest.revisionExperiment(AdaptiveCompetenceServedTest.java:1856)
+	at io.matrix.knowledge.AdaptiveCompetenceServedTest.theCostGridIsMeasured(AdaptiveCompetenceServedTest.java:892)
 </failure>
   </testcase>
-  <testcase name="every measured case is answered with the reference's own evidence, and the served path never answers where the procedure cannot" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.937"/>
-  <testcase name="an ambiguous question is not answered, by either path" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.681">
+  <testcase name="the statistics of a view are reused, and a changed view invalidates them" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.707"/>
+  <testcase name="the gate's best claim is the claim the reference reading cites first" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.839"/>
+  <testcase name="the competence survives the restart, and the gate still holds afterwards" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.716"/>
+  <testcase name="a revision that changes the bytes but not the sentences still invalidates the reused statistics" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.843"/>
+  <testcase name="a procedure forced outside its domain is refused, and no artifact is written" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.723"/>
+  <testcase name="a failure episode yields a candidate revision, validated on a separate subset, and the changed competence is measured on distinct subsequent tasks" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="1.025">
+    <failure message="org.opentest4j.AssertionFailedError: [the distinct subsequent task was served before the revision: AC-DHX-15] &#10;expected: 201&#10; but was: 422" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: [the distinct subsequent task was served before the revision: AC-DHX-15] 
+expected: 201
+ but was: 422
+	at io.matrix.knowledge.AdaptiveCompetenceServedTest.revisionExperiment(AdaptiveCompetenceServedTest.java:1856)
+	at io.matrix.knowledge.AdaptiveCompetenceServedTest.aFailureEpisodeYieldsAValidatedRevision(AdaptiveCompetenceServedTest.java:1381)
+</failure>
+  </testcase>
+  <testcase name="every measured case is answered with the reference's own evidence, and the served path never answers where the procedure cannot" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.954"/>
+  <testcase name="an ambiguous question is not answered, by either path" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.719">
     <failure message="org.opentest4j.AssertionFailedError: &#10;expected: 201&#10; but was: 422" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: 
 expected: 201
  but was: 422
-	at io.matrix.knowledge.AdaptiveCompetenceServedTest.anAmbiguousQuestionIsNotAnswered(AdaptiveCompetenceServedTest.java:774)
+	at io.matrix.knowledge.AdaptiveCompetenceServedTest.anAmbiguousQuestionIsNotAnswered(AdaptiveCompetenceServedTest.java:830)
 </failure>
   </testcase>
-  <testcase name="a reused identity with a changed question is refused, and the committed artifact is untouched" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.698"/>
-  <testcase name="every cited claim carries a citable status, and the evidence names its source" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.727">
+  <testcase name="a reused identity with a changed question is refused, and the committed artifact is untouched" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.779"/>
+  <testcase name="every cited claim carries a citable status, and the evidence names its source" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.758">
     <failure message="java.lang.AssertionError: [the response carries a body] &#10;Expecting actual:&#10;  {&quot;detail&quot;=&quot;the procedure report.procedure.b2f15202.4a96be6d does not hold for this request: the support set does not carry the workspace's own evidence for this question: the workspace's reading would cite clm-622e2fc6 (coverage 0.881) and the support set's best evidence reaches 0.198 (the coverage floor is 0.250), so the reference method must answer&quot;, &quot;error&quot;=&quot;method_refused&quot;}&#10;to be an instance of:&#10;  io.matrix.knowledge.ArtifactReportResource.ReportResponse&#10;but was instance of:&#10;  java.util.LinkedHashMap" type="java.lang.AssertionError">java.lang.AssertionError: [the response carries a body] 
 Expecting actual:
   {&quot;detail&quot;=&quot;the procedure report.procedure.b2f15202.4a96be6d does not hold for this request: the support set does not carry the workspace's own evidence for this question: the workspace's reading would cite clm-622e2fc6 (coverage 0.881) and the support set's best evidence reaches 0.198 (the coverage floor is 0.250), so the reference method must answer&quot;, &quot;error&quot;=&quot;method_refused&quot;}
@@ -42,16 +48,18 @@ to be an instance of:
   io.matrix.knowledge.ArtifactReportResource.ReportResponse
 but was instance of:
   java.util.LinkedHashMap
-	at io.matrix.knowledge.AdaptiveCompetenceServedTest.body(AdaptiveCompetenceServedTest.java:1600)
-	at io.matrix.knowledge.AdaptiveCompetenceServedTest.everyCitedClaimIsCitableAndNamed(AdaptiveCompetenceServedTest.java:716)
+	at io.matrix.knowledge.AdaptiveCompetenceServedTest.body(AdaptiveCompetenceServedTest.java:1915)
+	at io.matrix.knowledge.AdaptiveCompetenceServedTest.everyCitedClaimIsCitableAndNamed(AdaptiveCompetenceServedTest.java:772)
 </failure>
   </testcase>
-  <testcase name="the rejected tie rule is WITNESSED: it accepts a support set that holds the wrong claim, and the kept rule refuses it" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.703"/>
-  <testcase name="the served evidence is written: the method that ran, the fallback reason, the evidence and the effect, case by case" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.956">
-    <failure message="org.opentest4j.AssertionFailedError: &#10;expected: 201&#10; but was: 422" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: 
+  <testcase name="the rejected tie rule is WITNESSED: it accepts a support set that holds the wrong claim, and the kept rule refuses it" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.758"/>
+  <testcase name="the served evidence is written: the method that ran, the fallback reason, the evidence and the effect, case by case" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="1.696">
+    <failure message="org.opentest4j.AssertionFailedError: [the distinct subsequent task was served before the revision: AC-DHX-15] &#10;expected: 201&#10; but was: 422" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: [the distinct subsequent task was served before the revision: AC-DHX-15] 
 expected: 201
  but was: 422
-	at io.matrix.knowledge.AdaptiveCompetenceServedTest.theServedEvidenceIsWritten(AdaptiveCompetenceServedTest.java:1335)
+	at io.matrix.knowledge.AdaptiveCompetenceServedTest.revisionExperiment(AdaptiveCompetenceServedTest.java:1856)
+	at io.matrix.knowledge.AdaptiveCompetenceServedTest.writeServedEvidence(AdaptiveCompetenceServedTest.java:1638)
+	at io.matrix.knowledge.AdaptiveCompetenceServedTest.theServedEvidenceIsWritten(AdaptiveCompetenceServedTest.java:1512)
 </failure>
   </testcase>
   <system-out><![CDATA[]]></system-out>

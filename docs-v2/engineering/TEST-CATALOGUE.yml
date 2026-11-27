@@ -439,8 +439,8 @@ scopes:
     result:
       classes_discovered: 4
       classes_executed: 4
-      methods_executed: 18
-      successful: 18
+      methods_executed: 19
+      successful: 19
       failed: 0
       errored: 0
       skipped: 0
@@ -455,11 +455,11 @@ scopes:
       TEST-io.matrix.crj.corpus.Crj01AdaptiveSeparationProbeTest.xml and
       TEST-io.matrix.crj.corpus.Crj01AdaptiveLearningProbeTest.xml. The counts are read
       from those four files and not from the Gradle console summary. The retained copies
-      verify against the directory's own CHECKSUMS.sha256 (12 files OK, the independent
-      review among them), and the DELIBERATE
+      verify against the directory's own CHECKSUMS.sha256 (every file of the directory,
+      the independent reviews among them), and the DELIBERATE
       RED - the same suite with the applicability gate removed by one expression - is
-      retained beside them as CRJ-01-ADAPTIVE-REPRODUCTION-no-gate.xml and carries 5
-      failures of 15.
+      retained beside them as CRJ-01-ADAPTIVE-REPRODUCTION-no-gate.xml and carries 6
+      failures of 16.
     what_it_proves: >-
       that a procedure whose support set cannot carry the evidence for the question asked is
       NOT selected on the served route, that the stateless reference answers instead with
@@ -467,8 +467,11 @@ scopes:
       reason is recorded with the evidence it was made from, that the retrieval statistics
       are reused while the view does not change and are never served for a changed view,
       that the competence revision is promoted after a failure episode and validated on a
-      separate DEV subset, and that the served path's grounding is at PARITY with the
-      stateless reference's - 28 of 28 on two fresh synthetic DEV domains.
+      separate DEV subset, that the changed competence is measured on a DISTINCT subsequent
+      task - a question of the failure episode's own document that no other case uses, which
+      the first competence cannot answer and the exact revised procedure answers, grounded,
+      with its effect verified - and that the served path's grounding is at PARITY with the
+      stateless reference's - 30 of 30 on two fresh synthetic DEV domains.
     what_it_does_not_prove: >-
       it proves nothing about the SEALED evaluation, which is NOT EXECUTED: the host has one
       uid, no usable namespace, and a 0400 file was read by a same-uid process, so the

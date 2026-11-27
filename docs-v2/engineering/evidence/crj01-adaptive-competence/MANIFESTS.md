@@ -34,18 +34,26 @@ test), and the corpora are the milestone's own synthetic files under
 
 ## The artefacts that live OUTSIDE this directory, and why
 
-The rows and the numbers are in the repository's engineering root, because that is where the
-catalogue and the capability registry point:
+The rows and the numbers are in **this** directory, and only in this one — there is no
+second copy in the engineering root, because a copy that can go stale is a copy the gate
+and a reader can disagree about. The other artefacts live in the engineering root, because
+that is where the catalogue and the capability registry point:
 
 | artefact | what it holds |
 |---|---|
-| `docs-v2/engineering/evidence/crj01-adaptive-competence/CRJ-01-ADAPTIVE-EVIDENCE.json` | the per-case served rows, the parity flag, the promotions and the revisions |
-| `docs-v2/engineering/evidence/crj01-adaptive-competence/CRJ-01-ADAPTIVE-COST-ROWS.json` | the per-cell cost rows and the verdicts read against the pre-registration |
 | `docs-v2/engineering/CRJ-01-ADAPTIVE-CORPUS-REPORT.json` | the corpora as the production import path measured them |
 | `docs-v2/engineering/CRJ-01-ADAPTIVE-SEPARATION-PROBE.json` | the separation probe: the questions and the reach of every claim |
 | `docs-v2/engineering/CRJ-01-ADAPTIVE-DEV-SPLIT.json` | the DEV cases, their gold and the corpus digests |
 | `docs-v2/engineering/CRJ-01-ADAPTIVE-PREREGISTRATION.md` | the rule the verdicts were read against, written BEFORE the costs were observed |
 | `docs-v2/engineering/CRJ-01-ADAPTIVE-COMPETENCE.md` | the milestone document: the measured disposition and the next scientific decision |
 
-**A copy of each of the first two is retained here**, so that this directory verifies on its
-own: a reader who takes this directory alone still holds the rows and the costs.
+**The rows are here, not in the engineering root**: they are the canonical rows, and this
+directory verifies on its own — a reader who takes it alone still holds the rows, the costs
+and the reviews.
+
+## The tools that produced the artefacts, retained here
+
+| tool | what it made |
+|---|---|
+| `adaptive-split-fallback.py` | the DEV split — the questions and the gold, selected from the separation probe's narrow claims. It is retained because the split is **generated**, and a generated artefact without its generator is an artefact nobody can reproduce |
+| `render-cost-table.py` | the milestone document's cost table, rendered from the canonical rows, so that the table cannot drift from the artefact it cites |
