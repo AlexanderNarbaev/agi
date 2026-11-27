@@ -1,0 +1,514 @@
+{
+  "report" : "crj-01-reach-corpus-report",
+  "version" : "1.0",
+  "corpus" : "crj01-reach (synthetic, test-owned)",
+  "corpusDirectory" : "matrix-core/src/test/resources/crj01-reach",
+  "acquisitionPath" : "the PRODUCTION import path: workbench.importDocument(workspace, path, file, language)",
+  "purpose" : "the verbatim evidence the COMPETENCE-REACH DEV cases are written from: the sentences the production acquisition path derived, with the production claim ids it gave them",
+  "missingSentencesNote" : "the sentences the production acquisition path did NOT turn into a claim; a case's necessary evidence may only name a sentence that is NOT in this list, because a sentence that was not extracted has no claim to cite",
+  "domainOrderNote" : "the domains are reported in the lexicographic order of their directory names, and the files of a domain in the lexicographic order of their names; the order is stated so the artefact can be re-derived",
+  "domains" : [ {
+    "domain" : "hpd",
+    "workspace" : "crj01-reach-corpus-hpd",
+    "files" : [ "hpd-a-dispensing.md", "hpd-b-identification.md", "hpd-c-reconciliation.md", "hpd-d-labelling.md" ],
+    "documents" : [ {
+      "file" : "hpd-a-dispensing.md",
+      "sha256" : "e3ce929a870bbae064aed9f82f137f8cf7557d98e99b995bf25bb6ec436da8ac",
+      "sourceId" : "src-14c34089",
+      "claims" : [ {
+        "claimId" : "clm-56ed3339",
+        "proposition" : "A barcode on a unit dose of a medicine allows the cabinet to check that medicine against the prescription of the ward.",
+        "status" : "SUPPORTED",
+        "conceptId" : "9f3c78af",
+        "corpusFile" : "hpd-a-dispensing.md"
+      }, {
+        "claimId" : "clm-54bc6f3b",
+        "proposition" : "A dispensing cabinet in a hospital pharmacy stores the unit doses of the medicines that the ward asks for.",
+        "status" : "SUPPORTED",
+        "conceptId" : "b09ce7a3",
+        "corpusFile" : "hpd-a-dispensing.md"
+      }, {
+        "claimId" : "clm-cca3a80d",
+        "proposition" : "A picking machine in a hospital pharmacy takes the unit dose from the cabinet and records that removal in the log.",
+        "status" : "SUPPORTED",
+        "conceptId" : "2567b3dd",
+        "corpusFile" : "hpd-a-dispensing.md"
+      }, {
+        "claimId" : "clm-14d5838f",
+        "proposition" : "A unit dose in a hospital pharmacy has a label that the ward checks before the dose reaches the patient.",
+        "status" : "SUPPORTED",
+        "conceptId" : "9aaa63ba",
+        "corpusFile" : "hpd-a-dispensing.md"
+      }, {
+        "claimId" : "clm-ade9e7b0",
+        "proposition" : "A unit dose that does not match the barcode of its medicine requires a manual check before the ward receives it.",
+        "status" : "SUPPORTED",
+        "conceptId" : "59f15baf",
+        "corpusFile" : "hpd-a-dispensing.md"
+      }, {
+        "claimId" : "clm-9fa322d1",
+        "proposition" : "A unit dose with a label that the printer produced incorrectly requires a manual check before the ward receives it.",
+        "status" : "SUPPORTED",
+        "conceptId" : "be00e40e",
+        "corpusFile" : "hpd-a-dispensing.md"
+      }, {
+        "claimId" : "clm-d5f12fc8",
+        "proposition" : "An unrecorded unit dose in a hospital pharmacy reduces the ability of the pharmacy to account for the medicines in its cabinets.",
+        "status" : "SUPPORTED",
+        "conceptId" : "6c265b59",
+        "corpusFile" : "hpd-a-dispensing.md"
+      }, {
+        "claimId" : "clm-f5d698d8",
+        "proposition" : "The dispensing log of a hospital pharmacy provides the record of every unit dose that left the cabinet.",
+        "status" : "SUPPORTED",
+        "conceptId" : "2fad0633",
+        "corpusFile" : "hpd-a-dispensing.md"
+      }, {
+        "claimId" : "clm-e76c7eec",
+        "proposition" : "The picking list of a ward contains one line for every medicine that the ward needs during the day.",
+        "status" : "SUPPORTED",
+        "conceptId" : "842bfc5",
+        "corpusFile" : "hpd-a-dispensing.md"
+      }, {
+        "claimId" : "clm-dbcca4d1",
+        "proposition" : "The unit-dose dispensing process of a hospital requires a prescription that names the medicine and its dose.",
+        "status" : "SUPPORTED",
+        "conceptId" : "999f5579",
+        "corpusFile" : "hpd-a-dispensing.md"
+      } ],
+      "sentences" : [ "A dispensing cabinet in a hospital pharmacy stores the unit doses of the medicines that the ward asks for.", "The unit-dose dispensing process of a hospital requires a prescription that names the medicine and its dose.", "A barcode on a unit dose of a medicine allows the cabinet to check that medicine against the prescription of the ward.", "The picking list of a ward contains one line for every medicine that the ward needs during the day.", "A picking machine in a hospital pharmacy takes the unit dose from the cabinet and records that removal in the log.", "The dispensing log of a hospital pharmacy provides the record of every unit dose that left the cabinet.", "A unit dose that does not match the barcode of its medicine requires a manual check before the ward receives it.", "An unrecorded unit dose in a hospital pharmacy reduces the ability of the pharmacy to account for the medicines in its cabinets.", "A unit dose in a hospital pharmacy has a label that the ward checks before the dose reaches the patient.", "A unit dose with a label that the printer produced incorrectly requires a manual check before the ward receives it." ],
+      "missingSentences" : [ ]
+    }, {
+      "file" : "hpd-b-identification.md",
+      "sha256" : "f939b9e44c2c8d890411ddc825367dfd48e285852aa4608c5afc8890d90404c1",
+      "sourceId" : "src-85562bbf",
+      "claims" : [ {
+        "claimId" : "clm-619b75c4",
+        "proposition" : "A medicine in a hospital pharmacy has a label that states the substance inside the package.",
+        "status" : "SUPPORTED",
+        "conceptId" : "cf516dc7",
+        "corpusFile" : "hpd-b-identification.md"
+      }, {
+        "claimId" : "clm-68034c30",
+        "proposition" : "A medicine with two similar packages requires a check of the barcode before the unit dose leaves the cabinet.",
+        "status" : "SUPPORTED",
+        "conceptId" : "a82c5248",
+        "corpusFile" : "hpd-b-identification.md"
+      }, {
+        "claimId" : "clm-5fd19c67",
+        "proposition" : "A mismatch between the strength on a barcode and the strength in a prescription requires a manual check.",
+        "status" : "SUPPORTED",
+        "conceptId" : "8073bd49",
+        "corpusFile" : "hpd-b-identification.md"
+      }, {
+        "claimId" : "clm-a01b231b",
+        "proposition" : "A packaging change of a medicine makes an old barcode useless for the identification of the new package.",
+        "status" : "SUPPORTED",
+        "conceptId" : "856aa087",
+        "corpusFile" : "hpd-b-identification.md"
+      }, {
+        "claimId" : "clm-92731610",
+        "proposition" : "A scanner that cannot read the barcode of a medicine requires the cabinet to stop and to ask the pharmacist.",
+        "status" : "SUPPORTED",
+        "conceptId" : "d4c9862b",
+        "corpusFile" : "hpd-b-identification.md"
+      }, {
+        "claimId" : "clm-3a875cb2",
+        "proposition" : "A unit dose that does not match the barcode of its medicine requires a manual check before the ward dispenses it.",
+        "status" : "SUPPORTED",
+        "conceptId" : "59f15baf",
+        "corpusFile" : "hpd-b-identification.md"
+      }, {
+        "claimId" : "clm-f7c04d17",
+        "proposition" : "The barcode of a medicine provides the identifier of the product and the strength of that medicine.",
+        "status" : "SUPPORTED",
+        "conceptId" : "c1591a2",
+        "corpusFile" : "hpd-b-identification.md"
+      }, {
+        "claimId" : "clm-b020f6b9",
+        "proposition" : "The reading of a barcode takes a fraction of a second on a scanner that sits beside the cabinet.",
+        "status" : "SUPPORTED",
+        "conceptId" : "76724372",
+        "corpusFile" : "hpd-b-identification.md"
+      }, {
+        "claimId" : "clm-80937425",
+        "proposition" : "The recall of a medicine in a hospital requires the identification of every unit dose of that medicine in the cabinets.",
+        "status" : "SUPPORTED",
+        "conceptId" : "bbc51fed",
+        "corpusFile" : "hpd-b-identification.md"
+      } ],
+      "sentences" : [ "The barcode of a medicine provides the identifier of the product and the strength of that medicine.", "A medicine with two similar packages requires a check of the barcode before the unit dose leaves the cabinet.", "A mismatch between the strength on a barcode and the strength in a prescription requires a manual check.", "A medicine in a hospital pharmacy has a label that states the substance inside the package.", "The reading of a barcode takes a fraction of a second on a scanner that sits beside the cabinet.", "A scanner that cannot read the barcode of a medicine requires the cabinet to stop and to ask the pharmacist.", "The recall of a medicine in a hospital requires the identification of every unit dose of that medicine in the cabinets.", "A packaging change of a medicine makes an old barcode useless for the identification of the new package.", "A unit dose that does not match the barcode of its medicine requires a manual check before the ward dispenses it." ],
+      "missingSentences" : [ ]
+    }, {
+      "file" : "hpd-c-reconciliation.md",
+      "sha256" : "2b92f9c716ae94206b01d2b3796783901249934b39cd7200cd8807aa869ba999",
+      "sourceId" : "src-6f77ddbe",
+      "claims" : [ {
+        "claimId" : "clm-a9ceaa25",
+        "proposition" : "A disagreement about a medicine during an admission requires the pharmacist and the ward to agree before the next dose.",
+        "status" : "SUPPORTED",
+        "conceptId" : "d4b90e97",
+        "corpusFile" : "hpd-c-reconciliation.md"
+      }, {
+        "claimId" : "clm-ef7bccd9",
+        "proposition" : "A medication reconciliation that happens on the day of the admission provides more information than one that happens later.",
+        "status" : "SUPPORTED",
+        "conceptId" : "7eda12d1",
+        "corpusFile" : "hpd-c-reconciliation.md"
+      }, {
+        "claimId" : "clm-66e6776",
+        "proposition" : "A medicine that the patient brought in and that the ward does not hold requires a note in the record of the admission.",
+        "status" : "SUPPORTED",
+        "conceptId" : "8bcb0d21",
+        "corpusFile" : "hpd-c-reconciliation.md"
+      }, {
+        "claimId" : "clm-f4a725dd",
+        "proposition" : "A missing entry in the record of an admission creates a risk of a duplicate dose.",
+        "status" : "SUPPORTED",
+        "conceptId" : "f8c291bc",
+        "corpusFile" : "hpd-c-reconciliation.md"
+      }, {
+        "claimId" : "clm-96d1544",
+        "proposition" : "The barcode of a unit dose provides the batch number of that dose but not the strength of the medicine in it.",
+        "status" : "SUPPORTED",
+        "conceptId" : "625b18b5",
+        "corpusFile" : "hpd-c-reconciliation.md"
+      }, {
+        "claimId" : "clm-986c36a2",
+        "proposition" : "The list of medicines at the admission of a patient acts as the reference for every dose that the ward gives later.",
+        "status" : "SUPPORTED",
+        "conceptId" : "9a2fe16a",
+        "corpusFile" : "hpd-c-reconciliation.md"
+      }, {
+        "claimId" : "clm-993b944b",
+        "proposition" : "The medication reconciliation of a patient requires a comparison between the medicines of the ward and the medicines that the patient brought in.",
+        "status" : "SUPPORTED",
+        "conceptId" : "55beefa3",
+        "corpusFile" : "hpd-c-reconciliation.md"
+      }, {
+        "claimId" : "clm-a2fa91d0",
+        "proposition" : "The reconciliation of an admission in a hospital pharmacy reduces the number of medicines that the ward gives without a record.",
+        "status" : "SUPPORTED",
+        "conceptId" : "3ec6c3df",
+        "corpusFile" : "hpd-c-reconciliation.md"
+      }, {
+        "claimId" : "clm-16475623",
+        "proposition" : "The record of an admission contains the list of medicines that the ward gives to the patient.",
+        "status" : "SUPPORTED",
+        "conceptId" : "45c0b3f4",
+        "corpusFile" : "hpd-c-reconciliation.md"
+      } ],
+      "sentences" : [ "The medication reconciliation of a patient requires a comparison between the medicines of the ward and the medicines that the patient brought in.", "A medicine that the patient brought in and that the ward does not hold requires a note in the record of the admission.", "The record of an admission contains the list of medicines that the ward gives to the patient.", "A disagreement about a medicine during an admission requires the pharmacist and the ward to agree before the next dose.", "The reconciliation of an admission in a hospital pharmacy reduces the number of medicines that the ward gives without a record.", "A missing entry in the record of an admission creates a risk of a duplicate dose.", "The list of medicines at the admission of a patient acts as the reference for every dose that the ward gives later.", "A medication reconciliation that happens on the day of the admission provides more information than one that happens later.", "The barcode of a unit dose provides the batch number of that dose but not the strength of the medicine in it." ],
+      "missingSentences" : [ ]
+    }, {
+      "file" : "hpd-d-labelling.md",
+      "sha256" : "2d5ef5c7a8ae8f151f163c7fb7de752c1741b01d9204c4cd97e91250b57bbb95",
+      "sourceId" : "src-54915bd1",
+      "claims" : [ {
+        "claimId" : "clm-17a1108e",
+        "proposition" : "A delivery error causes the preparation of one ward to end up in the wrong cabinet.",
+        "status" : "SUPPORTED",
+        "conceptId" : "ea47f632",
+        "corpusFile" : "hpd-d-labelling.md"
+      }, {
+        "claimId" : "clm-15cfb12b",
+        "proposition" : "A label on a unit dose is the last check on that dose before the ward receives it.",
+        "status" : "SUPPORTED",
+        "conceptId" : "4c1cbb6f",
+        "corpusFile" : "hpd-d-labelling.md"
+      }, {
+        "claimId" : "clm-79b1fa00",
+        "proposition" : "A label that the printer produced incorrectly requires the pharmacist to check it against the prescription.",
+        "status" : "SUPPORTED",
+        "conceptId" : "e9ba9ab0",
+        "corpusFile" : "hpd-d-labelling.md"
+      }, {
+        "claimId" : "clm-d7174eb5",
+        "proposition" : "A label with the wrong name makes every wrapper that carries it be withdrawn.",
+        "status" : "SUPPORTED",
+        "conceptId" : "1de15ea3",
+        "corpusFile" : "hpd-d-labelling.md"
+      }, {
+        "claimId" : "clm-419db34f",
+        "proposition" : "A printed label states the preparation and the amount that the preparation carries.",
+        "status" : "SUPPORTED",
+        "conceptId" : "7252da04",
+        "corpusFile" : "hpd-d-labelling.md"
+      }, {
+        "claimId" : "clm-e0930ec",
+        "proposition" : "The colour of a wrapper lets the staff separate one preparation from another.",
+        "status" : "SUPPORTED",
+        "conceptId" : "3a57d7c0",
+        "corpusFile" : "hpd-d-labelling.md"
+      }, {
+        "claimId" : "clm-f96cc4c5",
+        "proposition" : "The printed label acts as the last check on a preparation before the ward receives it.",
+        "status" : "SUPPORTED",
+        "conceptId" : "c2582704",
+        "corpusFile" : "hpd-d-labelling.md"
+      }, {
+        "claimId" : "clm-4826fa1a",
+        "proposition" : "The wording of a label becomes ambiguous when the amount is not printed next to its name.",
+        "status" : "SUPPORTED",
+        "conceptId" : "5bec4c",
+        "corpusFile" : "hpd-d-labelling.md"
+      }, {
+        "claimId" : "clm-582603a6",
+        "proposition" : "Two preparations with close names need a distinct label on every wrapper.",
+        "status" : "SUPPORTED",
+        "conceptId" : "b2ea551b",
+        "corpusFile" : "hpd-d-labelling.md"
+      } ],
+      "sentences" : [ "A printed label states the preparation and the amount that the preparation carries.", "A label that the printer produced incorrectly requires the pharmacist to check it against the prescription.", "The wording of a label becomes ambiguous when the amount is not printed next to its name.", "Two preparations with close names need a distinct label on every wrapper.", "A delivery error causes the preparation of one ward to end up in the wrong cabinet.", "The colour of a wrapper lets the staff separate one preparation from another.", "A label with the wrong name makes every wrapper that carries it be withdrawn.", "The printed label acts as the last check on a preparation before the ward receives it.", "A label on a unit dose is the last check on that dose before the ward receives it." ],
+      "missingSentences" : [ ]
+    } ],
+    "counts" : {
+      "documents" : 4,
+      "claims" : 37,
+      "citableClaims" : 37
+    }
+  }, {
+    "domain" : "wbe",
+    "workspace" : "crj01-reach-corpus-wbe",
+    "files" : [ "wbe-a-erosion.md", "wbe-b-inspection.md", "wbe-c-coatings.md", "wbe-d-aerodynamics.md" ],
+    "documents" : [ {
+      "file" : "wbe-a-erosion.md",
+      "sha256" : "443cd9ee2b9ab441e0d5dde0bbfcdb1d2754e0112dd23fa6433e7b6f6f284f14",
+      "sourceId" : "src-fcb29a5",
+      "claims" : [ {
+        "claimId" : "clm-9c07454f",
+        "proposition" : "A protective coating over the leading edge of a wind-turbine blade reduces the erosion rate of that edge.",
+        "status" : "SUPPORTED",
+        "conceptId" : "84506a5e",
+        "corpusFile" : "wbe-a-erosion.md"
+      }, {
+        "claimId" : "clm-c2119f34",
+        "proposition" : "Erosion pits on a wind-turbine blade act as the starting points for further material loss.",
+        "status" : "SUPPORTED",
+        "conceptId" : "7f8e3b7c",
+        "corpusFile" : "wbe-a-erosion.md"
+      }, {
+        "claimId" : "clm-1aba53fe",
+        "proposition" : "Rain that strikes a wind-turbine blade causes the leading edge of that blade to lose material.",
+        "status" : "SUPPORTED",
+        "conceptId" : "52411d2a",
+        "corpusFile" : "wbe-a-erosion.md"
+      }, {
+        "claimId" : "clm-651ee9ee",
+        "proposition" : "Salt carried in sea air causes the leading edge of a wind-turbine blade to corrode faster than the rest of that blade.",
+        "status" : "SUPPORTED",
+        "conceptId" : "f4dab3f5",
+        "corpusFile" : "wbe-a-erosion.md"
+      }, {
+        "claimId" : "clm-22a11be4",
+        "proposition" : "Sea spray causes a higher erosion rate on a wind-turbine blade than dry air produces.",
+        "status" : "SUPPORTED",
+        "conceptId" : "6cb671c1",
+        "corpusFile" : "wbe-a-erosion.md"
+      }, {
+        "claimId" : "clm-6c0de784",
+        "proposition" : "The erosion rate of a wind-turbine blade depends on the wind speed and on the size of the rain drops that strike it.",
+        "status" : "SUPPORTED",
+        "conceptId" : "be092ff5",
+        "corpusFile" : "wbe-a-erosion.md"
+      }, {
+        "claimId" : "clm-f38bd010",
+        "proposition" : "The inspection interval for a wind-turbine blade in a coastal site depends on the erosion rate that the site produces.",
+        "status" : "SUPPORTED",
+        "conceptId" : "12774f81",
+        "corpusFile" : "wbe-a-erosion.md"
+      }, {
+        "claimId" : "clm-6250a875",
+        "proposition" : "The size of the rain drops changes the erosion rate of a wind-turbine blade at an exposed coastal site.",
+        "status" : "SUPPORTED",
+        "conceptId" : "24108247",
+        "corpusFile" : "wbe-a-erosion.md"
+      } ],
+      "sentences" : [ "Rain that strikes a wind-turbine blade causes the leading edge of that blade to lose material.", "Salt carried in sea air causes the leading edge of a wind-turbine blade to corrode faster than the rest of that blade.", "The erosion rate of a wind-turbine blade depends on the wind speed and on the size of the rain drops that strike it.", "The size of the rain drops changes the erosion rate of a wind-turbine blade at an exposed coastal site.", "A protective coating over the leading edge of a wind-turbine blade reduces the erosion rate of that edge.", "Erosion pits on a wind-turbine blade act as the starting points for further material loss.", "Sea spray causes a higher erosion rate on a wind-turbine blade than dry air produces.", "The inspection interval for a wind-turbine blade in a coastal site depends on the erosion rate that the site produces." ],
+      "missingSentences" : [ ]
+    }, {
+      "file" : "wbe-b-inspection.md",
+      "sha256" : "3da3a0c3df3b9b9513f0dc1c897bdea8a9bd18a4f3c2ca4357a28e2bca9dffee",
+      "sourceId" : "src-686bcc79",
+      "claims" : [ {
+        "claimId" : "clm-bc84844e",
+        "proposition" : "A drone that photographs the leading edge of a wind-turbine blade produces images that reveal small erosion pits.",
+        "status" : "SUPPORTED",
+        "conceptId" : "a2e03828",
+        "corpusFile" : "wbe-b-inspection.md"
+      }, {
+        "claimId" : "clm-1cc2bfce",
+        "proposition" : "A repair of a wind-turbine blade uses a filler material to restore the shape of the leading edge.",
+        "status" : "SUPPORTED",
+        "conceptId" : "72bbf9f1",
+        "corpusFile" : "wbe-b-inspection.md"
+      }, {
+        "claimId" : "clm-94f3addf",
+        "proposition" : "A second inspection of a wind-turbine blade becomes necessary after a period of operation in sea spray.",
+        "status" : "SUPPORTED",
+        "conceptId" : "21d20ea6",
+        "corpusFile" : "wbe-b-inspection.md"
+      }, {
+        "claimId" : "clm-45052b2b",
+        "proposition" : "An inspection of a wind-turbine blade requires a comparison between the new measurement and the measurement of the previous inspection.",
+        "status" : "SUPPORTED",
+        "conceptId" : "a3188dc",
+        "corpusFile" : "wbe-b-inspection.md"
+      }, {
+        "claimId" : "clm-11c4f272",
+        "proposition" : "An ultrasonic sensor measures the thickness of the leading edge of a wind-turbine blade without touching that blade.",
+        "status" : "SUPPORTED",
+        "conceptId" : "769ccdb6",
+        "corpusFile" : "wbe-b-inspection.md"
+      }, {
+        "claimId" : "clm-842e82be",
+        "proposition" : "The erosion rate of a wind-turbine blade depends on the wind speed and on the size of the sand grains that strike it.",
+        "status" : "SUPPORTED",
+        "conceptId" : "be092ff5",
+        "corpusFile" : "wbe-b-inspection.md"
+      }, {
+        "claimId" : "clm-3a99d83",
+        "proposition" : "The photographs of a blade inspection reveal an erosion depth of more than two millimetres when the leading edge has lost material.",
+        "status" : "SUPPORTED",
+        "conceptId" : "117b8b8f",
+        "corpusFile" : "wbe-b-inspection.md"
+      }, {
+        "claimId" : "clm-58b8b6f8",
+        "proposition" : "The severity of an erosion pit depends on its depth and on the width of the material that surrounds it.",
+        "status" : "SUPPORTED",
+        "conceptId" : "c61c417f",
+        "corpusFile" : "wbe-b-inspection.md"
+      } ],
+      "sentences" : [ "A drone that photographs the leading edge of a wind-turbine blade produces images that reveal small erosion pits.", "An ultrasonic sensor measures the thickness of the leading edge of a wind-turbine blade without touching that blade.", "The photographs of a blade inspection reveal an erosion depth of more than two millimetres when the leading edge has lost material.", "The erosion rate of a wind-turbine blade depends on the wind speed and on the size of the sand grains that strike it.", "An inspection of a wind-turbine blade requires a comparison between the new measurement and the measurement of the previous inspection.", "A repair of a wind-turbine blade uses a filler material to restore the shape of the leading edge.", "The severity of an erosion pit depends on its depth and on the width of the material that surrounds it.", "A second inspection of a wind-turbine blade becomes necessary after a period of operation in sea spray." ],
+      "missingSentences" : [ ]
+    }, {
+      "file" : "wbe-c-coatings.md",
+      "sha256" : "5235bcf5fb2110fc691441a70d01da7b3904bfb15f188dd8fc793051a0c569c3",
+      "sourceId" : "src-5fe182bb",
+      "claims" : [ {
+        "claimId" : "clm-27fb80da",
+        "proposition" : "A coating of polyurethane reduces the erosion rate of the leading edge of a wind-turbine blade in sea spray.",
+        "status" : "SUPPORTED",
+        "conceptId" : "39fce3a8",
+        "corpusFile" : "wbe-c-coatings.md"
+      }, {
+        "claimId" : "clm-20301c24",
+        "proposition" : "A crack in a coating causes sea spray to reach the metal of the wind-turbine blade under that coating.",
+        "status" : "SUPPORTED",
+        "conceptId" : "c215f9a7",
+        "corpusFile" : "wbe-c-coatings.md"
+      }, {
+        "claimId" : "clm-7591a7e8",
+        "proposition" : "A hardener inside a polyurethane coating binds the resin of that coating to the surface of the blade.",
+        "status" : "SUPPORTED",
+        "conceptId" : "c26118df",
+        "corpusFile" : "wbe-c-coatings.md"
+      }, {
+        "claimId" : "clm-b6466508",
+        "proposition" : "A leading-edge protection system on a wind-turbine blade requires an application of the coating before the blade leaves the factory.",
+        "status" : "SUPPORTED",
+        "conceptId" : "a31ac8ec",
+        "corpusFile" : "wbe-c-coatings.md"
+      }, {
+        "claimId" : "clm-cd694ebd",
+        "proposition" : "A repair of a damaged coating requires the removal of the loose coating and the application of a fresh layer.",
+        "status" : "SUPPORTED",
+        "conceptId" : "b0b058a3",
+        "corpusFile" : "wbe-c-coatings.md"
+      }, {
+        "claimId" : "clm-a20be6ab",
+        "proposition" : "The cost of a coating system for a wind-turbine blade depends on the size of the blade and on the number of leading edges that need protection.",
+        "status" : "SUPPORTED",
+        "conceptId" : "3b5ef9e9",
+        "corpusFile" : "wbe-c-coatings.md"
+      }, {
+        "claimId" : "clm-99aeee09",
+        "proposition" : "The erosion rate of a coated blade becomes higher than the rate of an uncoated blade when the coating has a crack.",
+        "status" : "SUPPORTED",
+        "conceptId" : "c554c7ab",
+        "corpusFile" : "wbe-c-coatings.md"
+      }, {
+        "claimId" : "clm-bb7455a6",
+        "proposition" : "The service life of a coating depends on the thickness of that coating and on the number of erosion pits that reach it.",
+        "status" : "SUPPORTED",
+        "conceptId" : "f63654fa",
+        "corpusFile" : "wbe-c-coatings.md"
+      }, {
+        "claimId" : "clm-bf89294c",
+        "proposition" : "The size of the rain drops does not change the erosion rate of a wind-turbine blade at an exposed coastal site.",
+        "status" : "SUPPORTED",
+        "conceptId" : "927bcae1",
+        "corpusFile" : "wbe-c-coatings.md"
+      } ],
+      "sentences" : [ "A coating of polyurethane reduces the erosion rate of the leading edge of a wind-turbine blade in sea spray.", "The service life of a coating depends on the thickness of that coating and on the number of erosion pits that reach it.", "A leading-edge protection system on a wind-turbine blade requires an application of the coating before the blade leaves the factory.", "The erosion rate of a coated blade becomes higher than the rate of an uncoated blade when the coating has a crack.", "A hardener inside a polyurethane coating binds the resin of that coating to the surface of the blade.", "A crack in a coating causes sea spray to reach the metal of the wind-turbine blade under that coating.", "A repair of a damaged coating requires the removal of the loose coating and the application of a fresh layer.", "The cost of a coating system for a wind-turbine blade depends on the size of the blade and on the number of leading edges that need protection.", "The size of the rain drops does not change the erosion rate of a wind-turbine blade at an exposed coastal site." ],
+      "missingSentences" : [ ]
+    }, {
+      "file" : "wbe-d-aerodynamics.md",
+      "sha256" : "53ce59a71954d34504837a8a709a7c25ce700ba238eeff3cbad06c71b6a712f8",
+      "sourceId" : "src-50990201",
+      "claims" : [ {
+        "claimId" : "clm-8cfde846",
+        "proposition" : "A decision about the operation of a wind-turbine becomes necessary when the erosion of one blade becomes severe.",
+        "status" : "SUPPORTED",
+        "conceptId" : "a015bc13",
+        "corpusFile" : "wbe-d-aerodynamics.md"
+      }, {
+        "claimId" : "clm-a5b138fa",
+        "proposition" : "A rough leading edge causes the airflow of a wind-turbine blade to separate from that edge at a lower angle.",
+        "status" : "SUPPORTED",
+        "conceptId" : "10239b00",
+        "corpusFile" : "wbe-d-aerodynamics.md"
+      }, {
+        "claimId" : "clm-529fe45f",
+        "proposition" : "An erosion pit on a wind-turbine blade increases the roughness of that blade and reduces its lift in the same operation.",
+        "status" : "SUPPORTED",
+        "conceptId" : "fc84f1ea",
+        "corpusFile" : "wbe-d-aerodynamics.md"
+      }, {
+        "claimId" : "clm-2a38d897",
+        "proposition" : "The lift of a repaired wind-turbine blade becomes close to the lift of a new blade when the repair restores the shape of the leading edge.",
+        "status" : "SUPPORTED",
+        "conceptId" : "4618b15f",
+        "corpusFile" : "wbe-d-aerodynamics.md"
+      }, {
+        "claimId" : "clm-4cd271d5",
+        "proposition" : "The lift of a wind-turbine blade decreases as the roughness of its leading edge increases.",
+        "status" : "SUPPORTED",
+        "conceptId" : "36f51ec1",
+        "corpusFile" : "wbe-d-aerodynamics.md"
+      }, {
+        "claimId" : "clm-162cb57e",
+        "proposition" : "The noise of a wind-turbine increases when the leading edge of one of its blades becomes rough.",
+        "status" : "SUPPORTED",
+        "conceptId" : "a6c11a68",
+        "corpusFile" : "wbe-d-aerodynamics.md"
+      }, {
+        "claimId" : "clm-51e2b69e",
+        "proposition" : "The power of a wind-turbine depends on the drag of its blades and on the lift that those blades produce.",
+        "status" : "SUPPORTED",
+        "conceptId" : "48efdf73",
+        "corpusFile" : "wbe-d-aerodynamics.md"
+      }, {
+        "claimId" : "clm-8698346b",
+        "proposition" : "The yearly energy production of a wind-turbine decreases as the roughness of its blades increases.",
+        "status" : "SUPPORTED",
+        "conceptId" : "81642693",
+        "corpusFile" : "wbe-d-aerodynamics.md"
+      } ],
+      "sentences" : [ "The lift of a wind-turbine blade decreases as the roughness of its leading edge increases.", "A rough leading edge causes the airflow of a wind-turbine blade to separate from that edge at a lower angle.", "The power of a wind-turbine depends on the drag of its blades and on the lift that those blades produce.", "An erosion pit on a wind-turbine blade increases the roughness of that blade and reduces its lift in the same operation.", "The noise of a wind-turbine increases when the leading edge of one of its blades becomes rough.", "The lift of a repaired wind-turbine blade becomes close to the lift of a new blade when the repair restores the shape of the leading edge.", "The yearly energy production of a wind-turbine decreases as the roughness of its blades increases.", "A decision about the operation of a wind-turbine becomes necessary when the erosion of one blade becomes severe." ],
+      "missingSentences" : [ ]
+    } ],
+    "counts" : {
+      "documents" : 4,
+      "claims" : 33,
+      "citableClaims" : 33
+    }
+  } ],
+  "counts" : {
+    "domains" : 2,
+    "claims" : 70,
+    "citableClaims" : 70,
+    "sentences" : 70,
+    "missingSentences" : 0
+  }
+}

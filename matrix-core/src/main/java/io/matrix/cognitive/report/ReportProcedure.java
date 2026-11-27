@@ -3,6 +3,7 @@ package io.matrix.cognitive.report;
 import io.matrix.cognitive.algorithms.AlgorithmFamilies;
 import io.matrix.cognitive.algorithms.Procedure;
 import io.matrix.cognitive.algorithms.ValidationKind;
+import io.matrix.knowledge.ScopeCriterion;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -55,6 +56,20 @@ public final class ReportProcedure {
     public static final String VERSION = "1.0.0";
 
     /**
+     * The version of the definition that names the rule the support set is judged by.
+     *
+     * <p><b>Why the version moves when the rule does.</b> A procedure's version is its
+     * definition, and the store refuses to rewrite a version: the same id with a different
+     * definition is a conflict. The rule that decides whether the support set is adequate for a
+     * question IS part of the domain the procedure may be used in — the W44 definition of a
+     * procedure is "the conditions under which it may be used" — so a competence that judges its
+     * scope by a different rule is a DIFFERENT DEFINITION of the same competence, and the
+     * store's own rule says it must carry a different version. The version therefore moves with
+     * the rule, and a procedure that names no rule keeps the version it always had.</p>
+     */
+    public static final String VERSION_SCOPED = "1.1.0";
+
+    /**
      * The fact that says a procedure's support set is present in the workspace as it is now.
      *
      * <p>The fact is per procedure, because two procedures of this family may have different
@@ -70,6 +85,17 @@ public final class ReportProcedure {
 
     /** The key the domain's description is stored under inside the applicability field. */
     private static final String KEY_DOMAIN = "domain";
+
+    /**
+     * The key the rule the support set is judged by is stored under inside the applicability
+     * field.
+     *
+     * <p><b>Why the rule lives in the applicability field.</b> The applicability field is the
+     * domain the procedure may be used in, and the rule that decides whether the support set is
+     * adequate for a question is part of that domain. Carrying it here needs no column, no
+     * table and no second registry: the field is already free text and already durable.</p>
+     */
+    private static final String KEY_CRITERION = "criterion";
 
     /** The separator between the two keys of the applicability field. */
     private static final String SEPARATOR = "|";
@@ -116,6 +142,49 @@ public final class ReportProcedure {
     }
 
     /**
+     * The applicability field of a procedure with the given support set and rule.
+     *
+     * <p>The rule is written only when it is not the incumbent, so that a procedure written by
+     * the previous codec keeps the applicability field it always had, byte for byte.</p>
+     *
+     * @param support   the source ids
+     * @param domain    the domain's description, in words a reader can act on
+     * @param criterion the rule the support set is judged by; null means the incumbent
+     * @return the applicability
+     */
+    public static String applicabilityFor(Set<String> support, String domain,
+            ScopeCriterion criterion) {
+        String base = applicabilityFor(support, domain);
+        if (criterion == null || criterion == ScopeCriterion.ANCHOR) {
+            return base;
+        }
+        return base + SEPARATOR + KEY_CRITERION + "=" + criterion.name();
+    }
+
+    /**
+     * The rule a procedure's support set is judged by.
+     *
+     * <p>A procedure that names no rule is judged by the incumbent: the served path's behaviour
+     * must not change because a record was written by a writer that knew nothing of the
+     * competitor rule.</p>
+     *
+     * @param procedure the procedure
+     * @return the rule
+     */
+    public static ScopeCriterion criterionOf(Procedure procedure) {
+        if (procedure == null || procedure.applicability() == null) {
+            return ScopeCriterion.ANCHOR;
+        }
+        for (String part : procedure.applicability().split("\\" + SEPARATOR)) {
+            if (!part.startsWith(KEY_CRITERION + "=")) {
+                continue;
+            }
+            return ScopeCriterion.of(part.substring((KEY_CRITERION + "=").length()).trim());
+        }
+        return ScopeCriterion.ANCHOR;
+    }
+
+    /**
      * The support set a procedure carries.
      *
      * @param procedure the procedure
@@ -159,14 +228,41 @@ public final class ReportProcedure {
      */
     public static Procedure record(Set<String> support, String domain, int validationCases,
             double agreement, String learnedInEpisode, String validationNote, String promotedAt) {
+        return record(support, domain, validationCases, agreement, learnedInEpisode,
+                validationNote, promotedAt, null);
+    }
+
+    /**
+     * The procedure record of a support set, with the rule its scope is judged by.
+     *
+     * <p><b>Why the rule changes the version.</b> The rule is part of the domain the procedure
+     * may be used in, and a procedure's version is its definition: the store refuses to rewrite
+     * a version, so a competence that judges its scope by another rule is a different
+     * definition of the same competence and must carry a different version. The version the
+     * previous codec wrote is left exactly as it was for a procedure that names no rule.</p>
+     *
+     * @param support        the source ids the validation covered
+     * @param domain         the domain's description
+     * @param validationCases how many held-out cases the agreement was measured over
+     * @param agreement      the measured agreement with the reference, over those cases
+     * @param learnedInEpisode the episodes the support set was learned from
+     * @param validationNote the note that says what the standing rests on
+     * @param promotedAt     the instant the procedure entered the active set
+     * @param criterion      the rule the support set is judged by; null means the incumbent
+     * @return the record
+     */
+    public static Procedure record(Set<String> support, String domain, int validationCases,
+            double agreement, String learnedInEpisode, String validationNote, String promotedAt,
+            ScopeCriterion criterion) {
         Set<String> facts = Set.of(supportPresentFact(idFor(support)));
+        boolean scoped = criterion != null && criterion != ScopeCriterion.ANCHOR;
         return new Procedure(
                 idFor(support),
                 "the validated support set of " + (support == null ? 0 : support.size())
                         + " source(s)",
                 FAMILY,
-                VERSION,
-                applicabilityFor(support, domain),
+                scoped ? VERSION_SCOPED : VERSION,
+                applicabilityFor(support, domain, criterion),
                 facts,
                 REFERENCE_ID,
                 validationCases,

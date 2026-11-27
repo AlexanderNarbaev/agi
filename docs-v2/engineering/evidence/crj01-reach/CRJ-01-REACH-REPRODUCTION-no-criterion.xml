@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.CompetenceReachServedTest" tests="8" skipped="0" failures="2" errors="0" timestamp="2026-11-27T17:00:59.802Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="12.572">
+  <properties/>
+  <testcase name="the three scope strategies produce different scopes, and every one of them goes through the same held-out validation" classname="io.matrix.knowledge.CompetenceReachServedTest" time="1.791"/>
+  <testcase name="the retained evidence carries every per-case row, the cells, and the manifest" classname="io.matrix.knowledge.CompetenceReachServedTest" time="4.565"/>
+  <testcase name="every case's gold is reachable, and every held-out question stays inside the declared scope — a case set that breaks this silently empties an arm" classname="io.matrix.knowledge.CompetenceReachServedTest" time="0.63"/>
+  <testcase name="the lifecycle: an observable failure, a diagnosis, a versioned proposal, a separate validation, a promotion and a rejection, and the explicit falsification of the two transitions the durable store does not support" classname="io.matrix.knowledge.CompetenceReachServedTest" time="0.769">
+    <failure message="org.opentest4j.AssertionFailedError: [the competitor rule REFUSES the same scope for the same question] &#10;Expecting value to be false but was true" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: [the competitor rule REFUSES the same scope for the same question] 
+Expecting value to be false but was true
+	at io.matrix.knowledge.CompetenceReachServedTest.theLifecycleIsWalkedOnTheServedRoute(CompetenceReachServedTest.java:462)
+</failure>
+  </testcase>
+  <testcase name="the incumbent's contract did not change: the anchor's reason is the reason the prior milestone's retained evidence records" classname="io.matrix.knowledge.CompetenceReachServedTest" time="0.32"/>
+  <testcase name="the six arms are measured on identical inputs, and the two criteria differ on a case that needs a second claim" classname="io.matrix.knowledge.CompetenceReachServedTest" time="4.058">
+    <failure message="java.lang.AssertionError: [the two criteria disagree on at least one case of the grid — the same scope, the same inputs, the same cases] &#10;Expecting actual:&#10;  0&#10;to be greater than:&#10;  0&#10;" type="java.lang.AssertionError">java.lang.AssertionError: [the two criteria disagree on at least one case of the grid — the same scope, the same inputs, the same cases] 
+Expecting actual:
+  0
+to be greater than:
+  0
+
+	at io.matrix.knowledge.CompetenceReachServedTest.theSixArmsAreMeasuredOnIdenticalInputs(CompetenceReachServedTest.java:356)
+</failure>
+  </testcase>
+  <testcase name="the two criteria are served differently by the SAME competence, and the oracle says which of the two answers is right" classname="io.matrix.knowledge.CompetenceReachServedTest" time="0.399"/>
+  <testcase name="the case set is the IMPLEMENTER's own, the slices are disjoint, and every gold is a sentence of the corpus bytes" classname="io.matrix.knowledge.CompetenceReachServedTest" time="0.023"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

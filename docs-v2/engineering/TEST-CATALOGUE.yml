@@ -494,6 +494,169 @@ scopes:
       fallback's reason or to the competence revision path requires this scope to be re-run
       and GATE-CRJ01-ADAPTIVE-COMPETENCE to be re-run with it
 
+  - id: SCOPE-CRJ01-COMPETENCE-REACH
+    purpose: the competence reach milestone on the REAL served route - the SCOPE CRITERION
+      as a rule that a competence carries (the anchor and the claim-sufficiency
+      alternative), the SCOPE STRATEGY that decides what a competence may learn (the
+      citation-derived, the declared and the evidence-derived scope), the six-arm paired
+      grid over two DEV domains and three conditions, the served lifecycle with its
+      explicit falsification of the two transitions the durable store does not support,
+      and the independent supervisor gate that re-derives the evidence
+    task: ':matrix-core:test'
+    filters:
+      - 'io.matrix.knowledge.CompetenceReachServedTest'
+      - 'io.matrix.crj.corpus.Crj01ReachCorpusReportBuilder'
+    source_packages: [io.matrix.knowledge, io.matrix.cognitive.report, io.matrix.crj.corpus,
+      io.matrix.crj.reach]
+    test_packages: [io.matrix.knowledge, io.matrix.crj.corpus, io.matrix.crj.reach]
+    last_verified_commit: 7e20e9d9f9945066ebc0120f8e5b379f255ef266
+    last_execution: '2026-11-27'
+    result:
+      classes_discovered: 2
+      classes_executed: 2
+      methods_executed: 9
+      successful: 9
+      failed: 0
+      errored: 0
+      skipped: 0
+      aborted: 0
+      filtered: 0
+      not_executed: 0
+    evidence: >-
+      the JUnit XML under matrix-core/build/test-results/test/ and RETAINED under
+      docs-v2/engineering/evidence/crj01-reach/ - the two files of this scope and no
+      others: TEST-io.matrix.knowledge.CompetenceReachServedTest.xml and
+      TEST-io.matrix.crj.corpus.Crj01ReachCorpusReportBuilder.xml - together with the
+      432 per-case rows and the per-cell summary the same run wrote. Both files are in the
+      retained directory and verify against its CHECKSUMS.sha256. The counts are read
+      from those XML files and not from the Gradle console summary. The retained copies
+      verify against the directory's own CHECKSUMS.sha256, and the DELIBERATE RED - the
+      same suite with the competitor criterion collapsed onto the incumbent by one
+      expression - is retained beside them as CRJ-01-REACH-REPRODUCTION-no-criterion.xml
+      and carries 2 failures of 8.
+    what_it_proves: >-
+      that the scope criterion can be carried by a competence and read back after a
+      restart, that the six arms of the paired comparison receive the same immutable
+      snapshot, the same bindings and the same history - every row carries the
+      fingerprint of the view it was measured against, and the six arms of a cell carry
+      the SAME one - that the two criteria AGREE on
+      every case of every wide scope and DIFFER on the narrow declared scope, that the
+      difference costs refusals whose denominator is the refusals and not the
+      admissions, that the served lifecycle walks an observable failure, a diagnosis that
+      NAMES the claims the scope does not carry, an inspectable versioned proposal, a
+      separate validation, a promotion and a refusal, and that after a restart the exact
+      promoted method serves a different question disjoint from the proposal and the
+      validation slices - and that the durable RETIRE and the durable NARROW are NOT
+      supported: the write of a retired version is accepted as the same definition and
+      dropped, the predecessor stays active and served, and a narrow scope is a different
+      competence identity.
+    what_it_does_not_prove: >-
+      it proves NOTHING about the sealed evaluation, which is NOT EXECUTED. The corpus is
+      SYNTHETIC and test-owned, and the cases were written by the IMPLEMENTER - two
+      commissioned case-author subagents delivered nothing - so the oracle is NOT
+      independent of the mechanism it measures. The measurement is DEV and the milestone
+      is downgraded accordingly. It also proves no winner: the citation-derived and the
+      evidence-derived strategy produced the SAME scope in every cell, so that
+      comparison is NOT ESTABLISHED, and the claim-sufficiency rule is NOT shown to be
+      better - it refuses more, and each refusal costs a fallback. The timings are
+      records of one run on one machine and no timing is asserted.
+    known_skips: []
+    known_flakes: []
+    destructive_side_effects: none - the suite writes only into its own temporary
+      directory and into the repository's own engineering artefacts
+    environment_dependencies:
+      - the JDK 25 at /home/alexandr-narbaev/jdk25
+      - the shared Gradle lock /tmp/gradle-matrix.lock
+    next_verification_condition: >-
+      a change to the scope criterion, to the scope strategy, to the procedure record's
+      rule, to the applicability gate or to the competence revision path requires this
+      scope to be re-run and GATE-CRJ01-COMPETENCE-REACH to be re-run with it. The run
+      MUST carry --rerun: the case set and the corpus are not declared inputs of the test
+      task, so Gradle would keep the previous XML and the scope would read a stale run.
+
+  - id: GATE-CRJ01-COMPETENCE-REACH-SELFTEST
+    purpose: prove that the competence reach gate CAN go red - a gate that cannot fail
+      is not a gate
+    task: 'bash scripts/reach-gate-selftest.sh'
+    filters: []
+    evidence: 'the script''s own printed counts and its exit code'
+    last_verified_commit: 7e20e9d9f9945066ebc0120f8e5b379f255ef266
+    last_execution: '2026-11-27'
+    result:
+      checks: 15
+      failed: 0
+      exit_code: 0
+    what_it_proves: >-
+      that fifteen mutations of the milestone's evidence are each caught by the check they
+      belong to, on a COPY in a temporary directory - the repository is never written to
+      and the copy's manifest is refreshed FIRST, so that no mutation can be caught by the
+      manifest alone:
+      a removed row (caught by "every evaluation case of every domain is measured in
+      every arm of every condition"), a relabelled false admission (caught by "every
+      false admission and every false rejection is re-derived from the row it belongs
+      to"), a changed denominator (caught by "the summary's counts are re-derived from
+      the rows, with the two denominators separate"), a refusal that loses its reason
+      (caught by "every refusal names its reason as a field of its own"), a changed
+      corpus digest in the case set (caught by "the case set's corpus digests match the
+      corpus bytes"), a RED that stops failing (caught by "the RED carries failures"), a
+      mislabelled row kind (caught by "every row names the case of the case set it
+      measures, with that case's own kind and answerability"), a forged scope (caught by
+      "every arm's scope is the scope the summary records, and its validation outcome is
+      consistent with its own agreement"), a falsified validation outcome (caught by the
+      same check), a falsified breakdown by the kind of the case (caught by "the breakdown
+      by the kind of the case is re-derived from the rows") and an arm measured against
+      another input (caught by "the six arms of every cell were measured against ONE
+      input").
+    what_it_does_not_prove: >-
+      it does not prove that the gate catches a mutation that leaves every check's
+      precondition intact: it proves that the gate REFUSES fifteen specific classes of
+      broken evidence, not that it refuses every possible one.
+    destructive_side_effects: none - it works on a copy in a temporary directory and
+      removes only its own temporary directory
+    environment_dependencies:
+      - python3
+    next_verification_condition: any change to the gate itself or to the self-test
+
+  - id: GATE-CRJ01-COMPETENCE-REACH
+    purpose: the INDEPENDENT supervisor gate of the competence reach milestone - it
+      re-derives the milestone's evidence without trusting the test that produced it,
+      and it can go red
+    task: 'bash scripts/reach-gate.sh'
+    filters: []
+    evidence: 'the script''s own printed counts and its exit code, and the retained
+      CHECKSUMS.sha256 of the evidence directory'
+    last_verified_commit: 7e20e9d9f9945066ebc0120f8e5b379f255ef266
+    last_execution: '2026-11-27'
+    result:
+      checks: 23
+      failed: 0
+      exit_code: 0
+    what_it_proves: >-
+      that the milestone's claims hold against the artefacts and not against the test's
+      own report: the retained manifest verifies, the rows are the rows of the case set
+      (every evaluation case of every domain in every arm of every condition, and no row
+      measured twice), every cell carries all six arms, the summary's counts are
+      RE-DERIVED from the rows with the two denominators separate, every false admission
+      and every false rejection is re-derived from the row it belongs to, every refusal
+      names its reason, every candidate scope carries the outcome of its validation, the
+      case set's corpus digests match the corpus BYTES, every row names the case of the
+      case set it measures with that case's own kind and answerability, every arm's scope
+      is the scope the summary records and its validation outcome is consistent with its
+      own agreement, the breakdown by the kind of the case is re-derived from the rows,
+      the six arms of every cell were measured against ONE input, the retained GREEN
+      carries no failure and the retained RED carries failures - a gate that cannot go
+      red is not a gate.
+    what_it_does_not_prove: >-
+      it does not run the suite: it reads the evidence the suite left, so a stale
+      retained XML would pass a gate whose source has changed. The re-run of the suite is
+      the scope above, and the two together are the milestone's verification.
+    destructive_side_effects: none - the gate is read-only and writes nothing
+    environment_dependencies:
+      - python3
+    next_verification_condition: >-
+      any change to the gate, the rows, the summary, the case set, the corpus or the
+      retained XML
+
   - id: GATE-CRJ01-ADAPTIVE-COMPETENCE-SELFTEST
     purpose: prove that the adaptive competence gate CAN go red - a gate that cannot fail
       is not a gate
