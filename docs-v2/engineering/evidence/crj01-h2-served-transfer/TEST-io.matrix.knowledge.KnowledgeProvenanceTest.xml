@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.KnowledgeProvenanceTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-11-27T12:04:37.609Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.262">
+  <properties/>
+  <testcase name="the epistemic axes survive an import and a read" classname="io.matrix.knowledge.KnowledgeProvenanceTest" time="0.052"/>
+  <testcase name="a derivation over claims the workspace does not hold is refused" classname="io.matrix.knowledge.KnowledgeProvenanceTest" time="0.056"/>
+  <testcase name="a derivation is recorded, read back, and keeps its premise order" classname="io.matrix.knowledge.KnowledgeProvenanceTest" time="0.05"/>
+  <testcase name="the provenance of every claim survives an import and a read" classname="io.matrix.knowledge.KnowledgeProvenanceTest" time="0.051"/>
+  <testcase name="a one-premise connective with several premises is refused" classname="io.matrix.knowledge.KnowledgeProvenanceTest" time="0.05"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

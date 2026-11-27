@@ -1,0 +1,331 @@
+{
+  "report" : "crj-01-h2-corpus-report",
+  "version" : "1.0",
+  "corpus" : "crj01-h2 (synthetic, test-owned)",
+  "corpusDirectory" : "matrix-core/src/test/resources/crj01-h2",
+  "acquisitionPath" : "the PRODUCTION import path: workbench.importDocument(workspace, path, file, language)",
+  "purpose" : "the verbatim gold the H2 DEV cases are written from: the sentences the production acquisition path derived, with the production claim ids it gave them",
+  "workspace" : "crj01-h2-corpus",
+  "claimStatusNote" : "the status a claim carries after the production import's own validation; a case's gold must name a claim of a CITABLE status, because the served path does not cite the others",
+  "documents" : [ {
+    "file" : "h2-magnetic-anomalies.md",
+    "sha256" : "7d2fda67fe94b0a99433854ccfd2dbde6726070848dbd5b4abcad676d8647dc0",
+    "sourceId" : "src-9d759771",
+    "claims" : [ {
+      "claimId" : "clm-74c3685f",
+      "proposition" : "A long survey line across the ocean floor gives the complete sequence of reversals in one measurement.",
+      "status" : "SUPPORTED",
+      "conceptId" : "e8a0ad0e"
+    }, {
+      "claimId" : "clm-c169ccc5",
+      "proposition" : "A magnetic anomaly is the difference between the field measured at a site and the field a dipole would produce there.",
+      "status" : "SUPPORTED",
+      "conceptId" : "51045569"
+    }, {
+      "claimId" : "clm-e4d39e27",
+      "proposition" : "A magnetometer measures the intensity of the magnetic field at the Earth's surface.",
+      "status" : "SUPPORTED",
+      "conceptId" : "8b5d78ea"
+    }, {
+      "claimId" : "clm-b20962e2",
+      "proposition" : "A magnetometer of the type used on research vessels can detect a field change of a few nanoTesla.",
+      "status" : "SUPPORTED",
+      "conceptId" : "69117d64"
+    }, {
+      "claimId" : "clm-8cf5c817",
+      "proposition" : "A marine magnetic anomaly survey measures the magnetic field along a ship track across the ocean floor.",
+      "status" : "SUPPORTED",
+      "conceptId" : "70255b5b"
+    }, {
+      "claimId" : "clm-1acc8d8c",
+      "proposition" : "A survey of the anomalies of the Pacific basin requires a track of several thousand kilometres of ship time.",
+      "status" : "SUPPORTED",
+      "conceptId" : "e3d069d9"
+    }, {
+      "claimId" : "clm-f3e7f66c",
+      "proposition" : "Paleomagnetic measurements of cooling lava reveal the direction of the field at the time the lava hardened.",
+      "status" : "SUPPORTED",
+      "conceptId" : "57f44813"
+    }, {
+      "claimId" : "clm-42865955",
+      "proposition" : "Reversals of the Earth's magnetic field have occurred at irregular intervals over the past two hundred million years.",
+      "status" : "SUPPORTED",
+      "conceptId" : "5e0aeae0"
+    }, {
+      "claimId" : "clm-31e23881",
+      "proposition" : "Shipboard surveys of magnetic anomalies provided the first continuous profile of the ocean floor.",
+      "status" : "SUPPORTED",
+      "conceptId" : "d98f2a4"
+    }, {
+      "claimId" : "clm-6cf614a4",
+      "proposition" : "Symmetric bands of matching polarity on both flanks of a ridge provide the central evidence for seafloor spreading.",
+      "status" : "SUPPORTED",
+      "conceptId" : "4265ac06"
+    }, {
+      "claimId" : "clm-ee524c83",
+      "proposition" : "The anomaly measured over a reversing segment has the opposite sign to the field over the segment beside it.",
+      "status" : "SUPPORTED",
+      "conceptId" : "bd276753"
+    }, {
+      "claimId" : "clm-18729920",
+      "proposition" : "The contribution of a single reversal to the width of the anomaly band is a function of the spreading rate and the duration of the interval.",
+      "status" : "SUPPORTED",
+      "conceptId" : "8d36fb28"
+    }, {
+      "claimId" : "clm-6cbc5063",
+      "proposition" : "The older anomalies occur farther from the ridge axis.",
+      "status" : "SUPPORTED",
+      "conceptId" : "bbad4325"
+    }, {
+      "claimId" : "clm-3e8a3564",
+      "proposition" : "The pattern of alternating polarity in the ocean floor is a record of the reversals of the Earth's magnetic field.",
+      "status" : "SUPPORTED",
+      "conceptId" : "72f9b3dc"
+    }, {
+      "claimId" : "clm-12fd878d",
+      "proposition" : "The polarity sequence of the anomalies forms a mirror image on the two sides of a mid-ocean ridge.",
+      "status" : "SUPPORTED",
+      "conceptId" : "114de0d2"
+    }, {
+      "claimId" : "clm-aa32976e",
+      "proposition" : "The spacing of the anomaly bands supports a rate of seafloor spreading of a few centimetres per year.",
+      "status" : "SUPPORTED",
+      "conceptId" : "69b555aa"
+    }, {
+      "claimId" : "clm-c0b2b0d9",
+      "proposition" : "The width of a band of matching polarity increases with the age of the crust it was created in.",
+      "status" : "SUPPORTED",
+      "conceptId" : "30885bfd"
+    }, {
+      "claimId" : "clm-79f44adc",
+      "proposition" : "The youngest anomalies occur close to the ridge axis.",
+      "status" : "SUPPORTED",
+      "conceptId" : "ef3986c7"
+    } ]
+  }, {
+    "file" : "h2-spreading-rate.md",
+    "sha256" : "3faae818275b56b9bea8342ca23c0ee50d130958b3b6991a861e4291cbf64c93",
+    "sourceId" : "src-930f8a2",
+    "claims" : [ {
+      "claimId" : "clm-f8ece58d",
+      "proposition" : "A change of the rate produces a bend in the age distance relation of the survey.",
+      "status" : "SUPPORTED",
+      "conceptId" : "a942a1da"
+    }, {
+      "claimId" : "clm-fda98a67",
+      "proposition" : "A measurement of the age of crust at two distances from the axis determines the average spreading rate.",
+      "status" : "SUPPORTED",
+      "conceptId" : "4182c0d6"
+    }, {
+      "claimId" : "clm-84954de5",
+      "proposition" : "A ridge that spreads slowly produces narrow bands of crust for the same age.",
+      "status" : "SUPPORTED",
+      "conceptId" : "9f4e0a24"
+    }, {
+      "claimId" : "clm-49770783",
+      "proposition" : "An isochron map shows crust of the same age in bands that run parallel to the ridge axis.",
+      "status" : "SUPPORTED",
+      "conceptId" : "5b3f77cb"
+    }, {
+      "claimId" : "clm-de015ac0",
+      "proposition" : "Calculations of the age distance relation depend on a constant rate of plate motion over the measured interval.",
+      "status" : "SUPPORTED",
+      "conceptId" : "1cb56cb3"
+    }, {
+      "claimId" : "clm-6cbfa776",
+      "proposition" : "Faster spreading produces a wider band of crust for the same age of the ocean floor.",
+      "status" : "SUPPORTED",
+      "conceptId" : "cd5de4d3"
+    }, {
+      "claimId" : "clm-a1dcde0a",
+      "proposition" : "Half rates of spreading move the crust away from the axis twice as slowly as full rates.",
+      "status" : "SUPPORTED",
+      "conceptId" : "a84bc463"
+    }, {
+      "claimId" : "clm-1987b8a5",
+      "proposition" : "The age of the ocean floor increases with the distance from the ridge axis.",
+      "status" : "SUPPORTED",
+      "conceptId" : "c1239fdd"
+    }, {
+      "claimId" : "clm-e1d929fb",
+      "proposition" : "The distance age relation is a straight line when the spreading rate is constant.",
+      "status" : "SUPPORTED",
+      "conceptId" : "a1acab62"
+    }, {
+      "claimId" : "clm-f87e0aef",
+      "proposition" : "The measurement of a spreading rate needs the age of the crust at two points on the floor.",
+      "status" : "SUPPORTED",
+      "conceptId" : "d3373615"
+    }, {
+      "claimId" : "clm-1b81b530",
+      "proposition" : "The oldest crust in the ocean basin forms far from the ridge, and the youngest crust forms at the ridge.",
+      "status" : "SUPPORTED",
+      "conceptId" : "c076c99d"
+    }, {
+      "claimId" : "clm-782abcf",
+      "proposition" : "The oldest measurable crust of the ocean floor is a little older than two hundred million years.",
+      "status" : "SUPPORTED",
+      "conceptId" : "7c805bb1"
+    }, {
+      "claimId" : "clm-f3bc2a65",
+      "proposition" : "The rate of seafloor spreading changes from one ocean basin to another.",
+      "status" : "SUPPORTED",
+      "conceptId" : "bf0559e1"
+    }, {
+      "claimId" : "clm-8398d6c8",
+      "proposition" : "The rate of seafloor spreading controls how quickly a new band of crust forms at the ridge axis.",
+      "status" : "SUPPORTED",
+      "conceptId" : "bf0559e1"
+    }, {
+      "claimId" : "clm-c0f3b1b2",
+      "proposition" : "The rate of spreading at a ridge can change during the lifetime of a survey line.",
+      "status" : "SUPPORTED",
+      "conceptId" : "28bbdf63"
+    }, {
+      "claimId" : "clm-f990de5a",
+      "proposition" : "The two points of the measurement are usually far apart, because the difference between them must be larger than the error of the age determination.",
+      "status" : "SUPPORTED",
+      "conceptId" : "952101eb"
+    }, {
+      "claimId" : "clm-69b51af9",
+      "proposition" : "The width of a band of crust of a given age is a measure of the rate of spreading during that interval.",
+      "status" : "SUPPORTED",
+      "conceptId" : "fe83b379"
+    }, {
+      "claimId" : "clm-2930adbb",
+      "proposition" : "The youngest crust at the ridge axis is a few hundred thousand years old.",
+      "status" : "SUPPORTED",
+      "conceptId" : "9b174c77"
+    } ]
+  }, {
+    "file" : "h2-deep-trenches.md",
+    "sha256" : "17ebb9a0948730c831d51f10029775c6dbcba22e319113cf9dc55cbf3c3de1e2",
+    "sourceId" : "src-8049efe4",
+    "claims" : [ {
+      "claimId" : "clm-2ce6038",
+      "proposition" : "A deep ocean trench forms where one plate moves beneath another plate.",
+      "status" : "SUPPORTED",
+      "conceptId" : "8892058c"
+    }, {
+      "claimId" : "clm-282f62a7",
+      "proposition" : "A subduction zone produces earthquakes that follow the dipping plane of the descending slab.",
+      "status" : "SUPPORTED",
+      "conceptId" : "c2fac8d4"
+    }, {
+      "claimId" : "clm-48dc0c60",
+      "proposition" : "A subduction zone without a trench can form where the older plate is unusually dense.",
+      "status" : "SUPPORTED",
+      "conceptId" : "987798f1"
+    }, {
+      "claimId" : "clm-50800e59",
+      "proposition" : "Serpentinite mud volcanoes form in the forearc of a subduction zone.",
+      "status" : "SUPPORTED",
+      "conceptId" : "78f93ee7"
+    }, {
+      "claimId" : "clm-321f65b4",
+      "proposition" : "The deepest earthquakes of the Wadati Benioff zone occur at depths of several hundred kilometres.",
+      "status" : "SUPPORTED",
+      "conceptId" : "121c3f85"
+    }, {
+      "claimId" : "clm-351a3896",
+      "proposition" : "The heat of the descending slab causes partial melting of the mantle wedge above it.",
+      "status" : "SUPPORTED",
+      "conceptId" : "f9227a08"
+    }, {
+      "claimId" : "clm-d60a9ce0",
+      "proposition" : "The rate of convergence of the two plates determines how much sediment the forearc basin can hold.",
+      "status" : "SUPPORTED",
+      "conceptId" : "58d8d19"
+    }, {
+      "claimId" : "clm-6ca1aad2",
+      "proposition" : "The sediment of the forearc basin contains the material that the trench has scraped from the ocean floor.",
+      "status" : "SUPPORTED",
+      "conceptId" : "455b2ae2"
+    }, {
+      "claimId" : "clm-42bd2e2f",
+      "proposition" : "The trench axis is the surface expression of the boundary between the two plates.",
+      "status" : "SUPPORTED",
+      "conceptId" : "92b53165"
+    }, {
+      "claimId" : "clm-6ec83a67",
+      "proposition" : "The volume of crust consumed at a subduction zone equals the volume of crust produced at a ridge.",
+      "status" : "SUPPORTED",
+      "conceptId" : "24a29094"
+    }, {
+      "claimId" : "clm-fe079ffc",
+      "proposition" : "Water depth increases sharply across a trench axis.",
+      "status" : "SUPPORTED",
+      "conceptId" : "191c37c3"
+    } ]
+  }, {
+    "file" : "h2-hydrothermal-vents.md",
+    "sha256" : "16277f5766d57ad4372df1e8a566c14a10f2e49a16c9a4c29be8f338526a1d50",
+    "sourceId" : "src-4cfcfec4",
+    "claims" : [ {
+      "claimId" : "clm-ccc6a5bd",
+      "proposition" : "A hydrothermal vent releases hot mineral rich water onto the ocean floor.",
+      "status" : "SUPPORTED",
+      "conceptId" : "f3e04e4e"
+    }, {
+      "claimId" : "clm-50f272c5",
+      "proposition" : "Chemosynthetic bacteria use the hydrogen sulphide of the vent fluid to produce organic matter.",
+      "status" : "SUPPORTED",
+      "conceptId" : "e50f0979"
+    }, {
+      "claimId" : "clm-2c4ae218",
+      "proposition" : "Chimney structures of sulphide minerals grow above a vent over years.",
+      "status" : "SUPPORTED",
+      "conceptId" : "b198df2e"
+    }, {
+      "claimId" : "clm-ea877d31",
+      "proposition" : "The animals of a vent community include tube worms and pale crabs.",
+      "status" : "SUPPORTED",
+      "conceptId" : "195e273f"
+    }, {
+      "claimId" : "clm-a85f01a3",
+      "proposition" : "The bacteria of the tube worm provide the organic matter that the worm uses.",
+      "status" : "SUPPORTED",
+      "conceptId" : "a099a72c"
+    }, {
+      "claimId" : "clm-c8aaa07e",
+      "proposition" : "The biological community around a vent depends on the chemosynthetic food chain rather than on sunlight.",
+      "status" : "SUPPORTED",
+      "conceptId" : "bc5e6f07"
+    }, {
+      "claimId" : "clm-1ed6bb1d",
+      "proposition" : "The dissolved metals of the vent fluid are an important source for the ocean water.",
+      "status" : "SUPPORTED",
+      "conceptId" : "18d9441a"
+    }, {
+      "claimId" : "clm-7c9211fe",
+      "proposition" : "The dissolved sulphide content of the fluid supports the growth of the vent community.",
+      "status" : "SUPPORTED",
+      "conceptId" : "18d9441a"
+    }, {
+      "claimId" : "clm-f1a4151f",
+      "proposition" : "The first confirmed vent field was found on the floor of the Atlantic ocean.",
+      "status" : "SUPPORTED",
+      "conceptId" : "1aff2adc"
+    }, {
+      "claimId" : "clm-dd25dbcc",
+      "proposition" : "The plume of a vent field can be followed for hundreds of metres above the floor.",
+      "status" : "SUPPORTED",
+      "conceptId" : "a4f92464"
+    }, {
+      "claimId" : "clm-ef715922",
+      "proposition" : "The temperature of the vent fluid is high enough to melt lead.",
+      "status" : "SUPPORTED",
+      "conceptId" : "7f52de0d"
+    }, {
+      "claimId" : "clm-6302cf0c",
+      "proposition" : "The tube worm of a vent community has no mouth and no gut of its own.",
+      "status" : "SUPPORTED",
+      "conceptId" : "c1a490d3"
+    } ]
+  } ],
+  "counts" : {
+    "documents" : 4,
+    "claims" : 59,
+    "citableClaims" : 59
+  }
+}

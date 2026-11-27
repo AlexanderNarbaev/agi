@@ -220,7 +220,12 @@ public final class ReportProcedureMethod
         }
         AbstractionLevel level = input.level();
         var snapshot = input.selectedEvidence();
-        Answer answer = input.workbench().askInView(snapshot, input.question(), level, support, input.historical());
+        // the relevance statistics come from the SAME view the reference path reads: the
+        // support set restricts WHAT MAY BE CITED, and it must not change HOW RELEVANT a
+        // claim is — otherwise the replay is a different retrieval and not the restriction
+        // the promotion validated.
+        Answer answer = input.workbench().askInView(snapshot, snapshot, input.question(), level,
+                support, input.historical());
         // the learned claims of the workspace join the evidence, exactly as they do on the
         // reference path: a validated claim is evidence of the question's concept, and the
         // path that answered does not change that

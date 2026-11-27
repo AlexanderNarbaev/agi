@@ -468,6 +468,49 @@ public class KnowledgeWorkbench implements AutoCloseable {
 
     public synchronized Answer askInView(KnowledgeSnapshot snapshot, String question,
             AbstractionLevel level, Set<String> sourceIds, boolean historical) {
+        // The statistics are the RETRIEVAL VIEW'S OWN, which is what this overload has always
+        // used: a caller that restricts the sources here gets the restricted view's own
+        // relevance statistics, exactly as before. The overload that takes the statistics
+        // from another view is the explicit opt-in, and the procedure paths use it because
+        // their restricted reading must stay comparable with the reference it was validated
+        // against.
+        return askInView(snapshot, null, question, level, sourceIds, historical);
+    }
+
+    /**
+     * Runs the normal answer pipeline over a view already pinned for the request, with the
+     * relevance statistics of ANOTHER view.
+     *
+     * <p><b>Why the statistics may come from another view.</b> A reading that is restricted to
+     * a set of sources is the same question asked in the same workspace with fewer claims
+     * eligible to answer it. The restriction decides WHAT MAY BE CITED; the workspace's own
+     * statistics decide HOW RELEVANT a claim is, and a restriction must not change the second
+     * while it changes the first — otherwise the restricted reading is a different retrieval
+     * rather than a restriction of the reference, and the two answers cannot be compared.
+     * This is what a validated procedure's replay needs: its support set is a restriction, and
+     * the learning that validated it compared it against the unrestricted reading of the same
+     * workspace.</p>
+     *
+     * <p><b>Which callers use this and which do not.</b> The overload without a statistics
+     * view keeps the behaviour it has always had: the relevance statistics are the retrieval
+     * view's own. This overload exists for the case where the two must differ — a reading
+     * that is RESTRICTED to a support set and must still be comparable with the unrestricted
+     * reading it is compared against. The source-restricted reading of
+     * {@link #ask(String, String, AbstractionLevel, Set, String)} deliberately keeps the old
+     * behaviour: it is a different path, with its own retained evidence, and changing its
+     * scoring is a separate decision with its own measurements.</p>
+     *
+     * @param snapshot    the view the claims are read from
+     * @param statistics  the view whose claims define the relevance statistics; null means the
+     *                    view itself
+     * @param question    the question
+     * @param level       the abstraction level of the answer
+     * @param sourceIds   the sources the selected view may be read as, or empty for all
+     * @param historical whether the reading is a historical one
+     * @return the answer
+     */
+    public synchronized Answer askInView(KnowledgeSnapshot snapshot, KnowledgeSnapshot statistics,
+            String question, AbstractionLevel level, Set<String> sourceIds, boolean historical) {
         String workspaceId = snapshot.workspaceId();
         if (sourceIds != null && !sourceIds.isEmpty()) {
             snapshot = snapshot.sourceRevisionSelections().isEmpty()
@@ -480,7 +523,7 @@ public class KnowledgeWorkbench implements AutoCloseable {
         DialogueContext context = historical ? new DialogueContext(workspaceId) : context(workspaceId);
         String expanded = context.expand(question);
         String resolvedSubject = expanded.equals(question) ? null : context.resolveSubject(question);
-        Answer answer = new KnowledgeRetriever(snapshot,
+        Answer answer = new KnowledgeRetriever(snapshot, statistics,
                 KnowledgeRetriever.configuredMinimumCoverage(),
                 historical ? Map.of() : weakenedBindings(workspaceId))
                 .answer(expanded.equals(question) ? question : expanded, level);

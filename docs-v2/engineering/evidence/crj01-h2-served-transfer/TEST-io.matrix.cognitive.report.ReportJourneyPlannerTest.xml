@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="P2 — the kernel's planner for the report journey" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-27T12:04:28.343Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.002">
+  <properties/>
+  <testcase name="the planner the route injects is an application-scoped bean, and it can be proxied" classname="io.matrix.cognitive.report.ReportJourneyPlannerTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

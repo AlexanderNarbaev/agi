@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.crj.corpus.Crj01H2CorpusReportBuilder" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-27T12:07:02.280Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.92">
+  <properties/>
+  <testcase name="the H2 corpus is measured by the production import path, and the report is written" classname="io.matrix.crj.corpus.Crj01H2CorpusReportBuilder" time="0.908"/>
+  <system-out><![CDATA[[CRJ-01/H2] the corpus report /home/alexandr-narbaev/Projects/matrix-worktrees/dsh-writer/docs-v2/engineering/CRJ-01-H2-CORPUS-REPORT.json
+[CRJ-01/H2] claims 59 citable 59
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

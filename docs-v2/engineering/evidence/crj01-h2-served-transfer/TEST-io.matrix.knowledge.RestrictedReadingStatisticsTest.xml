@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.RestrictedReadingStatisticsTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-27T12:07:09.727Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.402">
+  <properties/>
+  <testcase name="a restricted reading cites what the unrestricted reading cites, and the reading that recomputes its statistics cites less" classname="io.matrix.knowledge.RestrictedReadingStatisticsTest" time="0.402"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

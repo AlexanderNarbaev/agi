@@ -1,0 +1,336 @@
+{
+  "split": "crj-01-h2-dev-split",
+  "version": "1.0",
+  "date": "2026-11-27",
+  "domain": "A",
+  "corpus": "crj01-h2 (synthetic, test-owned)",
+  "corpusReport": "docs-v2/engineering/CRJ-01-H2-CORPUS-REPORT.json",
+  "corpusReportSha256": "7b8c50c01667f80be076a5dcfe79f1a53da913d9d02de368467e776bc0a25ed5",
+  "authorRole": "DSH subagent (independent DEV case author; implements no arm)",
+  "sealed": false,
+  "note": "a DEVELOPMENT split: the cases were written against the measured production extraction of the H2 corpus; the sealed evaluation is NOT EXECUTED for this milestone",
+  "cases": [
+    {
+      "id": "H2-A01",
+      "class": "POSITIVE",
+      "subset": "OBSERVED",
+      "level": "INTRODUCTORY",
+      "question": "What does a marine magnetic anomaly survey measure?",
+      "expectedDisposition": "ANSWERED",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedProvenance": null,
+      "corpusFile": "h2-magnetic-anomalies.md",
+      "corpusSha256": "7d2fda67fe94b0a99433854ccfd2dbde6726070848dbd5b4abcad676d8647dc0",
+      "goldClaims": [
+        {
+          "claimId": "clm-8cf5c817",
+          "proposition": "A marine magnetic anomaly survey measures the magnetic field along a ship track across the ocean floor.",
+          "sourceId": "src-9d759771",
+          "corpusFile": "h2-magnetic-anomalies.md",
+          "corpusSha256": "7d2fda67fe94b0a99433854ccfd2dbde6726070848dbd5b4abcad676d8647dc0"
+        }
+      ],
+      "idempotencyKey": "crj01-h2-DEV-H2-A01-8d025f9defb6"
+    },
+    {
+      "id": "H2-A02",
+      "class": "POSITIVE",
+      "subset": "OBSERVED",
+      "level": "INTRODUCTORY",
+      "question": "How does the age of ocean floor crust change with distance from the ridge axis?",
+      "expectedDisposition": "ANSWERED",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedProvenance": null,
+      "corpusFile": "h2-spreading-rate.md",
+      "corpusSha256": "3faae818275b56b9bea8342ca23c0ee50d130958b3b6991a861e4291cbf64c93",
+      "goldClaims": [
+        {
+          "claimId": "clm-1987b8a5",
+          "proposition": "The age of the ocean floor increases with the distance from the ridge axis.",
+          "sourceId": "src-930f8a2",
+          "corpusFile": "h2-spreading-rate.md",
+          "corpusSha256": "3faae818275b56b9bea8342ca23c0ee50d130958b3b6991a861e4291cbf64c93"
+        }
+      ],
+      "idempotencyKey": "crj01-h2-DEV-H2-A02-1744e5e8063b"
+    },
+    {
+      "id": "H2-A03",
+      "class": "POSITIVE",
+      "subset": "VALIDATION",
+      "level": "INTRODUCTORY",
+      "question": "How is a magnetic anomaly defined in terms of the field measured at a site and the field a dipole would produce there?",
+      "expectedDisposition": "ANSWERED",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedProvenance": null,
+      "corpusFile": "h2-magnetic-anomalies.md",
+      "corpusSha256": "7d2fda67fe94b0a99433854ccfd2dbde6726070848dbd5b4abcad676d8647dc0",
+      "goldClaims": [
+        {
+          "claimId": "clm-c169ccc5",
+          "proposition": "A magnetic anomaly is the difference between the field measured at a site and the field a dipole would produce there.",
+          "sourceId": "src-9d759771",
+          "corpusFile": "h2-magnetic-anomalies.md",
+          "corpusSha256": "7d2fda67fe94b0a99433854ccfd2dbde6726070848dbd5b4abcad676d8647dc0"
+        }
+      ],
+      "idempotencyKey": "crj01-h2-DEV-H2-A03-6d586787a7f2"
+    },
+    {
+      "id": "H2-A04",
+      "class": "POSITIVE",
+      "subset": "VALIDATION",
+      "level": "INTRODUCTORY",
+      "question": "What rate of seafloor spreading is supported by the spacing of the anomaly bands?",
+      "expectedDisposition": "ANSWERED",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedProvenance": null,
+      "corpusFile": "h2-magnetic-anomalies.md",
+      "corpusSha256": "7d2fda67fe94b0a99433854ccfd2dbde6726070848dbd5b4abcad676d8647dc0",
+      "goldClaims": [
+        {
+          "claimId": "clm-aa32976e",
+          "proposition": "The spacing of the anomaly bands supports a rate of seafloor spreading of a few centimetres per year.",
+          "sourceId": "src-9d759771",
+          "corpusFile": "h2-magnetic-anomalies.md",
+          "corpusSha256": "7d2fda67fe94b0a99433854ccfd2dbde6726070848dbd5b4abcad676d8647dc0"
+        }
+      ],
+      "idempotencyKey": "crj01-h2-DEV-H2-A04-8b4931b808c6"
+    },
+    {
+      "id": "H2-A05",
+      "class": "POSITIVE",
+      "subset": "VALIDATION",
+      "level": "INTRODUCTORY",
+      "question": "On the two sides of the ridge, what does the polarity sequence of the anomalies do?",
+      "expectedDisposition": "ANSWERED",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedProvenance": null,
+      "corpusFile": "h2-magnetic-anomalies.md",
+      "corpusSha256": "7d2fda67fe94b0a99433854ccfd2dbde6726070848dbd5b4abcad676d8647dc0",
+      "goldClaims": [
+        {
+          "claimId": "clm-12fd878d",
+          "proposition": "The polarity sequence of the anomalies forms a mirror image on the two sides of a mid-ocean ridge.",
+          "sourceId": "src-9d759771",
+          "corpusFile": "h2-magnetic-anomalies.md",
+          "corpusSha256": "7d2fda67fe94b0a99433854ccfd2dbde6726070848dbd5b4abcad676d8647dc0"
+        }
+      ],
+      "idempotencyKey": "crj01-h2-DEV-H2-A05-9b048bdb1978"
+    },
+    {
+      "id": "H2-A06",
+      "class": "POSITIVE",
+      "subset": "VALIDATION",
+      "level": "INTRODUCTORY",
+      "question": "Under what condition does the distance age relation become a straight line?",
+      "expectedDisposition": "ANSWERED",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedProvenance": null,
+      "corpusFile": "h2-spreading-rate.md",
+      "corpusSha256": "3faae818275b56b9bea8342ca23c0ee50d130958b3b6991a861e4291cbf64c93",
+      "goldClaims": [
+        {
+          "claimId": "clm-e1d929fb",
+          "proposition": "The distance age relation is a straight line when the spreading rate is constant.",
+          "sourceId": "src-930f8a2",
+          "corpusFile": "h2-spreading-rate.md",
+          "corpusSha256": "3faae818275b56b9bea8342ca23c0ee50d130958b3b6991a861e4291cbf64c93"
+        }
+      ],
+      "idempotencyKey": "crj01-h2-DEV-H2-A06-8de96459e9e1"
+    },
+    {
+      "id": "H2-A07",
+      "class": "POSITIVE",
+      "subset": "VALIDATION",
+      "level": "INTRODUCTORY",
+      "question": "Can the rate of spreading at a ridge change during the lifetime of a survey line?",
+      "expectedDisposition": "ANSWERED",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedProvenance": null,
+      "corpusFile": "h2-spreading-rate.md",
+      "corpusSha256": "3faae818275b56b9bea8342ca23c0ee50d130958b3b6991a861e4291cbf64c93",
+      "goldClaims": [
+        {
+          "claimId": "clm-c0f3b1b2",
+          "proposition": "The rate of spreading at a ridge can change during the lifetime of a survey line.",
+          "sourceId": "src-930f8a2",
+          "corpusFile": "h2-spreading-rate.md",
+          "corpusSha256": "3faae818275b56b9bea8342ca23c0ee50d130958b3b6991a861e4291cbf64c93"
+        }
+      ],
+      "idempotencyKey": "crj01-h2-DEV-H2-A07-2df37303e77f"
+    },
+    {
+      "id": "H2-A08",
+      "class": "POSITIVE",
+      "subset": "NOVEL",
+      "level": "INTRODUCTORY",
+      "question": "What do paleomagnetic measurements of cooling lava reveal about the field?",
+      "expectedDisposition": "ANSWERED",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedProvenance": null,
+      "corpusFile": "h2-magnetic-anomalies.md",
+      "corpusSha256": "7d2fda67fe94b0a99433854ccfd2dbde6726070848dbd5b4abcad676d8647dc0",
+      "goldClaims": [
+        {
+          "claimId": "clm-f3e7f66c",
+          "proposition": "Paleomagnetic measurements of cooling lava reveal the direction of the field at the time the lava hardened.",
+          "sourceId": "src-9d759771",
+          "corpusFile": "h2-magnetic-anomalies.md",
+          "corpusSha256": "7d2fda67fe94b0a99433854ccfd2dbde6726070848dbd5b4abcad676d8647dc0"
+        }
+      ],
+      "idempotencyKey": "crj01-h2-DEV-H2-A08-f4a214bded69"
+    },
+    {
+      "id": "H2-A09",
+      "class": "POSITIVE",
+      "subset": "NOVEL",
+      "level": "INTRODUCTORY",
+      "question": "What does an isochron map show about crust of the same age?",
+      "expectedDisposition": "ANSWERED",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedProvenance": null,
+      "corpusFile": "h2-spreading-rate.md",
+      "corpusSha256": "3faae818275b56b9bea8342ca23c0ee50d130958b3b6991a861e4291cbf64c93",
+      "goldClaims": [
+        {
+          "claimId": "clm-49770783",
+          "proposition": "An isochron map shows crust of the same age in bands that run parallel to the ridge axis.",
+          "sourceId": "src-930f8a2",
+          "corpusFile": "h2-spreading-rate.md",
+          "corpusSha256": "3faae818275b56b9bea8342ca23c0ee50d130958b3b6991a861e4291cbf64c93"
+        }
+      ],
+      "idempotencyKey": "crj01-h2-DEV-H2-A09-146ed519cb88"
+    },
+    {
+      "id": "H2-A10",
+      "class": "PARAPHRASE",
+      "subset": "NOVEL",
+      "level": "INTRODUCTORY",
+      "question": "When spreading is halved, how does the crust move away from the axis compared with a full rate?",
+      "expectedDisposition": "ANSWERED",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedProvenance": null,
+      "corpusFile": "h2-spreading-rate.md",
+      "corpusSha256": "3faae818275b56b9bea8342ca23c0ee50d130958b3b6991a861e4291cbf64c93",
+      "goldClaims": [
+        {
+          "claimId": "clm-a1dcde0a",
+          "proposition": "Half rates of spreading move the crust away from the axis twice as slowly as full rates.",
+          "sourceId": "src-930f8a2",
+          "corpusFile": "h2-spreading-rate.md",
+          "corpusSha256": "3faae818275b56b9bea8342ca23c0ee50d130958b3b6991a861e4291cbf64c93"
+        }
+      ],
+      "idempotencyKey": "crj01-h2-DEV-H2-A10-5e37999130d4"
+    },
+    {
+      "id": "H2-A11",
+      "class": "REFUTED_PREMISE",
+      "subset": "NOVEL",
+      "level": "INTRODUCTORY",
+      "question": "Given that a magnetometer of the type used on research vessels cannot detect a field change of a few nanoTesla, what does a survey of the anomalies of the Pacific basin require?",
+      "expectedDisposition": "REFUTED",
+      "positive": false,
+      "expectedField": "PREMISE",
+      "expectedProvenance": "src-9d759771",
+      "corpusFile": "h2-magnetic-anomalies.md",
+      "corpusSha256": "7d2fda67fe94b0a99433854ccfd2dbde6726070848dbd5b4abcad676d8647dc0",
+      "goldClaims": [
+        {
+          "claimId": "clm-b20962e2",
+          "proposition": "A magnetometer of the type used on research vessels can detect a field change of a few nanoTesla.",
+          "sourceId": "src-9d759771",
+          "corpusFile": "h2-magnetic-anomalies.md",
+          "corpusSha256": "7d2fda67fe94b0a99433854ccfd2dbde6726070848dbd5b4abcad676d8647dc0"
+        }
+      ],
+      "idempotencyKey": "crj01-h2-DEV-H2-A11-28f42268547d"
+    },
+    {
+      "id": "H2-A12",
+      "class": "UNSUPPORTED_PREMISE",
+      "subset": "NOVEL",
+      "level": "INTRODUCTORY",
+      "question": "Given that the magnetometer is calibrated against a terrestrial magnetic observatory, what does a magnetometer measure?",
+      "expectedDisposition": "UNSUPPORTED",
+      "positive": false,
+      "expectedField": "PREMISE",
+      "expectedProvenance": null,
+      "corpusFile": "h2-magnetic-anomalies.md",
+      "corpusSha256": "7d2fda67fe94b0a99433854ccfd2dbde6726070848dbd5b4abcad676d8647dc0",
+      "goldClaims": [
+        {
+          "claimId": "clm-e4d39e27",
+          "proposition": "A magnetometer measures the intensity of the magnetic field at the Earth's surface.",
+          "sourceId": "src-9d759771",
+          "corpusFile": "h2-magnetic-anomalies.md",
+          "corpusSha256": "7d2fda67fe94b0a99433854ccfd2dbde6726070848dbd5b4abcad676d8647dc0"
+        }
+      ],
+      "idempotencyKey": "crj01-h2-DEV-H2-A12-954d7c93d56d"
+    },
+    {
+      "id": "H2-A13",
+      "class": "POSITIVE",
+      "subset": "OUT_OF_SUPPORT",
+      "level": "INTRODUCTORY",
+      "question": "The trench axis is the surface expression of what?",
+      "expectedDisposition": "ANSWERED",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedProvenance": null,
+      "corpusFile": "h2-deep-trenches.md",
+      "corpusSha256": "17ebb9a0948730c831d51f10029775c6dbcba22e319113cf9dc55cbf3c3de1e2",
+      "goldClaims": [
+        {
+          "claimId": "clm-42bd2e2f",
+          "proposition": "The trench axis is the surface expression of the boundary between the two plates.",
+          "sourceId": "src-8049efe4",
+          "corpusFile": "h2-deep-trenches.md",
+          "corpusSha256": "17ebb9a0948730c831d51f10029775c6dbcba22e319113cf9dc55cbf3c3de1e2"
+        }
+      ],
+      "idempotencyKey": "crj01-h2-DEV-H2-A13-466525aac22a"
+    },
+    {
+      "id": "H2-A14",
+      "class": "POSITIVE",
+      "subset": "OUT_OF_SUPPORT",
+      "level": "INTRODUCTORY",
+      "question": "What is the temperature of the fluid released by a hydrothermal vent?",
+      "expectedDisposition": "ANSWERED",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedProvenance": null,
+      "corpusFile": "h2-hydrothermal-vents.md",
+      "corpusSha256": "16277f5766d57ad4372df1e8a566c14a10f2e49a16c9a4c29be8f338526a1d50",
+      "goldClaims": [
+        {
+          "claimId": "clm-ef715922",
+          "proposition": "The temperature of the vent fluid is high enough to melt lead.",
+          "sourceId": "src-4cfcfec4",
+          "corpusFile": "h2-hydrothermal-vents.md",
+          "corpusSha256": "16277f5766d57ad4372df1e8a566c14a10f2e49a16c9a4c29be8f338526a1d50"
+        }
+      ],
+      "idempotencyKey": "crj01-h2-DEV-H2-A14-0e0aa18b46e3"
+    }
+  ]
+}

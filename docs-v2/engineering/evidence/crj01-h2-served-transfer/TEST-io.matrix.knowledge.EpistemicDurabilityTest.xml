@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.EpistemicDurabilityTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-27T12:04:37.496Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.112">
+  <properties/>
+  <testcase name="the claims, their evidence and the revision that superseded one survive a restart" classname="io.matrix.knowledge.EpistemicDurabilityTest" time="0.061"/>
+  <testcase name="the schema version does not move when the store is reopened" classname="io.matrix.knowledge.EpistemicDurabilityTest" time="0.05"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

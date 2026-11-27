@@ -205,9 +205,15 @@ public final class ReportProcedureLearner {
             // the WARMUP pass: the first reading of a path pays the JIT's warmup, and a
             // cost measured on a cold path is not the cost the method will pay when the
             // serving process runs it. The warmup is not timed and not judged.
-            workbench.askInView(selectedView, heldOutCase.question(), heldOutCase.level(), support);
+            //
+            // The restricted reading takes its relevance statistics from the SAME view the
+            // reference was read from: the support set decides WHAT MAY BE CITED, and the
+            // workspace's own statistics decide HOW RELEVANT a claim is. Without that, the
+            // restriction would change the scoring as well as the candidates, and the two
+            // readings would not be comparable.
+            workbench.askInView(selectedView, selectedView, heldOutCase.question(), heldOutCase.level(), support, false);
             long start = System.nanoTime();
-            Answer restricted = workbench.askInView(selectedView, heldOutCase.question(), heldOutCase.level(), support);
+            Answer restricted = workbench.askInView(selectedView, selectedView, heldOutCase.question(), heldOutCase.level(), support, false);
             restrictedNanos.add(System.nanoTime() - start);
             if (!agrees(reference, restricted)) {
                 return new Outcome(false, "the candidate disagreed with the reference on the "

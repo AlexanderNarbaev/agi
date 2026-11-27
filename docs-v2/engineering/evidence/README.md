@@ -91,6 +91,18 @@ are not committed because a number that names 1373 files is a number a reviewer 
 | `TEST-io.matrix.auditor.DecisionPathGateTest.xml` | Article I | the decision-path gate and its baseline groups |
 | `TEST-io.matrix.knowledge.concept.research.LiveStoreLauncherTest.xml` | the launcher's own contract | the backup-before-write order, the abort before the live file is touched, the atomic replace, **the live store's referent concepts (20), the claims on them (29) and the rejection split** |
 
+## The milestone sub-directories
+
+Some milestones keep their evidence in a **sub-directory** of their own, because one run
+produced more than a flat set of XMLs and the sub-directory carries the records around them
+(the rows, the manifest, the reproduction procedure).
+
+| the directory | the milestone | what it holds |
+|---|---|---|
+| `crj01-premise-negative/` | CRJ-01's premise refutation | the negative result and its evidence |
+| `crj01-source-revision/` | CRJ-01's source-revision applicability | the accepted run, the evaluator's records and the manifests |
+| `crj01-h2-served-transfer/` | **CRJ-01 / H2 — the served transfer measurement** | **15 GREEN JUnit XMLs (43 tests, 0 failures), 2 deliberate RED XMLs, the retained rows, the README, the MANIFESTS and `CHECKSUMS.sha256` (20 of 20 OK)** — the measurement is DEV-only, the sealed evaluation was **NOT EXECUTED**, and the null was **NOT** rejected |
+
 ## The rule
 
 A row of the evidence ledger (`docs-v2/engineering/EPISTEMIC-EXECUTION-PLAN.md`) that names a
