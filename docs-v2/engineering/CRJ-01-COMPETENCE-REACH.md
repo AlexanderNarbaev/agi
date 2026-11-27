@@ -73,6 +73,11 @@ immutable snapshot, the same bindings and the same history** — and that is **c
 measurement, not promised**: every row carries the fingerprint of the view it was measured
 against, and the suite and the gate both require the six arms of a cell to carry **one**.
 
+**The scopes are listed in a deterministic order.** The candidate scope is an insertion-ordered
+copy of the support set, so two runs of the same measurement list the same sources in the same
+order — an immutable set would iterate in a salted order that differs between JVM runs, and the
+durable identity of a competence must not depend on the run.
+
 **The scopes** (source count per cell):
 
 | domain | condition | `CITATION_DERIVED` | `DECLARED` | `EVIDENCE_DERIVED` | validated |
@@ -473,6 +478,53 @@ role record are **supported by the milestone's own evidence**, and **the milesto
 integrated as a DEV result**.
 
 ---
+
+### 8.5 The CI regression of PR #89 — the legacy report-learning suites, and what it found
+
+The required GitHub CI of the pull request caught **five failures in the legacy
+report-learning suites** (`ReportProcedureLearningTest` at four places and
+`ReportProcedureMeasuredCostTest` at one), every one of them a `NullPointerException` inside
+the learner's `learn(...)`. The suite is reproduced here, and the failure has **two** causes.
+
+**The first cause — the crash.** A workspace may hold a claim that names **no introducing
+source**. Such a claim is in no support set, and the restriction has always left it out — the
+learner handed the reading path a null-tolerant set, and a null-tolerant set answers "no"
+about a null key. The milestone's own candidate scope was made an **immutable** copy of the
+support set, and an immutable set **throws** when it is asked about a null key: the restricted
+reading of such a workspace died instead of reading. The fix is in the **reading path**, not in
+the caller — `KnowledgeWorkbench.restrictedTo` now says out what it means
+(`KnowledgeWorkbench.java`, the two filters of the restricted view): a claim whose introducing
+source is null is not in any support set and is left out, and a source with no id is left out
+too. **The outcome is the one the null-tolerant set gave**, and the fix protects every caller,
+including the served path.
+
+**The second cause — the order.** The same immutable copy also **randomised the order** of a
+scope: an immutable set iterates in a salted order that differs between JVM runs, so the
+durable identity of a competence and every artefact that lists a scope differed between two
+runs of the same measurement. The candidate scope is now an **insertion-ordered** copy
+(`ReportProcedureLearner.Scope`), which is also the order the learner has always built it in.
+
+**What the fix did NOT change.** Every number of the milestone. The retained rows were
+compared with the committed ones field by field: the counts, the verdicts and the reasons are
+identical, and the scope **sets** are identical; only the scope **lists** were reordered, the
+timings changed, and the snapshot identity changed — the three things a re-run always changes.
+The evidence was refreshed, the gate re-ran (**23 checks, 0 failures**) and the self-test
+re-ran (**15 mutations, 15 caught**).
+
+**The guard.** A new regression test
+(`io.matrix.knowledge.RestrictedViewNullIntroducedClaimTest`) asks the restriction for an
+**immutable** support set over a workspace that holds a claim with no introducing source: it
+must not throw, and that claim must be absent from the restricted view. The test **fails
+without the fix** and passes with it.
+
+**One thing that was checked and found innocent.** Running the prior milestone's own suite
+rewrites that milestone's retained evidence, and the rewritten file differed from the committed
+one. The difference was traced with an A/B run — the milestone's production files reverted to
+the baseline and the suite run again — and **the baseline produces the same difference**. The
+cause is the **worktree's split file**, not the milestone's code: the committed ADAPTIVE
+evidence was measured against a different split than the one this worktree holds. The prior
+milestone's evidence was therefore **restored byte-for-byte from `HEAD`** and its
+`CHECKSUMS.sha256` verifies (15 files).
 
 ## 9. The next scientific decision
 

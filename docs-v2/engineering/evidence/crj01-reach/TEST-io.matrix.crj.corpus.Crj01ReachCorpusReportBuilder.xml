@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="io.matrix.crj.corpus.Crj01ReachCorpusReportBuilder" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-27T17:05:12.371Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="1.091">
+<testsuite name="io.matrix.crj.corpus.Crj01ReachCorpusReportBuilder" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-27T17:31:17.569Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.511">
   <properties/>
-  <testcase name="the reach corpora are measured by the production import path, every sentence is accounted for, and the report is written" classname="io.matrix.crj.corpus.Crj01ReachCorpusReportBuilder" time="1.08"/>
+  <testcase name="the reach corpora are measured by the production import path, every sentence is accounted for, and the report is written" classname="io.matrix.crj.corpus.Crj01ReachCorpusReportBuilder" time="0.51"/>
   <system-out><![CDATA[[CRJ-01/REACH] the corpus report /home/alexandr-narbaev/Projects/matrix-worktrees/dsh-writer/docs-v2/engineering/CRJ-01-REACH-CORPUS-REPORT.json
 [CRJ-01/REACH] domains 2 sentences 70 claims 70 citable 70 missing 0
 ]]></system-out>

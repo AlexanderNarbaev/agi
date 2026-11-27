@@ -12,6 +12,7 @@ import io.matrix.knowledge.ScopeCriterion;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -139,6 +140,15 @@ public final class ReportProcedureLearner {
     /**
      * The outcome of obtaining a candidate scope.
      *
+     * <p><b>Why the support set is copied into an insertion-ordered set.</b> Two properties of
+     * the copy are load-bearing, and neither is given by {@link Set#copyOf}. <b>Order:</b> an
+     * immutable set iterates in a salted order that differs between JVM runs, so a scope
+     * carried in one would make the durable identity of a competence, and every artefact that
+     * lists a scope, differ between two runs of the same measurement. The copy keeps the
+     * order the scope was built in, so the same corpus yields the same list every time.
+     * <b>Null tolerance:</b> a source id that no source carries cannot identify a source, and
+     * a null-tolerant set is what the learner has always handed to the reading path.</p>
+     *
      * @param accepted whether the scope could be obtained
      * @param reason   why, in words a reader can act on
      * @param support  the candidate scope, as source identifiers
@@ -148,7 +158,8 @@ public final class ReportProcedureLearner {
             ScopeStrategy strategy) {
 
         public Scope {
-            support = Set.copyOf(support == null ? Set.of() : support);
+            support = Collections.unmodifiableSet(
+                    new LinkedHashSet<>(support == null ? Set.of() : support));
             reason = reason == null ? "" : reason;
         }
     }

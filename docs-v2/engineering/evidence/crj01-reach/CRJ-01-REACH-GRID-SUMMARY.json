@@ -4,14 +4,14 @@
     "condition" : "BASELINE",
     "strategies" : [ {
       "strategy" : "CITATION_DERIVED",
-      "scope" : [ "src-a0483458", "src-8b94e032", "src-c0bf3a24", "src-866bfb48" ],
+      "scope" : [ "src-866bfb48", "src-c0bf3a24", "src-a0483458", "src-8b94e032" ],
       "scopeSize" : 4,
       "validated" : true,
       "validationReason" : "the candidate agreed with the reference on all 5 held-out case(s)",
       "validationAgreement" : 1.0,
       "validationCases" : 5,
-      "proposalNanos" : 588129,
-      "validationNanos" : 50831091,
+      "proposalNanos" : 533156,
+      "validationNanos" : 52272924,
       "arms" : {
         "ANCHOR" : {
           "cases" : 12,
@@ -28,10 +28,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.38,
           "cost" : {
-            "selectionNanos" : 18898805,
-            "readNanos" : 50826723,
+            "selectionNanos" : 18575862,
+            "readNanos" : 45971972,
             "fallbackNanos" : 0,
-            "totalNanos" : 69725528,
+            "totalNanos" : 64547834,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         },
@@ -50,10 +50,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.38,
           "cost" : {
-            "selectionNanos" : 18634268,
-            "readNanos" : 50826723,
+            "selectionNanos" : 16847279,
+            "readNanos" : 45971972,
             "fallbackNanos" : 0,
-            "totalNanos" : 69460991,
+            "totalNanos" : 62819251,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         }
@@ -236,14 +236,14 @@
       }
     }, {
       "strategy" : "DECLARED",
-      "scope" : [ "src-a0483458", "src-8b94e032", "src-866bfb48" ],
+      "scope" : [ "src-866bfb48", "src-a0483458", "src-8b94e032" ],
       "scopeSize" : 3,
       "validated" : true,
       "validationReason" : "the candidate agreed with the reference on all 5 held-out case(s)",
       "validationAgreement" : 1.0,
       "validationCases" : 5,
-      "proposalNanos" : 548604,
-      "validationNanos" : 56934680,
+      "proposalNanos" : 740767,
+      "validationNanos" : 49494324,
       "arms" : {
         "ANCHOR" : {
           "cases" : 12,
@@ -260,10 +260,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.385,
           "cost" : {
-            "selectionNanos" : 18498220,
-            "readNanos" : 34345916,
-            "fallbackNanos" : 10443434,
-            "totalNanos" : 63287570,
+            "selectionNanos" : 17153437,
+            "readNanos" : 32955015,
+            "fallbackNanos" : 12288083,
+            "totalNanos" : 62396535,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         },
@@ -282,10 +282,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.38,
           "cost" : {
-            "selectionNanos" : 18152429,
-            "readNanos" : 25552364,
-            "fallbackNanos" : 18968410,
-            "totalNanos" : 62673203,
+            "selectionNanos" : 16839033,
+            "readNanos" : 26481087,
+            "fallbackNanos" : 20142154,
+            "totalNanos" : 63462274,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         }
@@ -468,14 +468,14 @@
       }
     }, {
       "strategy" : "EVIDENCE_DERIVED",
-      "scope" : [ "src-a0483458", "src-8b94e032", "src-c0bf3a24", "src-866bfb48" ],
+      "scope" : [ "src-866bfb48", "src-c0bf3a24", "src-a0483458", "src-8b94e032" ],
       "scopeSize" : 4,
       "validated" : true,
       "validationReason" : "the candidate agreed with the reference on all 5 held-out case(s)",
       "validationAgreement" : 1.0,
       "validationCases" : 5,
-      "proposalNanos" : 4637034,
-      "validationNanos" : 56778085,
+      "proposalNanos" : 6058194,
+      "validationNanos" : 55901657,
       "arms" : {
         "ANCHOR" : {
           "cases" : 12,
@@ -492,10 +492,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.38,
           "cost" : {
-            "selectionNanos" : 17699357,
-            "readNanos" : 50484427,
+            "selectionNanos" : 17361248,
+            "readNanos" : 46374660,
             "fallbackNanos" : 0,
-            "totalNanos" : 68183784,
+            "totalNanos" : 63735908,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         },
@@ -514,10 +514,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.38,
           "cost" : {
-            "selectionNanos" : 15932955,
-            "readNanos" : 50484427,
+            "selectionNanos" : 16952048,
+            "readNanos" : 46374660,
             "fallbackNanos" : 0,
-            "totalNanos" : 66417382,
+            "totalNanos" : 63326708,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         }
@@ -704,14 +704,14 @@
     "condition" : "CHANGED_BINDINGS",
     "strategies" : [ {
       "strategy" : "CITATION_DERIVED",
-      "scope" : [ "src-8df329b4", "src-814bd8a8", "src-a9d5f78", "src-1194d1e2" ],
+      "scope" : [ "src-a9d5f78", "src-8df329b4", "src-814bd8a8", "src-1194d1e2" ],
       "scopeSize" : 4,
       "validated" : true,
       "validationReason" : "the candidate agreed with the reference on all 5 held-out case(s)",
       "validationAgreement" : 1.0,
       "validationCases" : 5,
-      "proposalNanos" : 450369,
-      "validationNanos" : 73451906,
+      "proposalNanos" : 504742,
+      "validationNanos" : 74386135,
       "arms" : {
         "ANCHOR" : {
           "cases" : 12,
@@ -728,10 +728,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.378,
           "cost" : {
-            "selectionNanos" : 24315913,
-            "readNanos" : 77327183,
+            "selectionNanos" : 19924092,
+            "readNanos" : 67280686,
             "fallbackNanos" : 0,
-            "totalNanos" : 101643096,
+            "totalNanos" : 87204778,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         },
@@ -750,10 +750,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.378,
           "cost" : {
-            "selectionNanos" : 21620299,
-            "readNanos" : 77327183,
+            "selectionNanos" : 18529443,
+            "readNanos" : 67280686,
             "fallbackNanos" : 0,
-            "totalNanos" : 98947482,
+            "totalNanos" : 85810129,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         }
@@ -936,14 +936,14 @@
       }
     }, {
       "strategy" : "DECLARED",
-      "scope" : [ "src-814bd8a8", "src-1194d1e2", "src-a9d5f78" ],
+      "scope" : [ "src-a9d5f78", "src-814bd8a8", "src-1194d1e2" ],
       "scopeSize" : 3,
       "validated" : true,
       "validationReason" : "the candidate agreed with the reference on all 5 held-out case(s)",
       "validationAgreement" : 1.0,
       "validationCases" : 5,
-      "proposalNanos" : 465778,
-      "validationNanos" : 60245573,
+      "proposalNanos" : 506515,
+      "validationNanos" : 60266258,
       "arms" : {
         "ANCHOR" : {
           "cases" : 12,
@@ -960,10 +960,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.383,
           "cost" : {
-            "selectionNanos" : 24440375,
-            "readNanos" : 48603713,
-            "fallbackNanos" : 15072562,
-            "totalNanos" : 88116650,
+            "selectionNanos" : 19066003,
+            "readNanos" : 42944943,
+            "fallbackNanos" : 14032771,
+            "totalNanos" : 76043717,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         },
@@ -982,10 +982,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.378,
           "cost" : {
-            "selectionNanos" : 21198515,
-            "readNanos" : 38879856,
-            "fallbackNanos" : 26549313,
-            "totalNanos" : 86627684,
+            "selectionNanos" : 17089717,
+            "readNanos" : 33271461,
+            "fallbackNanos" : 25595445,
+            "totalNanos" : 75956623,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         }
@@ -1168,14 +1168,14 @@
       }
     }, {
       "strategy" : "EVIDENCE_DERIVED",
-      "scope" : [ "src-8df329b4", "src-814bd8a8", "src-a9d5f78", "src-1194d1e2" ],
+      "scope" : [ "src-a9d5f78", "src-8df329b4", "src-814bd8a8", "src-1194d1e2" ],
       "scopeSize" : 4,
       "validated" : true,
       "validationReason" : "the candidate agreed with the reference on all 5 held-out case(s)",
       "validationAgreement" : 1.0,
       "validationCases" : 5,
-      "proposalNanos" : 5875920,
-      "validationNanos" : 63564122,
+      "proposalNanos" : 6363340,
+      "validationNanos" : 62873224,
       "arms" : {
         "ANCHOR" : {
           "cases" : 12,
@@ -1192,10 +1192,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.378,
           "cost" : {
-            "selectionNanos" : 21544013,
-            "readNanos" : 76894260,
+            "selectionNanos" : 19646759,
+            "readNanos" : 60929747,
             "fallbackNanos" : 0,
-            "totalNanos" : 98438273,
+            "totalNanos" : 80576506,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         },
@@ -1214,10 +1214,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.378,
           "cost" : {
-            "selectionNanos" : 20152440,
-            "readNanos" : 76894260,
+            "selectionNanos" : 17634215,
+            "readNanos" : 60929747,
             "fallbackNanos" : 0,
-            "totalNanos" : 97046700,
+            "totalNanos" : 78563962,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         }
@@ -1404,14 +1404,14 @@
     "condition" : "SUPERSEDED",
     "strategies" : [ {
       "strategy" : "CITATION_DERIVED",
-      "scope" : [ "src-b7b0489d", "src-6bb14557", "src-362836c7" ],
+      "scope" : [ "src-6bb14557", "src-362836c7", "src-b7b0489d" ],
       "scopeSize" : 3,
       "validated" : false,
       "validationReason" : "the candidate disagreed with the reference on the held-out case 'RC-WBE-07', so it was not promoted",
       "validationAgreement" : 0.0,
       "validationCases" : 5,
-      "proposalNanos" : 982523,
-      "validationNanos" : 36707408,
+      "proposalNanos" : 652951,
+      "validationNanos" : 40056237,
       "arms" : {
         "ANCHOR" : {
           "cases" : 12,
@@ -1428,10 +1428,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.396,
           "cost" : {
-            "selectionNanos" : 18788379,
-            "readNanos" : 28338167,
-            "fallbackNanos" : 14584591,
-            "totalNanos" : 61711137,
+            "selectionNanos" : 19957285,
+            "readNanos" : 27722067,
+            "fallbackNanos" : 14874339,
+            "totalNanos" : 62553691,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         },
@@ -1450,10 +1450,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.393,
           "cost" : {
-            "selectionNanos" : 18268809,
-            "readNanos" : 13164555,
-            "fallbackNanos" : 32422798,
-            "totalNanos" : 63856162,
+            "selectionNanos" : 21137490,
+            "readNanos" : 12100458,
+            "fallbackNanos" : 34066531,
+            "totalNanos" : 67304479,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         }
@@ -1636,14 +1636,14 @@
       }
     }, {
       "strategy" : "DECLARED",
-      "scope" : [ "src-b7b0489d", "src-54aba107", "src-362836c7" ],
+      "scope" : [ "src-54aba107", "src-362836c7", "src-b7b0489d" ],
       "scopeSize" : 3,
       "validated" : false,
       "validationReason" : "an observed support source is no longer applicable",
       "validationAgreement" : 0.0,
       "validationCases" : 5,
-      "proposalNanos" : 684951,
-      "validationNanos" : 579582,
+      "proposalNanos" : 800129,
+      "validationNanos" : 664824,
       "arms" : {
         "ANCHOR" : {
           "cases" : 12,
@@ -1660,10 +1660,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.398,
           "cost" : {
-            "selectionNanos" : 18289066,
-            "readNanos" : 33013251,
-            "fallbackNanos" : 11752652,
-            "totalNanos" : 63054969,
+            "selectionNanos" : 21126570,
+            "readNanos" : 33779660,
+            "fallbackNanos" : 10678918,
+            "totalNanos" : 65585148,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         },
@@ -1682,10 +1682,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.393,
           "cost" : {
-            "selectionNanos" : 18118506,
-            "readNanos" : 26694806,
-            "fallbackNanos" : 19773676,
-            "totalNanos" : 64586988,
+            "selectionNanos" : 19177866,
+            "readNanos" : 27125502,
+            "fallbackNanos" : 18742454,
+            "totalNanos" : 65045822,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         }
@@ -1868,14 +1868,14 @@
       }
     }, {
       "strategy" : "EVIDENCE_DERIVED",
-      "scope" : [ "src-6bb14557", "src-54aba107", "src-362836c7", "src-b7b0489d" ],
+      "scope" : [ "src-6bb14557", "src-362836c7", "src-b7b0489d", "src-54aba107" ],
       "scopeSize" : 4,
       "validated" : false,
       "validationReason" : "an observed support source is no longer applicable",
       "validationAgreement" : 0.0,
       "validationCases" : 5,
-      "proposalNanos" : 4929184,
-      "validationNanos" : 619638,
+      "proposalNanos" : 4952258,
+      "validationNanos" : 643424,
       "arms" : {
         "ANCHOR" : {
           "cases" : 12,
@@ -1892,10 +1892,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.393,
           "cost" : {
-            "selectionNanos" : 18866696,
-            "readNanos" : 45852364,
+            "selectionNanos" : 19896760,
+            "readNanos" : 45572670,
             "fallbackNanos" : 0,
-            "totalNanos" : 64719060,
+            "totalNanos" : 65469430,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         },
@@ -1914,10 +1914,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.393,
           "cost" : {
-            "selectionNanos" : 17520397,
-            "readNanos" : 45852364,
+            "selectionNanos" : 17926053,
+            "readNanos" : 45572670,
             "fallbackNanos" : 0,
-            "totalNanos" : 63372761,
+            "totalNanos" : 63498723,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         }
@@ -2104,14 +2104,14 @@
     "condition" : "BASELINE",
     "strategies" : [ {
       "strategy" : "CITATION_DERIVED",
-      "scope" : [ "src-7657cc8f", "src-6af75d5a", "src-fb468a14", "src-e17cb578" ],
+      "scope" : [ "src-e17cb578", "src-6af75d5a", "src-7657cc8f", "src-fb468a14" ],
       "scopeSize" : 4,
       "validated" : true,
       "validationReason" : "the candidate agreed with the reference on all 5 held-out case(s)",
       "validationAgreement" : 1.0,
       "validationCases" : 5,
-      "proposalNanos" : 543795,
-      "validationNanos" : 54581844,
+      "proposalNanos" : 537504,
+      "validationNanos" : 59707565,
       "arms" : {
         "ANCHOR" : {
           "cases" : 12,
@@ -2128,10 +2128,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.439,
           "cost" : {
-            "selectionNanos" : 21257476,
-            "readNanos" : 53054902,
-            "fallbackNanos" : 4446966,
-            "totalNanos" : 78759344,
+            "selectionNanos" : 21026662,
+            "readNanos" : 56423378,
+            "fallbackNanos" : 4646062,
+            "totalNanos" : 82096102,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         },
@@ -2150,10 +2150,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.439,
           "cost" : {
-            "selectionNanos" : 18791102,
-            "readNanos" : 53054902,
-            "fallbackNanos" : 4446966,
-            "totalNanos" : 76292970,
+            "selectionNanos" : 18967328,
+            "readNanos" : 56423378,
+            "fallbackNanos" : 4646062,
+            "totalNanos" : 80036768,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         }
@@ -2336,14 +2336,14 @@
       }
     }, {
       "strategy" : "DECLARED",
-      "scope" : [ "src-6af75d5a", "src-e17cb578", "src-7657cc8f" ],
+      "scope" : [ "src-e17cb578", "src-6af75d5a", "src-7657cc8f" ],
       "scopeSize" : 3,
       "validated" : true,
       "validationReason" : "the candidate agreed with the reference on all 5 held-out case(s)",
       "validationAgreement" : 1.0,
       "validationCases" : 5,
-      "proposalNanos" : 496076,
-      "validationNanos" : 59565632,
+      "proposalNanos" : 788526,
+      "validationNanos" : 55944017,
       "arms" : {
         "ANCHOR" : {
           "cases" : 12,
@@ -2360,10 +2360,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.436,
           "cost" : {
-            "selectionNanos" : 19130063,
-            "readNanos" : 38708353,
-            "fallbackNanos" : 12589621,
-            "totalNanos" : 70428037,
+            "selectionNanos" : 19190339,
+            "readNanos" : 41211485,
+            "fallbackNanos" : 13234287,
+            "totalNanos" : 73636111,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         },
@@ -2382,10 +2382,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.439,
           "cost" : {
-            "selectionNanos" : 19069751,
-            "readNanos" : 20172830,
-            "fallbackNanos" : 34338893,
-            "totalNanos" : 73581474,
+            "selectionNanos" : 17958015,
+            "readNanos" : 20664047,
+            "fallbackNanos" : 39228807,
+            "totalNanos" : 77850869,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         }
@@ -2568,14 +2568,14 @@
       }
     }, {
       "strategy" : "EVIDENCE_DERIVED",
-      "scope" : [ "src-7657cc8f", "src-6af75d5a", "src-fb468a14", "src-e17cb578" ],
+      "scope" : [ "src-e17cb578", "src-6af75d5a", "src-7657cc8f", "src-fb468a14" ],
       "scopeSize" : 4,
       "validated" : true,
       "validationReason" : "the candidate agreed with the reference on all 5 held-out case(s)",
       "validationAgreement" : 1.0,
       "validationCases" : 5,
-      "proposalNanos" : 4684594,
-      "validationNanos" : 58140204,
+      "proposalNanos" : 4514633,
+      "validationNanos" : 54914756,
       "arms" : {
         "ANCHOR" : {
           "cases" : 12,
@@ -2592,10 +2592,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.439,
           "cost" : {
-            "selectionNanos" : 19061353,
-            "readNanos" : 51906139,
-            "fallbackNanos" : 4446966,
-            "totalNanos" : 75414458,
+            "selectionNanos" : 20422704,
+            "readNanos" : 53062985,
+            "fallbackNanos" : 4646062,
+            "totalNanos" : 78131751,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         },
@@ -2614,10 +2614,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.439,
           "cost" : {
-            "selectionNanos" : 16997851,
-            "readNanos" : 51906139,
-            "fallbackNanos" : 4446966,
-            "totalNanos" : 73350956,
+            "selectionNanos" : 18703810,
+            "readNanos" : 53062985,
+            "fallbackNanos" : 4646062,
+            "totalNanos" : 76412857,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         }
@@ -2804,14 +2804,14 @@
     "condition" : "CHANGED_BINDINGS",
     "strategies" : [ {
       "strategy" : "CITATION_DERIVED",
-      "scope" : [ "src-f6795407", "src-ab983422", "src-587304c0", "src-fcd3222c" ],
+      "scope" : [ "src-587304c0", "src-ab983422", "src-f6795407", "src-fcd3222c" ],
       "scopeSize" : 4,
       "validated" : true,
       "validationReason" : "the candidate agreed with the reference on all 5 held-out case(s)",
       "validationAgreement" : 1.0,
       "validationCases" : 5,
-      "proposalNanos" : 548764,
-      "validationNanos" : 86482708,
+      "proposalNanos" : 516935,
+      "validationNanos" : 79924438,
       "arms" : {
         "ANCHOR" : {
           "cases" : 12,
@@ -2828,10 +2828,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.439,
           "cost" : {
-            "selectionNanos" : 20449741,
-            "readNanos" : 68572587,
-            "fallbackNanos" : 3388991,
-            "totalNanos" : 92411319,
+            "selectionNanos" : 21210836,
+            "readNanos" : 71736789,
+            "fallbackNanos" : 3271459,
+            "totalNanos" : 96219084,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         },
@@ -2850,10 +2850,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.439,
           "cost" : {
-            "selectionNanos" : 19259850,
-            "readNanos" : 68572587,
-            "fallbackNanos" : 3388991,
-            "totalNanos" : 91221428,
+            "selectionNanos" : 19707534,
+            "readNanos" : 71736789,
+            "fallbackNanos" : 3271459,
+            "totalNanos" : 94715782,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         }
@@ -3036,14 +3036,14 @@
       }
     }, {
       "strategy" : "DECLARED",
-      "scope" : [ "src-ab983422", "src-587304c0", "src-f6795407" ],
+      "scope" : [ "src-587304c0", "src-ab983422", "src-f6795407" ],
       "scopeSize" : 3,
       "validated" : true,
       "validationReason" : "the candidate agreed with the reference on all 5 held-out case(s)",
       "validationAgreement" : 1.0,
       "validationCases" : 5,
-      "proposalNanos" : 522635,
-      "validationNanos" : 78262418,
+      "proposalNanos" : 494974,
+      "validationNanos" : 81436661,
       "arms" : {
         "ANCHOR" : {
           "cases" : 12,
@@ -3060,10 +3060,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.439,
           "cost" : {
-            "selectionNanos" : 19608845,
-            "readNanos" : 49166514,
-            "fallbackNanos" : 13223275,
-            "totalNanos" : 81998634,
+            "selectionNanos" : 20701826,
+            "readNanos" : 52498939,
+            "fallbackNanos" : 13698332,
+            "totalNanos" : 86899097,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         },
@@ -3082,10 +3082,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.439,
           "cost" : {
-            "selectionNanos" : 17953985,
-            "readNanos" : 26028872,
-            "fallbackNanos" : 39757871,
-            "totalNanos" : 83740728,
+            "selectionNanos" : 18482265,
+            "readNanos" : 27766461,
+            "fallbackNanos" : 47352544,
+            "totalNanos" : 93601270,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         }
@@ -3268,14 +3268,14 @@
       }
     }, {
       "strategy" : "EVIDENCE_DERIVED",
-      "scope" : [ "src-f6795407", "src-ab983422", "src-587304c0", "src-fcd3222c" ],
+      "scope" : [ "src-587304c0", "src-ab983422", "src-f6795407", "src-fcd3222c" ],
       "scopeSize" : 4,
       "validated" : true,
       "validationReason" : "the candidate agreed with the reference on all 5 held-out case(s)",
       "validationAgreement" : 1.0,
       "validationCases" : 5,
-      "proposalNanos" : 4904879,
-      "validationNanos" : 80698641,
+      "proposalNanos" : 5338157,
+      "validationNanos" : 90418949,
       "arms" : {
         "ANCHOR" : {
           "cases" : 12,
@@ -3292,10 +3292,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.439,
           "cost" : {
-            "selectionNanos" : 19441090,
-            "readNanos" : 64414576,
-            "fallbackNanos" : 3388991,
-            "totalNanos" : 87244657,
+            "selectionNanos" : 21004347,
+            "readNanos" : 69310239,
+            "fallbackNanos" : 3271459,
+            "totalNanos" : 93586045,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         },
@@ -3314,10 +3314,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.439,
           "cost" : {
-            "selectionNanos" : 18795585,
-            "readNanos" : 64414576,
-            "fallbackNanos" : 3388991,
-            "totalNanos" : 86599152,
+            "selectionNanos" : 19427073,
+            "readNanos" : 69310239,
+            "fallbackNanos" : 3271459,
+            "totalNanos" : 92008771,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         }
@@ -3504,14 +3504,14 @@
     "condition" : "SUPERSEDED",
     "strategies" : [ {
       "strategy" : "CITATION_DERIVED",
-      "scope" : [ "src-f4e04e28", "src-91157013", "src-9fe189d5" ],
+      "scope" : [ "src-9fe189d5", "src-f4e04e28", "src-91157013" ],
       "scopeSize" : 3,
       "validated" : false,
       "validationReason" : "the candidate disagreed with the reference on the held-out case 'RC-HPD-07', so it was not promoted",
       "validationAgreement" : 0.0,
       "validationCases" : 5,
-      "proposalNanos" : 900388,
-      "validationNanos" : 42484852,
+      "proposalNanos" : 988845,
+      "validationNanos" : 42340204,
       "arms" : {
         "ANCHOR" : {
           "cases" : 12,
@@ -3528,10 +3528,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.433,
           "cost" : {
-            "selectionNanos" : 19911858,
-            "readNanos" : 25212924,
-            "fallbackNanos" : 17897788,
-            "totalNanos" : 63022570,
+            "selectionNanos" : 20195034,
+            "readNanos" : 25873311,
+            "fallbackNanos" : 19370057,
+            "totalNanos" : 65438402,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         },
@@ -3550,10 +3550,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.428,
           "cost" : {
-            "selectionNanos" : 17876719,
-            "readNanos" : 3117719,
-            "fallbackNanos" : 43718908,
-            "totalNanos" : 64713346,
+            "selectionNanos" : 18560844,
+            "readNanos" : 3654161,
+            "fallbackNanos" : 49018427,
+            "totalNanos" : 71233432,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         }
@@ -3736,14 +3736,14 @@
       }
     }, {
       "strategy" : "DECLARED",
-      "scope" : [ "src-f4e04e28", "src-e40daf3b", "src-9fe189d5" ],
+      "scope" : [ "src-e40daf3b", "src-9fe189d5", "src-f4e04e28" ],
       "scopeSize" : 3,
       "validated" : false,
       "validationReason" : "an observed support source is no longer applicable",
       "validationAgreement" : 0.0,
       "validationCases" : 5,
-      "proposalNanos" : 755835,
-      "validationNanos" : 697254,
+      "proposalNanos" : 848490,
+      "validationNanos" : 788086,
       "arms" : {
         "ANCHOR" : {
           "cases" : 12,
@@ -3760,10 +3760,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.429,
           "cost" : {
-            "selectionNanos" : 17747225,
-            "readNanos" : 28051175,
-            "fallbackNanos" : 14798695,
-            "totalNanos" : 60597095,
+            "selectionNanos" : 19856807,
+            "readNanos" : 30138865,
+            "fallbackNanos" : 15239359,
+            "totalNanos" : 65235031,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         },
@@ -3782,10 +3782,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.428,
           "cost" : {
-            "selectionNanos" : 17133277,
-            "readNanos" : 16840806,
-            "fallbackNanos" : 29330597,
-            "totalNanos" : 63304680,
+            "selectionNanos" : 18209268,
+            "readNanos" : 17209623,
+            "fallbackNanos" : 31012874,
+            "totalNanos" : 66431765,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         }
@@ -3968,14 +3968,14 @@
       }
     }, {
       "strategy" : "EVIDENCE_DERIVED",
-      "scope" : [ "src-e40daf3b", "src-91157013", "src-f4e04e28", "src-9fe189d5" ],
+      "scope" : [ "src-e40daf3b", "src-9fe189d5", "src-f4e04e28", "src-91157013" ],
       "scopeSize" : 4,
       "validated" : false,
       "validationReason" : "an observed support source is no longer applicable",
       "validationAgreement" : 0.0,
       "validationCases" : 5,
-      "proposalNanos" : 4845196,
-      "validationNanos" : 669161,
+      "proposalNanos" : 5243107,
+      "validationNanos" : 746407,
       "arms" : {
         "ANCHOR" : {
           "cases" : 12,
@@ -3992,10 +3992,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.428,
           "cost" : {
-            "selectionNanos" : 18866246,
-            "readNanos" : 44617432,
-            "fallbackNanos" : 2815078,
-            "totalNanos" : 66298756,
+            "selectionNanos" : 21340464,
+            "readNanos" : 47224965,
+            "fallbackNanos" : 3320652,
+            "totalNanos" : 71886081,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         },
@@ -4014,10 +4014,10 @@
           "meanCompletenessNote" : "the mean is over the ADMITTED rows: a refused row was served by the reference, whose completeness is 1.0 by construction, and a mean over every row would mix the two paths",
           "meanCoverage" : 0.428,
           "cost" : {
-            "selectionNanos" : 18117355,
-            "readNanos" : 44617432,
-            "fallbackNanos" : 2815078,
-            "totalNanos" : 65549865,
+            "selectionNanos" : 18223266,
+            "readNanos" : 47224965,
+            "fallbackNanos" : 3320652,
+            "totalNanos" : 68768883,
             "note" : "the costs are RECORDS, never assertions; the proposal and the validation are counted separately and are not part of this path. The restricted reading is measured ONCE per scope and shared by the two criteria of that scope, so their read costs are the same by construction and the cost fields must not be read as a difference between the rules. A refused row served nothing from the scope: its read is zero and the reference reading is counted once, as the fallback"
           }
         }

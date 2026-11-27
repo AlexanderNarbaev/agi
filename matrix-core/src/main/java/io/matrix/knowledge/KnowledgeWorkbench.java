@@ -795,16 +795,25 @@ public class KnowledgeWorkbench implements AutoCloseable {
      * and dropping it would change what the asking path reasons with rather than how much it
      * reads.</p>
      *
+     * <p><b>A claim that no source introduced is in no support set.</b> A claim may name no
+     * introducing source at all, and a support set never names it — so the restricted view
+     * leaves it out. The check is written out rather than left to the set: an IMMUTABLE set
+     * (the immutable copy of a support set, for instance) throws when it is asked about a null
+     * key, and a workspace that holds such a claim would make the restriction throw instead of
+     * reading. The outcome is the one the null-tolerant set gave: the claim is not in the
+     * restricted view.</p>
+     *
      * @param snapshot  the workspace as it is
      * @param sourceIds the sources the workspace may be read as
      * @return the restricted snapshot
      */
     private KnowledgeSnapshot restrictedTo(KnowledgeSnapshot snapshot, Set<String> sourceIds) {
         List<Source> sources = snapshot.sources().stream()
-                .filter(source -> sourceIds.contains(source.id()))
+                .filter(source -> source.id() != null && sourceIds.contains(source.id()))
                 .toList();
         List<Claim> claims = snapshot.claims().stream()
-                .filter(claim -> sourceIds.contains(claim.introducedBySourceId()))
+                .filter(claim -> claim.introducedBySourceId() != null
+                        && sourceIds.contains(claim.introducedBySourceId()))
                 .toList();
         Set<String> claimIds = claims.stream().map(Claim::id).collect(Collectors.toSet());
         Set<String> conceptIds = claims.stream()

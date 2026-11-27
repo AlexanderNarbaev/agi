@@ -101,6 +101,10 @@ The two failures are exactly the two claims the milestone makes about the criter
   branch for that case: a clearly downgraded DEV result, with the failure stated in every
   artefact and no false role attribution.
 - The cost numbers are **records** of one DEV run on one machine. No timing is asserted anywhere.
+- **The scope lists are in a deterministic order** — the candidate scope is an insertion-ordered
+  copy of the support set, so two runs of the same measurement list the same sources in the same
+  order. What a re-run still changes is the timings, the snapshot identity and the run's own
+  timings in the XML: those are records of a run, not of the measurement.
 - **The input fingerprint proves sameness of the LABEL, not of the view.** It says that the six
   arms of a cell were measured against one recorded input; it does not re-derive the view, because
   the view lives in the workspace and the evidence does not hold it.

@@ -506,16 +506,17 @@ scopes:
     filters:
       - 'io.matrix.knowledge.CompetenceReachServedTest'
       - 'io.matrix.crj.corpus.Crj01ReachCorpusReportBuilder'
+      - 'io.matrix.knowledge.RestrictedViewNullIntroducedClaimTest'
     source_packages: [io.matrix.knowledge, io.matrix.cognitive.report, io.matrix.crj.corpus,
       io.matrix.crj.reach]
     test_packages: [io.matrix.knowledge, io.matrix.crj.corpus, io.matrix.crj.reach]
     last_verified_commit: 7e20e9d9f9945066ebc0120f8e5b379f255ef266
-    last_execution: '2026-11-27'
+    last_execution: '2026-11-28'
     result:
-      classes_discovered: 2
-      classes_executed: 2
-      methods_executed: 9
-      successful: 9
+      classes_discovered: 3
+      classes_executed: 3
+      methods_executed: 10
+      successful: 10
       failed: 0
       errored: 0
       skipped: 0
@@ -535,7 +536,10 @@ scopes:
       expression - is retained beside them as CRJ-01-REACH-REPRODUCTION-no-criterion.xml
       and carries 2 failures of 8.
     what_it_proves: >-
-      that the scope criterion can be carried by a competence and read back after a
+      that a restricted reading over a support set survives a workspace that holds a
+      claim no source introduced - the claim is in no support set, so the restricted view
+      leaves it out, and the restriction reads rather than throws - that the scope
+      criterion can be carried by a competence and read back after a
       restart, that the six arms of the paired comparison receive the same immutable
       snapshot, the same bindings and the same history - every row carries the
       fingerprint of the view it was measured against, and the six arms of a cell carry
