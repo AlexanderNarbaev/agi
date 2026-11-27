@@ -2,7 +2,7 @@
 """Bounded, local DSH headless supervisor. No Codex/model call in the retry loop.
 
 Usage: python3 scripts/matrix_dsh_supervise.py run --task-file FILE --worktree PATH \
-  --gate 'flock /tmp/gradle-matrix.lock ./gradlew ...' [--max-runs 6]
+  --gate 'flock /tmp/gradle-matrix.lock ./gradlew ...'
 
 The gate must use public/development cases; NEVER expose sealed test failures to workers.
 """
@@ -14,7 +14,9 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import signal
 import subprocess
+import tempfile
 import sys
 import time
 
@@ -47,38 +49,108 @@ def verify_worktree(worktree: Path, canonical: Path) -> str:
     return str(common)
 
 
+def event_summary() -> dict:
+    return {'session_id': None, 'final': None, 'error': None, 'tokens': 0,
+            'metered_steps': 0, 'unmetered_steps': 0, 'tool_calls': 0,
+            'usage': {}}
+
+
+def consume_event(result: dict, line: bytes) -> bool:
+    try:
+        event = json.loads(line)
+    except (ValueError, UnicodeError):
+        return False
+    if not isinstance(event, dict):
+        return False
+    kind = event.get('type')
+    if kind == 'session':
+        result['session_id'] = event.get('sessionId')
+    elif kind == 'final':
+        result['final'] = event
+    elif kind == 'error':
+        result['error'] = event.get('message') or str(event)[:1000]
+    elif kind == 'tool_call':
+        result['tool_calls'] += 1
+    elif kind == 'status' and event.get('phase') == 'step_end':
+        usage = event.get('usage')
+        fields = ('inputTokens', 'outputTokens', 'cacheReadTokens', 'cacheWriteTokens')
+        if isinstance(usage, dict):
+            amounts = {key: usage[key] for key in fields
+                       if type(usage.get(key)) is int and usage[key] >= 0}
+            for key, value in amounts.items():
+                result['usage'][key] = result['usage'].get(key, 0) + value
+            total = usage.get('totalTokens')
+            if type(total) is not int and {'inputTokens', 'outputTokens'} <= amounts.keys():
+                total = sum(amounts.values())
+            if type(total) is int and total >= sum(amounts.values()):
+                result['tokens'] += total
+                result['metered_steps'] += 1
+                return True
+        result['unmetered_steps'] += 1
+    return True
+
+
 def parse_events(path: Path) -> dict:
-    result = {'session_id': None, 'final': None, 'error': None, 'tokens': 0, 'metered_steps': 0,
-              'unmetered_steps': 0}
-    with path.open(encoding='utf-8', errors='replace') as stream:
+    result = event_summary()
+    with path.open('rb') as stream:
         for line in stream:
-            try:
-                e = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            typ = e.get('type')
-            if typ == 'session':
-                result['session_id'] = e.get('sessionId')
-            elif typ == 'final':
-                result['final'] = e
-            elif typ == 'error':
-                result['error'] = e.get('message') or str(e)[:1000]
-            elif typ == 'status' and e.get('phase') == 'step_end':
-                u = e.get('usage')
-                if not isinstance(u, dict):
-                    result['unmetered_steps'] += 1
-                else:
-                    n = u.get('totalTokens')
-                    if not isinstance(n, (float, int)):
-                        inp, out = u.get('inputTokens'), u.get('outputTokens')
-                        if isinstance(inp, (float, int)) and isinstance(out, (float, int)):
-                            n = inp + out
-                    if isinstance(n, (float, int)):
-                        result['tokens'] += int(n)
-                        result['metered_steps'] += 1
-                    else:
-                        result['unmetered_steps'] += 1
+            consume_event(result, line)
     return result
+
+
+def terminate_group(process: subprocess.Popen) -> None:
+    try:
+        os.killpg(process.pid, signal.SIGTERM)
+        deadline = time.monotonic() + 2
+        while time.monotonic() < deadline:
+            process.poll()
+            os.killpg(process.pid, 0)
+            time.sleep(0.05)
+        os.killpg(process.pid, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
+    process.wait()
+
+
+def run_headless(cmd, prompt, worktree, output, events, stderr, *, max_tools, timeout, idle_timeout, checkpoint, lock_fd):
+    # The provider reports committed steps. A request can overrun the threshold
+    # before its usage arrives, and dropped attempts and subagents may be absent.
+    with tempfile.TemporaryFile() as request, events.open('rb') as stream:
+        request.write(prompt.encode())
+        request.seek(0)
+        process = subprocess.Popen(cmd, stdin=request, stdout=output, stderr=stderr,
+                                   cwd=worktree, start_new_session=True,
+                                   pass_fds=() if lock_fd is None else (lock_fd,))
+        started = last_progress = time.monotonic()
+        result = event_summary()
+        try:
+            while True:
+                offset = stream.tell()
+                line = stream.readline()
+                if line.endswith(b'\n'):
+                    if consume_event(result, line):
+                        last_progress = time.monotonic()
+                        checkpoint(result)
+                else:
+                    stream.seek(offset)
+                if result['tool_calls'] >= max_tools:
+                    stop = 'TOOL_LIMIT'
+                    break
+                now = time.monotonic()
+                if now - started >= timeout:
+                    stop = 'ROUND_TIMEOUT'
+                    break
+                if now - last_progress >= idle_timeout:
+                    stop = 'NO_PROGRESS'
+                    break
+                if not line.endswith(b'\n'):
+                    code = process.poll()
+                    if code is not None:
+                        return code, None
+                    time.sleep(0.02)
+        finally:
+            terminate_group(process)
+        return process.returncode, stop
 
 
 def final_completed(ev: dict, code: int) -> bool:
@@ -109,6 +181,10 @@ def run(args: argparse.Namespace) -> int:
     lock_path = state_dir / 'execution.lock'
     state_path = state_dir / 'state.json'
     task_digest = hashlib.sha256(task_file.read_bytes()).hexdigest()
+    round_timeout = getattr(args, 'round_timeout', 1800)
+    idle_timeout = getattr(args, 'idle_timeout', 180)
+    max_tools = getattr(args, 'max_tools', 100)
+    resume_note = getattr(args, 'resume_note', '')
     with lock_path.open('a+') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         state = read_json(state_path)
@@ -129,24 +205,39 @@ def run(args: argparse.Namespace) -> int:
                      'unmetered_steps': 0, 'status': 'PREPARING', 'round_evidence': []}
             (state_dir / 'task.md').write_bytes(task_file.read_bytes())
             os.chmod(state_dir / 'task.md', 0o600)
+        if state.get('in_flight'):
+            flight = state.pop('in_flight')
+            path = Path(flight['events'])
+            parsed = parse_events(path) if path.is_file() else event_summary()
+            if state.get('session_id') and parsed['session_id'] not in (None, state['session_id']):
+                raise ValueError('Interrupted round has a different session ID')
+            state['session_id'] = parsed['session_id'] or state.get('session_id')
+            state['reported_root_tokens'] += parsed['tokens']
+            state['unmetered_steps'] += parsed['unmetered_steps']
+            state['rounds'] = flight['round']
+            state['round_evidence'].append({**flight, 'interrupted': True,
+                                            'reported_root_tokens': parsed['tokens'],
+                                            'usage': parsed['usage']})
+            record(state_path, state, status='INTERRUPTED')
         record(state_path, state, status='RUNNING')
         last_gate_sig = state.get('last_gate_signature')
         stagnant = state.get('stagnant', 0)
-        while state['rounds'] < args.max_runs:
-            if state['reported_root_tokens'] >= args.token_budget:
-                record(state_path, state, status='BUDGET_EXHAUSTED')
-                break
+        first_round = state['rounds'] + 1
+        while True:
             index = state['rounds'] + 1
-            ndjson = state_dir / f'round-{index:02d}.jsonl'
-            stderr = state_dir / f'round-{index:02d}.stderr'
+            prefix = f'{task_digest[:12]}-{time.time_ns()}-{index:02d}'
+            ndjson = state_dir / f'round-{prefix}.jsonl'
+            stderr = state_dir / f'round-{prefix}.stderr'
             if index == 1 and not args.resume:
                 prompt = (state_dir / 'task.md').read_text()
             else:
-                gate_note = state.get('last_gate_feedback', 'No gate result was available.')
+                gate_note = state.get('last_gate_feedback', 'The last run stopped without a gate result. Resume the saved work.')
                 prompt = ('Continue the SAME bounded milestone in the SAME worktree. '
                           'Do not create clones or new directories. Previous attempt did not satisfy '
                           'the independent development gate. Fix root cause; run applicable targeted tests. '
                           'No hidden sealed gold may be read or transmitted. Gate feedback:\n' + gate_note)
+            if resume_note and index == first_round:
+                prompt += '\nCoordinator recovery instruction: ' + resume_note
             cmd = ['dsh', 'headless', '--permission-mode', args.permission,
                    '--approval-policy', 'never', '--json']
             if state.get('session_id'):
@@ -154,15 +245,28 @@ def run(args: argparse.Namespace) -> int:
             if args.grant_git:
                 cmd += ['--add-dir', common]
             cmd += ['-']
-            with ndjson.open('w') as out, stderr.open('w') as err:
+            with ndjson.open('xb') as out, stderr.open('xb') as err:
                 os.chmod(ndjson, 0o600)
                 os.chmod(stderr, 0o600)
+                flight = {'round': index, 'events': str(ndjson), 'stderr': str(stderr)}
+                record(state_path, state, in_flight=flight)
+
+                def checkpoint(events):
+                    flight['session_id'] = events['session_id']
+                    flight['reported_root_tokens'] = events['tokens']
+                    flight['usage'] = events['usage']
+                    flight['tool_calls'] = events['tool_calls']
+                    record(state_path, state)
+
                 try:
-                    code = subprocess.run(cmd, input=prompt, text=True, cwd=worktree,
-                                          stdout=out, stderr=err, check=False).returncode
+                    code, stop = run_headless(
+                        cmd, prompt, worktree, out, ndjson, err,
+                        max_tools=max_tools, timeout=round_timeout, idle_timeout=idle_timeout,
+                        checkpoint=checkpoint, lock_fd=lock.fileno())
                 except OSError as exc:
                     record(state_path, state, status='LAUNCH_FAILED', error=str(exc))
                     break
+            state.pop('in_flight')
             parsed = parse_events(ndjson)
             if parsed['session_id']:
                 if state.get('session_id') and parsed['session_id'] != state['session_id']:
@@ -174,25 +278,48 @@ def run(args: argparse.Namespace) -> int:
             item = {'round': index, 'dsh_exit_code': code, 'final_reason':
                     parsed['final'].get('reason') if parsed['final'] else None,
                     'reported_root_tokens': parsed['tokens'], 'unmetered_steps': parsed['unmetered_steps'],
-                    'events': str(ndjson), 'stderr': str(stderr)}
+                    'events': str(ndjson), 'stderr': str(stderr),
+                    'usage': parsed['usage'], 'tool_calls': parsed['tool_calls']}
             state['round_evidence'].append(item)
             record(state_path, state)
-            if not final_completed(parsed, code):
-                record(state_path, state, status='DSH_FAILED', error=parsed.get('error'))
+            if stop or not final_completed(parsed, code):
+                reason = item['final_reason'] or {}
+                detail = parsed['error'] or reason.get('message') or ''
+                kind = reason.get('kind', '')
+                if kind in ('quota_exhausted', 'insufficient_quota') or any(
+                        word in str(detail).lower() for word in
+                        ('quota exceeded', 'quota exhausted', 'insufficient balance')):
+                    record(state_path, state, status='PROVIDER_QUOTA_EXHAUSTED', error=detail)
+                    break
+                # Checkpointed slices can continue after tool/time limits. A
+                # repeated stop with the same durable milestone checkpoint
+                # means another continuation has no new work to build on.
+                milestone = worktree / '.opencode' / 'matrix-dsh-checkpoint.md'
+                checkpoint_hash = hashlib.sha256(milestone.read_bytes()).hexdigest() if milestone.is_file() else None
+                signature = [stop or kind or code, checkpoint_hash]
+                if state.get('session_id') and signature != state.get('last_slice_failure'):
+                    record(state_path, state, last_slice_failure=signature,
+                           last_gate_feedback=f'Prior slice ended ({signature[0]}). If present, read '
+                           '.opencode/matrix-dsh-checkpoint.md and execute the next unfinished action.')
+                    continue
+                record(state_path, state, status=stop or 'DSH_FAILED', error=detail)
                 break
-            if state['unmetered_steps']:
-                # Reported tokens may omit retries/subagents. Never promise a hard 512K total.
-                record(state_path, state, status='TOKEN_USAGE_UNVERIFIED')
-                break
-            gate_log = state_dir / f'gate-{index:02d}.log'
+            gate_log = state_dir / f'gate-{prefix}.log'
             # An operator-supplied development gate is allowed to read public dev fixtures only.
             # Run under a shell to support flock and the project's Gradle command conventions.
             with gate_log.open('w') as log:
                 os.chmod(gate_log, 0o600)
                 try:
-                    gate_code = subprocess.run(args.gate, shell=True, cwd=worktree,
-                                               stdout=log, stderr=subprocess.STDOUT, check=False,
-                                               executable='/bin/bash').returncode
+                    with subprocess.Popen(['/bin/bash', '-c', args.gate], cwd=worktree,
+                                          stdout=log, stderr=subprocess.STDOUT,
+                                          start_new_session=True) as gate:
+                        try:
+                            gate_code = gate.wait(timeout=round_timeout)
+                        except subprocess.TimeoutExpired:
+                            gate_code = 124
+                            log.write('Development gate timed out.\n')
+                        finally:
+                            terminate_group(gate)
                 except OSError as exc:
                     gate_code = 127
                     log.write(f'Gate launch failed: {exc}\n')
@@ -210,8 +337,6 @@ def run(args: argparse.Namespace) -> int:
             if stagnant >= 2:
                 record(state_path, state, status='NO_PROGRESS')
                 break
-        else:
-            record(state_path, state, status='MAX_RUNS_REACHED')
     summary = (f"{state['status']} | rounds={state['rounds']} | "
                f"reported_root_tokens={state['reported_root_tokens']} | "
                f"unmetered_steps={state['unmetered_steps']} | "
@@ -230,9 +355,11 @@ def main() -> int:
     run_parser.add_argument('--gate', required=True, help='Independent DEV-only acceptance command')
     run_parser.add_argument('--permission', default='workspace-write', choices=['workspace-write','read-only'])
     run_parser.add_argument('--grant-git', action='store_true', help='Explicitly permit shared .git metadata writes')
-    run_parser.add_argument('--token-budget', type=int, default=512000)
-    run_parser.add_argument('--max-runs', type=int, default=8)
+    run_parser.add_argument('--max-tools', type=int, default=100)
+    run_parser.add_argument('--round-timeout', type=int, default=1800, help='Per round or gate, seconds')
+    run_parser.add_argument('--idle-timeout', type=int, default=180, help='Seconds without a valid event')
     run_parser.add_argument('--resume', action='store_true')
+    run_parser.add_argument('--resume-note', default='', help='Instruction appended to the first resumed turn')
     status_parser = sub.add_parser('status')
     status_parser.add_argument('--repo', default='~/Projects/agi')
     args = parser.parse_args()
@@ -244,8 +371,8 @@ def main() -> int:
                           'unmetered_steps': state.get('unmetered_steps'), 'evidence': str(state_path)},
                          ensure_ascii=False))
         return 0
-    if args.max_runs < 1 or args.token_budget < 1:
-        parser.error('max-runs and token-budget must be positive')
+    if min(args.max_tools, args.round_timeout, args.idle_timeout) < 1:
+        parser.error('Runtime limits must be positive')
     try:
         return run(args)
     except (ValueError, OSError, subprocess.CalledProcessError, BlockingIOError) as exc:
