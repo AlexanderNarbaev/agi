@@ -116,7 +116,7 @@ run_mutation "the corpus digest is changed" \
 import json, pathlib
 p = pathlib.Path('docs-v2/engineering/CRJ-01-ADAPTIVE-DEV-SPLIT.json')
 data = json.loads(p.read_text(encoding='utf-8'))
-data['cases'][0]['corpusSha256'] = '0' * 64
+data['cases'][0]['corpusSha256'] = '0' * len(data['cases'][0]['corpusSha256'])
 p.write_text(json.dumps(data, indent=1), encoding='utf-8')
 PY" "the split's corpus digests match the corpus bytes"
 
