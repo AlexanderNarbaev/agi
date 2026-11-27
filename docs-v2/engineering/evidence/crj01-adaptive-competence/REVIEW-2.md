@@ -49,7 +49,7 @@ artefact's self-declared `parity` flag, and nothing anywhere asserts that the co
 `CRJ-01-ADAPTIVE-DEV-SPLIT.json`, the retained evidence directory (README, MANIFESTS,
 CHECKSUMS, all seven XMLs) and both canonical row artefacts, the served suite
 (`AdaptiveCompetenceServedTest.java`, 2346 lines, in full), `scripts/adaptive-competence-gate.py`
-and `-selftest.sh` (both run), `render-cost-table.py`, `.opencode/adaptive-split-fallback.py`
+and `-selftest.sh` (both run), `render-cost-table.py`, the then-local split generator
 (run, output compared byte for byte with the committed split), the protocol §5.5a/§5.6, and
 the production sources behind the claims (`ReportProcedureLearner`, `ReportProcedure`,
 `ReportProcedureMethod`, `KnowledgeWorkbench.assessSupport`, `KnowledgeStatistics.identityOf`,
@@ -290,7 +290,7 @@ slot document, or the rule that makes it distinct.
 
 The disjointness itself is **real and by construction** — I checked it three ways: the
 generator takes the third narrow claim of the out-of-support slot
-(`.opencode/adaptive-split-fallback.py:87-96`), the committed split is **byte-identical** to
+(lines 87–96 of the then-local split generator), the committed split is **byte-identical** to
 the generator's output (I ran it and compared), and the 30 cases carry **30 distinct claim
 ids, 30 distinct propositions and 30 distinct questions**. But the record that says so is not
 in the split.
@@ -301,8 +301,8 @@ other case.
 
 ### F-07 — MINOR — The generator that guarantees the disjointness is untracked and unretained, and no test asserts the disjointness
 
-**Files/lines:** `.opencode/adaptive-split-fallback.py` (untracked — `git status` lists it as
-`??`), `.opencode/CRJ-01-ADAPTIVE-DEV-SPLIT.fallback.json` (untracked); the split's
+**Files/lines:** the then-local split generator (untracked — `git status` lists it as
+`??`), its local output (untracked); the split's
 `provenance` names no generator; `docs-v2/engineering/evidence/crj01-adaptive-competence/MANIFESTS.md`
 does not list it.
 
@@ -490,3 +490,5 @@ manifest and in the directory but in neither table.
    that the gate checks it; I did not re-derive the H2 rows themselves.
 7. **Whether the coordinator's acceptance review was itself conducted against this state.**
    I reviewed the tree as it stood; I have no visibility into the coordinator's re-review.
+
+The generator and the final DEV split are retained with the published evidence.

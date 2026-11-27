@@ -148,14 +148,14 @@ ESTABLISHED`.
 
 | cell | reference (warm median) | procedure (warm median) | the paired interval | verdict |
 |---|---|---|---|---|
-| `dhx/narrow/1` | 8.31 ms | 8.74 ms | [−0.58, +0.86] ms | `NOT ESTABLISHED` |
-| `dhx/narrow/2` | 11.51 ms | 11.13 ms | [−1.32, +2.98] ms | `NOT ESTABLISHED` |
-| `dhx/wide/1` | 12.82 ms | 11.26 ms | [−1.87, −0.35] ms | **`CHEAPER`** |
-| `dhx/wide/2` | 16.07 ms | 14.10 ms | [−2.95, −0.42] ms | **`CHEAPER`** |
-| `dmy/narrow/1` | 10.57 ms | 10.23 ms | [−2.62, +0.59] ms | `NOT ESTABLISHED` |
-| `dmy/narrow/2` | 12.31 ms | 12.48 ms | [−2.34, +0.70] ms | `NOT ESTABLISHED` |
-| `dmy/wide/1` | 13.70 ms | 12.54 ms | [−2.15, −1.23] ms | **`CHEAPER`** |
-| `dmy/wide/2` | 17.56 ms | 16.17 ms | [−1.51, +0.29] ms | `NOT ESTABLISHED` |
+| `dhx/narrow/1` | 8.02 ms | 8.37 ms | [−0.69, +0.50] ms | `NOT ESTABLISHED` |
+| `dhx/narrow/2` | 12.10 ms | 12.06 ms | [−0.48, +1.62] ms | `NOT ESTABLISHED` |
+| `dhx/wide/1` | 12.29 ms | 11.19 ms | [−2.14, +0.52] ms | `NOT ESTABLISHED` |
+| `dhx/wide/2` | 14.44 ms | 15.23 ms | [−0.96, +1.15] ms | `NOT ESTABLISHED` |
+| `dmy/narrow/1` | 10.49 ms | 9.85 ms | [−2.09, +0.52] ms | `NOT ESTABLISHED` |
+| `dmy/narrow/2` | 12.09 ms | 13.88 ms | [+0.14, +1.34] ms | `NOT ESTABLISHED` |
+| `dmy/wide/1` | 15.63 ms | 13.38 ms | [−2.82, −0.52] ms | **`CHEAPER`** |
+| `dmy/wide/2` | 16.65 ms | 15.44 ms | [−2.44, +0.39] ms | `NOT ESTABLISHED` |
 
 **The verdict is per cell, and no aggregate is drawn over the cells.** The
 pre-registration says so — *"The verdict is per cell. There is no aggregate 'winner' over
