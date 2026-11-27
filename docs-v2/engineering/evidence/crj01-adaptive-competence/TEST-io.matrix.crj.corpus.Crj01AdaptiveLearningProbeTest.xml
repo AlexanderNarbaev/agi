@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.crj.corpus.Crj01AdaptiveLearningProbeTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-27T14:39:07.392Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.97">
+  <properties/>
+  <testcase name="the learning episode's width is measured: which documents the reference reading cites for each question" classname="io.matrix.crj.corpus.Crj01AdaptiveLearningProbeTest" time="0.97"/>
+  <system-out><![CDATA[[CRJ-01/ADAPTIVE/LEARN] AC-DHX-01 OBSERVED gold=dhx-b-cooling.md cited=[dhx-b-cooling.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DHX-02 OBSERVED gold=dhx-d-instrumentation.md cited=[dhx-d-instrumentation.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DHX-03 VALIDATION gold=dhx-b-cooling.md cited=[dhx-b-cooling.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DHX-04 VALIDATION gold=dhx-b-cooling.md cited=[dhx-b-cooling.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DHX-05 VALIDATION gold=dhx-b-cooling.md cited=[dhx-b-cooling.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DHX-06 VALIDATION gold=dhx-b-cooling.md cited=[dhx-b-cooling.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DHX-07 VALIDATION gold=dhx-b-cooling.md cited=[dhx-b-cooling.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DHX-08 NOVEL gold=dhx-b-cooling.md cited=[dhx-b-cooling.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DHX-09 NOVEL gold=dhx-b-cooling.md cited=[dhx-b-cooling.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DHX-10 NOVEL gold=dhx-b-cooling.md cited=[dhx-b-cooling.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DHX-11 NOVEL gold=dhx-b-cooling.md cited=[dhx-b-cooling.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DHX-12 NOVEL gold=dhx-b-cooling.md cited=[dhx-b-cooling.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DHX-13 OUT_OF_SUPPORT gold=dhx-a-heat.md cited=[dhx-a-heat.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DHX-14 OUT_OF_SUPPORT gold=dhx-a-heat.md cited=[dhx-a-heat.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DMY-01 OBSERVED gold=dmy-c-erosion.md cited=[dmy-c-erosion.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DMY-02 OBSERVED gold=dmy-a-sediment.md cited=[dmy-a-sediment.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DMY-03 VALIDATION gold=dmy-c-erosion.md cited=[dmy-c-erosion.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DMY-04 VALIDATION gold=dmy-c-erosion.md cited=[dmy-c-erosion.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DMY-05 VALIDATION gold=dmy-c-erosion.md cited=[dmy-c-erosion.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DMY-06 VALIDATION gold=dmy-c-erosion.md cited=[dmy-c-erosion.md] claims=3 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DMY-07 VALIDATION gold=dmy-c-erosion.md cited=[dmy-c-erosion.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DMY-08 NOVEL gold=dmy-c-erosion.md cited=[dmy-c-erosion.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DMY-09 NOVEL gold=dmy-c-erosion.md cited=[dmy-c-erosion.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DMY-10 NOVEL gold=dmy-c-erosion.md cited=[dmy-c-erosion.md] claims=2 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DMY-11 NOVEL gold=dmy-c-erosion.md cited=[dmy-c-erosion.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DMY-12 NOVEL gold=dmy-c-erosion.md cited=[dmy-c-erosion.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DMY-13 OUT_OF_SUPPORT gold=dmy-b-microbes.md cited=[dmy-b-microbes.md] claims=1 OK
+[CRJ-01/ADAPTIVE/LEARN] AC-DMY-14 OUT_OF_SUPPORT gold=dmy-b-microbes.md cited=[dmy-b-microbes.md] claims=1 OK
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

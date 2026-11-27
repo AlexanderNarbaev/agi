@@ -103,6 +103,7 @@ RUNTIME_PREFIXES = (
     "formal/states/",
     "matrix-core/bin/",
     "matrix-core/data/",
+    "matrix-api-gateway/data/",
     "matrix-core/build/",
     # every module's build output is a runtime artefact as well: the C2A wave's
     # documents cited the brain runtime's retained JUnit XML, and the gate failed

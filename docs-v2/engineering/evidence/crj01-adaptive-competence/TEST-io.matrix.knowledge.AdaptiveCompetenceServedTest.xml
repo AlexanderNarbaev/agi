@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.AdaptiveCompetenceServedTest" tests="16" skipped="0" failures="0" errors="0" timestamp="2026-11-27T15:16:35.542Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="21.569">
+  <properties/>
+  <testcase name="a changed document invalidates the reused statistics, and the next request pays the cold cost again" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="1.0"/>
+  <testcase name="a question the support set cannot answer falls back to the reference, and the reason names the evidence" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.845"/>
+  <testcase name="the distinct subsequent task is DISJOINT from the observations, the failure question and the validation" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.745"/>
+  <testcase name="the pre-registered cost grid: the reference against the procedure, warm and cold, over two domains and two corpus sizes" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="7.099"/>
+  <testcase name="the statistics of a view are reused, and a changed view invalidates them" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.736"/>
+  <testcase name="the gate's best claim is the claim the reference reading cites first" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.779"/>
+  <testcase name="the competence survives the restart, and the gate still holds afterwards" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.708"/>
+  <testcase name="a revision that changes the bytes but not the sentences still invalidates the reused statistics" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.855"/>
+  <testcase name="a procedure forced outside its domain is refused, and no artifact is written" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.751"/>
+  <testcase name="a failure episode yields a candidate revision, validated on a separate subset, and the changed competence is measured on distinct subsequent tasks" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="1.511"/>
+  <testcase name="every measured case is answered with the reference's own evidence, and the served path never answers where the procedure cannot" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="1.03"/>
+  <testcase name="an ambiguous question is not answered, by either path" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.766"/>
+  <testcase name="a reused identity with a changed question is refused, and the committed artifact is untouched" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.743"/>
+  <testcase name="every cited claim carries a citable status, and the evidence names its source" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.874"/>
+  <testcase name="the rejected tie rule is WITNESSED: it accepts a support set that holds the wrong claim, and the kept rule refuses it" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="0.761"/>
+  <testcase name="the served evidence is written: the method that ran, the fallback reason, the evidence and the effect, case by case" classname="io.matrix.knowledge.AdaptiveCompetenceServedTest" time="2.359"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

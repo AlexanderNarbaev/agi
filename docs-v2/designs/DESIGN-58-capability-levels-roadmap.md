@@ -183,6 +183,37 @@ re-measured by this wave, and none is claimed to be.
 — and the registry's Consensus entry does not claim a checked quorum because
 of it. See `docs-v2/engineering/MUTATION-REPORT.md`.
 
+## 6b. Capability registry — CRJ-01 / ADAPTIVE-COMPETENCE (2026-11-27)
+
+**What this section is.** META-R5 requires every new measurement of "the brain can X" to
+name the capability level it belongs to, and to say what the measurement does **not**
+establish. This milestone measured one thing: **that a learned competence knows the
+difference between a question it can answer and a question it cannot** — and it did so on
+the **real served route**, against the stateless reference, on two fresh synthetic
+development domains.
+
+**The level.** **L5 — symbol grounding.** The measurement is about a claim's standing
+*relative to the evidence that answers the question*: the procedure's answer and the
+reference's answer are compared claim by claim, and the competence is admitted only when it
+can hold the workspace's own evidence for the question asked. That is a grounding claim —
+"this answer stands on this evidence" — and not a planning, a reasoning or a motor claim.
+**No level was added, and no level's target was re-measured.** The pipeline's own L0–L7
+targets are untouched by this milestone.
+
+| Capability measured | Level | What was measured | What it does NOT establish | Evidence |
+|---|---|---|---|---|
+| A learned competence's applicability, decided on the evidence for the question asked | **L5 — symbol grounding** | On the served route, a procedure whose support set cannot hold the claim the workspace's own reading would cite first is **not** selected; the stateless reference answers instead, with its own evidence; the refusal happens **before** any durable side effect; the reason is recorded with the evidence it was made from. The served path's grounding is at **parity** with the stateless reference — **30 of 30** cases on two synthetic DEV domains — where the previous milestone (H2) measured 10 of 12 against the reference's 12 of 12. A competence revision was promoted in both domains after a failure episode, validated on a separate DEV subset; one revision was first **refused** for a precise reason and the refusal was kept. The changed competence is measured on a **distinct subsequent task** — a question of the failure episode's own document that no other case uses: before the revision the first competence cannot hold it and the reference answers, after it the **exact revised procedure** answers it, grounded, with its effect verified. The revision runs in its own workspace, so no assertion depends on the order the tests ran in. The deliberate RED — the same suite with the gate removed by one expression — fails 6 of 16 tests. | That the pipeline reaches any level's target: no level's number was re-measured. That the competence is **cheaper** than the stateless reference: of the eight pre-registered grid cells only some separate at all, the separating ones are the wide corpora with a one-document support, and at least one cell changes verdict between runs. That the measurement is sealed: **the sealed evaluation is NOT EXECUTED**, because the host has one uid, no usable namespace, and a `0400` file was read by a same-uid process — the protocol's own "deny the implementer read access before the frozen run" cannot be met. That the cases are independent of the implementer: the independent case author did not deliver, and the questions were written by the implementer's deterministic generator. | `AdaptiveCompetenceServedTest` (15 tests) and the three corpus instruments (3 tests), `scripts/adaptive-competence-gate.sh` (29 checks) and its self-test (6 mutations, each caught by the check that belongs to it), the retained evidence under `docs-v2/engineering/evidence/crj01-adaptive-competence/` (manifest: 11 files OK), `docs-v2/engineering/CRJ-01-ADAPTIVE-COMPETENCE.md` |
+
+**The honest limit of this measurement.** It establishes that a competence can be **refused**
+on evidence, and refused before it does anything. It does not establish that refusing is
+**worth it** — the paired interval contains zero in every cell the rule does not separate — and it does
+not establish that the competence's **reach** is correctly bounded: the measurement exposed
+that a procedure's support set is the union of the sources its learning episode cited, so
+an episode whose answer reaches a second document widens the support (16 of 96 claims of
+the DEV corpora reach a second document even under a focused question). That width is the
+next open question, and it is a question about **what a competence is**, not about the
+retrieval.
+
 ## 7. Where publishing fits
 
 After reaching Level 6:
