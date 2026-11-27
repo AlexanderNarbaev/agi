@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.ClosedLoopReportJourneyTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-11-27T12:04:36.801Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.694">
+  <properties/>
+  <testcase name="the replay agrees with the reference over the validation corpus" classname="io.matrix.knowledge.ClosedLoopReportJourneyTest" time="0.231"/>
+  <testcase name="the observer refuses a name it cannot trust" classname="io.matrix.knowledge.ClosedLoopReportJourneyTest" time="0.001"/>
+  <testcase name="a journey the kernel has no method for is refused with a reason" classname="io.matrix.knowledge.ClosedLoopReportJourneyTest" time="0.066"/>
+  <testcase name="the journey without the trace is the no-learning baseline" classname="io.matrix.knowledge.ClosedLoopReportJourneyTest" time="0.062"/>
+  <testcase name="the same request replays the retained journey and asks nothing again" classname="io.matrix.knowledge.ClosedLoopReportJourneyTest" time="0.083"/>
+  <testcase name="the effect is observed by a reader that did not write it" classname="io.matrix.knowledge.ClosedLoopReportJourneyTest" time="0.081"/>
+  <testcase name="a request for another file name under the same identity is not replayed" classname="io.matrix.knowledge.ClosedLoopReportJourneyTest" time="0.083"/>
+  <testcase name="the journey is planned, executed, observed and traced" classname="io.matrix.knowledge.ClosedLoopReportJourneyTest" time="0.081"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

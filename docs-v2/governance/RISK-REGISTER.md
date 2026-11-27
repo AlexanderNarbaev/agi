@@ -1209,3 +1209,63 @@ evidence is a suspicion, and it is marked as such.
 - **what does not change**: the register keeps the history. The merges of 2026-11-21 and 2026-11-22 were **bypasses of
   an unsatisfiable gate**, and the later replacement of the gate does not rewrite what those merges were.
 - **status**: **RESOLVED** — the gate is satisfiable and the bypass is obsolete.
+
+### R-EPIS-26 — a RESTRICTED READING recomputed its own relevance statistics, so it was a different retrieval and not a restriction
+
+- **the finding**: the procedure's restricted reading — the reading a promoted procedure replays, restricted to its
+  validated support set — recomputed its **relevance statistics over the restricted set**. The corpus shrank, so every
+  term's weight **fell** (`log(1 + total/documentFrequency)` over fewer documents), and the **common** terms fell
+  proportionally **more**, so the claims whose matched terms were the common ones **lost coverage faster** than the
+  question's total weight and fell below the floor. The restricted answer **dropped claims the unrestricted answer
+  cited**. On the held-out case `H2-A05` the reference cited
+  **4** claims and the restricted reading cited **2**: *"The older anomalies occur farther from the ridge axis"* and
+  *"The youngest anomalies occur close to the ridge axis"* were lost. A restricted reading was therefore **a different
+  retrieval**, not a restriction of the reference.
+- **why it matters**: the promotion's agreement gate compares a candidate's restricted reading with the **reference it
+  is validated against**. If the two are not comparable, the comparison is **not a test of the candidate** — it is a test
+  of the retrieval's arithmetic. The promotion was **refused** ("the candidate disagreed with the reference on the
+  held-out case 'H2-A05', so it was not promoted"), and no procedure could ever be promoted on a support set whose
+  statistics differ from the workspace's.
+- **the mechanism, stated as an architectural property**: the support set decides **WHAT MAY BE CITED**; the workspace's
+  statistics decide **HOW RELEVANT** a claim is. These are two different questions, and the retriever was answering them
+  with one number.
+- **the fix**: `KnowledgeRetriever` takes the relevance **statistics** from a named view and the **claims** from another;
+  `KnowledgeWorkbench.askInView` has an overload that says which view the statistics come from; the procedure's learner
+  and its method pass the view the reference was read from. Every pre-existing caller delegates with the statistics of the
+  view it already read, so no other behaviour moved.
+- **the RED, retained**: `docs-v2/engineering/evidence/crj01-h2-served-transfer/CRJ-01-REPRODUCTION-restricted-reading-statistics.xml`
+  — the same test with the pre-correction behaviour: **all 7 tests fail**, and the promotion is refused with the message
+  above. A second, sharper RED sits beside it (`…-restricted-reading-statistics-pinned.xml`): the correction's own
+  regression with the correction reverted — **1 test, 1 failure**, and the failure names the defect in numbers (the
+  unrestricted reading cited **4** claims, the restricted one **2**). **The procedure that produced both** is written
+  down in the evidence directory's README.
+- **the arithmetic, corrected**: a restricted reading recomputes its statistics over a **smaller** corpus, and the weight
+  of a term is `log(1 + total / documentFrequency)` — so every term's weight **FALLS**, and the **common** terms fall
+  proportionally **more** (over the H2 corpus, a term carried by 12 of 59 claims loses 22 % of its weight, a term carried
+  by one loses 12 %). The question's total weight falls with them, but a claim whose matched terms are the common ones
+  loses coverage **faster** than the total does and falls below the floor. The claims that drop are therefore the ones
+  whose matched terms are **common**, not the ones whose terms are rare.
+- **the GREEN**: 43 tests across 15 targeted suites, 0 failures, 0 errors, 0 skipped, with the XMLs and
+  `CHECKSUMS.sha256` in `docs-v2/engineering/evidence/crj01-h2-served-transfer/`.
+- **the SCOPE of the fix, which is deliberate and must not be widened silently**: the
+  correction is applied to the **two procedure paths** the milestone measured — the learner's
+  validation reading and the procedure method's replay. The **source-restricted public reading**
+  (`KnowledgeWorkbench.ask(workspaceId, question, level, sourceIds, historicalEventId)`) **keeps
+  the behaviour it always had**: its relevance statistics are the restricted view's own. That path
+  is a different one, it has **its own retained evidence** (`docs-v2/engineering/evidence/crj01-source-revision/`,
+  seven independently evaluated synthetic groups), and changing its scoring without re-running that
+  independent evaluation would leave retained evidence describing behaviour that no longer exists.
+  **It is worth measuring** — with a single source in the restriction every term has
+  `documentFrequency = 1`, so the IDF cannot discriminate and the coverage degenerates — but it is
+  a **separate decision with its own measurements**, and it is named as such.
+- **the status of the class**: this is the same class as **R-EPIS-20** — a narrower reading changes the ANSWER — but it
+  is a different instance and a different severity: R-EPIS-20 is a **disposition** difference between two systems, and
+  this is a **comparability** failure that made the promotion's own gate unusable. **CLOSED as a defect.**
+- **what stays open, and is an owner decision**: the **applicability domain** of a learned procedure is the **presence**
+  of its support set, which is a statement about the workspace and not about the request — so the kernel offers the
+  procedure for a question the support cannot answer, and the served answer is the restricted reading. The measurement
+  records this as a **limitation of the learned competence** (the two `OUT_OF_SUPPORT` controls), not as a property to be
+  blessed. Whether the applicability domain should be **per-question** is the owner's decision, and it is the question the
+  next experiment must answer.
+- **the evidence**: `docs-v2/engineering/CRJ-01-H2-SERVED-TRANSFER.md` and
+  `docs-v2/engineering/evidence/crj01-h2-served-transfer/`.

@@ -154,6 +154,48 @@ public final class KnowledgeRetriever {
      */
     public KnowledgeRetriever(KnowledgeSnapshot snapshot, double minimumCoverage,
             Map<String, float[]> weakenedBindings) {
+        this(snapshot, snapshot, minimumCoverage, weakenedBindings);
+    }
+
+    /**
+     * A retriever that takes its relevance STATISTICS from another view than the one it reads.
+     *
+     * <p><b>Why the statistics may come from another view.</b> The inverse document frequency
+     * of a term is a number about the CORPUS the question is asked in: a word that is rare in
+     * the workspace is discriminative, and a word every claim carries is not. A reading that is
+     * RESTRICTED to a set of sources is the same question asked in the same workspace with
+     * fewer claims eligible to answer it — and a retriever that recomputed its statistics over
+     * the smaller set would make the restriction change the SCORING as well as the candidates.
+     * The corpus shrinks, and the weight of a term is
+     * {@code log(1 + total / documentFrequency)} — so a smaller corpus gives every term a
+     * SMALLER weight, and it gives the COMMON terms a proportionally LARGER fall: over the
+     * H2 corpus (59 claims down to 36) a term carried by 12 claims loses 22 % of its weight,
+     * while a term carried by one claim loses 12 %. The question's total weight falls with
+     * them, but the claims whose matched terms are the common ones lose coverage FASTER than
+     * the total does, and they fall below the floor: on the H2-A05 question the unrestricted
+     * reading cited four claims and the restricted reading cited two. So a restricted reading
+     * drops claims that the unrestricted reading cited, and the two answers stop being
+     * comparable.
+     *
+     * <p>That is not a restriction, it is a DIFFERENT RETRIEVAL, and a procedure that replays a
+     * validated support set needs the first: the support set decides WHAT MAY BE CITED, and
+     * the workspace's own statistics decide HOW RELEVANT a claim is. The two are separate
+     * questions, and the retriever answers them separately.</p>
+     *
+     * <p><b>What this does not change.</b> The claims that may be cited are still the claims of
+     * {@code snapshot}; only the weights come from {@code statistics}. A statistics view that
+     * is the retrieval view itself — the ordinary case — computes exactly what it computed
+     * before.</p>
+     *
+     * @param snapshot the view the claims are read from
+     * @param statistics the view whose claims define the relevance statistics; null means the
+     *     retrieval view itself
+     * @param minimumCoverage the coverage a claim must reach
+     * @param weakenedBindings the stored accumulator of each concept whose binding the
+     *     error-driven decay has weakened
+     */
+    public KnowledgeRetriever(KnowledgeSnapshot snapshot, KnowledgeSnapshot statistics,
+            double minimumCoverage, Map<String, float[]> weakenedBindings) {
         this.snapshot = snapshot;
         this.minimumCoverage = minimumCoverage;
         this.weakenedBindings = weakenedBindings == null ? Map.of() : Map.copyOf(weakenedBindings);
@@ -210,7 +252,38 @@ public final class KnowledgeRetriever {
                     new LinkedHashSet<>(TextFeatures.tokens(text.toString())));
             representationLemmas.put(entry.getKey(), EnglishLemma.lemmasOf(text.toString()));
         }
-        this.idf = TextFeatures.idf(new ArrayList<>(claimTerms.values()));
+        this.idf = statistics == null || statistics == snapshot
+                ? TextFeatures.idf(new ArrayList<>(claimTerms.values()))
+                : TextFeatures.idf(statisticsTerms(statistics));
+    }
+
+    /**
+     * The term sets of a view's claims: the proposition, and the concept it belongs to.
+     *
+     * <p>The same text the retriever indexes a claim by, so that the statistics of another
+     * view are computed over the same units the scoring uses.</p>
+     *
+     * @param source the view
+     * @return one term set per claim
+     */
+    private static List<Set<String>> statisticsTerms(KnowledgeSnapshot source) {
+        Map<String, Concept> concepts = new LinkedHashMap<>();
+        for (Concept concept : source.concepts()) {
+            concepts.put(concept.id(), concept);
+        }
+        List<Set<String>> documents = new ArrayList<>();
+        for (Claim claim : source.claims()) {
+            Concept concept = concepts.get(claim.conceptId());
+            StringBuilder text = new StringBuilder(claim.proposition());
+            if (concept != null) {
+                text.append(' ').append(concept.name());
+                if (concept.definition() != null) {
+                    text.append(' ').append(concept.definition());
+                }
+            }
+            documents.add(new LinkedHashSet<>(TextFeatures.tokens(text.toString())));
+        }
+        return documents;
     }
 
     /** Answer a question at the introductory level by default. */

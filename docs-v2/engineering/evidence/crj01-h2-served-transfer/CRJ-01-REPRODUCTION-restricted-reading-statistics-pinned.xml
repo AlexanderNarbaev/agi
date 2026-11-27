@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.RestrictedReadingStatisticsTest" tests="1" skipped="0" failures="1" errors="0" timestamp="2026-11-27T12:01:22.961Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.965">
+  <properties/>
+  <testcase name="a restricted reading cites what the unrestricted reading cites, and the reading that recomputes its statistics cites less" classname="io.matrix.knowledge.RestrictedReadingStatisticsTest" time="0.954">
+    <failure message="org.opentest4j.AssertionFailedError: [the restricted reading cites what the unrestricted reading cites: the restriction changes WHAT MAY BE CITED, not HOW RELEVANT a claim is] &#10;expected: [&quot;clm-22457843&quot;, &quot;clm-466ca75b&quot;, &quot;clm-a6c95294&quot;, &quot;clm-ce50a0e2&quot;]&#10; but was: [&quot;clm-22457843&quot;, &quot;clm-a6c95294&quot;]" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: [the restricted reading cites what the unrestricted reading cites: the restriction changes WHAT MAY BE CITED, not HOW RELEVANT a claim is] 
+expected: [&quot;clm-22457843&quot;, &quot;clm-466ca75b&quot;, &quot;clm-a6c95294&quot;, &quot;clm-ce50a0e2&quot;]
+ but was: [&quot;clm-22457843&quot;, &quot;clm-a6c95294&quot;]
+	at io.matrix.knowledge.RestrictedReadingStatisticsTest.theRestrictedReadingKeepsTheWorkspacesStatistics(RestrictedReadingStatisticsTest.java:106)
+</failure>
+  </testcase>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

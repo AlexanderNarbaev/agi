@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.CRJ01H2ServedTransferTest" tests="7" skipped="0" failures="7" errors="0" timestamp="2026-11-27T11:46:51.246Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="4.058">
+  <properties/>
+  <testcase name="a NOVEL question after the restart is answered by the LEARNED procedure, with grounded evidence, a verified effect and a trace" classname="io.matrix.knowledge.CRJ01H2ServedTransferTest" time="1.206">
+    <failure message="org.opentest4j.AssertionFailedError: [the candidate was promoted on the held-out cases: the candidate disagreed with the reference on the held-out case 'H2-A05', so it was not promoted] &#10;Expecting value to be true but was false" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: [the candidate was promoted on the held-out cases: the candidate disagreed with the reference on the held-out case 'H2-A05', so it was not promoted] 
+Expecting value to be true but was false
+	at io.matrix.knowledge.CRJ01H2ServedTransferTest.setUp(CRJ01H2ServedTransferTest.java:189)
+</failure>
+  </testcase>
+  <testcase name="a question OUTSIDE the procedure's support set is not answered out of it" classname="io.matrix.knowledge.CRJ01H2ServedTransferTest" time="0.49">
+    <failure message="org.opentest4j.AssertionFailedError: [the candidate was promoted on the held-out cases: the candidate disagreed with the reference on the held-out case 'H2-A05', so it was not promoted] &#10;Expecting value to be true but was false" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: [the candidate was promoted on the held-out cases: the candidate disagreed with the reference on the held-out case 'H2-A05', so it was not promoted] 
+Expecting value to be true but was false
+	at io.matrix.knowledge.CRJ01H2ServedTransferTest.setUp(CRJ01H2ServedTransferTest.java:189)
+</failure>
+  </testcase>
+  <testcase name="the exact replay is INAPPLICABLE on a novel task and serves an exact repeat" classname="io.matrix.knowledge.CRJ01H2ServedTransferTest" time="0.473">
+    <failure message="org.opentest4j.AssertionFailedError: [the candidate was promoted on the held-out cases: the candidate disagreed with the reference on the held-out case 'H2-A05', so it was not promoted] &#10;Expecting value to be true but was false" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: [the candidate was promoted on the held-out cases: the candidate disagreed with the reference on the held-out case 'H2-A05', so it was not promoted] 
+Expecting value to be true but was false
+	at io.matrix.knowledge.CRJ01H2ServedTransferTest.setUp(CRJ01H2ServedTransferTest.java:189)
+</failure>
+  </testcase>
+  <testcase name="a changed payload under a reused idempotency key is NOT a stale success" classname="io.matrix.knowledge.CRJ01H2ServedTransferTest" time="0.487">
+    <failure message="org.opentest4j.AssertionFailedError: [the candidate was promoted on the held-out cases: the candidate disagreed with the reference on the held-out case 'H2-A05', so it was not promoted] &#10;Expecting value to be true but was false" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: [the candidate was promoted on the held-out cases: the candidate disagreed with the reference on the held-out case 'H2-A05', so it was not promoted] 
+Expecting value to be true but was false
+	at io.matrix.knowledge.CRJ01H2ServedTransferTest.setUp(CRJ01H2ServedTransferTest.java:189)
+</failure>
+  </testcase>
+  <testcase name="the arms are measured on the SAME cases, per metric, and the rows are retained" classname="io.matrix.knowledge.CRJ01H2ServedTransferTest" time="0.469">
+    <failure message="org.opentest4j.AssertionFailedError: [the candidate was promoted on the held-out cases: the candidate disagreed with the reference on the held-out case 'H2-A05', so it was not promoted] &#10;Expecting value to be true but was false" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: [the candidate was promoted on the held-out cases: the candidate disagreed with the reference on the held-out case 'H2-A05', so it was not promoted] 
+Expecting value to be true but was false
+	at io.matrix.knowledge.CRJ01H2ServedTransferTest.setUp(CRJ01H2ServedTransferTest.java:189)
+</failure>
+  </testcase>
+  <testcase name="a superseded source revision is not answered from, and the provenance names the current revision" classname="io.matrix.knowledge.CRJ01H2ServedTransferTest" time="0.462">
+    <failure message="org.opentest4j.AssertionFailedError: [the candidate was promoted on the held-out cases: the candidate disagreed with the reference on the held-out case 'H2-A05', so it was not promoted] &#10;Expecting value to be true but was false" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: [the candidate was promoted on the held-out cases: the candidate disagreed with the reference on the held-out case 'H2-A05', so it was not promoted] 
+Expecting value to be true but was false
+	at io.matrix.knowledge.CRJ01H2ServedTransferTest.setUp(CRJ01H2ServedTransferTest.java:189)
+</failure>
+  </testcase>
+  <testcase name="a learned, versioned procedure survives the restart and still carries its standing" classname="io.matrix.knowledge.CRJ01H2ServedTransferTest" time="0.456">
+    <failure message="org.opentest4j.AssertionFailedError: [the candidate was promoted on the held-out cases: the candidate disagreed with the reference on the held-out case 'H2-A05', so it was not promoted] &#10;Expecting value to be true but was false" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: [the candidate was promoted on the held-out cases: the candidate disagreed with the reference on the held-out case 'H2-A05', so it was not promoted] 
+Expecting value to be true but was false
+	at io.matrix.knowledge.CRJ01H2ServedTransferTest.setUp(CRJ01H2ServedTransferTest.java:189)
+</failure>
+  </testcase>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

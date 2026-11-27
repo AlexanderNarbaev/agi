@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.crj.corpus.Crj01H2DevSplitValidatorTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-27T12:07:03.202Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="0.63">
+  <properties/>
+  <testcase name="the H2 dev split holds every rule the protocol names, and the structure the transfer measurement depends on" classname="io.matrix.crj.corpus.Crj01H2DevSplitValidatorTest" time="0.629"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
