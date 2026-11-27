@@ -421,6 +421,143 @@ scopes:
       requires this scope to be re-run, and the counts it carries then belong to a new
       commit
 
+  - id: SCOPE-CRJ01-ADAPTIVE-COMPETENCE
+    purpose: the adaptive competence milestone on the REAL served route - the
+      question-specific applicability gate, the safe fallback before any durable effect,
+      the reused retrieval statistics with their invalidation, the competence revision
+      and the pre-registered cost grid
+    task: ':matrix-core:test'
+    filters:
+      - 'io.matrix.knowledge.AdaptiveCompetenceServedTest'
+      - 'io.matrix.crj.corpus.Crj01AdaptiveCorpusReportBuilder'
+      - 'io.matrix.crj.corpus.Crj01AdaptiveSeparationProbeTest'
+      - 'io.matrix.crj.corpus.Crj01AdaptiveLearningProbeTest'
+    source_packages: [io.matrix.knowledge, io.matrix.cognitive.report, io.matrix.crj.corpus]
+    test_packages: [io.matrix.knowledge, io.matrix.crj.corpus]
+    last_verified_commit: dff12b5883242b74c09cc2388be32061c2b87cf0
+    last_execution: '2026-11-27'
+    result:
+      classes_discovered: 4
+      classes_executed: 4
+      methods_executed: 18
+      successful: 18
+      failed: 0
+      errored: 0
+      skipped: 0
+      aborted: 0
+      filtered: 0
+      not_executed: 0
+    evidence: >-
+      the JUnit XML under matrix-core/build/test-results/test/ and RETAINED under
+      docs-v2/engineering/evidence/crj01-adaptive-competence/ - the four files of this scope
+      and no others: TEST-io.matrix.knowledge.AdaptiveCompetenceServedTest.xml,
+      TEST-io.matrix.crj.corpus.Crj01AdaptiveCorpusReportBuilder.xml,
+      TEST-io.matrix.crj.corpus.Crj01AdaptiveSeparationProbeTest.xml and
+      TEST-io.matrix.crj.corpus.Crj01AdaptiveLearningProbeTest.xml. The counts are read
+      from those four files and not from the Gradle console summary. The retained copies
+      verify against the directory's own CHECKSUMS.sha256 (12 files OK, the independent
+      review among them), and the DELIBERATE
+      RED - the same suite with the applicability gate removed by one expression - is
+      retained beside them as CRJ-01-ADAPTIVE-REPRODUCTION-no-gate.xml and carries 5
+      failures of 15.
+    what_it_proves: >-
+      that a procedure whose support set cannot carry the evidence for the question asked is
+      NOT selected on the served route, that the stateless reference answers instead with
+      its OWN evidence, that the refusal happens BEFORE any durable side effect, that the
+      reason is recorded with the evidence it was made from, that the retrieval statistics
+      are reused while the view does not change and are never served for a changed view,
+      that the competence revision is promoted after a failure episode and validated on a
+      separate DEV subset, and that the served path's grounding is at PARITY with the
+      stateless reference's - 28 of 28 on two fresh synthetic DEV domains.
+    what_it_does_not_prove: >-
+      it proves nothing about the SEALED evaluation, which is NOT EXECUTED: the host has one
+      uid, no usable namespace, and a 0400 file was read by a same-uid process, so the
+      protocol's own requirement cannot be met. It also proves no COST advantage beyond the cells the rule separates: the
+      pre-registration's verdict is PER CELL and forbids a grid-level verdict, at least one
+      cell changes verdict between runs, and the timings are machine state that no test
+      asserts. The cases' questions were written by
+      the implementer's deterministic generator after the independent case author did not
+      deliver, so the questions are formulic and the cases are not independent of the
+      implementer's mechanism.
+    known_skips: []
+    known_flakes: []
+    destructive_side_effects: none - the suite writes only into its own temporary
+      directory and into the repository's own engineering artefacts
+    environment_dependencies:
+      - the JDK 25 at /home/alexandr-narbaev/jdk25
+      - the shared Gradle lock /tmp/gradle-matrix.lock
+    next_verification_condition: >-
+      a change to the applicability criterion, to the reused retrieval statistics, to the
+      fallback's reason or to the competence revision path requires this scope to be re-run
+      and GATE-CRJ01-ADAPTIVE-COMPETENCE to be re-run with it
+
+  - id: GATE-CRJ01-ADAPTIVE-COMPETENCE-SELFTEST
+    purpose: prove that the adaptive competence gate CAN go red - a gate that cannot fail
+      is not a gate
+    task: 'bash scripts/adaptive-competence-gate-selftest.sh'
+    filters: []
+    evidence: 'the script''s own printed counts and its exit code'
+    last_verified_commit: dff12b5883242b74c09cc2388be32061c2b87cf0
+    last_execution: '2026-11-27'
+    result:
+      checks: 6
+      failed: 0
+      exit_code: 0
+    what_it_proves: >-
+      that six mutations of the milestone's evidence are each caught by the check they
+      belong to, on a COPY in a temporary directory - the repository is never written to:
+      a retained XML that carries a failure (caught by "the serving suite passed"), a
+      served evidence that loses a case (caught by "every measured case is in the
+      evidence"), a fallback row that loses its reason (caught by "every fallback row
+      names its reason as a field of its own"), a changed corpus digest (caught by "the
+      split's corpus digests match the corpus bytes"), a broken manifest (caught by "the
+      retained manifest verifies") and a RED that stops failing (caught by "the RED
+      carries failures").
+    what_it_does_not_prove: >-
+      it does not prove that the gate catches a mutation that leaves every check's
+      precondition intact: it proves that the gate REFUSES six specific classes of broken
+      evidence, not that it refuses every possible one.
+    destructive_side_effects: none - it works on a copy in a temporary directory and
+      removes only its own temporary directory
+    environment_dependencies:
+      - python3
+    next_verification_condition: any change to the gate itself or to the self-test
+
+  - id: GATE-CRJ01-ADAPTIVE-COMPETENCE
+    purpose: the INDEPENDENT supervisor gate of the adaptive competence milestone - it
+      re-derives the milestone's evidence without trusting the test that produced it, and
+      it can go red
+    task: 'bash scripts/adaptive-competence-gate.sh'
+    filters: []
+    evidence: 'the script''s own printed counts and its exit code, and the retained
+      CHECKSUMS.sha256 of the evidence directory'
+    last_verified_commit: dff12b5883242b74c09cc2388be32061c2b87cf0
+    last_execution: '2026-11-27'
+    result:
+      checks: 27
+      failed: 0
+      exit_code: 0
+    what_it_proves: >-
+      that the milestone's claims hold against the artefacts and not against the test's own
+      report: the retained JUnit XML carries no failure and no error, the corpus digests
+      are RE-DERIVED from the bytes, every case of the split is in the served evidence,
+      every row names the method that ran and the grounding verdict, every fallback names
+      its reason, and no row claims inapplicability for an applicable procedure, the served
+      path's grounding is at parity with the reference's, the cost grid carries a verdict
+      for every cell and names its pre-registration, BOTH retained manifests verify (this
+      milestone's 11 files and the inherited H2's 20), and the DELIBERATE RED carries
+      failures - a gate that cannot go red is not a gate.
+    what_it_does_not_prove: >-
+      it does not run the suite: it reads the evidence the suite left, so a stale retained
+      XML would pass a gate whose source has changed. The re-run of the suite is the scope
+      above, and the two together are the milestone's verification.
+    destructive_side_effects: none - the gate is read-only and writes nothing
+    environment_dependencies:
+      - python3
+    next_verification_condition: >-
+      any change to the gate itself, to the milestone's evidence artefacts or to the
+      pre-registration
+
   - id: GATE-CHAIN-ISOLATION
     purpose: prove that the two serving chains do not meet - no chain B class reaches the
       cognitive store, the epistemic store or the chain A surface

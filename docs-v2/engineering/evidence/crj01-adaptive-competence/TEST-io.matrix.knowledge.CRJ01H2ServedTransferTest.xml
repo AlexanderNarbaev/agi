@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.CRJ01H2ServedTransferTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-11-27T14:39:11.969Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="6.933">
+  <properties/>
+  <testcase name="a NOVEL question after the restart is answered by the LEARNED procedure, with grounded evidence, a verified effect and a trace" classname="io.matrix.knowledge.CRJ01H2ServedTransferTest" time="1.348"/>
+  <testcase name="a question OUTSIDE the procedure's support set is not answered out of it" classname="io.matrix.knowledge.CRJ01H2ServedTransferTest" time="0.631"/>
+  <testcase name="the exact replay is INAPPLICABLE on a novel task and serves an exact repeat" classname="io.matrix.knowledge.CRJ01H2ServedTransferTest" time="0.559"/>
+  <testcase name="a changed payload under a reused idempotency key is NOT a stale success" classname="io.matrix.knowledge.CRJ01H2ServedTransferTest" time="0.543"/>
+  <testcase name="the arms are measured on the SAME cases, per metric, and the rows are retained" classname="io.matrix.knowledge.CRJ01H2ServedTransferTest" time="2.726"/>
+  <testcase name="a superseded source revision is not answered from, and the provenance names the current revision" classname="io.matrix.knowledge.CRJ01H2ServedTransferTest" time="0.629"/>
+  <testcase name="a learned, versioned procedure survives the restart and still carries its standing" classname="io.matrix.knowledge.CRJ01H2ServedTransferTest" time="0.482"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

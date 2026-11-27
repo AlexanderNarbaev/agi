@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.crj.corpus.Crj01AdaptiveSeparationProbeTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-27T14:39:08.362Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="1.29">
+  <properties/>
+  <testcase name="the separation of the two development corpora is measured, and the report is written" classname="io.matrix.crj.corpus.Crj01AdaptiveSeparationProbeTest" time="1.289"/>
+  <system-out><![CDATA[[CRJ-01/ADAPTIVE] the separation probe /home/alexandr-narbaev/Projects/matrix-worktrees/dsh-writer/docs-v2/engineering/CRJ-01-ADAPTIVE-SEPARATION-PROBE.json
+[CRJ-01/ADAPTIVE] claims probed 96 narrow 83 wide 13
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

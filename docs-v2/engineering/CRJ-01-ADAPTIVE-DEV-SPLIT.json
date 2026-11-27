@@ -1,0 +1,648 @@
+{
+  "split": "crj-01-adaptive-dev-split",
+  "version": "1.0",
+  "date": "2026-11-27",
+  "sealed": false,
+  "sealedNote": "the sealed evaluation is NOT EXECUTED; this is a DEV split on synthetic, test-owned data",
+  "provenance": "the questions and the gold are selected from the separation probe's narrow claims; the questions are the probe's own focused questions",
+  "domains": [
+    {
+      "id": "dhx",
+      "subject": "dhx",
+      "files": [
+        "dhx-a-heat.md",
+        "dhx-b-cooling.md",
+        "dhx-c-degradation.md",
+        "dhx-d-instrumentation.md"
+      ]
+    },
+    {
+      "id": "dmy",
+      "subject": "dmy",
+      "files": [
+        "dmy-a-sediment.md",
+        "dmy-b-microbes.md",
+        "dmy-c-erosion.md",
+        "dmy-d-instruments.md"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "AC-DHX-01",
+      "domain": "dhx",
+      "class": "TRANSFER",
+      "subset": "OBSERVED",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about bath completely contain immersion transfer wett convection surface?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dhx-b-cooling.md",
+      "corpusSha256": "e656623977771b78c03a300a80eca8c0cb50db3fa3da05d6b9f1b41d7872c9ba",
+      "goldClaims": [
+        {
+          "proposition": "An immersion cooling bath contains the cell completely and transfers heat by convection at the wetted surface.",
+          "claimId": "clm-b90ec286",
+          "corpusFile": "dhx-b-cooling.md"
+        }
+      ],
+      "idempotencyKey": "ac-dhx-01"
+    },
+    {
+      "id": "AC-DHX-02",
+      "domain": "dhx",
+      "class": "TRANSFER",
+      "subset": "OBSERVED",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about external glu thermocouple surface measur temperature cell?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dhx-d-instrumentation.md",
+      "corpusSha256": "a159fc3cf939aba4ec2de83b646fe2c3086a28b2a04e6e5288e05c25e5bbd234",
+      "goldClaims": [
+        {
+          "proposition": "A thermocouple glued to the surface of a cell measures the external temperature of the cell.",
+          "claimId": "clm-e26a3320",
+          "corpusFile": "dhx-d-instrumentation.md"
+        }
+      ],
+      "idempotencyKey": "ac-dhx-02"
+    },
+    {
+      "id": "AC-DHX-03",
+      "domain": "dhx",
+      "class": "TRANSFER",
+      "subset": "VALIDATION",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about design every sustain maximum determin pack inside thermal?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dhx-b-cooling.md",
+      "corpusSha256": "e656623977771b78c03a300a80eca8c0cb50db3fa3da05d6b9f1b41d7872c9ba",
+      "goldClaims": [
+        {
+          "proposition": "The thermal design of a pack determines the maximum sustained discharge current of every cell inside it.",
+          "claimId": "clm-3c4d3594",
+          "corpusFile": "dhx-b-cooling.md"
+        }
+      ],
+      "idempotencyKey": "ac-dhx-03"
+    },
+    {
+      "id": "AC-DHX-04",
+      "domain": "dhx",
+      "class": "TRANSFER",
+      "subset": "VALIDATION",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about before larger passive reach spreader transport surface acros?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dhx-b-cooling.md",
+      "corpusSha256": "e656623977771b78c03a300a80eca8c0cb50db3fa3da05d6b9f1b41d7872c9ba",
+      "goldClaims": [
+        {
+          "proposition": "A passive spreader plate transports the heat of a cell across a larger surface before the coolant reaches it.",
+          "claimId": "clm-533ff981",
+          "corpusFile": "dhx-b-cooling.md"
+        }
+      ],
+      "idempotencyKey": "ac-dhx-04"
+    },
+    {
+      "id": "AC-DHX-05",
+      "domain": "dhx",
+      "class": "TRANSFER",
+      "subset": "VALIDATION",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about difference interface joint material cold determin thermal acros?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dhx-b-cooling.md",
+      "corpusSha256": "e656623977771b78c03a300a80eca8c0cb50db3fa3da05d6b9f1b41d7872c9ba",
+      "goldClaims": [
+        {
+          "proposition": "The thermal interface material between a cell and its cold plate determines the temperature difference across the joint.",
+          "claimId": "clm-14fd858e",
+          "corpusFile": "dhx-b-cooling.md"
+        }
+      ],
+      "idempotencyKey": "ac-dhx-05"
+    },
+    {
+      "id": "AC-DHX-06",
+      "domain": "dhx",
+      "class": "TRANSFER",
+      "subset": "VALIDATION",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about away flow much through carri cold determin rate?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dhx-b-cooling.md",
+      "corpusSha256": "e656623977771b78c03a300a80eca8c0cb50db3fa3da05d6b9f1b41d7872c9ba",
+      "goldClaims": [
+        {
+          "proposition": "The coolant flow rate through a cold plate determines how much heat the plate carries away from the cell.",
+          "claimId": "clm-6039989",
+          "corpusFile": "dhx-b-cooling.md"
+        }
+      ],
+      "idempotencyKey": "ac-dhx-06"
+    },
+    {
+      "id": "AC-DHX-07",
+      "domain": "dhx",
+      "class": "TRANSFER",
+      "subset": "VALIDATION",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about footprint serpentine support uniform whole channel velocity acros?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dhx-b-cooling.md",
+      "corpusSha256": "e656623977771b78c03a300a80eca8c0cb50db3fa3da05d6b9f1b41d7872c9ba",
+      "goldClaims": [
+        {
+          "proposition": "A cooling plate with a serpentine channel supports a uniform coolant velocity across the whole footprint of the cell.",
+          "claimId": "clm-f520ae63",
+          "corpusFile": "dhx-b-cooling.md"
+        }
+      ],
+      "idempotencyKey": "ac-dhx-07"
+    },
+    {
+      "id": "AC-DHX-08",
+      "domain": "dhx",
+      "class": "TRANSFER",
+      "subset": "NOVEL",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about base bond circulat conduct remov cold prismatic plate?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dhx-b-cooling.md",
+      "corpusSha256": "e656623977771b78c03a300a80eca8c0cb50db3fa3da05d6b9f1b41d7872c9ba",
+      "goldClaims": [
+        {
+          "proposition": "A cold plate bonded to the base of a prismatic cell removes heat by conducting it into a circulating coolant.",
+          "claimId": "clm-b919347f",
+          "corpusFile": "dhx-b-cooling.md"
+        }
+      ],
+      "idempotencyKey": "ac-dhx-08"
+    },
+    {
+      "id": "AC-DHX-09",
+      "domain": "dhx",
+      "class": "TRANSFER",
+      "subset": "NOVEL",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about aqueou glycol mixture serv control liquid maximum pump?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dhx-b-cooling.md",
+      "corpusSha256": "e656623977771b78c03a300a80eca8c0cb50db3fa3da05d6b9f1b41d7872c9ba",
+      "goldClaims": [
+        {
+          "proposition": "A liquid cooling loop that pumps an aqueous glycol mixture controls the maximum temperature of the cells it serves.",
+          "claimId": "clm-335c5b8b",
+          "corpusFile": "dhx-b-cooling.md"
+        }
+      ],
+      "idempotencyKey": "ac-dhx-09"
+    },
+    {
+      "id": "AC-DHX-10",
+      "domain": "dhx",
+      "class": "TRANSFER",
+      "subset": "NOVEL",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about power tub liquid pump square velocity grow inside?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dhx-b-cooling.md",
+      "corpusSha256": "e656623977771b78c03a300a80eca8c0cb50db3fa3da05d6b9f1b41d7872c9ba",
+      "goldClaims": [
+        {
+          "proposition": "The pumping power of a liquid cooling loop grows with the square of the coolant velocity inside the tubing.",
+          "claimId": "clm-d87da1c2",
+          "corpusFile": "dhx-b-cooling.md"
+        }
+      ],
+      "idempotencyKey": "ac-dhx-10"
+    },
+    {
+      "id": "AC-DHX-11",
+      "domain": "dhx",
+      "class": "TRANSFER",
+      "subset": "NOVEL",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about approach describ quickly time constant loop cool coolant?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dhx-b-cooling.md",
+      "corpusSha256": "e656623977771b78c03a300a80eca8c0cb50db3fa3da05d6b9f1b41d7872c9ba",
+      "goldClaims": [
+        {
+          "proposition": "The time constant of a cooling loop describes how quickly the coolant temperature approaches the cell temperature.",
+          "claimId": "clm-108cf619",
+          "corpusFile": "dhx-b-cooling.md"
+        }
+      ],
+      "idempotencyKey": "ac-dhx-11"
+    },
+    {
+      "id": "AC-DHX-12",
+      "domain": "dhx",
+      "class": "TRANSFER",
+      "subset": "NOVEL",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about fluid gap latent link pipe radiator transport use?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dhx-b-cooling.md",
+      "corpusSha256": "e656623977771b78c03a300a80eca8c0cb50db3fa3da05d6b9f1b41d7872c9ba",
+      "goldClaims": [
+        {
+          "proposition": "A heat pipe that links a cell to a radiator uses the latent heat of a working fluid to transport energy across the gap.",
+          "claimId": "clm-5b7525a0",
+          "corpusFile": "dhx-b-cooling.md"
+        }
+      ],
+      "idempotencyKey": "ac-dhx-12"
+    },
+    {
+      "id": "AC-DHX-13",
+      "domain": "dhx",
+      "class": "OUT_OF_SUPPORT",
+      "subset": "OUT_OF_SUPPORT",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about chemical convert electrical electrochemical release remainder work energy?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dhx-a-heat.md",
+      "corpusSha256": "3a159bb4649373c16fd76e43ec9f75bf538f09b819a72cee3cece85d7e6b2bd0",
+      "goldClaims": [
+        {
+          "proposition": "Electrochemical reactions inside a lithium-ion cell convert chemical energy into electrical work and release the remainder as heat.",
+          "claimId": "clm-6ef88dd7",
+          "corpusFile": "dhx-a-heat.md"
+        }
+      ],
+      "idempotencyKey": "ac-dhx-13"
+    },
+    {
+      "id": "AC-DHX-14",
+      "domain": "dhx",
+      "class": "OUT_OF_SUPPORT",
+      "subset": "OUT_OF_SUPPORT",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about enclosure onset preced pressure seal gas runaway internal?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dhx-a-heat.md",
+      "corpusSha256": "3a159bb4649373c16fd76e43ec9f75bf538f09b819a72cee3cece85d7e6b2bd0",
+      "goldClaims": [
+        {
+          "proposition": "The onset of thermal runaway in a lithium-ion cell is preceded by a rise of the internal gas pressure inside the sealed enclosure.",
+          "claimId": "clm-5584421e",
+          "corpusFile": "dhx-a-heat.md"
+        }
+      ],
+      "idempotencyKey": "ac-dhx-14"
+    },
+    {
+      "id": "AC-DMY-01",
+      "domain": "dmy",
+      "class": "TRANSFER",
+      "subset": "OBSERVED",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about low new storm surge transport caus onto surface?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dmy-c-erosion.md",
+      "corpusSha256": "0d19f0b1859bc56dacf4fc8c9abd8cd45eab514910d907827f688faaa6889f96",
+      "goldClaims": [
+        {
+          "proposition": "A storm surge causes new sediment to be transported onto the surface of a low marsh.",
+          "claimId": "clm-b3eb2355",
+          "corpusFile": "dmy-c-erosion.md"
+        }
+      ],
+      "idempotencyKey": "ac-dmy-01"
+    },
+    {
+      "id": "AC-DMY-02",
+      "domain": "dmy",
+      "class": "TRANSFER",
+      "subset": "OBSERVED",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about bind slow sulfide iron produc release sulfate reduction?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dmy-a-sediment.md",
+      "corpusSha256": "9d9d8cc394a1f69a23f9c2a8608cc0246eaec98f89f43f9e3bdb659af4a9e7fa",
+      "goldClaims": [
+        {
+          "proposition": "Sulfate reduction in marsh sediment produces sulfide that binds iron and slows the release of buried carbon.",
+          "claimId": "clm-f33b2112",
+          "corpusFile": "dmy-a-sediment.md"
+        }
+      ],
+      "idempotencyKey": "ac-dmy-02"
+    },
+    {
+      "id": "AC-DMY-03",
+      "domain": "dmy",
+      "class": "TRANSFER",
+      "subset": "VALIDATION",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about accrete coastal plain remov need erosion shoreline sediment?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dmy-c-erosion.md",
+      "corpusSha256": "0d19f0b1859bc56dacf4fc8c9abd8cd45eab514910d907827f688faaa6889f96",
+      "goldClaims": [
+        {
+          "proposition": "Erosion of the shoreline of a coastal plain removes the sediment that the marsh needs to accrete.",
+          "claimId": "clm-c61f34d1",
+          "corpusFile": "dmy-c-erosion.md"
+        }
+      ],
+      "idempotencyKey": "ac-dmy-03"
+    },
+    {
+      "id": "AC-DMY-04",
+      "domain": "dmy",
+      "class": "TRANSFER",
+      "subset": "VALIDATION",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about belt factor main reach width control much energy?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dmy-c-erosion.md",
+      "corpusSha256": "0d19f0b1859bc56dacf4fc8c9abd8cd45eab514910d907827f688faaa6889f96",
+      "goldClaims": [
+        {
+          "proposition": "The width of the marsh belt is the main factor that controls how much wave energy reaches the shoreline.",
+          "claimId": "clm-563f9f7d",
+          "corpusFile": "dmy-c-erosion.md"
+        }
+      ],
+      "idempotencyKey": "ac-dmy-04"
+    },
+    {
+      "id": "AC-DMY-05",
+      "domain": "dmy",
+      "class": "TRANSFER",
+      "subset": "VALIDATION",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about exposure vegetation platform erosion los wave increas soil?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dmy-c-erosion.md",
+      "corpusSha256": "0d19f0b1859bc56dacf4fc8c9abd8cd45eab514910d907827f688faaa6889f96",
+      "goldClaims": [
+        {
+          "proposition": "Vegetation loss on a marsh platform increases the exposure of the soil to wave erosion.",
+          "claimId": "clm-f937a8fb",
+          "corpusFile": "dmy-c-erosion.md"
+        }
+      ],
+      "idempotencyKey": "ac-dmy-05"
+    },
+    {
+      "id": "AC-DMY-06",
+      "domain": "dmy",
+      "class": "TRANSFER",
+      "subset": "VALIDATION",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about dissipat restor front seawall energy erosion shoreline wave?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dmy-c-erosion.md",
+      "corpusSha256": "0d19f0b1859bc56dacf4fc8c9abd8cd45eab514910d907827f688faaa6889f96",
+      "goldClaims": [
+        {
+          "proposition": "A restored marsh in front of a seawall dissipates wave energy and reduces the erosion of the shoreline.",
+          "claimId": "clm-dde40171",
+          "corpusFile": "dmy-c-erosion.md"
+        }
+      ],
+      "idempotencyKey": "ac-dmy-06"
+    },
+    {
+      "id": "AC-DMY-07",
+      "domain": "dmy",
+      "class": "TRANSFER",
+      "subset": "VALIDATION",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about develop gain higher shelter one along los shoreline?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dmy-c-erosion.md",
+      "corpusSha256": "0d19f0b1859bc56dacf4fc8c9abd8cd45eab514910d907827f688faaa6889f96",
+      "goldClaims": [
+        {
+          "proposition": "The rate of marsh loss along a developed shoreline is higher than the rate of marsh gain on a sheltered one.",
+          "claimId": "clm-ef06b3c0",
+          "corpusFile": "dmy-c-erosion.md"
+        }
+      ],
+      "idempotencyKey": "ac-dmy-07"
+    },
+    {
+      "id": "AC-DMY-08",
+      "domain": "dmy",
+      "class": "TRANSFER",
+      "subset": "NOVEL",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about floodplain isolat levee river need supply reduc sediment?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dmy-c-erosion.md",
+      "corpusSha256": "0d19f0b1859bc56dacf4fc8c9abd8cd45eab514910d907827f688faaa6889f96",
+      "goldClaims": [
+        {
+          "proposition": "A levee that isolates a marsh from the floodplain reduces the supply of the river sediment the marsh needs.",
+          "claimId": "clm-8330eb36",
+          "corpusFile": "dmy-c-erosion.md"
+        }
+      ],
+      "idempotencyKey": "ac-dmy-08"
+    },
+    {
+      "id": "AC-DMY-09",
+      "domain": "dmy",
+      "class": "TRANSFER",
+      "subset": "NOVEL",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about fix free landward migration requir structur space marsh?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dmy-c-erosion.md",
+      "corpusSha256": "0d19f0b1859bc56dacf4fc8c9abd8cd45eab514910d907827f688faaa6889f96",
+      "goldClaims": [
+        {
+          "proposition": "The landward migration of a marsh requires space that is free of fixed structures.",
+          "claimId": "clm-9322cabe",
+          "corpusFile": "dmy-c-erosion.md"
+        }
+      ],
+      "idempotencyKey": "ac-dmy-09"
+    },
+    {
+      "id": "AC-DMY-10",
+      "domain": "dmy",
+      "class": "TRANSFER",
+      "subset": "NOVEL",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about back reflect shore without front incom seawall energy?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dmy-c-erosion.md",
+      "corpusSha256": "0d19f0b1859bc56dacf4fc8c9abd8cd45eab514910d907827f688faaa6889f96",
+      "goldClaims": [
+        {
+          "proposition": "A seawall without a marsh in front of it reflects the incoming wave energy back onto the shore.",
+          "claimId": "clm-26735dc",
+          "corpusFile": "dmy-c-erosion.md"
+        }
+      ],
+      "idempotencyKey": "ac-dmy-10"
+    },
+    {
+      "id": "AC-DMY-11",
+      "domain": "dmy",
+      "class": "TRANSFER",
+      "subset": "NOVEL",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about cannot drown keep level pace rise sea platform?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dmy-c-erosion.md",
+      "corpusSha256": "0d19f0b1859bc56dacf4fc8c9abd8cd45eab514910d907827f688faaa6889f96",
+      "goldClaims": [
+        {
+          "proposition": "Relative sea level rise drowns the marsh platform where the sediment supply cannot keep pace.",
+          "claimId": "clm-2c286890",
+          "corpusFile": "dmy-c-erosion.md"
+        }
+      ],
+      "idempotencyKey": "ac-dmy-11"
+    },
+    {
+      "id": "AC-DMY-12",
+      "domain": "dmy",
+      "class": "TRANSFER",
+      "subset": "NOVEL",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about beside channel deepen dredg navigation prism tidal increas?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dmy-c-erosion.md",
+      "corpusSha256": "0d19f0b1859bc56dacf4fc8c9abd8cd45eab514910d907827f688faaa6889f96",
+      "goldClaims": [
+        {
+          "proposition": "Dredging of a navigation channel increases the tidal prism and deepens the water beside the marsh.",
+          "claimId": "clm-910de35c",
+          "corpusFile": "dmy-c-erosion.md"
+        }
+      ],
+      "idempotencyKey": "ac-dmy-12"
+    },
+    {
+      "id": "AC-DMY-13",
+      "domain": "dmy",
+      "class": "OUT_OF_SUPPORT",
+      "subset": "OUT_OF_SUPPORT",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about acetate methanogenic fermentation methane produc releas community salt?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dmy-b-microbes.md",
+      "corpusSha256": "ae9c48799bccf152fcb9438a47aa5ed9c0de42bca03be71d584a1f6ab4c2d356",
+      "goldClaims": [
+        {
+          "proposition": "The methanogenic community of a salt marsh produces methane from the acetate that fermentation releases.",
+          "claimId": "clm-9f2143bb",
+          "corpusFile": "dmy-b-microbes.md"
+        }
+      ],
+      "idempotencyKey": "ac-dmy-13"
+    },
+    {
+      "id": "AC-DMY-14",
+      "domain": "dmy",
+      "class": "OUT_OF_SUPPORT",
+      "subset": "OUT_OF_SUPPORT",
+      "level": "INTRODUCTORY",
+      "question": "What is stated about below oxic slowly convert matter one community microbial?",
+      "positive": true,
+      "expectedField": "PREMISE",
+      "expectedDisposition": "SUPPORTED",
+      "expectedProvenance": "",
+      "corpusFile": "dmy-b-microbes.md",
+      "corpusSha256": "ae9c48799bccf152fcb9438a47aa5ed9c0de42bca03be71d584a1f6ab4c2d356",
+      "goldClaims": [
+        {
+          "proposition": "A microbial community below the oxic surface of marsh sediment converts the organic matter more slowly than one at the surface.",
+          "claimId": "clm-883d7e17",
+          "corpusFile": "dmy-b-microbes.md"
+        }
+      ],
+      "idempotencyKey": "ac-dmy-14"
+    }
+  ]
+}

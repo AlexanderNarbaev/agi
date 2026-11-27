@@ -376,11 +376,16 @@ public class ArtifactReportResource {
                 learnedClaims, snapshot, historical);
         ProblemRequest planRequest = new ProblemRequest(AlgorithmFamilies.KNOWLEDGE_REPORT, problem,
                 facts, budget);
-        ReportJourneyPlanner.Plan plan = planner.plan(planRequest, forcedMethodId,
-                procedureMethods(workspaceId, procedures));
+        List<ReportJourneyPlanner.JourneyMethod> offered = procedureMethods(workspaceId, procedures);
+        ReportJourneyPlanner.Plan plan = planner.plan(planRequest, forcedMethodId, offered);
         if (plan.refused()) {
             return refused(422, "no_method_for_request", plan.reason());
         }
+        // WHY A PROCEDURE WAS NOT SELECTED. The decision record says that a candidate was
+        // blocked; this says what the block WAS — the evidence the support set carries for
+        // this question and the verdict on it — so that a reader of the journey can see the
+        // fallback's reason and not only its occurrence.
+        List<String> methodNotes = fallbackNotes(offered, plan);
 
         // ── THE ACTION — the permissioned write, measured ───────────────────
         ReportJourney.Result result;
@@ -434,7 +439,8 @@ public class ArtifactReportResource {
             }
         }
         List<CognitiveStore.EventRecord> steps = new ArrayList<>();
-        String planDetail = plan.method().capability().id() + ": " + plan.reason();
+        String planDetail = plan.method().capability().id() + ": " + plan.reason()
+                + (methodNotes.isEmpty() ? "" : "; " + String.join("; ", methodNotes));
         steps.add(new CognitiveStore.EventRecord(ReportJourneyTrace.PHASE_PLAN,
                 ReportJourneyTrace.ACTOR_PLANNER, planDetail));
         steps.add(new CognitiveStore.EventRecord(ReportJourneyTrace.PHASE_PERMISSION,
@@ -470,7 +476,8 @@ public class ArtifactReportResource {
         try {
             response = result.replayed()
                     ? replayedResponse(retained, written, traceFailures)
-                    : response(snapshot, learnedClaims, result, written, traceFailures);
+                    : response(snapshot, learnedClaims, result, written, traceFailures,
+                            methodNotes);
         } catch (IllegalStateException unreadable) {
             return refused(503, "output_root_unavailable", unreadable.getMessage());
         }
@@ -574,16 +581,69 @@ public class ArtifactReportResource {
     }
 
     /**
+     * Why an offered procedure was not selected.
+     *
+     * <p>The selector's decision says that a candidate was blocked, and the block is the
+     * method's own precondition check. This names what that check found: the evidence the
+     * support set carries for THIS question, and the verdict on it. The note is recorded in
+     * the journey's plan step and in the response's limitations, so the fallback is
+     * auditable from the journey itself and not only from the code.</p>
+     *
+     * @param offered the methods the request offered
+     * @param plan    the plan the kernel made
+     * @return the notes, one per procedure that was not selected
+     */
+    private List<String> fallbackNotes(List<ReportJourneyPlanner.JourneyMethod> offered,
+            ReportJourneyPlanner.Plan plan) {
+        List<String> notes = new ArrayList<>();
+        String selected = plan.method() == null ? "" : plan.method().capability().id();
+        for (ReportJourneyPlanner.JourneyMethod method : offered) {
+            if (!(method instanceof ReportProcedureMethod procedure)) {
+                continue;
+            }
+            if (procedure.capability().id().equals(selected)) {
+                continue;
+            }
+            SupportAdequacy assessment = procedure.lastAssessment();
+            if (assessment == null) {
+                // the method was refused for a reason that is not the adequacy's — a
+                // presence failure. The reason is still known: the method remembers it.
+                String refusal = procedure.lastRefusalReason();
+                if (refusal == null || refusal.isBlank()) {
+                    continue;
+                }
+                notes.add("the procedure " + procedure.procedureId() + " was not applicable to "
+                        + "this question: " + refusal);
+                continue;
+            }
+            // The note must say WHAT HAPPENED. A procedure that was applicable and simply
+            // not selected is NOT "not applicable", and a record that says so would assert
+            // something the evidence contradicts — the plan's own reason would then read as
+            // an admission of inapplicability in the same breath as "the support set
+            // carries the workspace's own evidence".
+            notes.add(assessment.applicable()
+                    ? "the procedure " + procedure.procedureId() + " was applicable to this "
+                            + "question but was not selected: " + assessment.reason()
+                    : "the procedure " + procedure.procedureId() + " was not applicable to "
+                            + "this question: " + assessment.reason());
+        }
+        return notes;
+    }
+
+    /**
      * The response of a journey that asked the workspace and wrote the report.
      *
      * @param snapshot    the evidence view pinned for this request
      * @param learnedClaims the learned claims available to the request
      * @param result      what the chosen method produced
      * @param written     the writer's own result
+     * @param traceFailures failures to persist trace records
+     * @param methodNotes reasons that offered procedures were not selected
      * @return the response
      */
     private ReportResponse response(KnowledgeSnapshot snapshot, List<LearnedClaim> learnedClaims,
-            ReportJourney.Result result, ArtifactWriter.Result written, List<String> traceFailures) {
+            ReportJourney.Result result, ArtifactWriter.Result written, List<String> traceFailures,
+            List<String> methodNotes) {
         Answer answer = result.answer();
         List<EvidenceReference> evidence = new ArrayList<>();
         Map<String, String> sourceTitles = new LinkedHashMap<>();
@@ -617,6 +677,9 @@ public class ArtifactReportResource {
             }
         }
         limitations.addAll(traceFailures);
+        // the fallback's reason: why a procedure was not applicable to this question, and
+        // what the evidence was
+        limitations.addAll(methodNotes);
         if (!answer.answered()) {
             limitations.add("the question was not answered; the absence of an answer is the "
                     + "epistemic result, not a defect of the file action");

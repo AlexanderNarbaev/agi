@@ -10,6 +10,7 @@ import io.matrix.knowledge.AbstractionLevel;
 import io.matrix.knowledge.Answer;
 import io.matrix.knowledge.Claim;
 import io.matrix.knowledge.Source;
+import io.matrix.knowledge.SupportAdequacy;
 
 import java.util.List;
 import java.util.Set;
@@ -67,6 +68,16 @@ public final class ReportProcedureMethod
      * measured.
      */
     private final long measuredCostNanos;
+
+    /**
+     * The adequacy verdict of the last question this method was asked about, and the key of
+     * the request it was made for.
+     */
+    private SupportAdequacy adequacy;
+
+    /** The reason of the last refusal, when the method was refused. */
+    private String lastRefusal;
+    private String adequacyKey;
 
     /**
      * @param procedure the validated procedure this method replays
@@ -200,22 +211,131 @@ public final class ReportProcedureMethod
 
     @Override
     public boolean preconditionsHold(ReportJourney.Problem input) {
-        if (input == null || !procedure.active() || support.isEmpty()) {
-            return false;
+        return refusalOf(input) == null;
+    }
+
+    /**
+     * Why this procedure does not hold for a request — or null when it does.
+     *
+     * <p><b>Why the reason is kept and not a boolean.</b> A refusal that says only "the
+     * support set is no longer present" is a REFUSAL THAT MAY BE WRONG: the support set can
+     * be present and still be unable to answer the question, and the two failures call for
+     * different actions by the caller — one is a drift of the workspace, the other is a
+     * question outside the competence's reach. The milestone's own rule is that the
+     * fallback's reason is recorded with the evidence it was made from, so the reason is
+     * carried, not recomputed.</p>
+     *
+     * @param input the request
+     * @return the reason, or null when the procedure may serve the request
+     */
+    private String refusalOf(ReportJourney.Problem input) {
+        lastRefusal = null;
+        if (input == null) {
+            return "the request is empty";
+        }
+        if (!procedure.active()) {
+            return "the procedure " + procedure.id() + " has been invalidated";
+        }
+        if (support.isEmpty()) {
+            return "the procedure " + procedure.id() + " carries no support set";
         }
         // the domain must still hold: the support set's sources must be in the workspace
         // as it is now, and the question must be one the workspace can be read for
         Set<String> present = input.selectedEvidence().sources().stream()
                 .map(Source::id)
                 .collect(java.util.stream.Collectors.toSet());
-        return present.containsAll(support);
+        if (!present.containsAll(support)) {
+            return remember("its support set is no longer present in the workspace: it holds "
+                    + support.size() + " source(s) and the workspace offers " + present.size());
+        }
+        // THE QUESTION-SPECIFIC PART. The presence of the support set is a statement about the
+        // WORKSPACE; whether the support set can answer THIS question is a statement about the
+        // EVIDENCE, and the H2 milestone measured what the difference costs: with the
+        // presence check alone, a procedure was offered for a question its support could not
+        // answer, and the served answer was the restricted reading — on the H2 controls it
+        // cited one claim where the reference cited three and still said ANSWERED. The
+        // adequacy check compares the two readings' own evidence, so a support set that
+        // cannot carry the workspace's best evidence for this question is not applicable,
+        // and the reference method answers instead.
+        SupportAdequacy assessment = adequacyOf(input);
+        if (!assessment.applicable()) {
+            return remember(assessment.reason());
+        }
+        return null;
+    }
+
+    /**
+     * Remembers a refusal's reason and returns it.
+     *
+     * <p>The reason must survive the call that produced it: the selector asks whether the
+     * procedure holds, and the note in the journey's plan is written later, from the
+     * method's own last word. A presence failure has no adequacy verdict to read, so its
+     * reason would be lost — and a fallback with no reason is a record with a hole in
+     * it.</p>
+     *
+     * @param reason the reason
+     * @return the reason
+     */
+    private String remember(String reason) {
+        lastRefusal = reason;
+        return reason;
+    }
+
+    /**
+     * The reason of the last refusal this method made.
+     *
+     * @return the reason, or null when the method was never refused
+     */
+    public String lastRefusalReason() {
+        return lastRefusal;
+    }
+
+    /**
+     * The adequacy of the support set for this question.
+     *
+     * <p><b>Why the verdict is remembered.</b> The selector asks a candidate whether its
+     * preconditions hold, and the method asks again before it runs — so the check would be
+     * made twice for one request, and the check reads the workspace. The verdict is therefore
+     * held against the request it was made for, and the key carries the question, the level,
+     * the view's fingerprint and the support set, so a request that differs in any of them
+     * is answered afresh.</p>
+     *
+     * @param input the request
+     * @return the adequacy of the support set for the request's question
+     */
+    private SupportAdequacy adequacyOf(ReportJourney.Problem input) {
+        String key = input.question() + "|" + input.level() + "|" + input.workspaceFingerprint()
+                + "|" + String.join(",", support);
+        if (adequacy != null && adequacyKey != null && adequacyKey.equals(key)) {
+            return adequacy;
+        }
+        adequacy = input.workbench().assessSupport(input.selectedEvidence(),
+                input.selectedEvidence(), input.question(), input.level(), support,
+                input.historical());
+        adequacyKey = key;
+        return adequacy;
+    }
+
+    /**
+     * The adequacy verdict of the last question this method was asked about.
+     *
+     * <p>It is the REASON a procedure was not selected, and it is recorded so that a reader
+     * of the journey can see why the fallback happened and what the evidence was — the
+     * decision record says that a candidate was blocked, and this says what the block
+     * was.</p>
+     *
+     * @return the verdict, or null when the method was never asked
+     */
+    public SupportAdequacy lastAssessment() {
+        return adequacy;
     }
 
     @Override
     public ReportJourney.Result execute(ReportJourney.Problem input, ComputeBudget budget) {
-        if (!preconditionsHold(input)) {
+        String refusal = refusalOf(input);
+        if (refusal != null) {
             throw new AlgorithmRefusalException("the procedure " + procedure.id()
-                    + " does not hold for this request: its support set is no longer present, "
+                    + " does not hold for this request: " + refusal + ", "
                     + "so the reference method must answer");
         }
         AbstractionLevel level = input.level();

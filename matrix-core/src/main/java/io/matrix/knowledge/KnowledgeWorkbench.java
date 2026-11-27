@@ -69,6 +69,24 @@ public class KnowledgeWorkbench implements AutoCloseable {
     private final Map<String, AssessmentDataset> datasets = new LinkedHashMap<>();
 
     /**
+     * The cache of the reusable retrieval statistics.
+     *
+     * <p><b>Why the workbench holds it.</b> The statistics of a view are a pure function of
+     * the view's content, and the workbench is the thing that reads the same view more than
+     * once: the reference reading reads the whole workspace, and a procedure's restricted
+     * reading reads the workspace's STATISTICS as well as its own support set — which is the
+     * O(N) pass the H2 milestone measured and named. The cache is keyed by the workspace and
+     * the identity of the view, so a view whose claims changed is never served with the
+     * statistics of an older one, and a restart empties it, which is the honest behaviour
+     * for a cache whose contents are derivable.</p>
+     *
+     * <p><b>Why it is per workbench.</b> The cache belongs to the reader that owns the
+     * workspace: it dies with the workbench, it never serves one workspace's statistics for
+     * another, and it holds nothing the workspace does not already hold.</p>
+     */
+    private final KnowledgeStatisticsCache statisticsCache = new KnowledgeStatisticsCache();
+
+    /**
      * The clock the recorded instants come from.
      *
      * <p>Two of the workbench's records are read back and COMPARED, not just
@@ -512,18 +530,23 @@ public class KnowledgeWorkbench implements AutoCloseable {
     public synchronized Answer askInView(KnowledgeSnapshot snapshot, KnowledgeSnapshot statistics,
             String question, AbstractionLevel level, Set<String> sourceIds, boolean historical) {
         String workspaceId = snapshot.workspaceId();
-        if (sourceIds != null && !sourceIds.isEmpty()) {
-            snapshot = snapshot.sourceRevisionSelections().isEmpty()
-                    ? restrictedTo(snapshot, sourceIds)
-                    : SourceRevisionView.restrict(snapshot, sourceIds, snapshot.sourceRevisionSelections());
-        }
+        snapshot = restrictedView(snapshot, sourceIds);
         // The conversation resolves the reference BEFORE the retrieval, so
         // that "Explain this in more detail" reaches the concept the last
         // turn was about. The original question is what the answer carries.
         DialogueContext context = historical ? new DialogueContext(workspaceId) : context(workspaceId);
         String expanded = context.expand(question);
         String resolvedSubject = expanded.equals(question) ? null : context.resolveSubject(question);
-        Answer answer = new KnowledgeRetriever(snapshot, statistics,
+        // The statistics of the two views are COMPUTED ONCE and reused. The statistics view
+        // is the workspace's own, and the workspace is read again and again: the H2
+        // milestone measured the price of not reusing it — a second full tokenisation of
+        // every claim of the workspace on every reading — and left the question of whether
+        // that pass could be made once per workspace rather than once per reading open.
+        KnowledgeSnapshot statisticsView = statistics == null ? snapshot : statistics;
+        KnowledgeStatistics statisticsIndex = statisticsOf(workspaceId, statisticsView);
+        KnowledgeStatistics retrievalStatistics = statisticsOf(workspaceId, snapshot);
+        Answer answer = new KnowledgeRetriever(snapshot, statisticsView, retrievalStatistics,
+                statisticsIndex,
                 KnowledgeRetriever.configuredMinimumCoverage(),
                 historical ? Map.of() : weakenedBindings(workspaceId))
                 .answer(expanded.equals(question) ? question : expanded, level);
@@ -575,6 +598,171 @@ public class KnowledgeWorkbench implements AutoCloseable {
             persistTurn(workspaceId, context);
         }
         return answer;
+    }
+
+    /**
+     * The workspace as the named sources read it.
+     *
+     * <p><b>Why it is public.</b> A restricted reading and the assessment of whether a
+     * restriction may serve a question must restrict the SAME view in the SAME way, and two
+     * implementations of the restriction would be two rules that could drift apart — which
+     * is the defect class the H2 milestone was about. There is one rule here and both callers
+     * use it.</p>
+     *
+     * @param snapshot  the workspace as it is
+     * @param sourceIds the sources the workspace may be read as; an empty set means all of them
+     * @return the restricted snapshot
+     */
+    public synchronized KnowledgeSnapshot restrictedView(KnowledgeSnapshot snapshot,
+            Set<String> sourceIds) {
+        if (sourceIds == null || sourceIds.isEmpty()) {
+            return snapshot;
+        }
+        return snapshot.sourceRevisionSelections().isEmpty()
+                ? restrictedTo(snapshot, sourceIds)
+                : SourceRevisionView.restrict(snapshot, sourceIds, snapshot.sourceRevisionSelections());
+    }
+
+    /**
+     * Empties the cache of the reusable retrieval statistics.
+     *
+     * <p><b>Why this exists.</b> The cache is what makes the second reading of a view cheap,
+     * and the difference between the first and the second is a fact about the path that the
+     * measurement must be able to see. Emptying the cache is the state a RESTART leaves
+     * behind: the next reading of a view pays the full price of building its statistics
+     * again. A caller that empties the cache is not changing what the workspace knows — it
+     * is only paying for what it is told to forget.</p>
+     */
+    public synchronized void clearStatisticsCache() {
+        statisticsCache.clear();
+    }
+
+    /**
+     * The retrieval statistics of a view, computed once and reused.
+     *
+     * <p>The statistics are a pure function of the view's content, and the cache is keyed by
+     * the workspace and the identity of the view — so a view whose claims changed is never
+     * served with the statistics of an older one, and two workspaces never share an
+     * entry.</p>
+     *
+     * @param workspaceId the workspace the view belongs to
+     * @param view        the view
+     * @return the statistics
+     */
+    public synchronized KnowledgeStatistics statisticsOf(String workspaceId,
+            KnowledgeSnapshot view) {
+        return statisticsCache.forView(workspaceId, view);
+    }
+
+    /**
+     * Whether a support set can answer a question, judged on the EVIDENCE.
+     *
+     * <p><b>What this is for.</b> A procedure of the knowledge-report family answers from
+     * its validated support set. Whether it may serve a question is a question about the
+     * evidence, and the H2 milestone measured what happens when it is not asked: the
+     * applicability of a promoted procedure was the <b>presence</b> of its support set — a
+     * statement about the workspace, not about the request — so a procedure was offered for a
+     * question its support could not answer and the served answer was the restricted
+     * reading. On the H2 controls that reading cited <b>one</b> claim where the reference
+     * cited <b>three</b> and still said {@code ANSWERED}. A check that only asks whether the
+     * answer abstained cannot see that; a check that compares the two readings' evidence
+     * can.</p>
+     *
+     * <p><b>How the comparison is made.</b> The two readings are computed with the SAME
+     * retriever, the SAME statistics view and the SAME question — the question the
+     * conversation resolved, exactly as the reading resolves it — so the coverage a claim
+     * reaches in the workspace's reading is the number the comparison uses. The support set
+     * is adequate when the evidence it carries for this question is as relevant as the
+     * evidence the workspace itself would cite.</p>
+     *
+     * <p><b>What this does not do.</b> It does not ask the workspace: it does not record an
+     * asking, it does not advance the conversation, and it does not answer. It reads the
+     * workspace and compares two scorings.</p>
+     *
+     * @param view        the view the question is asked over
+     * @param statistics  the view whose claims define the relevance statistics; null means the
+     *                    view itself
+     * @param question    the question
+     * @param level       the abstraction level the answer would be asked for
+     * @param sourceIds   the support set, as source identifiers
+     * @param historical  whether the reading would be a historical one
+     * @return the adequacy of the support set for this question
+     */
+    public synchronized SupportAdequacy assessSupport(KnowledgeSnapshot view,
+            KnowledgeSnapshot statistics, String question, AbstractionLevel level,
+            Set<String> sourceIds, boolean historical) {
+        KnowledgeSnapshot restricted = restrictedView(view, sourceIds);
+        if (restricted.claims().isEmpty()) {
+            return SupportAdequacy.none("the support set holds no claim of the workspace, so it "
+                    + "carries no evidence for this question");
+        }
+        String workspaceId = view.workspaceId();
+        DialogueContext context = historical ? new DialogueContext(workspaceId)
+                : context(workspaceId);
+        String expanded = context.expand(question);
+        String asked = expanded.equals(question) ? question : expanded;
+        KnowledgeSnapshot statisticsView = statistics == null ? view : statistics;
+        KnowledgeStatistics statisticsIndex = statisticsOf(workspaceId, statisticsView);
+        KnowledgeStatistics viewStatistics = statisticsOf(workspaceId, view);
+        KnowledgeStatistics restrictedStatistics = statisticsOf(workspaceId, restricted);
+        double floor = KnowledgeRetriever.configuredMinimumCoverage();
+        java.util.Map<String, float[]> bindings = historical ? Map.of()
+                : weakenedBindings(workspaceId);
+        // the workspace's own reading of the question, and the restricted reading the
+        // procedure would serve: the SAME retriever, the SAME statistics, the SAME question
+        KnowledgeRetriever workspaceReader = new KnowledgeRetriever(view, statisticsView,
+                viewStatistics, statisticsIndex, floor, bindings);
+        KnowledgeRetriever supportReader = new KnowledgeRetriever(restricted, statisticsView,
+                restrictedStatistics, statisticsIndex, floor, bindings);
+        KnowledgeRetriever.Relevance workspaceRelevance = workspaceReader.relevance(asked);
+        KnowledgeRetriever.Relevance supportRelevance = supportReader.relevance(asked);
+
+        String bestClaimId = workspaceRelevance.bestClaimId();
+        double bestCoverage = workspaceRelevance.bestCoverage();
+        // THE SUPPORT'S BEST EVIDENCE, OVER EVERY CLAIM IT HOLDS. The measurement is over
+        // the claims the support set holds, not over the ones that cleared the floor: a
+        // support set that holds only sub-floor evidence has a best coverage of its own,
+        // and a reason that said "reaches 0.000" would describe a number the reader cannot
+        // check against the support set's own claims.
+        double supportBest = 0.0;
+        for (Double coverage : supportRelevance.coverage().values()) {
+            supportBest = Math.max(supportBest, coverage);
+        }
+        List<String> supportClaimIds = restricted.claims().stream().map(Claim::id).toList();
+        boolean carries = bestClaimId != null
+                && supportRelevance.relevantClaimIds().contains(bestClaimId);
+        // A workspace whose own reading reaches no claim at all is answered by the concept
+        // bridge, and the bridge reaches a concept's claims regardless of their own coverage
+        // — so a support set cannot be shown to carry that evidence, and the reference
+        // answers.
+        //
+        // A TIE IN THE NUMBER IS NOT A TIE IN THE EVIDENCE. The restricted reading's best
+        // claim may reach exactly the workspace's best coverage and still be a DIFFERENT
+        // claim — and then the restricted answer is anchored on other evidence, which is the
+        // degradation the H2 milestone measured (one claim cited where the reference cited
+        // three, and the answer still said ANSWERED). The criterion is therefore the
+        // ANCHOR: the support set must hold the claim the workspace's own reading would
+        // cite first.
+        boolean applicable = bestClaimId != null && carries;
+        String reason = applicable
+                ? "the support set carries the workspace's own evidence for this question: the "
+                        + "workspace's reading would cite " + bestClaimId
+                        + " (coverage " + SupportAdequacy.round(bestCoverage)
+                        + ") and the support set holds that claim"
+                        + (supportBest > 0.0
+                                ? " and reaches " + SupportAdequacy.round(supportBest)
+                                : "")
+                : bestClaimId == null
+                        ? "the workspace's own reading of this question reaches no claim that may "
+                                + "be cited, so no support set can be shown to carry its evidence"
+                        : "the support set does not carry the workspace's own evidence for this "
+                                + "question: the workspace's reading would cite " + bestClaimId
+                                + " (coverage " + SupportAdequacy.round(bestCoverage)
+                                + ") and the support set's best evidence reaches "
+                                + SupportAdequacy.round(supportBest)
+                                + " (the coverage floor is " + SupportAdequacy.round(floor) + ")";
+        return new SupportAdequacy(applicable, reason, bestClaimId, bestCoverage, supportBest,
+                supportClaimIds, supportRelevance.relevantClaimIds());
     }
 
     /**

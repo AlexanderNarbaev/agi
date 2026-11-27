@@ -1,0 +1,652 @@
+{
+  "report" : "crj-01-adaptive-corpus-report",
+  "version" : "1.0",
+  "corpus" : "crj01-adaptive (synthetic, test-owned)",
+  "corpusDirectory" : "matrix-core/src/test/resources/crj01-adaptive",
+  "acquisitionPath" : "the PRODUCTION import path: workbench.importDocument(workspace, path, file, language)",
+  "purpose" : "the verbatim gold the ADAPTIVE-COMPETENCE DEV cases are written from: the sentences the production acquisition path derived, with the production claim ids it gave them",
+  "claimStatusNote" : "the status a claim carries after the production import's own validation; a case's gold must name a claim of a CITABLE status, because the served path does not cite the others",
+  "domainOrderNote" : "the domains are reported in the lexicographic order of their directory names, and the files of a domain in the lexicographic order of their names; the order is stated so the artefact can be re-derived",
+  "domains" : [ {
+    "domain" : "dhx",
+    "workspace" : "crj01-adaptive-corpus-dhx",
+    "files" : [ "dhx-a-heat.md", "dhx-b-cooling.md", "dhx-c-degradation.md", "dhx-d-instrumentation.md" ],
+    "documents" : [ {
+      "file" : "dhx-a-heat.md",
+      "sha256" : "3a159bb4649373c16fd76e43ec9f75bf538f09b819a72cee3cece85d7e6b2bd0",
+      "sourceId" : "src-c0352fb4",
+      "claims" : [ {
+        "claimId" : "clm-ee267218",
+        "proposition" : "A lithium-ion cell that rests at a high state of charge stores more entropic heat than the same cell at a low state of charge.",
+        "status" : "SUPPORTED",
+        "conceptId" : "35b3ae54",
+        "corpusFile" : "dhx-a-heat.md"
+      }, {
+        "claimId" : "clm-14198e8a",
+        "proposition" : "A lithium-ion cell whose internal resistance rises with age generates more heat at the same discharge current.",
+        "status" : "SUPPORTED",
+        "conceptId" : "dbad288f",
+        "corpusFile" : "dhx-a-heat.md"
+      }, {
+        "claimId" : "clm-6ef88dd7",
+        "proposition" : "Electrochemical reactions inside a lithium-ion cell convert chemical energy into electrical work and release the remainder as heat.",
+        "status" : "SUPPORTED",
+        "conceptId" : "f8ed738",
+        "corpusFile" : "dhx-a-heat.md"
+      }, {
+        "claimId" : "clm-b6698395",
+        "proposition" : "Joule heating in the electrolyte of a lithium-ion cell accounts for a small share of the total heat generated under a high discharge rate.",
+        "status" : "SUPPORTED",
+        "conceptId" : "e68836a2",
+        "corpusFile" : "dhx-a-heat.md"
+      }, {
+        "claimId" : "clm-61ef6f2e",
+        "proposition" : "Tabulated heat generation curves for a lithium-ion cell are usually measured at a constant temperature and a constant current.",
+        "status" : "SUPPORTED",
+        "conceptId" : "b5d1ef3b",
+        "corpusFile" : "dhx-a-heat.md"
+      }, {
+        "claimId" : "clm-9c45fc5c",
+        "proposition" : "The adiabatic temperature rise of a lithium-ion cell during a high-rate discharge is proportional to the energy released and inversely proportional to the heat capacity of the cell.",
+        "status" : "SUPPORTED",
+        "conceptId" : "95afec4a",
+        "corpusFile" : "dhx-a-heat.md"
+      }, {
+        "claimId" : "clm-e3fad1fb",
+        "proposition" : "The entropic heat of a lithium-ion cell changes sign when the cell voltage crosses the entropic coefficient of its chemistry.",
+        "status" : "SUPPORTED",
+        "conceptId" : "f4f6167c",
+        "corpusFile" : "dhx-a-heat.md"
+      }, {
+        "claimId" : "clm-f1d2d8b6",
+        "proposition" : "The heat generated during a fast charge of a lithium-ion cell is concentrated near the electrode surface where the reaction front advances.",
+        "status" : "SUPPORTED",
+        "conceptId" : "db6c3b1b",
+        "corpusFile" : "dhx-a-heat.md"
+      }, {
+        "claimId" : "clm-877604e9",
+        "proposition" : "The heat generation rate of a lithium-ion cell at a given current does not depend on the capacity of the cell in ampere hours.",
+        "status" : "SUPPORTED",
+        "conceptId" : "87508362",
+        "corpusFile" : "dhx-a-heat.md"
+      }, {
+        "claimId" : "clm-52003f56",
+        "proposition" : "The irreversible heat source of a lithium-ion cell grows with the square of the current drawn from it.",
+        "status" : "SUPPORTED",
+        "conceptId" : "4d4f6c4d",
+        "corpusFile" : "dhx-a-heat.md"
+      }, {
+        "claimId" : "clm-5584421e",
+        "proposition" : "The onset of thermal runaway in a lithium-ion cell is preceded by a rise of the internal gas pressure inside the sealed enclosure.",
+        "status" : "SUPPORTED",
+        "conceptId" : "3da029a0",
+        "corpusFile" : "dhx-a-heat.md"
+      }, {
+        "claimId" : "clm-a9c25801",
+        "proposition" : "Thermal runaway in a lithium-ion cell begins with a localised rise of temperature and does not occur while the ambient temperature stays below the melting point of the separator.",
+        "status" : "SUPPORTED",
+        "conceptId" : "6c72cc59",
+        "corpusFile" : "dhx-a-heat.md"
+      } ]
+    }, {
+      "file" : "dhx-b-cooling.md",
+      "sha256" : "e656623977771b78c03a300a80eca8c0cb50db3fa3da05d6b9f1b41d7872c9ba",
+      "sourceId" : "src-8ba7c67b",
+      "claims" : [ {
+        "claimId" : "clm-b919347f",
+        "proposition" : "A cold plate bonded to the base of a prismatic cell removes heat by conducting it into a circulating coolant.",
+        "status" : "SUPPORTED",
+        "conceptId" : "4b3464fb",
+        "corpusFile" : "dhx-b-cooling.md"
+      }, {
+        "claimId" : "clm-f520ae63",
+        "proposition" : "A cooling plate with a serpentine channel supports a uniform coolant velocity across the whole footprint of the cell.",
+        "status" : "SUPPORTED",
+        "conceptId" : "d911b88d",
+        "corpusFile" : "dhx-b-cooling.md"
+      }, {
+        "claimId" : "clm-5b7525a0",
+        "proposition" : "A heat pipe that links a cell to a radiator uses the latent heat of a working fluid to transport energy across the gap.",
+        "status" : "SUPPORTED",
+        "conceptId" : "789f59ec",
+        "corpusFile" : "dhx-b-cooling.md"
+      }, {
+        "claimId" : "clm-335c5b8b",
+        "proposition" : "A liquid cooling loop that pumps an aqueous glycol mixture controls the maximum temperature of the cells it serves.",
+        "status" : "SUPPORTED",
+        "conceptId" : "f1525770",
+        "corpusFile" : "dhx-b-cooling.md"
+      }, {
+        "claimId" : "clm-f2c860fc",
+        "proposition" : "A pack that uses air cooling relies on the natural convection of ambient air across fins attached to the cells.",
+        "status" : "SUPPORTED",
+        "conceptId" : "c1884609",
+        "corpusFile" : "dhx-b-cooling.md"
+      }, {
+        "claimId" : "clm-533ff981",
+        "proposition" : "A passive spreader plate transports the heat of a cell across a larger surface before the coolant reaches it.",
+        "status" : "SUPPORTED",
+        "conceptId" : "66985d96",
+        "corpusFile" : "dhx-b-cooling.md"
+      }, {
+        "claimId" : "clm-b90ec286",
+        "proposition" : "An immersion cooling bath contains the cell completely and transfers heat by convection at the wetted surface.",
+        "status" : "SUPPORTED",
+        "conceptId" : "fb794340",
+        "corpusFile" : "dhx-b-cooling.md"
+      }, {
+        "claimId" : "clm-6039989",
+        "proposition" : "The coolant flow rate through a cold plate determines how much heat the plate carries away from the cell.",
+        "status" : "SUPPORTED",
+        "conceptId" : "3e091a15",
+        "corpusFile" : "dhx-b-cooling.md"
+      }, {
+        "claimId" : "clm-d87da1c2",
+        "proposition" : "The pumping power of a liquid cooling loop grows with the square of the coolant velocity inside the tubing.",
+        "status" : "SUPPORTED",
+        "conceptId" : "cc5dcf4d",
+        "corpusFile" : "dhx-b-cooling.md"
+      }, {
+        "claimId" : "clm-3c4d3594",
+        "proposition" : "The thermal design of a pack determines the maximum sustained discharge current of every cell inside it.",
+        "status" : "SUPPORTED",
+        "conceptId" : "aca27e1",
+        "corpusFile" : "dhx-b-cooling.md"
+      }, {
+        "claimId" : "clm-14fd858e",
+        "proposition" : "The thermal interface material between a cell and its cold plate determines the temperature difference across the joint.",
+        "status" : "SUPPORTED",
+        "conceptId" : "2ead6624",
+        "corpusFile" : "dhx-b-cooling.md"
+      }, {
+        "claimId" : "clm-108cf619",
+        "proposition" : "The time constant of a cooling loop describes how quickly the coolant temperature approaches the cell temperature.",
+        "status" : "SUPPORTED",
+        "conceptId" : "f9611ba1",
+        "corpusFile" : "dhx-b-cooling.md"
+      } ]
+    }, {
+      "file" : "dhx-c-degradation.md",
+      "sha256" : "7d7852faa3a09004168a7ea9a2f9f967add57409fa261e8c68f303ac009751e8",
+      "sourceId" : "src-bfaf0000",
+      "claims" : [ {
+        "claimId" : "clm-bc11c8fc",
+        "proposition" : "A lithium-ion cell that is kept at a high storage temperature ages faster than the same cell kept at room temperature.",
+        "status" : "SUPPORTED",
+        "conceptId" : "c68654b1",
+        "corpusFile" : "dhx-c-degradation.md"
+      }, {
+        "claimId" : "clm-ebe68eeb",
+        "proposition" : "A lithium-ion cell that is stored fully charged for a long period loses more capacity than the same cell stored at a middle state of charge.",
+        "status" : "SUPPORTED",
+        "conceptId" : "c68654b1",
+        "corpusFile" : "dhx-c-degradation.md"
+      }, {
+        "claimId" : "clm-770af328",
+        "proposition" : "A lithium-ion cell whose electrodes have lost contact with their current collector shows a sudden rise of the internal resistance.",
+        "status" : "SUPPORTED",
+        "conceptId" : "cc2bf878",
+        "corpusFile" : "dhx-c-degradation.md"
+      }, {
+        "claimId" : "clm-ca75af84",
+        "proposition" : "Anode plating of lithium metal reduces the usable capacity of a lithium-ion cell charged at a low temperature.",
+        "status" : "SUPPORTED",
+        "conceptId" : "9dfe0fb6",
+        "corpusFile" : "dhx-c-degradation.md"
+      }, {
+        "claimId" : "clm-e7ceee93",
+        "proposition" : "Calendar ageing of a lithium-ion cell occurs even when the cell is not being discharged.",
+        "status" : "SUPPORTED",
+        "conceptId" : "5b80f214",
+        "corpusFile" : "dhx-c-degradation.md"
+      }, {
+        "claimId" : "clm-8d1134da",
+        "proposition" : "Repeated cycling of a lithium-ion cell produces a slow loss of the available capacity of the cell.",
+        "status" : "SUPPORTED",
+        "conceptId" : "86f6c6b0",
+        "corpusFile" : "dhx-c-degradation.md"
+      }, {
+        "claimId" : "clm-23dbe515",
+        "proposition" : "The capacity fade of a lithium-ion cell depends on the depth of the discharge cycles it undergoes.",
+        "status" : "SUPPORTED",
+        "conceptId" : "5a5e54e",
+        "corpusFile" : "dhx-c-degradation.md"
+      }, {
+        "claimId" : "clm-abe71f50",
+        "proposition" : "The end of the service life of a lithium-ion cell is usually defined by a loss of a fixed share of the original capacity.",
+        "status" : "SUPPORTED",
+        "conceptId" : "ef49a50c",
+        "corpusFile" : "dhx-c-degradation.md"
+      }, {
+        "claimId" : "clm-f9dd956c",
+        "proposition" : "The gas produced by side reactions in a lithium-ion cell swells the pouch of a prismatic cell.",
+        "status" : "SUPPORTED",
+        "conceptId" : "c4f24daa",
+        "corpusFile" : "dhx-c-degradation.md"
+      }, {
+        "claimId" : "clm-48851032",
+        "proposition" : "The growth of the solid electrolyte layer on the anode of a lithium-ion cell uses part of the lithium inventory of the cell.",
+        "status" : "SUPPORTED",
+        "conceptId" : "abf70c",
+        "corpusFile" : "dhx-c-degradation.md"
+      }, {
+        "claimId" : "clm-a522ee72",
+        "proposition" : "The impedance of a lithium-ion cell rises as the electrodes become coated with the products of side reactions.",
+        "status" : "SUPPORTED",
+        "conceptId" : "46564e2f",
+        "corpusFile" : "dhx-c-degradation.md"
+      }, {
+        "claimId" : "clm-7d2c7663",
+        "proposition" : "The resistance of the electrolyte of a lithium-ion cell grows as the salt concentration of the electrolyte falls during an extended discharge.",
+        "status" : "SUPPORTED",
+        "conceptId" : "21283e9",
+        "corpusFile" : "dhx-c-degradation.md"
+      } ]
+    }, {
+      "file" : "dhx-d-instrumentation.md",
+      "sha256" : "a159fc3cf939aba4ec2de83b646fe2c3086a28b2a04e6e5288e05c25e5bbd234",
+      "sourceId" : "src-bfd3a034",
+      "claims" : [ {
+        "claimId" : "clm-e2057348",
+        "proposition" : "A barcode reader provides the identity of the specimen that a technician loads into the test bench.",
+        "status" : "SUPPORTED",
+        "conceptId" : "53253ac6",
+        "corpusFile" : "dhx-d-instrumentation.md"
+      }, {
+        "claimId" : "clm-384c6ffa",
+        "proposition" : "A calorimeter measures the total energy a laboratory cell releases during a complete discharge.",
+        "status" : "SUPPORTED",
+        "conceptId" : "bc4d611a",
+        "corpusFile" : "dhx-d-instrumentation.md"
+      }, {
+        "claimId" : "clm-5ec2a50f",
+        "proposition" : "A data logger samples the sensor channels of a test bench at a fixed rate and stores them on a local disk.",
+        "status" : "SUPPORTED",
+        "conceptId" : "59d6359e",
+        "corpusFile" : "dhx-d-instrumentation.md"
+      }, {
+        "claimId" : "clm-5236cdbe",
+        "proposition" : "A fume hood captures the gaseous products released by a cell that vents during an abuse test.",
+        "status" : "SUPPORTED",
+        "conceptId" : "2e6e1f97",
+        "corpusFile" : "dhx-d-instrumentation.md"
+      }, {
+        "claimId" : "clm-afc62207",
+        "proposition" : "A humidity sensor installed in a test chamber observes the moisture of the air around the cell.",
+        "status" : "SUPPORTED",
+        "conceptId" : "e150760a",
+        "corpusFile" : "dhx-d-instrumentation.md"
+      }, {
+        "claimId" : "clm-1c6edd61",
+        "proposition" : "A potentiostat provides a controlled current to a laboratory cell and measures its terminal voltage.",
+        "status" : "SUPPORTED",
+        "conceptId" : "a9d4e6e7",
+        "corpusFile" : "dhx-d-instrumentation.md"
+      }, {
+        "claimId" : "clm-5721c9fb",
+        "proposition" : "A reference electrode placed next to a half cell measures the potential of the working electrode directly.",
+        "status" : "SUPPORTED",
+        "conceptId" : "6a2c2030",
+        "corpusFile" : "dhx-d-instrumentation.md"
+      }, {
+        "claimId" : "clm-df2b5ffb",
+        "proposition" : "A reference thermometer placed in the coolant stream measures the temperature the loop actually carries.",
+        "status" : "SUPPORTED",
+        "conceptId" : "51bfc14d",
+        "corpusFile" : "dhx-d-instrumentation.md"
+      }, {
+        "claimId" : "clm-e26a3320",
+        "proposition" : "A thermocouple glued to the surface of a cell measures the external temperature of the cell.",
+        "status" : "SUPPORTED",
+        "conceptId" : "5939e104",
+        "corpusFile" : "dhx-d-instrumentation.md"
+      }, {
+        "claimId" : "clm-f013c2e5",
+        "proposition" : "A vibration shaker produces the mechanical excitation that a vehicle delivers to a battery pack.",
+        "status" : "SUPPORTED",
+        "conceptId" : "1cc57c7f",
+        "corpusFile" : "dhx-d-instrumentation.md"
+      }, {
+        "claimId" : "clm-bfaa878e",
+        "proposition" : "An environmental chamber controls the air temperature and the relative humidity around the specimen.",
+        "status" : "SUPPORTED",
+        "conceptId" : "827d7ef5",
+        "corpusFile" : "dhx-d-instrumentation.md"
+      }, {
+        "claimId" : "clm-278bc86f",
+        "proposition" : "An ultrasonic probe reveals the delamination of the electrode stack of a prismatic cell.",
+        "status" : "SUPPORTED",
+        "conceptId" : "ed68fd7d",
+        "corpusFile" : "dhx-d-instrumentation.md"
+      } ]
+    } ],
+    "counts" : {
+      "documents" : 4,
+      "claims" : 48,
+      "citableClaims" : 48
+    }
+  }, {
+    "domain" : "dmy",
+    "workspace" : "crj01-adaptive-corpus-dmy",
+    "files" : [ "dmy-a-sediment.md", "dmy-b-microbes.md", "dmy-c-erosion.md", "dmy-d-instruments.md" ],
+    "documents" : [ {
+      "file" : "dmy-a-sediment.md",
+      "sha256" : "9d9d8cc394a1f69a23f9c2a8608cc0246eaec98f89f43f9e3bdb659af4a9e7fa",
+      "sourceId" : "src-6dc6bdbd",
+      "claims" : [ {
+        "claimId" : "clm-1aff4f41",
+        "proposition" : "A salt marsh that receives freshwater inflow causes more organic carbon to accumulate in its sediment.",
+        "status" : "SUPPORTED",
+        "conceptId" : "5601ece7",
+        "corpusFile" : "dmy-a-sediment.md"
+      }, {
+        "claimId" : "clm-f593e5ac",
+        "proposition" : "Compaction of marsh sediment increases with depth and reduces the space available for further burial.",
+        "status" : "SUPPORTED",
+        "conceptId" : "1bf522a6",
+        "corpusFile" : "dmy-a-sediment.md"
+      }, {
+        "claimId" : "clm-74babffe",
+        "proposition" : "Mineral sediment that buries marsh soil reduces the oxidation of the buried organic carbon.",
+        "status" : "SUPPORTED",
+        "conceptId" : "d6744542",
+        "corpusFile" : "dmy-a-sediment.md"
+      }, {
+        "claimId" : "clm-c5eed4a9",
+        "proposition" : "Organic carbon that leaves a marsh in surface water is exported rather than buried.",
+        "status" : "SUPPORTED",
+        "conceptId" : "7403316a",
+        "corpusFile" : "dmy-a-sediment.md"
+      }, {
+        "claimId" : "clm-f5f15e9c",
+        "proposition" : "Salt-marsh sediment stores organic carbon from the water column as particles settle onto the marsh surface.",
+        "status" : "SUPPORTED",
+        "conceptId" : "9e200d73",
+        "corpusFile" : "dmy-a-sediment.md"
+      }, {
+        "claimId" : "clm-9b4848c3",
+        "proposition" : "Sediment accretion on a salt marsh increases the elevation of the surface relative to the surrounding water.",
+        "status" : "SUPPORTED",
+        "conceptId" : "f48ebbbe",
+        "corpusFile" : "dmy-a-sediment.md"
+      }, {
+        "claimId" : "clm-f33b2112",
+        "proposition" : "Sulfate reduction in marsh sediment produces sulfide that binds iron and slows the release of buried carbon.",
+        "status" : "SUPPORTED",
+        "conceptId" : "3ce68a66",
+        "corpusFile" : "dmy-a-sediment.md"
+      }, {
+        "claimId" : "clm-b49c22ab",
+        "proposition" : "The accumulation rate of organic carbon in salt-marsh sediment depends on the supply of fine particles from the estuary.",
+        "status" : "SUPPORTED",
+        "conceptId" : "58327aff",
+        "corpusFile" : "dmy-a-sediment.md"
+      }, {
+        "claimId" : "clm-46af3fb2",
+        "proposition" : "The burial depth of a salt-marsh soil column determines how long the buried carbon stays away from the air.",
+        "status" : "SUPPORTED",
+        "conceptId" : "edb6fac4",
+        "corpusFile" : "dmy-a-sediment.md"
+      }, {
+        "claimId" : "clm-14d08960",
+        "proposition" : "The carbon content of salt-marsh sediment decreases with depth as the oldest material decomposes.",
+        "status" : "SUPPORTED",
+        "conceptId" : "3d540e75",
+        "corpusFile" : "dmy-a-sediment.md"
+      }, {
+        "claimId" : "clm-b0fd2147",
+        "proposition" : "The rate of decomposition of buried marsh organic carbon increases when the water table falls.",
+        "status" : "SUPPORTED",
+        "conceptId" : "73710faa",
+        "corpusFile" : "dmy-a-sediment.md"
+      }, {
+        "claimId" : "clm-9d99da53",
+        "proposition" : "The residence time of organic carbon in marsh sediment is measured in centuries rather than in years.",
+        "status" : "SUPPORTED",
+        "conceptId" : "b5401f84",
+        "corpusFile" : "dmy-a-sediment.md"
+      } ]
+    }, {
+      "file" : "dmy-b-microbes.md",
+      "sha256" : "ae9c48799bccf152fcb9438a47aa5ed9c0de42bca03be71d584a1f6ab4c2d356",
+      "sourceId" : "src-95157953",
+      "claims" : [ {
+        "claimId" : "clm-883d7e17",
+        "proposition" : "A microbial community below the oxic surface of marsh sediment converts the organic matter more slowly than one at the surface.",
+        "status" : "SUPPORTED",
+        "conceptId" : "91713443",
+        "corpusFile" : "dmy-b-microbes.md"
+      }, {
+        "claimId" : "clm-4ce93757",
+        "proposition" : "A productive marsh supports its microbial community with more organic substrate.",
+        "status" : "SUPPORTED",
+        "conceptId" : "16b1eb1b",
+        "corpusFile" : "dmy-b-microbes.md"
+      }, {
+        "claimId" : "clm-f21c064c",
+        "proposition" : "Anaerobic microbes in marsh sediment use sulfate instead of oxygen when the soil is saturated.",
+        "status" : "SUPPORTED",
+        "conceptId" : "81483abf",
+        "corpusFile" : "dmy-b-microbes.md"
+      }, {
+        "claimId" : "clm-d72cfa56",
+        "proposition" : "Bacterial sulphate reduction in a salt marsh is faster in the warm season than in the cold season.",
+        "status" : "SUPPORTED",
+        "conceptId" : "fdb4244f",
+        "corpusFile" : "dmy-b-microbes.md"
+      }, {
+        "claimId" : "clm-fb58c4cb",
+        "proposition" : "Enzyme activity in marsh soil decreases sharply when the soil dries out.",
+        "status" : "SUPPORTED",
+        "conceptId" : "74707910",
+        "corpusFile" : "dmy-b-microbes.md"
+      }, {
+        "claimId" : "clm-45ececd8",
+        "proposition" : "Iron reduction in marsh sediment competes with methanogenesis for the hydrogen that fermentation supplies.",
+        "status" : "SUPPORTED",
+        "conceptId" : "f35c63de",
+        "corpusFile" : "dmy-b-microbes.md"
+      }, {
+        "claimId" : "clm-c2fbbd23",
+        "proposition" : "Microbial respiration in marsh soil converts organic carbon into carbon dioxide that escapes to the atmosphere.",
+        "status" : "SUPPORTED",
+        "conceptId" : "b6ecc42f",
+        "corpusFile" : "dmy-b-microbes.md"
+      }, {
+        "claimId" : "clm-bb53451e",
+        "proposition" : "The ammonium that marsh microbes release feeds the primary production of marsh plants.",
+        "status" : "SUPPORTED",
+        "conceptId" : "adcf808a",
+        "corpusFile" : "dmy-b-microbes.md"
+      }, {
+        "claimId" : "clm-9f2143bb",
+        "proposition" : "The methanogenic community of a salt marsh produces methane from the acetate that fermentation releases.",
+        "status" : "SUPPORTED",
+        "conceptId" : "df946363",
+        "corpusFile" : "dmy-b-microbes.md"
+      }, {
+        "claimId" : "clm-a0c3ae01",
+        "proposition" : "The microbial turnover of marsh organic matter controls how much carbon the marsh releases as carbon dioxide.",
+        "status" : "SUPPORTED",
+        "conceptId" : "9a8df40e",
+        "corpusFile" : "dmy-b-microbes.md"
+      }, {
+        "claimId" : "clm-3a3737cd",
+        "proposition" : "The rate of microbial respiration in marsh soil depends on the temperature of the soil and on its moisture.",
+        "status" : "SUPPORTED",
+        "conceptId" : "c759aa87",
+        "corpusFile" : "dmy-b-microbes.md"
+      }, {
+        "claimId" : "clm-8e8aefb2",
+        "proposition" : "The respiration rate of a marsh soil sample changes within hours of the sample being brought into the laboratory.",
+        "status" : "SUPPORTED",
+        "conceptId" : "a08d01a3",
+        "corpusFile" : "dmy-b-microbes.md"
+      } ]
+    }, {
+      "file" : "dmy-c-erosion.md",
+      "sha256" : "0d19f0b1859bc56dacf4fc8c9abd8cd45eab514910d907827f688faaa6889f96",
+      "sourceId" : "src-dc555af6",
+      "claims" : [ {
+        "claimId" : "clm-8330eb36",
+        "proposition" : "A levee that isolates a marsh from the floodplain reduces the supply of the river sediment the marsh needs.",
+        "status" : "SUPPORTED",
+        "conceptId" : "393d8a68",
+        "corpusFile" : "dmy-c-erosion.md"
+      }, {
+        "claimId" : "clm-412d17d5",
+        "proposition" : "A marsh that loses its creek network reduces the exchange of water and sediment with the estuary.",
+        "status" : "SUPPORTED",
+        "conceptId" : "7b8a9ab5",
+        "corpusFile" : "dmy-c-erosion.md"
+      }, {
+        "claimId" : "clm-dde40171",
+        "proposition" : "A restored marsh in front of a seawall dissipates wave energy and reduces the erosion of the shoreline.",
+        "status" : "SUPPORTED",
+        "conceptId" : "34429a3e",
+        "corpusFile" : "dmy-c-erosion.md"
+      }, {
+        "claimId" : "clm-26735dc",
+        "proposition" : "A seawall without a marsh in front of it reflects the incoming wave energy back onto the shore.",
+        "status" : "SUPPORTED",
+        "conceptId" : "77534b60",
+        "corpusFile" : "dmy-c-erosion.md"
+      }, {
+        "claimId" : "clm-b3eb2355",
+        "proposition" : "A storm surge causes new sediment to be transported onto the surface of a low marsh.",
+        "status" : "SUPPORTED",
+        "conceptId" : "4736d21a",
+        "corpusFile" : "dmy-c-erosion.md"
+      }, {
+        "claimId" : "clm-910de35c",
+        "proposition" : "Dredging of a navigation channel increases the tidal prism and deepens the water beside the marsh.",
+        "status" : "SUPPORTED",
+        "conceptId" : "ca60389",
+        "corpusFile" : "dmy-c-erosion.md"
+      }, {
+        "claimId" : "clm-c61f34d1",
+        "proposition" : "Erosion of the shoreline of a coastal plain removes the sediment that the marsh needs to accrete.",
+        "status" : "SUPPORTED",
+        "conceptId" : "19baeeab",
+        "corpusFile" : "dmy-c-erosion.md"
+      }, {
+        "claimId" : "clm-2c286890",
+        "proposition" : "Relative sea level rise drowns the marsh platform where the sediment supply cannot keep pace.",
+        "status" : "SUPPORTED",
+        "conceptId" : "97ac4509",
+        "corpusFile" : "dmy-c-erosion.md"
+      }, {
+        "claimId" : "clm-9322cabe",
+        "proposition" : "The landward migration of a marsh requires space that is free of fixed structures.",
+        "status" : "SUPPORTED",
+        "conceptId" : "29d9614d",
+        "corpusFile" : "dmy-c-erosion.md"
+      }, {
+        "claimId" : "clm-ef06b3c0",
+        "proposition" : "The rate of marsh loss along a developed shoreline is higher than the rate of marsh gain on a sheltered one.",
+        "status" : "SUPPORTED",
+        "conceptId" : "18f6b6cd",
+        "corpusFile" : "dmy-c-erosion.md"
+      }, {
+        "claimId" : "clm-563f9f7d",
+        "proposition" : "The width of the marsh belt is the main factor that controls how much wave energy reaches the shoreline.",
+        "status" : "SUPPORTED",
+        "conceptId" : "9b9f490f",
+        "corpusFile" : "dmy-c-erosion.md"
+      }, {
+        "claimId" : "clm-f937a8fb",
+        "proposition" : "Vegetation loss on a marsh platform increases the exposure of the soil to wave erosion.",
+        "status" : "SUPPORTED",
+        "conceptId" : "35e6869",
+        "corpusFile" : "dmy-c-erosion.md"
+      } ]
+    }, {
+      "file" : "dmy-d-instruments.md",
+      "sha256" : "99ed151210ba407f90b5b6b3a9aa07575054e39d34bcaebcd726adb5c966aa0f",
+      "sourceId" : "src-72b820f9",
+      "claims" : [ {
+        "claimId" : "clm-5792c795",
+        "proposition" : "A chamber built around a patch of marsh soil measures the carbon dioxide that escapes from it.",
+        "status" : "SUPPORTED",
+        "conceptId" : "64b00004",
+        "corpusFile" : "dmy-d-instruments.md"
+      }, {
+        "claimId" : "clm-215b5c4",
+        "proposition" : "A dissolved carbon analyser measures the concentration of carbon compounds in the sampled water.",
+        "status" : "SUPPORTED",
+        "conceptId" : "ca0525d1",
+        "corpusFile" : "dmy-d-instruments.md"
+      }, {
+        "claimId" : "clm-1b1b465e",
+        "proposition" : "A drone moves along a survey line above the marsh and photographs the creek network from above.",
+        "status" : "SUPPORTED",
+        "conceptId" : "d69d3e9f",
+        "corpusFile" : "dmy-d-instruments.md"
+      }, {
+        "claimId" : "clm-16b9b11e",
+        "proposition" : "A field notebook notes the date, the time and the weather of every measurement round.",
+        "status" : "SUPPORTED",
+        "conceptId" : "181f04a2",
+        "corpusFile" : "dmy-d-instruments.md"
+      }, {
+        "claimId" : "clm-67e5a4a9",
+        "proposition" : "A flux tower measures the wind speed above the marsh canopy.",
+        "status" : "SUPPORTED",
+        "conceptId" : "87d3c701",
+        "corpusFile" : "dmy-d-instruments.md"
+      }, {
+        "claimId" : "clm-53dfc536",
+        "proposition" : "A gas chromatograph separates the methane and the carbon dioxide of a gas sample.",
+        "status" : "SUPPORTED",
+        "conceptId" : "9d2fa255",
+        "corpusFile" : "dmy-d-instruments.md"
+      }, {
+        "claimId" : "clm-bf6bffcc",
+        "proposition" : "A laboratory balance measures the sediment samples that the core cutter brought up.",
+        "status" : "SUPPORTED",
+        "conceptId" : "4126e8d2",
+        "corpusFile" : "dmy-d-instruments.md"
+      }, {
+        "claimId" : "clm-bab22138",
+        "proposition" : "A piezometer measures the depth of the water table inside the marsh soil.",
+        "status" : "SUPPORTED",
+        "conceptId" : "681f7e21",
+        "corpusFile" : "dmy-d-instruments.md"
+      }, {
+        "claimId" : "clm-cc3aebb3",
+        "proposition" : "A sediment core shows the vertical sequence of deposits in a marsh soil column.",
+        "status" : "SUPPORTED",
+        "conceptId" : "7c92d463",
+        "corpusFile" : "dmy-d-instruments.md"
+      }, {
+        "claimId" : "clm-41b0f2",
+        "proposition" : "A trap stores the material that the incoming tide brings onto the marsh surface.",
+        "status" : "SUPPORTED",
+        "conceptId" : "d161034",
+        "corpusFile" : "dmy-d-instruments.md"
+      }, {
+        "claimId" : "clm-bef464f1",
+        "proposition" : "A water sampler takes a known volume of water from the creek that drains the marsh.",
+        "status" : "SUPPORTED",
+        "conceptId" : "3a31bd72",
+        "corpusFile" : "dmy-d-instruments.md"
+      }, {
+        "claimId" : "clm-ac280670",
+        "proposition" : "An echosounder shows the elevation of the marsh surface along a transect.",
+        "status" : "SUPPORTED",
+        "conceptId" : "8ce42cae",
+        "corpusFile" : "dmy-d-instruments.md"
+      } ]
+    } ],
+    "counts" : {
+      "documents" : 4,
+      "claims" : 48,
+      "citableClaims" : 48
+    }
+  } ],
+  "counts" : {
+    "domains" : 2,
+    "claims" : 96,
+    "citableClaims" : 96
+  }
+}
