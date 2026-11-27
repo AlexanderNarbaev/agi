@@ -10,6 +10,10 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import argparse
+import contextlib
+import io
+from unittest import mock
 
 MODULE = Path(__file__).resolve().parents[1] / 'matrix_dsh_supervise.py'
 spec = importlib.util.spec_from_file_location('matrix_dsh_supervise', MODULE)
@@ -47,7 +51,6 @@ class IntegrationTests(unittest.TestCase):
             d = Path(d)
             repo = d / 'repo'
             repo.mkdir()
-            subprocess.run(['git', 'init', '-q', str(repo)], check=True)
             (repo / '.opencode/tmp').mkdir(parents=True)
             task = d / 'task.md'
             task.write_text('Make the independent acceptance test pass. Do not use hidden cases.\n')
@@ -78,16 +81,23 @@ p.write_text(str(n))
 print('control still RED' if n==1 else 'control GREEN')
 raise SystemExit(0 if n>=2 else 1)
 """ % str(count_file))
-            cmd = [sys.executable, str(MODULE), 'run', '--repo', str(repo),
-                   '--worktree', str(repo), '--task-file', str(task),
-                   '--gate', shlex_quote(sys.executable) + ' ' + shlex_quote(str(gate)),
-                   '--max-runs', '3']
-            env = os.environ.copy()
-            env['FAKE_DSH_DIR'] = str(d)
-            env['PATH'] = str(fake_bin) + os.pathsep + env['PATH']
-            result = subprocess.run(cmd, env=env, capture_output=True, text=True)
-            self.assertEqual(result.returncode, 0, result.stderr + '\n' + result.stdout)
-            self.assertIn('VERIFIED | rounds=2', result.stdout)
+            args = argparse.Namespace(
+                repo=str(repo), worktree=str(repo), task_file=str(task),
+                gate=shlex_quote(sys.executable) + ' ' + shlex_quote(str(gate)),
+                permission='workspace-write', grant_git=False,
+                token_budget=512000, max_runs=3, resume=False,
+            )
+            env = {'FAKE_DSH_DIR': str(d),
+                   'PATH': str(fake_bin) + os.pathsep + os.environ['PATH']}
+            output = io.StringIO()
+            # Mock only the preflight's Git metadata lookup: do not git-init a repo.
+            # All controller retry behavior and the external fake DSH/gate run unchanged.
+            with mock.patch.object(module, 'verify_worktree', return_value=str(d / 'common-git')):
+                with mock.patch.dict(os.environ, env):
+                    with contextlib.redirect_stdout(output):
+                        code = module.run(args)
+            self.assertEqual(code, 0, output.getvalue())
+            self.assertIn('VERIFIED | rounds=2', output.getvalue())
             state = json.loads((repo / '.opencode/tmp/matrix-dsh-supervisor/state.json').read_text())
             self.assertEqual(state['reported_root_tokens'], 210)
             self.assertEqual(state['session_id'], 'session-test')
