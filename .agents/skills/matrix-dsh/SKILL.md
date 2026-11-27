@@ -12,7 +12,7 @@ This skill runs in the existing canonical ~/Projects/agi checkout and existing ~
 2. Write exactly one bounded English milestone commission under ~/Projects/agi/.opencode/tmp/matrix-dsh-supervisor/commission.md. Include: observed defect, correct behavior, scope, negative controls, allowed source disclosures, a deterministic DEV-only acceptance gate, resources, stop conditions and evidence outputs.
 3. Run the local supervisor once from the canonical repo:
 
-    python3 scripts/matrix_dsh_supervise.py run --task-file .opencode/tmp/matrix-dsh-supervisor/commission.md --worktree "$HOME/Projects/matrix-worktrees/dsh-writer" --gate 'flock /tmp/gradle-matrix.lock ./gradlew :matrix-core:test --offline --tests "io.matrix.knowledge.ActualTargetTest"' --token-budget 512000 --max-runs 8
+    python3 scripts/matrix_dsh_supervise.py run --task-file .opencode/tmp/matrix-dsh-supervisor/commission.md --worktree "$HOME/Projects/matrix-worktrees/dsh-writer" --gate 'flock /tmp/gradle-matrix.lock ./gradlew :matrix-core:test --offline --tests "io.matrix.knowledge.ActualTargetTest"'
 
 Replace ActualTargetTest with a real, task-specific regression test. A generic compile or diff check is not sufficient for an end-to-end claim. The supervisor uses the existing ignored state root and returns one compact result line. It invokes only DSH and trusted local gates, never Codex.
 4. DSH performs implementation, tests, reviewer roles and retries. A failed gate triggers same-session DSH continuation without another Codex invocation. Hidden sealed evaluation cases and results MUST remain isolated and may not be used as feedback gates.
@@ -21,10 +21,10 @@ Replace ActualTargetTest with a real, task-specific regression test. A generic c
 
     python3 scripts/matrix_dsh_supervise.py status
 
-Only escalate an actual missing authority, material architecture choice, repeated failure, or exhausted budget. Do not restart a 256-round goal or reconstruct entire project history.
+Only escalate an actual missing authority, material architecture choice, repeated substantive failure without progress, or confirmed provider quota exhaustion. Do not restart a 256-round goal or reconstruct entire project history.
 
 The DSH output is stored under .opencode/tmp/matrix-dsh-supervisor/; promote durable science and test evidence to existing canonical evidence paths before declaring success. No other temporary checkout is created.
 
-Important limits: the token budget is measured using headless parent-agent reported usage; subagent or missing-usage tokens cannot be reliably capped by this script. Provider-side quotas are required for a hard 512K aggregate limit. If usage is incomplete, automatic retries stop. The DSH invocation is synchronous and runs one task before exiting, but the script may resume its saved DSH session for a bounded test/fix cycle. No perpetual background processing or spontaneous Codex callbacks are claimed.
+MiniMax-M3.1-Flash uses a recommended 512K active context with native DSH compaction. Cumulative root usage is for observability only. Input, cache reads and writes, and output are reported separately when available. Subagent or discarded-attempt usage may be uninstrumented. Check subscription consumption separately in MiniMax Token Plan. Persist the current decisions, evidence and next action in the worktree before compaction.
 
 By default DSH may edit the writer worktree but cannot write the shared Git directory. The optional --grant-git gives broad access to Git metadata including hooks; use it only after explicit source-scope review, never by default. Preserve owner data, protected paths, frozen controls and hidden gold.
