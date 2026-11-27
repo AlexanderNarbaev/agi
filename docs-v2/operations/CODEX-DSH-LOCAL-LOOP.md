@@ -51,8 +51,7 @@ Replace ActualTargetTest with the task's real negative-control test:
     python3 scripts/matrix_dsh_supervise.py run \
       --task-file .opencode/tmp/matrix-dsh-supervisor/commission.md \
       --worktree "$HOME/Projects/matrix-worktrees/dsh-writer" \
-      --gate 'flock /tmp/gradle-matrix.lock ./gradlew :matrix-core:test --offline --tests "io.matrix.knowledge.ActualTargetTest"' \
-      --token-budget 512000 --max-runs 8
+      --gate 'flock /tmp/gradle-matrix.lock ./gradlew :matrix-core:test --offline --tests "io.matrix.knowledge.ActualTargetTest"'
 
 Query current status in the same repository:
 
@@ -67,8 +66,8 @@ The script prints only one summary line and retains complete evidence under the 
 3. Require process exit 0 and DSH final.reason.kind == completed before any gate acceptance. Preserve failed JSONL and stderr.
 4. The default workspace-write permission applies to the existing dsh-writer worktree, not the owner's databases or shared Git metadata. The optional --grant-git exposes the common .git directory including hooks and config; do not enable by default.
 5. Run only one heavy matrix-core Gradle task at a time using the shared flock; do not run two supervisors in parallel.
-6. Reported step usage is derived from headless JSON events. It may omit subagent tokens, provider retries, or an uninstrumented step. Therefore 512K is a **best-effort parent-agent reported-token ceiling**; use provider-side controls for a strict aggregated budget.
-7. A repeat failure without new progress, missing usage, provider error, exhaustion of rounds or a material owner boundary stops and returns a named condition. Do not launch another 256-round goal.
+6. MiniMax-M3.1-Flash uses a recommended 512K active context with native DSH compaction. Cumulative root usage is for observability only. Input, cache reads and writes, and output are reported separately when available. Subagent or discarded-attempt usage may be uninstrumented. Check subscription consumption separately in MiniMax Token Plan. Persist the current decisions, evidence and next action in the worktree before compaction.
+7. A repeated failure without new progress, confirmed provider quota exhaustion or a material owner boundary returns a named condition. Do not launch another 256-round goal.
 8. After the gate passes, Codex reviews the diff and the PR's required technical checks once before claiming integration. The controller itself does not push, merge or touch main.
 
 ## Reproducibility

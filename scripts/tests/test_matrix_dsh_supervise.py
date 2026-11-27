@@ -46,6 +46,38 @@ class ParserTests(unittest.TestCase):
 
 
 class IntegrationTests(unittest.TestCase):
+    def test_large_cumulative_usage_does_not_stop_round(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            events = root / 'events.jsonl'
+            with events.open('wb') as output:
+                code, stop = module.run_headless(
+                    [sys.executable, '-c',
+                     'print(\'{"type":"status","phase":"step_end",'
+                     '"usage":{"totalTokens":900000,"inputTokens":12,'
+                     '"cacheReadTokens":899980,"outputTokens":8}}\', flush=True)'],
+                    '', root, output, events, subprocess.DEVNULL,
+                    max_tools=10, timeout=3, idle_timeout=2,
+                    checkpoint=lambda _: None, lock_fd=None)
+            self.assertEqual((code, stop), (0, None))
+            parsed = module.parse_events(events)
+            self.assertEqual(parsed['tokens'], 900000)
+            self.assertEqual(parsed['usage']['cacheReadTokens'], 899980)
+
+    def test_runaway_round_stops_on_tool_limit(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            events = root / 'events.jsonl'
+            with events.open('wb') as output:
+                code, stop = module.run_headless(
+                    [sys.executable, '-c',
+                     'import time; print(\'{"type":"tool_call"}\', flush=True); time.sleep(60)'],
+                    '', root, output, events, subprocess.DEVNULL,
+                    max_tools=1, timeout=3, idle_timeout=2,
+                    checkpoint=lambda _: None, lock_fd=None)
+            self.assertEqual(stop, 'TOOL_LIMIT')
+            self.assertNotEqual(code, 0)
+
     def test_gate_drives_retry_without_codex_and_resumes_same_session(self):
         with tempfile.TemporaryDirectory() as d:
             d = Path(d)
@@ -85,7 +117,7 @@ raise SystemExit(0 if n>=2 else 1)
                 repo=str(repo), worktree=str(repo), task_file=str(task),
                 gate=shlex_quote(sys.executable) + ' ' + shlex_quote(str(gate)),
                 permission='workspace-write', grant_git=False,
-                token_budget=512000, max_runs=3, resume=False,
+                resume=False,
             )
             env = {'FAKE_DSH_DIR': str(d),
                    'PATH': str(fake_bin) + os.pathsep + os.environ['PATH']}
