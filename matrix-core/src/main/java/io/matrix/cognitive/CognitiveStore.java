@@ -519,6 +519,14 @@ public final class CognitiveStore
                 // MEASUREMENT and not part of the procedure's definition, so it is not
                 // compared by the immutability check and a re-measurement never rewrites it.
                 addColumnIfMissing(st, "cognitive_procedure", "measured_cost_nanos", "INTEGER");
+                // CRJ-01 / EPISTEMIC-NECESSITY: WHY a version was retired, and WHAT retired it.
+                // The retirement INSTANT was already a column; a retirement without a reason
+                // and without the link to the competence that replaced it is a withdrawal a
+                // reader cannot audit, and the milestone's own rule is that a retired version
+                // keeps its history. The two columns are ADDITIVE: a row written before this
+                // milestone keeps null in both, which is the truth about it.
+                addColumnIfMissing(st, "cognitive_procedure", "invalidation_reason", "TEXT");
+                addColumnIfMissing(st, "cognitive_procedure", "invalidation_cause", "TEXT");
             }
             return;
         }
@@ -544,6 +552,8 @@ public final class CognitiveStore
                         learned_in_episode TEXT,
                         validation_note TEXT,
                         measured_cost_nanos INTEGER,
+                        invalidation_reason TEXT,
+                        invalidation_cause TEXT,
                         PRIMARY KEY (id, version)
                     )""");
             // A table written before the validation kind existed carries no such column,
@@ -585,6 +595,8 @@ public final class CognitiveStore
                         learned_in_episode TEXT,
                         validation_note TEXT,
                         measured_cost_nanos INTEGER,
+                        invalidation_reason TEXT,
+                        invalidation_cause TEXT,
                         PRIMARY KEY (id, version)
                     )""");
         }
@@ -1264,6 +1276,105 @@ public final class CognitiveStore
                                 + " already exists");
             }
             throw new IllegalStateException("failed to record the procedure", e);
+        }
+    }
+
+    /**
+     * The record of a version's retirement.
+     *
+     * @param invalidatedAt the instant the version was withdrawn, or null when it is active
+     * @param reason        why it was withdrawn
+     * @param cause         what retired it — the competence that replaced it, or the task that
+     *                      showed it could not be used
+     */
+    public record ProcedureInvalidation(String invalidatedAt, String reason, String cause) {
+
+        public ProcedureInvalidation {
+            reason = reason == null ? "" : reason;
+            cause = cause == null ? "" : cause;
+        }
+    }
+
+    /**
+     * Retires a stored procedure VERSION, durably.
+     *
+     * <p><b>Why this is an operation and not a re-write.</b> A procedure version is immutable:
+     * its DEFINITION is what makes it a version, and the store refuses to rewrite it. The
+     * retirement is not part of the definition — it is the version's <b>standing</b>, and the
+     * standing was already a column ({@code invalidated_at}) that the definition does not
+     * compare. Writing a retired version through {@link #recordProcedure} therefore does
+     * nothing at all: the write is accepted as "the same definition" and dropped, the version
+     * stays active, and the route keeps serving it. The COMPETENCE-REACH milestone measured
+     * exactly that and recorded it as the falsification of the durable retire.</p>
+     *
+     * <p><b>What this does instead.</b> It writes the retirement instant, the reason and the
+     * causal link into the version's own row, and it does so with a single conditional
+     * statement: a version that is already retired is not retired twice, and two callers that
+     * race produce one retirement and one refusal. The definition is untouched, so the
+     * immutable record is still immutable — a retired version stays <b>readable</b>, with its
+     * history, and it is simply no longer offered to the selector.</p>
+     *
+     * <p><b>Why the reason and the cause are separate.</b> The reason says why this version
+     * stopped being usable; the cause says what made that decision — the competence that
+     * replaced it, or the task whose evidence it could not carry. A reader who wants to know
+     * whether a withdrawal was a correction or a replacement needs both, and a single field
+     * would have to choose.</p>
+     *
+     * @param workspaceId the workspace the version belongs to
+     * @param procedureId the procedure
+     * @param version     the version
+     * @param at          the instant the version was withdrawn; supplied by the caller, never
+     *                    read from a clock
+     * @param reason      why it was withdrawn
+     * @param cause       what retired it
+     * @return whether this call performed the retirement
+     */
+    public synchronized boolean retireProcedure(String workspaceId, String procedureId,
+            String version, String at, String reason, String cause) {
+        if (procedureId == null || procedureId.isBlank() || version == null || version.isBlank()) {
+            throw new IllegalArgumentException("a retirement names the procedure and the version");
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE cognitive_procedure SET invalidated_at = ?, invalidation_reason = ?, "
+                        + "invalidation_cause = ? WHERE workspace_id = ? AND id = ? AND version = ? "
+                        + "AND invalidated_at IS NULL")) {
+            ps.setString(1, at);
+            ps.setString(2, reason);
+            ps.setString(3, cause);
+            ps.setString(4, workspaceId);
+            ps.setString(5, procedureId);
+            ps.setString(6, version);
+            return ps.executeUpdate() == 1;
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to retire the procedure " + procedureId, e);
+        }
+    }
+
+    /**
+     * The retirement of a stored procedure version.
+     *
+     * @param workspaceId the workspace the version belongs to
+     * @param procedureId the procedure
+     * @param version     the version
+     * @return the retirement, or null when the version is unknown
+     */
+    public synchronized ProcedureInvalidation procedureInvalidation(String workspaceId,
+            String procedureId, String version) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT invalidated_at, invalidation_reason, invalidation_cause "
+                        + "FROM cognitive_procedure WHERE workspace_id = ? AND id = ? "
+                        + "AND version = ?")) {
+            ps.setString(1, workspaceId);
+            ps.setString(2, procedureId);
+            ps.setString(3, version);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    return null;
+                }
+                return new ProcedureInvalidation(rs.getString(1), rs.getString(2), rs.getString(3));
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the retirement of " + procedureId, e);
         }
     }
 

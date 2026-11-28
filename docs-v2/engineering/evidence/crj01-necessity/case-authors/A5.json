@@ -1,0 +1,104 @@
+{
+  "assignment": "A5",
+  "domain": "wbe",
+  "author": "the DSH case-author subagent for assignment A5",
+  "independence": "the author read ONLY the case contract, the corpus of the assigned domain (wbe-a-erosion.md, wbe-b-inspection.md, wbe-c-coatings.md, wbe-d-aerodynamics.md), the output TEMPLATE.json, the checker script and the author's own A5.json; no implementation, no instrument, no previous case set, no pre-registration, no other case-author file",
+  "cases": [
+    {
+      "id": "EN-WBE-A5-1",
+      "domain": "wbe",
+      "slice": "VALIDATION",
+      "condition": "LOWER_RANKED_NECESSARY",
+      "level": "INTRODUCTORY",
+      "question": "On the north turbine nothing can reach the blade - no crane to lift it, no drone to fly over it - and we still have to say how much of the leading edge is gone; how is that number obtained?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-b-inspection.md",
+          "proposition": "The photographs of a blade inspection reveal an erosion depth of more than two millimetres when the leading edge has lost material."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": ["ANSWERED"],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "The wording of the question points most directly at the sentences of the inspection file that describe how a reading is taken on a blade that nobody can reach - the ultrasonic sentence that reads the thickness of the edge without any contact, and the drone sentence, whose images show only small pits - because the scene stresses that nothing can reach the blade and the last clause of the question asks how the number is obtained, which is a question about method. Neither of those sentences is in the necessary set: the drone is excluded by the wording of the question itself, and the ultrasonic reading answers how a reading is taken but not how much material the leading edge has lost. The necessary sentence is reached only indirectly, through the question's demand for an amount rather than for a method: the corpus states how much of a leading edge is gone in a consequence clause, not in a method sentence - the photographs of a blade inspection reveal an erosion depth of more than two millimetres when the leading edge has lost material. That sentence is necessary because the question asks how much of the leading edge is gone, and this is the one place where the corpus gives an amount of lost leading edge; the photographs it speaks of are the photographs of an inspection, not of a drone, so the scene of the question does not exclude them, and what they reveal is the depth that has to be reported. Drop it and an answer can still name a way of measuring the edge, but it never says how much is gone, so the answer either stops at the method and does not answer the question or collapses into 'the corpus does not say', and that is not one of the allowed dispositions of this case. The necessary sentence is minimal - one sentence carries the whole figure - and a reader who stopped at the most direct match would answer with a method and would miss the necessary evidence entirely."
+    },
+    {
+      "id": "EN-WBE-A5-2",
+      "domain": "wbe",
+      "slice": "VALIDATION",
+      "condition": "JOINTLY_NECESSARY",
+      "level": "INTERMEDIATE",
+      "question": "We are buying a leading-edge protection system for a new turbine; when does the coating have to go on, and what decides what we pay for it?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-c-coatings.md",
+          "proposition": "A leading-edge protection system on a wind-turbine blade requires an application of the coating before the blade leaves the factory."
+        },
+        {
+          "corpusFile": "wbe-c-coatings.md",
+          "proposition": "The cost of a coating system for a wind-turbine blade depends on the size of the blade and on the number of leading edges that need protection."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": ["ANSWERED"],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "The question has two halves and each half of the answer is carried by exactly one corpus sentence, so neither sentence carries the answer alone. The first half - when the protection is applied - is carried by the sentence saying a leading-edge protection system requires an application of the coating before the blade leaves the factory, and the second half - what drives the price - is carried by the sentence saying the cost of a coating system depends on the size of the blade and on the number of leading edges that need protection. Drop the first and the answer never says that the coating is a factory step; drop the second and it never says what the price follows from. No other sentence of the corpus touches either half, which is why the set has no alternative route."
+    },
+    {
+      "id": "EN-WBE-A5-3",
+      "domain": "wbe",
+      "slice": "VALIDATION",
+      "condition": "ALTERNATIVE_SUFFICIENT",
+      "level": "INTERMEDIATE",
+      "question": "Our offshore turbine has been running in sea spray for most of the year; is the scheduled inspection enough, or does it need another one?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-b-inspection.md",
+          "proposition": "A second inspection of a wind-turbine blade becomes necessary after a period of operation in sea spray."
+        }
+      ],
+      "alternativeSufficientSets": [
+        [
+          {
+            "corpusFile": "wbe-a-erosion.md",
+            "proposition": "Sea spray causes a higher erosion rate on a wind-turbine blade than dry air produces."
+          },
+          {
+            "corpusFile": "wbe-a-erosion.md",
+            "proposition": "The inspection interval for a wind-turbine blade in a coastal site depends on the erosion rate that the site produces."
+          }
+        ]
+      ],
+      "allowedDispositions": ["ANSWERED"],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "The necessary sentence states the conclusion outright - a second inspection becomes necessary after a period of operation in sea spray - and it is minimal, because removing it leaves nothing in the corpus that says an inspection recurs. A different route to the same correct answer exists and is named here: the pair about sea spray producing a higher erosion rate than dry air, together with the sentence saying the inspection interval at a coastal site depends on the erosion rate that the site produces - two sentences from another file, which reach the same conclusion by the chain sea spray raises the rate, the coastal interval follows the rate, so the next inspection falls sooner. The alternative set shares no sentence with the necessary set, so the question is answerable from the corpus in two distinct ways."
+    },
+    {
+      "id": "EN-WBE-A5-4",
+      "domain": "wbe",
+      "slice": "VALIDATION",
+      "condition": "CHANGED_BINDINGS",
+      "level": "INTERMEDIATE",
+      "question": "One of our offshore blades came back from the yard with its polyurethane coating opened up along the leading edge; on that blade, can the sea spray still get at the metal underneath?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-c-coatings.md",
+          "proposition": "A crack in a coating causes sea spray to reach the metal of the wind-turbine blade under that coating."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": ["ANSWERED"],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "The terms of the question - the polyurethane coating, the sea spray, the metal under the coating, the blade - are shared by two sentences of the same file, and which of the two the answer has to stand on is settled by the state of the workspace, not by the wording. With a sound coating the binding is the sentence saying that a coating of polyurethane reduces the erosion rate of the leading edge in sea spray; in the state this case describes, the coating has opened up along the edge, so the binding is the necessary sentence, which says that a crack in a coating causes sea spray to reach the metal of the blade under it. The necessary sentence is minimal - one sentence carries the whole answer to the question - and a reader who bound the sound-coating sentence without looking at the state of that blade would answer that the spray is turned back, which is wrong for this state. The question says 'opened up' rather than the corpus word for the damage, so the binding decision follows from the state of the blade rather than from a wording cue."
+    }
+  ],
+  "notes": "Follow-up round, assignment A5, domain wbe: all four cases are VALIDATION, as the follow-up slice rule requires, and the four conditions are one each. The author opened only the case contract, the four wbe corpus files, the output TEMPLATE.json and scripts/necessity-case-check.py; in the second and third revision rounds of EN-WBE-A5-1 the author re-opened only those, plus the author's own A5.json; no file under matrix-core/src/main or matrix-core/src/test/java, no pre-registration or milestone document, no docs-v2/governance, docs-v2/research, docs-v2/engineering/evidence/crj01-reach, .git or wal, and no other case-author file (A1.json to A4.json) was opened at any point. The author also did not read CRJ-01-NECESSITY-DEV-CASES.json, scripts/necessity-cases.py, CRJ-01-COMPETENCE-REACH.md, CRJ-01-REACH-PREREGISTRATION.md or CRJ-01-NECESSITY-PREREGISTRATION.md, and did not run Gradle, git add or git commit. The four necessary sets are pairwise disjoint, so no sentence of this assignment is the necessary evidence of two of its own cases. The coordinator's whole-set report found that the necessary sentences of EN-WBE-A5-1 and EN-WBE-A5-4 were already the necessary sentences of cases of another assignment; both cases were therefore rebuilt on different corpus sentences. A second whole-set check then found that the rebuilt sentence of EN-WBE-A5-1 - the ultrasonic reading of the thickness of a leading edge without touching it - was itself the necessary sentence of EN-WBE-A1-2 of the first round, a case of another author that is not this author's to change, and the sentence chosen in that second revision, taken from wbe-c-coatings.md, turned out to be the necessary sentence of EN-WBE-A1-4 of that same first round. On the third report the coordinator assigned the necessary sentence of EN-WBE-A5-1 explicitly - the sentence of wbe-b-inspection.md about the erosion depth that the photographs of a blade inspection reveal - which no other case of the domain uses as a necessary sentence and which stands in a different corpus file from the one the case used before it, so that the cross-document rule of the revision is met. The sentences of the first two revisions no longer occur anywhere in this file as evidence, and the note of EN-WBE-A5-1 no longer quotes either of them. One consequence is stated here rather than hidden: the necessary sentence of EN-WBE-A5-1 and the sentence its wording points most directly at now both stand in wbe-b-inspection.md, so the spread over two documents that the second revision gave this case is not carried by the necessary set any more. The author cannot rule out a further whole-set collision, because the case files of the other assignments are outside the author's assignment and were not opened at any point; nor can the author see which sentences the other authors have chosen in their parallel revisions; this is stated here rather than hidden."
+}

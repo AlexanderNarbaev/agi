@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.EpistemicNecessityServedTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-11-28T08:03:54.020Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="14.25">
+  <properties/>
+  <testcase name="the journey: an unseen task the competence cannot carry, the missing prerequisite named, a bounded typed request, an authorised fulfilment that changes the SAME task's disposition, and three refusals" classname="io.matrix.knowledge.EpistemicNecessityServedTest" time="2.261"/>
+  <testcase name="the durable lifecycle: a retirement survives a restart, prevents the stale selection, keeps the historical evidence, and the competence can be revalidated" classname="io.matrix.knowledge.EpistemicNecessityServedTest" time="0.608"/>
+  <testcase name="the retained evidence carries every per-case row and the summary, and the manifest verifies the directory" classname="io.matrix.knowledge.EpistemicNecessityServedTest" time="4.061"/>
+  <testcase name="after a restart the EXACT REVISED procedure serves a DIFFERENT task, the retired one is not offered to the selector, and the user-observable outcome is kept apart from any generalisation claim" classname="io.matrix.knowledge.EpistemicNecessityServedTest" time="0.878"/>
+  <testcase name="the case set is SIX INDEPENDENT authors' work, the slices are disjoint, the nine conditions are covered, and every proposition is a sentence of the corpus" classname="io.matrix.knowledge.EpistemicNecessityServedTest" time="0.644"/>
+  <testcase name="the two rules are measured on IDENTICAL inputs, and the confusion matrix carries every denominator — including the cells that have none" classname="io.matrix.knowledge.EpistemicNecessityServedTest" time="5.355"/>
+  <testcase name="the journey's acquisition metadata is REQUEST-LOCAL: one journey never sees another's, and the resource keeps nothing between requests" classname="io.matrix.knowledge.EpistemicNecessityServedTest" time="0.427"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

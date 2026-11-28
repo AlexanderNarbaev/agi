@@ -1,0 +1,101 @@
+{
+  "assignment": "A2",
+  "domain": "wbe",
+  "author": "the DSH case-author subagent for assignment A2",
+  "independence": "the author read ONLY the case contract, the four corpus documents of the wbe domain, the output TEMPLATE and the checker; no implementation, no instrument, no previous case set, no pre-registration",
+  "cases": [
+    {
+      "id": "EN-WBE-A2-1",
+      "domain": "wbe",
+      "slice": "PROPOSAL",
+      "condition": "CONTRADICTION",
+      "level": "INTERMEDIATE",
+      "question": "Our turbines stand at an exposed coastal site and the leading edge of the blade is wearing away fast — does the size of the rain drops matter for how quickly that erosion happens?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-a-erosion.md",
+          "proposition": "The size of the rain drops changes the erosion rate of a wind-turbine blade at an exposed coastal site."
+        },
+        {
+          "corpusFile": "wbe-c-coatings.md",
+          "proposition": "The size of the rain drops does not change the erosion rate of a wind-turbine blade at an exposed coastal site."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": ["ANSWERED", "QUALIFIED", "ABSTAINED"],
+      "corroboration": "NONE",
+      "contradiction": "wbe-a-erosion.md states 'The size of the rain drops changes the erosion rate of a wind-turbine blade at an exposed coastal site.' and wbe-c-coatings.md states 'The size of the rain drops does not change the erosion rate of a wind-turbine blade at an exposed coastal site.' — the same fact, about the same kind of site, with opposite polarity.",
+      "note": "The corpus holds a literal contradiction here, not merely a tension, so the conflict is not manufactured: the two sentences make the same claim about the same site and one of them is the plain negation of the other. Both are therefore necessary — drop the first and the answer can no longer state the conflict, drop the second and the same — and a correct answer has to carry the conflict: it may report that the corpus says both things, qualify its answer by the conflict, or abstain; what is not correct is an ANSWERED that silently takes one side, because its evidence then carries only half of the necessary set, which is why three dispositions are allowed here. The sentence the wording of the question points most directly at is the general one in wbe-a-erosion.md — 'The erosion rate of a wind-turbine blade depends on the wind speed and on the size of the rain drops that strike it.' — but it settles nothing about the coastal site, so it is neither necessary nor corroborating; no third corpus sentence corroborates the two sides, because the corpus holds no third statement about the rain drops at a coastal site."
+    },
+    {
+      "id": "EN-WBE-A2-2",
+      "domain": "wbe",
+      "slice": "EVALUATION",
+      "condition": "SUPERSESSION",
+      "level": "INTERMEDIATE",
+      "question": "We fitted a polyurethane coating to the leading edges of the blades that work in sea spray, and the last inspection found a crack in one of them — does that coating still do its job?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-c-coatings.md",
+          "proposition": "A coating of polyurethane reduces the erosion rate of the leading edge of a wind-turbine blade in sea spray."
+        },
+        {
+          "corpusFile": "wbe-c-coatings.md",
+          "proposition": "The erosion rate of a coated blade becomes higher than the rate of an uncoated blade when the coating has a crack."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": ["ANSWERED", "QUALIFIED"],
+      "corroboration": "wbe-c-coatings.md's sentence 'A crack in a coating causes sea spray to reach the metal of the wind-turbine blade under that coating.' corroborates the governing sentence by giving the mechanism that turns a cracked coating into a liability.",
+      "contradiction": "NONE",
+      "note": "The corpus carries this question's evidence in two forms: the general statement 'A coating of polyurethane reduces the erosion rate of the leading edge of a wind-turbine blade in sea spray.' and a later, narrower statement that corrects it — 'The erosion rate of a coated blade becomes higher than the rate of an uncoated blade when the coating has a crack.' The later sentence governs, because it is the one that applies to the cracked coating the question is about, and the general statement is still needed because the question asks whether the coating is doing its job, which presumes what the coating is for; drop the general statement and the answer says only that a cracked coating is worse than no coating at all, drop the governing sentence and the answer says the coating protects while the corpus says the opposite for the cracked case. The generic protective sentence in wbe-a-erosion.md — 'A protective coating over the leading edge of a wind-turbine blade reduces the erosion rate of that edge.' — is a weaker third version of the general claim and is not needed once the polyurethane sentence is used. ANSWERED and QUALIFIED are both honest here because the condition is part of the answer itself, while a plain abstention is not, since the corpus does settle the case for a cracked coating."
+    },
+    {
+      "id": "EN-WBE-A2-3",
+      "domain": "wbe",
+      "slice": "EVALUATION",
+      "condition": "CHANGED_BINDINGS",
+      "level": "INTRODUCTORY",
+      "question": "The leading edge of one of our blades has gone rough after erosion — how does that affect the lift that blade makes?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-d-aerodynamics.md",
+          "proposition": "An erosion pit on a wind-turbine blade increases the roughness of that blade and reduces its lift in the same operation."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": ["ANSWERED", "QUALIFIED"],
+      "corroboration": "wbe-d-aerodynamics.md's sentence 'The lift of a wind-turbine blade decreases as the roughness of its leading edge increases.' corroborates the lift half of the erosion-pit sentence.",
+      "contradiction": "NONE",
+      "note": "The question's terms are shared by two sentences of the same file, wbe-d-aerodynamics.md: 'The lift of a wind-turbine blade decreases as the roughness of its leading edge increases.' and 'An erosion pit on a wind-turbine blade increases the roughness of that blade and reduces its lift in the same operation.' Each takes a different two of the question's terms — roughness, leading edge and lift against erosion pit, roughness and lift — so which of the two the question binds to is decided by the state of the workspace rather than by the wording, which is what makes this a changed binding rather than an ordinary lookup. The necessary evidence is the erosion-pit sentence, because only it carries the link from the pit to the roughness: an answer built on the general law alone would state that a rougher leading edge loses lift but would never say that the pit itself makes the surface rough, which is what the question is about, so the general law is named as corroboration rather than as a second necessary sentence. The corpus holds no third sentence about the lift of an eroded leading edge, so there is nothing else the question could bind to."
+    },
+    {
+      "id": "EN-WBE-A2-4",
+      "domain": "wbe",
+      "slice": "VALIDATION",
+      "condition": "AMBIGUITY",
+      "level": "INTRODUCTORY",
+      "question": "We had a repair done on the leading edge of a blade that was eroding badly — what actually goes into a repair like that?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-b-inspection.md",
+          "proposition": "A repair of a wind-turbine blade uses a filler material to restore the shape of the leading edge."
+        },
+        {
+          "corpusFile": "wbe-c-coatings.md",
+          "proposition": "A repair of a damaged coating requires the removal of the loose coating and the application of a fresh layer."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": ["ANSWERED", "QUALIFIED", "ABSTAINED"],
+      "corroboration": "wbe-d-aerodynamics.md's sentence 'The lift of a repaired wind-turbine blade becomes close to the lift of a new blade when the repair restores the shape of the leading edge.' corroborates the blade-repair reading by stating what restoring the leading-edge shape buys.",
+      "contradiction": "NONE",
+      "note": "The corpus uses a repair for two different things and the question does not say which one is meant: 'A repair of a wind-turbine blade uses a filler material to restore the shape of the leading edge.' and 'A repair of a damaged coating requires the removal of the loose coating and the application of a fresh layer.' Both readings sit on the leading edge, since the protective coating is applied over it, so the wording cannot decide between them, and both sentences are necessary: drop the blade sentence and only the coating reading survives, drop the coating sentence and only the blade repair survives. An answer that names one reading and ignores the other has picked a side the corpus does not settle, so the correct answer carries both readings, or qualifies which one it is answering, or asks the asker which repair is meant, which is why all three dispositions are allowed. The sentence in wbe-d-aerodynamics.md about the lift of a repaired blade is named as corroboration because it speaks only to the blade-repair reading and does not resolve the ambiguity."
+    }
+  ],
+  "notes": "Scope of reading: only the case contract, the four corpus documents of the wbe domain, the output TEMPLATE and the checker were opened. Nothing under matrix-core/src/main, matrix-core/src/test/java, docs-v2/governance, docs-v2/research, .git or wal was opened, and neither the previous milestone's case set nor the pre-registration and milestone documents were opened. The corpus itself lives under matrix-core/src/test/resources/crj01-reach/wbe/, which the contract section 2 and the assignment both require; no other file under matrix-core/src was read. One constraint cannot be satisfied inside this file and is recorded here for the milestone: the contract section 8 asks that an EVALUATION case carries one of LOWER_RANKED_NECESSARY, JOINTLY_NECESSARY or ALTERNATIVE_SUFFICIENT, but assignment A2 is required to carry exactly CONTRADICTION, SUPERSESSION, CHANGED_BINDINGS and AMBIGUITY and a case may carry only one condition, so that rule is a milestone-level rule satisfied by A1 and A3 and is unreachable for A2; the checker applies that rule only to the assignments whose condition set contains one of those three conditions, so no A2 file can satisfy it. The two checker defects recorded in the first round are gone: the sentence extractor of scripts/necessity-case-check.py now splits a corpus document on the blank-line pattern (line 73) and the EVALUATION-condition rule is scoped to the assignments that carry one of those three conditions (lines 250 to 261), so the file checks GREEN and every proposition and every corpus sentence quoted in the notes, corroboration and contradiction fields of this file is byte-identical to its corpus sentence; the four necessary sets share no sentence across slices. Revision: the whole-set check of the milestone found twice that the necessary sentence of EN-WBE-A2-3 was also used by a case of the same domain. The case was first re-pointed to a sentence of wbe-b-inspection.md about the severity of an erosion pit (its depth and the width of the material that surrounds it), which the milestone then reported as used by EN-WBE-A1-3, so the case has been re-pointed back to the erosion-pit sentence of wbe-d-aerodynamics.md that it named in the first round, which the milestone reports as free in the wbe domain at the time of this revision. The id, slice, condition, level, question, answerable, allowedDispositions, alternativeSufficientSets and contradiction of the case are unchanged; the necessaryEvidence entry of the case and the corroboration and note fields that quote it were rewritten to match, and the severity sentence is no longer quoted anywhere in this file."
+}

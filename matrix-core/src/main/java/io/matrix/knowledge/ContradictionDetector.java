@@ -146,7 +146,21 @@ public final class ContradictionDetector {
         return false;
     }
 
+    /**
+     * The short hash of a pair of claims.
+     *
+     * <p><b>Why it is not a plain substring.</b> {@link Ids#digest(String)} prints the hash
+     * without padding, so its length varies — a hash whose top nibble is zero is six
+     * characters long, and taking the first eight of it throws. The contradiction detector
+     * crashed on such a pair, and the milestone's own test found it: the defect was latent
+     * and would have surfaced on any pair of claims whose identifiers happened to hash that
+     * way. The prefix is therefore taken safely.</p>
+     *
+     * @param raw the material
+     * @return the short hash
+     */
     private static String shortHash(String raw) {
-        return Ids.digest(raw).substring(0, 8);
+        String digest = Ids.digest(raw);
+        return digest.length() <= 8 ? digest : digest.substring(0, 8);
     }
 }

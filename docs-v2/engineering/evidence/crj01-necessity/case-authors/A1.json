@@ -1,0 +1,104 @@
+{
+  "assignment": "A1",
+  "domain": "wbe",
+  "author": "the DSH case-author subagent for assignment A1",
+  "independence": "the author read ONLY this contract, the output TEMPLATE.json, the checker scripts/necessity-case-check.py (both expressly permitted by contract section 2) and the four corpus files of the assigned domain wbe; no implementation, no instrument, no previous case set, no pre-registration, no milestone document, no governance or research file and no .git content was opened",
+  "cases": [
+    {
+      "id": "EN-WBE-A1-1",
+      "domain": "wbe",
+      "slice": "PROPOSAL",
+      "condition": "LOWER_RANKED_NECESSARY",
+      "level": "INTRODUCTORY",
+      "question": "Rain keeps hammering the leading edges of our blades, but the blade goes on losing material for days after each downpour has passed — what makes the erosion carry on like that?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-a-erosion.md",
+          "proposition": "Erosion pits on a wind-turbine blade act as the starting points for further material loss."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": ["ANSWERED"],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "The wording of the question points most directly at 'Rain that strikes a wind-turbine blade causes the leading edge of that blade to lose material.' — the sentence a reader stops at, and one that is NOT in the necessary set, because the question is not about what starts the loss but about what keeps it going after the rain has stopped. The only sentence in the corpus that says why the damage continues is 'Erosion pits on a wind-turbine blade act as the starting points for further material loss.', and it is reached only indirectly: the question speaks of 'the erosion carry on', while the sentence speaks of erosion pits, starting points and further material loss, none of which the question uses. The set is minimal — the one sentence answers the question alone, and removing it leaves nothing in the corpus that explains continuing loss (the other rain sentences answer what begins the loss, not what sustains it). ANSWERED alone is allowed because the corpus states the fact flatly and there is nothing to hedge about."
+    },
+    {
+      "id": "EN-WBE-A1-2",
+      "domain": "wbe",
+      "slice": "VALIDATION",
+      "condition": "ALTERNATIVE_SUFFICIENT",
+      "level": "INTRODUCTORY",
+      "question": "How can we still measure the condition of a blade's leading edge while the turbine is up and running?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-b-inspection.md",
+          "proposition": "An ultrasonic sensor measures the thickness of the leading edge of a wind-turbine blade without touching that blade."
+        }
+      ],
+      "alternativeSufficientSets": [
+        [
+          {
+            "corpusFile": "wbe-b-inspection.md",
+            "proposition": "A drone that photographs the leading edge of a wind-turbine blade produces images that reveal small erosion pits."
+          },
+          {
+            "corpusFile": "wbe-b-inspection.md",
+            "proposition": "The photographs of a blade inspection reveal an erosion depth of more than two millimetres when the leading edge has lost material."
+          }
+        ]
+      ],
+      "allowedDispositions": ["ANSWERED", "QUALIFIED"],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "The question is answerable by two independent routes in the corpus, and the case measures whether a system recognises the second one instead of insisting on the first. Route one, the necessary set, is the ultrasonic sensor: it measures the leading-edge thickness without touching the blade, which is the minimal route on its own. Route two is the camera route: a drone photographs the leading edge and the images reveal the small erosion pits, and the photographs of the inspection reveal the erosion depth once the leading edge has lost material — two different sentences, disjoint from route one, that together support the same correct answer about measuring the leading edge in service. B1/B3 are an alternative route rather than corroboration of the ultrasonic sentence: they do not state the ultrasonic fact, they replace it. Both ANSWERED and QUALIFIED are allowed because a correct answer may name one route plainly or name one route and note what it does not establish; either way it must carry a whole route."
+    },
+    {
+      "id": "EN-WBE-A1-3",
+      "domain": "wbe",
+      "slice": "EVALUATION",
+      "condition": "JOINTLY_NECESSARY",
+      "level": "INTERMEDIATE",
+      "question": "How does leading-edge erosion end up costing the turbine the power it used to produce?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-b-inspection.md",
+          "proposition": "The severity of an erosion pit depends on its depth and on the width of the material that surrounds it."
+        },
+        {
+          "corpusFile": "wbe-d-aerodynamics.md",
+          "proposition": "The power of a wind-turbine depends on the drag of its blades and on the lift that those blades produce."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": ["ANSWERED", "QUALIFIED"],
+      "corroboration": "'The lift of a wind-turbine blade decreases as the roughness of its leading edge increases.' (wbe-d-aerodynamics.md) — it states the step from the material the leading edge loses to the lift the blade produces, but it mentions neither erosion nor power, so it corroborates the necessary set instead of replacing it.",
+      "contradiction": "NONE",
+      "note": "The necessary set has two sentences and no single one of them carries the answer alone. The first (wbe-b-inspection.md) is the corpus's statement of what the erosion takes off the blade: the severity of an erosion pit depends on its depth and on the width of the material that surrounds it, so the pit deepens and the band of material around it narrows — the leading edge of the blade loses material. The second (wbe-d-aerodynamics.md) is the corpus's statement of where the output comes from: the power of a wind-turbine depends on the drag of its blades and on the lift that those blades produce. Drop the first and the answer reaches only the output half of the chain — it would say that the power follows the drag and the lift of the blades, with nothing saying what the erosion does to the leading edge; drop the second and the answer stops at the damage to the leading edge and never reaches the turbine's power. So the two must travel together, and so must the two documents. The corpus offers no single-sentence shortcut: the sentence about the yearly energy production speaks of energy and of roughness, not of erosion and of power, and no sentence outside wbe-d-aerodynamics.md connects the erosion to the output. QUALIFIED is tolerated because the corpus names both the drag and the lift as the sources of the power while the erosion-side sentence speaks only of the material the pits consume, so an answer may state the chain and note that it runs through the lift rather than through the drag."
+    },
+    {
+      "id": "EN-WBE-A1-4",
+      "domain": "wbe",
+      "slice": "EVALUATION",
+      "condition": "MISSING_PREREQUISITE",
+      "level": "INTERMEDIATE",
+      "question": "How long will the leading-edge coating last on a turbine that works in sea spray before it has to be renewed?",
+      "answerable": false,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-c-coatings.md",
+          "proposition": "The service life of a coating depends on the thickness of that coating and on the number of erosion pits that reach it."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": ["QUALIFIED", "ABSTAINED"],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "The corpus carries only the two drivers of a coating's service life — 'The service life of a coating depends on the thickness of that coating and on the number of erosion pits that reach it.' — and no sentence in any of the four files states the service life itself, the rate at which pits reach the coating, or any relation from a thickness to a time in service. The proposition the question needs is therefore a service-life fact that the corpus does not contain, not a paraphrase that has not been found: the workspace cannot carry the whole answer. A correct answer therefore states what the corpus gives and says that the duration itself is not settled (QUALIFIED), or declines to give a duration (ABSTAINED); ANSWERED is not allowed and answerable is false. The sentences about polyurethane and sea spray do not help here, because they concern the erosion rate and not the life of the coating."
+    }
+  ],
+  "notes": "The author read only: docs-v2/engineering/CRJ-01-NECESSITY-CASE-CONTRACT.md, docs-v2/engineering/evidence/crj01-necessity/case-authors/TEMPLATE.json, scripts/necessity-case-check.py (explicitly permitted by contract section 2), and the four corpus files matrix-core/src/test/resources/crj01-reach/wbe/*.md. Nothing under matrix-core/src/main, matrix-core/src/test/java, docs-v2/engineering/CRJ-01-REACH-DEV-CASES.json, scripts/reach-cases.py, CRJ-01-COMPETENCE-REACH.md, CRJ-01-REACH-PREREGISTRATION.md, docs-v2/engineering/evidence/crj01-reach/, docs-v2/governance/, docs-v2/research/, wal/ or .git/ was opened; no rule about the comparison was sought or guessed. Sentence budget, so that the reviewer can check the slices at a glance: PROPOSAL uses wbe-a-erosion.md 'Erosion pits ... further material loss.'; VALIDATION uses wbe-b-inspection.md 'An ultrasonic sensor ...' with the alternative set 'A drone that photographs ...' + 'The photographs of a blade inspection ...'; EVALUATION uses wbe-b-inspection.md 'The severity of an erosion pit ...' + wbe-d-aerodynamics.md 'The power of a wind-turbine ...' and wbe-c-coatings.md 'The service life of a coating ...'. No sentence is necessary in two slices, and no sentence used as a necessary evidence is repeated in the alternative set of another case. Deliberately left untouched: the two coastal rain-drop sentences of wbe-a-erosion.md and wbe-c-coatings.md, which state opposite things about the same fact — that conflict is not one of this assignment's four conditions, and this assignment has no contradiction case to claim it. The checker file changed between the author's first read and the verification run (its splitter moved from a literal str.split to re.split on a blank line); the author did not edit the checker and did not modify any pre-existing file. REVISION (follow-up round): the necessary sentence of EN-WBE-A1-3 was replaced, because 'An erosion pit on a wind-turbine blade increases the roughness of that blade and reduces its lift in the same operation.' (wbe-d-aerodynamics.md) is also the necessary sentence of another case of the wbe domain; it is now 'The severity of an erosion pit depends on its depth and on the width of the material that surrounds it.' (wbe-b-inspection.md), a sentence of the wbe corpus that no other case of the domain uses. The case keeps its id, slice (EVALUATION), condition (JOINTLY_NECESSARY), question, level, answerable, allowedDispositions and empty alternativeSufficientSets, and it still spans two documents (wbe-b-inspection.md + wbe-d-aerodynamics.md), so neither document alone answers the question. The corroborating sentence and the remaining cases are unchanged. The author's access was the same in this round: the contract, the template, the checker and the four corpus files of the domain wbe; no other author's file was opened, and no implementation, instrument, pre-registration, milestone document, governance, research or .git content was read."
+}

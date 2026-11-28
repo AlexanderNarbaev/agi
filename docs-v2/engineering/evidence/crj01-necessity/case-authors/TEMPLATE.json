@@ -1,0 +1,29 @@
+{
+  "assignment": "A1",
+  "domain": "wbe",
+  "author": "the DSH case-author subagent for assignment A1",
+  "independence": "the author read ONLY the case contract and the corpus of the assigned domain; no implementation, no instrument, no previous case set, no pre-registration",
+  "cases": [
+    {
+      "id": "EN-WBE-A1-1",
+      "domain": "wbe",
+      "slice": "EVALUATION",
+      "condition": "LOWER_RANKED_NECESSARY",
+      "level": "INTRODUCTORY",
+      "question": "REPLACE: a natural question whose wording points most directly at a corpus sentence that is NOT necessary, and whose necessary sentence is reached only indirectly",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-a-erosion.md",
+          "proposition": "REPLACE: the corpus sentence VERBATIM"
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": ["ANSWERED"],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "REPLACE: why the necessary sentence is necessary, and what makes this case a LOWER_RANKED_NECESSARY one"
+    }
+  ],
+  "notes": "REPLACE: anything the milestone must know"
+}

@@ -97,6 +97,50 @@ public final class ReportProcedure {
      */
     private static final String KEY_CRITERION = "criterion";
 
+    /**
+     * The version of the definition that names the version it revalidates.
+     *
+     * <p><b>Why a revalidation is a new version.</b> A retired version cannot be re-activated
+     * in place: the store refuses to rewrite a version, and a re-promotion of the <b>same</b>
+     * definition is a no-op — the write is accepted as "the same definition" and dropped, so
+     * the version stays retired. A revalidation that says <i>this definition was checked again,
+     * against these cases, at this time</i> is a <b>different definition</b>, and the store's own
+     * rule says that a different definition carries a different version.</p>
+     */
+    public static final String VERSION_REVALIDATED = "1.2.0";
+
+    /**
+     * The version a revalidation writes.
+     *
+     * <p><b>Why it is derived and not fixed.</b> A fixed version would collide with the
+     * first revalidation the second time it happened: the store refuses to rewrite a
+     * version, so the second revalidation of the same competence would be refused and the
+     * door the retirement opened would close again. The version is therefore derived from
+     * the version being revalidated, by moving its minor number on.</p>
+     *
+     * @param revalidates the version being revalidated
+     * @return the version the revalidation writes
+     */
+    public static String versionForRevalidation(String revalidates) {
+        if (revalidates == null || revalidates.isBlank()) {
+            return VERSION_REVALIDATED;
+        }
+        String[] parts = revalidates.split("\\.");
+        if (parts.length < 2) {
+            return VERSION_REVALIDATED;
+        }
+        int minor = 1;
+        try {
+            minor = Integer.parseInt(parts[1]);
+        } catch (NumberFormatException notANumber) {
+            minor = 1;
+        }
+        return parts[0] + "." + (minor + 1) + "." + (parts.length > 2 ? parts[2] : "0");
+    }
+
+    /** The key the revalidated version is stored under inside the applicability field. */
+    private static final String KEY_REVALIDATED = "revalidated";
+
     /** The separator between the two keys of the applicability field. */
     private static final String SEPARATOR = "|";
 
@@ -212,6 +256,60 @@ public final class ReportProcedure {
             return support;
         }
         return Set.of();
+    }
+
+    /**
+     * The procedure record of a support set that was REVALIDATED after a retirement.
+     *
+     * <p><b>Why the record says which version it revalidates.</b> A retirement is a decision
+     * about one version, and a revalidation is a decision about the competence. The causal link
+     * has to survive: a reader who sees an active version must be able to see the retired
+     * version it replaces and why that version was retired, and the applicability field is the
+     * one place the record already carries such links.</p>
+     *
+     * @param support           the source ids the validation covered
+     * @param domain            the domain's description
+     * @param validationCases   how many held-out cases the agreement was measured over
+     * @param agreement         the measured agreement with the reference
+     * @param learnedInEpisode  the episodes the support set was learned from
+     * @param validationNote    the note that says what the standing rests on
+     * @param promotedAt        the instant the procedure entered the active set
+     * @param criterion         the rule the support set is judged by; null means the incumbent
+     * @param revalidates       the version this record revalidates
+     * @return the record
+     */
+    public static Procedure recordRevalidated(Set<String> support, String domain,
+            int validationCases, double agreement, String learnedInEpisode, String validationNote,
+            String promotedAt, ScopeCriterion criterion, String revalidates) {
+        Procedure base = record(support, domain, validationCases, agreement, learnedInEpisode,
+                validationNote, promotedAt, criterion);
+        String applicability = base.applicability() + SEPARATOR + KEY_REVALIDATED + "="
+                + (revalidates == null ? "" : revalidates);
+        return new Procedure(base.id(), base.name(), base.problemFamily(),
+                versionForRevalidation(revalidates),
+                applicability, base.requiredFacts(), base.referenceAlgorithmId(),
+                base.validationCases(), base.validationAgreement(), base.useCount(),
+                base.failureCount(), promotedAt, null, base.validationKind(), learnedInEpisode,
+                validationNote);
+    }
+
+    /**
+     * The version a procedure record revalidates, or null when it revalidates none.
+     *
+     * @param procedure the procedure
+     * @return the version it revalidates, or null
+     */
+    public static String revalidatesOf(Procedure procedure) {
+        if (procedure == null || procedure.applicability() == null) {
+            return null;
+        }
+        for (String part : procedure.applicability().split("\\" + SEPARATOR)) {
+            if (part.startsWith(KEY_REVALIDATED + "=")) {
+                String value = part.substring((KEY_REVALIDATED + "=").length()).trim();
+                return value.isEmpty() ? null : value;
+            }
+        }
+        return null;
     }
 
     /**
