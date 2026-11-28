@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.matrix.knowledge.EpistemicNecessityRedReproduction" tests="1" skipped="0" failures="1" errors="0" timestamp="2026-11-28T08:03:38.767Z" hostname="alexandr-narbaev-JIAOLONG-Series" time="1.82">
+  <properties/>
+  <testcase name="without the derivation the necessary-prerequisite rule refuses nothing: the missing prerequisite is NOT visible — this assertion is EXPECTED TO FAIL" classname="io.matrix.knowledge.EpistemicNecessityRedReproduction" time="1.811">
+    <failure message="org.opentest4j.AssertionFailedError: [without the derivation the rule refuses the scope (the reason it gives is: the task's necessary evidence was NOT derived, so this rule could not decide and the incumbent's verdict stands: the support set carries the workspace's own evidence for this question: the workspace's reading would cite clm-8822d26b (coverage 0.558) and the support set holds that claim and reaches 0.558)] &#10;Expecting value to be false but was true" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: [without the derivation the rule refuses the scope (the reason it gives is: the task's necessary evidence was NOT derived, so this rule could not decide and the incumbent's verdict stands: the support set carries the workspace's own evidence for this question: the workspace's reading would cite clm-8822d26b (coverage 0.558) and the support set holds that claim and reaches 0.558)] 
+Expecting value to be false but was true
+	at io.matrix.knowledge.EpistemicNecessityRedReproduction.withoutTheDerivationTheMissingPrerequisiteIsNotVisible(EpistemicNecessityRedReproduction.java:187)
+</failure>
+  </testcase>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

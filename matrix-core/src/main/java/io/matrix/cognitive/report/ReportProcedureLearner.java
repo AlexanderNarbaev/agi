@@ -210,6 +210,34 @@ public final class ReportProcedureLearner {
     public Outcome learn(String workspaceId, List<Observation> observations, List<Case> cases,
             Set<String> quarantinedIds, String promotedAt, ScopeStrategy strategy,
             Set<String> declaredScope, ScopeCriterion criterion) {
+        return learn(workspaceId, observations, cases, quarantinedIds, promotedAt, strategy,
+                declaredScope, criterion, null);
+    }
+
+    /**
+     * Learns a procedure from the observed episodes under a named scope strategy, or refuses to
+     * — and the procedure may REVALIDATE a version that was retired.
+     *
+     * <p><b>Why the revalidation is a separate parameter.</b> A retired version cannot be
+     * re-activated in place: the store refuses to rewrite a version, and a re-promotion of the
+     * same definition is dropped as a duplicate. A revalidation therefore writes a <b>new
+     * version</b> that names the version it revalidates, and the retired version stays retired
+     * with its reason and its causal link — so the history is kept and the door is not closed.</p>
+     *
+     * @param workspaceId    the workspace the procedure belongs to
+     * @param observations   the observed, learning-eligible episodes
+     * @param cases          the held-out cases the candidate must survive
+     * @param quarantinedIds the ids of the records that are evaluation traffic; null refuses
+     * @param promotedAt     the instant the procedure entered the active set
+     * @param strategy       how the candidate scope is obtained
+     * @param declaredScope  the documents the competence declares it is about
+     * @param criterion      the rule the support set is judged by at request time
+     * @param revalidates    the version this promotion revalidates, or null for a fresh one
+     * @return the outcome
+     */
+    public Outcome learn(String workspaceId, List<Observation> observations, List<Case> cases,
+            Set<String> quarantinedIds, String promotedAt, ScopeStrategy strategy,
+            Set<String> declaredScope, ScopeCriterion criterion, String revalidates) {
         if (quarantinedIds == null) {
             return new Outcome(false,
                     "the quarantine list is absent, so no record can be admitted to the durable "
@@ -246,12 +274,20 @@ public final class ReportProcedureLearner {
             return new Outcome(false, validation.reason(), null);
         }
 
-        Procedure procedure = ReportProcedure.record(support,
-                "the sources the observed journeys of this workspace drew on",
-                validation.cases(), validation.agreement(), episodeIds(observed),
-                "validated on " + validation.cases() + " held-out case(s) against the reference, "
-                        + "over the support set of " + support.size() + " source(s)", promotedAt,
-                criterion);
+        Procedure procedure = revalidates == null
+                ? ReportProcedure.record(support,
+                        "the sources the observed journeys of this workspace drew on",
+                        validation.cases(), validation.agreement(), episodeIds(observed),
+                        "validated on " + validation.cases() + " held-out case(s) against the "
+                                + "reference, over the support set of " + support.size()
+                                + " source(s)", promotedAt, criterion)
+                : ReportProcedure.recordRevalidated(support,
+                        "the sources the observed journeys of this workspace drew on",
+                        validation.cases(), validation.agreement(), episodeIds(observed),
+                        "revalidated on " + validation.cases() + " held-out case(s) against the "
+                                + "reference, over the support set of " + support.size()
+                                + " source(s), after the retirement of the version "
+                                + revalidates, promotedAt, criterion, revalidates);
         store.recordProcedure(workspaceId, procedure, validation.measuredCostNanos());
         return new Outcome(true, "the candidate agreed with the reference on all "
                 + validation.cases() + " held-out case(s) and was promoted", procedure);

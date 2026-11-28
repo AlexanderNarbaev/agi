@@ -1,0 +1,104 @@
+{
+  "assignment": "A4",
+  "domain": "hpd",
+  "author": "the DSH case-author subagent for assignment A4 (domain hpd)",
+  "independence": "the DSH case-author subagent for assignment A4 read ONLY the case contract (docs-v2/engineering/CRJ-01-NECESSITY-CASE-CONTRACT.md), the TEMPLATE.json beside its output, the checker scripts/necessity-case-check.py (which contract section 2 lists as readable) and the four documents of matrix-core/src/test/resources/crj01-reach/hpd/; no implementation, no instrument, no previous case set, no pre-registration, and no peer case file",
+  "cases": [
+    {
+      "id": "EN-HPD-A4-1",
+      "domain": "hpd",
+      "slice": "PROPOSAL",
+      "condition": "CONTRADICTION",
+      "level": "INTERMEDIATE",
+      "question": "We want the cabinet to check every unit dose against the ward's prescription. Can it confirm the strength of the medicine from the barcode on the dose alone?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "hpd-b-identification.md",
+          "proposition": "The barcode of a medicine provides the identifier of the product and the strength of that medicine."
+        },
+        {
+          "corpusFile": "hpd-c-reconciliation.md",
+          "proposition": "The barcode of a unit dose provides the batch number of that dose but not the strength of the medicine in it."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "QUALIFIED",
+        "ABSTAINED"
+      ],
+      "corroboration": "hpd-b-identification.md also states: 'A mismatch between the strength on a barcode and the strength in a prescription requires a manual check.' That sentence corroborates the identification side of the conflict - it shows the workflow expects the strength to be readable from the barcode - and it is not part of the necessary set.",
+      "contradiction": "hpd-b-identification.md states 'The barcode of a medicine provides the identifier of the product and the strength of that medicine.' and hpd-c-reconciliation.md states 'The barcode of a unit dose provides the batch number of that dose but not the strength of the medicine in it.' The two sentences conflict about the same thing - whether the barcode of the dispensed medicine carries its strength - and the corpus nowhere distinguishes a medicine-level barcode from a unit-dose barcode, so the conflict stands unresolved on the corpus's own terms.",
+      "note": "Both sentences are necessary and neither carries the conflict alone: the identification document says the barcode of the medicine carries its strength, the reconciliation document says the barcode of the unit dose carries the batch number and not the strength. An answer that quotes only one of them has silently picked a side, which is exactly what this condition forbids; the corpus nowhere states that a medicine's barcode and a unit dose's barcode are two different objects, so the conflict cannot be closed from the corpus and a correct answer has to carry it or to abstain. ANSWERED is not allowed here because a flat statement of one side - or even of both sides without saying that they conflict - reads as a settled answer, which this condition forbids. The strength-mismatch sentence of the identification document and the cabinet-checks-the-barcode sentence of the dispensing document are background a reader may add, but neither is needed to carry the conflict, so the necessary set is the two conflicting sentences and nothing else."
+    },
+    {
+      "id": "EN-HPD-A4-2",
+      "domain": "hpd",
+      "slice": "VALIDATION",
+      "condition": "UNANSWERABLE",
+      "level": "INTRODUCTORY",
+      "question": "Does anything in the dispensing workflow check a unit dose's expiry date before that dose leaves the cabinet?",
+      "answerable": false,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "hpd-a-dispensing.md",
+          "proposition": "A picking machine in a hospital pharmacy takes the unit dose from the cabinet and records that removal in the log."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "ABSTAINED"
+      ],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "The corpus says nothing about expiry: no sentence of the four hpd documents mentions a date, a shelf life, an expiry or a dose that has gone off, so the subject of the question is genuinely outside what the corpus holds and the only honest disposition is ABSTAINED. The one sentence listed is the nearest thing the corpus does hold about the picking step, and it is listed precisely because it makes the gap visible: 'A picking machine in a hospital pharmacy takes the unit dose from the cabinet and records that removal in the log.' It fixes what the corpus says happens when a dose leaves the cabinet, and leaves the expiry question with no answer at all - the corpus does not contain the answer, and no sentence of it would let a reader infer one."
+    },
+    {
+      "id": "EN-HPD-A4-3",
+      "domain": "hpd",
+      "slice": "EVALUATION",
+      "condition": "SUPERSESSION",
+      "level": "INTERMEDIATE",
+      "question": "Our labels print the preparation and the amount it carries, yet staff still pick the wrong dose off the shelf. Under what condition does the wording on a label actually become ambiguous?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "hpd-d-labelling.md",
+          "proposition": "The wording of a label becomes ambiguous when the amount is not printed next to its name."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "ANSWERED",
+        "QUALIFIED"
+      ],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "The question's evidence exists in the corpus in two forms and the later one governs. The earlier form is the flat claim 'A printed label states the preparation and the amount that the preparation carries.' The later sentence of the same file qualifies it: 'The wording of a label becomes ambiguous when the amount is not printed next to its name.' That later sentence is the one that governs, and it alone answers the question. An answer that rests only on that earlier general claim would not answer the question at all and would drop the condition the corpus attaches to the label, so the necessary set is the single governing sentence. The earlier statement is deliberately not in the necessary set: the question already puts that general claim in its premise, so it is not evidence for the answer. QUALIFIED is allowed alongside ANSWERED because an honest answer may also say that the corpus's later sentence narrows its earlier, more general statement, and that is a stated limit rather than a different answer."
+    },
+    {
+      "id": "EN-HPD-A4-4",
+      "domain": "hpd",
+      "slice": "EVALUATION",
+      "condition": "CHANGED_BINDINGS",
+      "level": "INTERMEDIATE",
+      "question": "The ward has taken the dose from the pharmacy cabinet. Before it reaches the patient, does anybody still check the dose itself?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "hpd-a-dispensing.md",
+          "proposition": "A unit dose in a hospital pharmacy has a label that the ward checks before the dose reaches the patient."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "ANSWERED",
+        "QUALIFIED"
+      ],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "The question's terms bind to more than one sentence of one file. The necessary sentence is 'A unit dose in a hospital pharmacy has a label that the ward checks before the dose reaches the patient.' The competing sentence sits in the same file, hpd-a-dispensing.md: 'A unit dose that does not match the barcode of its medicine requires a manual check before the ward receives it.' Both are about a check on a unit dose around the handover to the ward and they share the terms unit dose, check and ward, so the wording of the question cannot separate them; only the moment does - before the ward has the dose at all, against before the patient gets it. Which of the two the question binds to therefore depends on the state of the workspace, that is on which of the two sentences the workspace holds and surfaces, and not on the wording alone. The barcode sentence does not answer this question, because its check happens before the ward has the dose and so is not a check on the dose after receipt; only the ward's own check of the label before the dose reaches the patient answers it, which is why the necessary set holds that one sentence alone. QUALIFIED is allowed alongside ANSWERED because an honest answer may add that the pharmacy-side check happens earlier in the chain, which is a stated limit and not a different answer."
+    }
+  ],
+  "notes": "Scope of reading: the author read only docs-v2/engineering/CRJ-01-NECESSITY-CASE-CONTRACT.md, docs-v2/engineering/evidence/crj01-necessity/case-authors/TEMPLATE.json, scripts/necessity-case-check.py (which contract section 2 lists as readable) and the four documents of matrix-core/src/test/resources/crj01-reach/hpd/. No file under matrix-core/src/ was opened except those four corpus documents, which the assignment and the contract name as the corpus of this domain. No forbidden file was opened: not the implementation, not the instruments, not CRJ-01-REACH-DEV-CASES.json, not scripts/reach-cases.py, not CRJ-01-COMPETENCE-REACH.md, not CRJ-01-REACH-PREREGISTRATION.md, not docs-v2/engineering/evidence/crj01-reach/**, not docs-v2/governance/**, not docs-v2/research/**, not .git/. The case-authors directory holds peer files of the other assignments (A1.json, A2.json, A3.json); none of them was opened, since the contract's 'what you may read' table lists no peer case file, and A3.json in particular covers the same domain as this assignment. Contradiction: the corpus of hpd does contain a genuine conflict, so EN-HPD-A4-1 is a contradiction and not a tension. The identification document says the barcode of a medicine carries its identifier and strength; the reconciliation document says the barcode of a unit dose carries the batch number and not the strength. The only reconciliation on offer - treating a medicine's barcode and a unit dose's barcode as two different objects - is nowhere made in the corpus, and the identification document's own strength-mismatch rule presupposes the strength to be on the barcode. Both sentences are therefore in the necessary set of that case, so that a correct answer has to carry the conflict. Changed bindings: inside hpd-a-dispensing.md the terms unit dose, check and ward bind the question of EN-HPD-A4-4 to more than one sentence of that file; the case measures whether the binding follows the workspace state, and the note of that case says plainly which sentence is necessary and why the competitor does not answer the question. Slices and disjointness: the necessary sentences are, for the PROPOSAL case, the barcode-strength sentence of hpd-b-identification.md and the barcode-batch sentence of hpd-c-reconciliation.md; for the VALIDATION case, the picking-machine sentence of hpd-a-dispensing.md; for the two EVALUATION cases, the label-wording sentence of hpd-d-labelling.md and the ward-checks-the-label sentence of hpd-a-dispensing.md. No sentence is necessary in two slices of this assignment. A collision with the sibling assignment A3 (same domain, other author) is possible and is outside this author's control; the milestone checks that across the whole case set. Contract section 8 asks for at least one LOWER_RANKED_NECESSARY, JOINTLY_NECESSARY or ALTERNATIVE_SUFFICIENT case in EVALUATION. Assignment A4 carries none of those conditions, so that requirement does not apply here, and the checker exempts the assignment in the same way. The shape of the necessary set is still visible in this file: EN-HPD-A4-1 has a two-sentence necessary set in which each sentence contributes something the other does not, and EN-HPD-A4-3 has a single-sentence necessary set whose governing sentence replaces an earlier, more general statement of the same corpus."
+}

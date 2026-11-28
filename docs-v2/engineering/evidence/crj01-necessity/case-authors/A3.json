@@ -1,0 +1,109 @@
+{
+  "assignment": "A3",
+  "domain": "hpd",
+  "author": "the DSH case-author subagent for assignment A3",
+  "independence": "the author read ONLY the case contract, the TEMPLATE.json, the four corpus documents of the hpd domain and scripts/necessity-case-check.py; no implementation, no instrument, no previous case set, no pre-registration, no governance or research file",
+  "cases": [
+    {
+      "id": "EN-HPD-A3-1",
+      "domain": "hpd",
+      "slice": "PROPOSAL",
+      "condition": "LOWER_RANKED_NECESSARY",
+      "level": "INTRODUCTORY",
+      "question": "Our cabinet is stocked with the unit doses the wards ask for, and each ward sends us what it needs for the day. Even so, the pharmacy will not release a dose on the strength of that request alone — what has to be on file before a unit dose may be dispensed?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "hpd-a-dispensing.md",
+          "proposition": "The unit-dose dispensing process of a hospital requires a prescription that names the medicine and its dose."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "ANSWERED"
+      ],
+      "corroboration": "A3 corroborates the necessary set: “A barcode on a unit dose of a medicine allows the cabinet to check that medicine against the prescription of the ward.” — the check the cabinet performs presupposes exactly the prescription that the necessary sentence makes a requirement.",
+      "contradiction": "NONE",
+      "note": "LOWER_RANKED_NECESSARY: the wording deliberately repeats the vocabulary of the most direct match — “A dispensing cabinet in a hospital pharmacy stores the unit doses of the medicines that the ward asks for.” — so a reader who stops at that sentence concludes that the ward's request is what the pharmacy works from and never reaches the sentence that actually answers the question. The necessary sentence, “The unit-dose dispensing process of a hospital requires a prescription that names the medicine and its dose.”, is reached only indirectly: the argument that a request is not enough has to be turned into “what does the process require”, and the corpus answers that in other words (“requires”, “prescription that names the medicine and its dose”). The direct match is not needed: it says only what the cabinet stores, not what the process requires, so the necessary set is the single sentence and stays minimal."
+    },
+    {
+      "id": "EN-HPD-A3-2",
+      "domain": "hpd",
+      "slice": "VALIDATION",
+      "condition": "JOINTLY_NECESSARY",
+      "level": "INTERMEDIATE",
+      "question": "After a patient is admitted, our ward hands out medicines at every dosing round. Which document is the authority on what that patient should be getting, and what has that document got to contain?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "hpd-c-reconciliation.md",
+          "proposition": "The record of an admission contains the list of medicines that the ward gives to the patient."
+        },
+        {
+          "corpusFile": "hpd-c-reconciliation.md",
+          "proposition": "The list of medicines at the admission of a patient acts as the reference for every dose that the ward gives later."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "ANSWERED"
+      ],
+      "corroboration": "C5 corroborates the necessary set: “The reconciliation of an admission in a hospital pharmacy reduces the number of medicines that the ward gives without a record.” — it ties the admission record and the list in it to the medicines the ward actually gives.",
+      "contradiction": "NONE",
+      "note": "JOINTLY_NECESSARY: both sentences are needed and neither carries the answer alone. “The record of an admission contains the list of medicines that the ward gives to the patient.” says which document holds the list and what the list is, but says nothing about the list governing the doses the ward gives later. “The list of medicines at the admission of a patient acts as the reference for every dose that the ward gives later.” says the list at the admission is the reference for every later dose, but names no document and does not say where the list is recorded. Drop the first and “which document” is unanswered; drop the second and “what governs the doses afterwards” is unanswered. The two sentences come from one file but contribute different halves of the answer, and neither of them is a necessary sentence of another slice of this assignment."
+    },
+    {
+      "id": "EN-HPD-A3-3",
+      "domain": "hpd",
+      "slice": "EVALUATION",
+      "condition": "ALTERNATIVE_SUFFICIENT",
+      "level": "INTRODUCTORY",
+      "question": "A unit dose is sitting in the cabinet with a label that the label printer produced wrong. What has to happen to that dose before it is allowed to go out to the ward?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "hpd-a-dispensing.md",
+          "proposition": "A unit dose with a label that the printer produced incorrectly requires a manual check before the ward receives it."
+        }
+      ],
+      "alternativeSufficientSets": [
+        [
+          {
+            "corpusFile": "hpd-d-labelling.md",
+            "proposition": "A label that the printer produced incorrectly requires the pharmacist to check it against the prescription."
+          }
+        ]
+      ],
+      "allowedDispositions": [
+        "ANSWERED"
+      ],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "ALTERNATIVE_SUFFICIENT: two routes to the same correct answer, in two different documents. The necessary set is “A unit dose with a label that the printer produced incorrectly requires a manual check before the ward receives it.”, because the question asks about a unit dose in the cabinet and about the moment before the ward receives it, and that sentence says both. The alternative sufficient set is the single sentence “A label that the printer produced incorrectly requires the pharmacist to check it against the prescription.”, which reaches the same correct answer from the labelling document and adds who checks the label and against what. A correct answer may stand on either set; neither of the two sentences is a necessary sentence of another slice of this assignment."
+    },
+    {
+      "id": "EN-HPD-A3-4",
+      "domain": "hpd",
+      "slice": "EVALUATION",
+      "condition": "MISSING_PREREQUISITE",
+      "level": "INTERMEDIATE",
+      "question": "How long does the verification of a single unit dose take at our cabinet, from the moment the technician lifts the dose off the shelf to the moment the ward receives it?",
+      "answerable": false,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "hpd-b-identification.md",
+          "proposition": "The reading of a barcode takes a fraction of a second on a scanner that sits beside the cabinet."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "QUALIFIED",
+        "ABSTAINED"
+      ],
+      "corroboration": "A5 corroborates the necessary set: “A picking machine in a hospital pharmacy takes the unit dose from the cabinet and records that removal in the log.” — the chain between the shelf and the ward has more than one step, so the barcode read cannot be the whole of the time asked about.",
+      "contradiction": "NONE",
+      "note": "MISSING_PREREQUISITE: the corpus carries exactly one duration, “The reading of a barcode takes a fraction of a second on a scanner that sits beside the cabinet.”, and that single sentence is the necessary set, because it is the only timing fact an answer may stand on. The end-to-end time the question asks for needs propositions the corpus does not contain: how long the comparison against the ward's prescription takes, how long the manual check on a mismatch takes, what the ward's own check of the label costs in time, and how those steps compose into a cycle time. The workspace therefore cannot carry the whole answer, and the honest dispositions are QUALIFIED (give the barcode read time and say the rest is not in the workspace) and ABSTAINED. The question also has a second reading that the corpus does support — the time of the barcode read alone — so this case carries an ambiguity shape as well; if the milestone wants the AMBIGUITY slot for A3, it can be re-filed as such with answerable set to true, and the evidence and dispositions would not change."
+    }
+  ],
+  "notes": "Slice and condition coverage: one PROPOSAL, one VALIDATION, two EVALUATION; the four conditions the checker fixes for A3 (LOWER_RANKED_NECESSARY, JOINTLY_NECESSARY, ALTERNATIVE_SUFFICIENT, MISSING_PREREQUISITE); no necessary sentence appears in two slices of this assignment. Two things the milestone must know. (1) The brief for A3 named AMBIGUITY as the fourth condition, but the checker fixes the A3 row to MISSING_PREREQUISITE and rejects any other set with 'the conditions are ...; the assignment must carry ...', so slot four carries MISSING_PREREQUISITE and this file carries no AMBIGUITY case; EN-HPD-A3-4 was written so that it also carries an ambiguity shape (the question has two readings and the corpus supports only one of them), and it can be re-filed as the AMBIGUITY case by changing that one condition value and answerable to true, the evidence and the dispositions staying as they are. (2) The checker I first read (scripts/necessity-case-check.py as of mtime 2026-11-28 06:14) split the corpus with the literal five-character string '\\n\\s*\\n' through str.split; that sequence occurs nowhere in the corpus documents, so its sentence extractor returned zero sentences for all four hpd files and every proposition was rejected with 'the proposition is not a sentence of ... VERBATIM', which made GREEN unreachable for any case file. I did not edit the checker: the file was replaced during my session by a version that splits with re.split(r'\\n\\s*\\n', ...) (mtime 06:19), and against that version the checker prints GREEN for this file. Every proposition here was additionally verified byte-identical to a sentence of the corpus file it names under that regex split. Files read: this contract, the four corpus documents of the hpd domain, TEMPLATE.json and scripts/necessity-case-check.py; no implementation, instrument, previous case set, pre-registration, governance, research or .git file was opened. matrix-core/src/test/resources/crj01-reach/hpd/*.md is read because the brief and the contract name it as the corpus of the domain."
+}

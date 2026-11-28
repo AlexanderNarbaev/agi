@@ -130,6 +130,18 @@ public class ArtifactReportResource {
      */
     public boolean consultRetainedTrace = true;
 
+    /**
+     * The methods the last request offered to the planner.
+     *
+     * <p><b>Why the route remembers them.</b> A method that was refused carries a diagnosis — why
+     * it was refused, and, when the refusal was for a missing prerequisite, the bounded request
+     * for the evidence that would settle it. The route already writes that diagnosis into the
+     * journey's own record; keeping the offered methods as well lets a caller read the
+     * <b>typed</b> record itself, and not only its sentence.</p>
+     *
+     * <p>The list is empty before the first request.</p>
+     */
+
     /** The JSON the response is written in, and the retained response is kept in. */
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -275,8 +287,13 @@ public class ArtifactReportResource {
      */
     public JourneyResult journey(String workspaceId, ReportRequest request,
             String forcedMethodId) {
-        Response response = run(workspaceId, request, forcedMethodId);
-        return new JourneyResult(response, outcomeOf(workspaceId, request, response));
+        // THE COLLECTOR — a request-local list. The acquisition metadata a journey produces
+        // belongs to THAT journey: the resource keeps no state between requests, so one
+        // journey can never see another's acquisition requests.
+        List<EvidenceAcquisitionRequest> acquisitions = new ArrayList<>();
+        Response response = run(workspaceId, request, forcedMethodId, acquisitions);
+        return new JourneyResult(response, outcomeOf(workspaceId, request, response),
+                List.copyOf(acquisitions));
     }
 
     /**
@@ -288,6 +305,21 @@ public class ArtifactReportResource {
      * @return the response
      */
     private Response run(String workspaceId, ReportRequest request, String forcedMethodId) {
+        return run(workspaceId, request, forcedMethodId, new ArrayList<>());
+    }
+
+    /**
+     * The journey, as the serving path and the counterfactual both run it, collecting the
+     * typed acquisition metadata the journey produced.
+     *
+     * @param workspaceId the workspace the question is addressed to
+     * @param request the request
+     * @param forcedMethodId the method that must run, or null to let the evidence choose
+     * @param acquisitions the collector the journey's acquisition requests go into
+     * @return the response
+     */
+    private Response run(String workspaceId, ReportRequest request, String forcedMethodId,
+            List<EvidenceAcquisitionRequest> acquisitions) {
         if (request == null || request.question() == null || request.question().isBlank()) {
             return refused(400, "question_required", "a question is required");
         }
@@ -378,6 +410,11 @@ public class ArtifactReportResource {
                 facts, budget);
         List<ReportJourneyPlanner.JourneyMethod> offered = procedureMethods(workspaceId, procedures);
         ReportJourneyPlanner.Plan plan = planner.plan(planRequest, forcedMethodId, offered);
+        // THE TYPED ACQUISITION METADATA THIS JOURNEY PRODUCED. The planner has just asked
+        // every offered procedure whether its preconditions hold, and a procedure that
+        // refuses for a MISSING PREREQUISITE says what it needs and through which authorised
+        // channel. That is the journey's own metadata and it travels with the journey.
+        collectAcquisitions(acquisitions, offered);
         if (plan.refused()) {
             return refused(422, "no_method_for_request", plan.reason());
         }
@@ -577,7 +614,23 @@ public class ArtifactReportResource {
      * @param response the response the caller received
      * @param outcome what the journey produced
      */
-    public record JourneyResult(Response response, ReportJourneyOutcome outcome) {
+    public record JourneyResult(Response response, ReportJourneyOutcome outcome,
+            List<EvidenceAcquisitionRequest> acquisitionRequests) {
+
+        /**
+         * The result of a journey that produced no acquisition metadata.
+         *
+         * @param response the response the journey served
+         * @param outcome what the journey produced
+         */
+        public JourneyResult(Response response, ReportJourneyOutcome outcome) {
+            this(response, outcome, List.of());
+        }
+
+        public JourneyResult {
+            acquisitionRequests = List.copyOf(
+                    acquisitionRequests == null ? List.of() : acquisitionRequests);
+        }
     }
 
     /**
@@ -626,8 +679,55 @@ public class ArtifactReportResource {
                             + "question but was not selected: " + assessment.reason()
                     : "the procedure " + procedure.procedureId() + " was not applicable to "
                             + "this question: " + assessment.reason());
+            // THE MISSING PREREQUISITE, AS A BOUNDED REQUEST. The refusal says that the
+            // scope does not carry the evidence the task needs; the request says WHAT is
+            // missing and through WHICH authorised channel it may arrive. A reader who only
+            // has the refusal has nothing to do about it.
+            EvidenceAcquisitionRequest acquisition = procedure.lastAcquisitionRequest();
+            if (acquisition != null) {
+                notes.add("the procedure " + procedure.procedureId() + " asked for the evidence "
+                        + "this question needs: " + acquisition.summary());
+            }
         }
         return notes;
+    }
+
+    /**
+     * The typed acquisition metadata the offered procedures produced.
+     *
+     * <p><b>Why this is a collector and not a field.</b> The first version of the journey's
+     * acquisition metadata lived in a <b>field of the resource</b> — the last request's
+     * offered methods, workspace method objects and all. The resource is long-lived and the
+     * methods carry per-request state, so that field was a channel between requests: one
+     * journey could read another's methods, and one journey's acquisition request could be
+     * handed to the next. The coordinator's acceptance found it. The metadata is now
+     * <b>request-local</b>: the journey collects it while it runs and carries it in its
+     * result, and the resource keeps nothing.</p>
+     *
+     * @param acquisitions the collector
+     * @param methods the methods this journey offered
+     */
+    private void collectAcquisitions(List<EvidenceAcquisitionRequest> acquisitions,
+            List<ReportJourneyPlanner.JourneyMethod> methods) {
+        for (ReportJourneyPlanner.JourneyMethod method : methods) {
+            if (!(method instanceof ReportProcedureMethod procedure)) {
+                continue;
+            }
+            EvidenceAcquisitionRequest request = procedure.lastAcquisitionRequest();
+            if (request == null) {
+                continue;
+            }
+            boolean already = false;
+            for (EvidenceAcquisitionRequest collected : acquisitions) {
+                if (collected.requestId().equals(request.requestId())) {
+                    already = true;
+                    break;
+                }
+            }
+            if (!already) {
+                acquisitions.add(request);
+            }
+        }
     }
 
     /**

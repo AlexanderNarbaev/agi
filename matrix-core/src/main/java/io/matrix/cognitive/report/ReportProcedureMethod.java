@@ -9,6 +9,9 @@ import io.matrix.cognitive.algorithms.ProcedureBacked;
 import io.matrix.knowledge.AbstractionLevel;
 import io.matrix.knowledge.Answer;
 import io.matrix.knowledge.Claim;
+import io.matrix.knowledge.EvidenceAcquisition;
+import io.matrix.knowledge.EvidenceAcquisitionRequest;
+import io.matrix.knowledge.PrerequisiteAssessment;
 import io.matrix.knowledge.ScopeAssessment;
 import io.matrix.knowledge.Source;
 import io.matrix.knowledge.SupportAdequacy;
@@ -79,6 +82,12 @@ public final class ReportProcedureMethod
     /** The reason of the last refusal, when the method was refused. */
     private String lastRefusal;
     private String adequacyKey;
+
+    /**
+     * The acquisition request the last refusal carried, when the refusal was for a missing
+     * prerequisite.
+     */
+    private io.matrix.knowledge.EvidenceAcquisitionRequest acquisition;
 
     /**
      * @param procedure the validated procedure this method replays
@@ -231,6 +240,10 @@ public final class ReportProcedureMethod
      */
     private String refusalOf(ReportJourney.Problem input) {
         lastRefusal = null;
+        // THE REQUEST OF THE LAST REFUSAL — and of no other. A successful run clears it, so
+        // a reader who asks the method for the request it produced is never handed the
+        // request of an earlier refusal. The independent reviewer found that it could be.
+        acquisition = null;
         if (input == null) {
             return "the request is empty";
         }
@@ -260,9 +273,43 @@ public final class ReportProcedureMethod
         // and the reference method answers instead.
         SupportAdequacy assessment = adequacyOf(input);
         if (!assessment.applicable()) {
+            rememberAcquisition(input, assessment);
             return remember(assessment.reason());
         }
         return null;
+    }
+
+    /**
+     * Builds the acquisition request a refusal for a missing prerequisite carries.
+     *
+     * <p><b>Why a refusal carries a request.</b> The refusal says that the scope does not
+     * carry the evidence the task needs. A reader who only has the refusal has nothing to do
+     * about it, so the method also names <b>what</b> is missing and <b>through which
+     * authorised channel</b> it may be obtained: the evidence is in the workspace, and a wider
+     * scope has to be <b>learned and validated</b> before it may be served — a scope that was
+     * simply widened would be a competence nobody checked.</p>
+     *
+     * <p>A refusal for any other reason — the support set is gone, the procedure was
+     * invalidated — carries <b>no</b> request: there is nothing to acquire, and a request that
+     * named nothing would be a form that asks for nothing.</p>
+     *
+     * @param input      the request
+     * @param assessment the scope assessment the refusal was made from
+     */
+    private void rememberAcquisition(ReportJourney.Problem input, SupportAdequacy assessment) {
+        acquisition = null;
+        ScopeAssessment scope = lastScopeAssessment();
+        if (scope == null || scope.taskPrerequisites() == null
+                || scope.taskPrerequisites().necessary().isEmpty()) {
+            return;
+        }
+        PrerequisiteAssessment prerequisites = PrerequisiteAssessment.of(
+                scope.taskPrerequisites(), support);
+        if (prerequisites.satisfied() || prerequisites.missing().isEmpty()) {
+            return;
+        }
+        acquisition = EvidenceAcquisition.forMissingEvidence(input.workspaceId(), procedure.id(),
+                input.question(), input.level().name(), prerequisites.missing());
     }
 
     /**
@@ -289,6 +336,20 @@ public final class ReportProcedureMethod
      */
     public String lastRefusalReason() {
         return lastRefusal;
+    }
+
+    /**
+     * The acquisition request the last refusal carried.
+     *
+     * <p>It is <b>null</b> when the refusal was not for a missing prerequisite — a support set
+     * that is gone, or a procedure that was invalidated, is not something one acquires — and
+     * it is the request that names what is missing and the authorised channel it may arrive
+     * through.</p>
+     *
+     * @return the request, or null when the last refusal carried none
+     */
+    public io.matrix.knowledge.EvidenceAcquisitionRequest lastAcquisitionRequest() {
+        return acquisition;
     }
 
     /**

@@ -28,6 +28,8 @@ import java.util.List;
  * @param supportCitedIds    the claims the scope's reading would cite
  * @param workspaceCitedIds  the claims the workspace's reading would cite
  * @param missingClaimIds    the cited claims the scope does not carry
+ * @param taskPrerequisites  the task's derived necessary evidence, or null when the rule that
+ *                           was applied does not need it
  */
 public record ScopeAssessment(
         boolean applicable,
@@ -39,7 +41,8 @@ public record ScopeAssessment(
         List<String> supportClaimIds,
         List<String> supportCitedIds,
         List<String> workspaceCitedIds,
-        List<String> missingClaimIds) {
+        List<String> missingClaimIds,
+        TaskPrerequisites taskPrerequisites) {
 
     public ScopeAssessment {
         supportClaimIds = List.copyOf(supportClaimIds == null ? List.of() : supportClaimIds);
@@ -47,6 +50,38 @@ public record ScopeAssessment(
         workspaceCitedIds =
                 List.copyOf(workspaceCitedIds == null ? List.of() : workspaceCitedIds);
         missingClaimIds = List.copyOf(missingClaimIds == null ? List.of() : missingClaimIds);
+    }
+
+    /**
+     * The assessment of a scope, without derived prerequisites.
+     *
+     * <p>The convenience form is the one the rules that do not need the prerequisites use, and
+     * it keeps the record's shape readable for a caller that only wants the verdict.</p>
+     *
+     * @param applicable          whether the scope may serve the question
+     * @param reason              the sentence a reader can act on
+     * @param criterion           the rule the decision was made by
+     * @param bestClaimId         the claim the unrestricted reading would cite first, or null
+     * @param bestCoverage        the coverage of that claim
+     * @param supportBestCoverage the best coverage the scope carries for the question
+     * @param supportClaimIds     the claims the scope holds
+     * @param supportCitedIds     the claims the scope's reading would cite
+     * @param workspaceCitedIds   the claims the workspace's reading would cite
+     * @param missingClaimIds     the cited claims the scope does not carry
+     */
+    public ScopeAssessment(
+            boolean applicable,
+            String reason,
+            ScopeCriterion criterion,
+            String bestClaimId,
+            double bestCoverage,
+            double supportBestCoverage,
+            List<String> supportClaimIds,
+            List<String> supportCitedIds,
+            List<String> workspaceCitedIds,
+            List<String> missingClaimIds) {
+        this(applicable, reason, criterion, bestClaimId, bestCoverage, supportBestCoverage,
+                supportClaimIds, supportCitedIds, workspaceCitedIds, missingClaimIds, null);
     }
 
     /**

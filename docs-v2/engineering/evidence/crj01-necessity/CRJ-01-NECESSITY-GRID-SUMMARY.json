@@ -1,0 +1,523 @@
+{
+  "cells" : [ {
+    "key" : "rule:ANCHOR",
+    "counts" : {
+      "tp" : 29,
+      "fp" : 19,
+      "tn" : 24,
+      "fn" : 0
+    },
+    "fpr" : {
+      "numerator" : 19,
+      "denominator" : 43,
+      "value" : 0.4419,
+      "label" : "FP/(FP+TN)"
+    },
+    "fnr" : {
+      "numerator" : 0,
+      "denominator" : 29,
+      "value" : 0.0,
+      "label" : "FN/(FN+TP)"
+    },
+    "falseDiscovery" : {
+      "numerator" : 19,
+      "denominator" : 48,
+      "value" : 0.3958,
+      "label" : "FP/(TP+FP)"
+    },
+    "falseOmission" : {
+      "numerator" : 0,
+      "denominator" : 24,
+      "value" : 0.0,
+      "label" : "FN/(TN+FN)"
+    }
+  }, {
+    "key" : "rule:NECESSARY_PREREQUISITE",
+    "counts" : {
+      "tp" : 24,
+      "fp" : 9,
+      "tn" : 34,
+      "fn" : 5
+    },
+    "fpr" : {
+      "numerator" : 9,
+      "denominator" : 43,
+      "value" : 0.2093,
+      "label" : "FP/(FP+TN)"
+    },
+    "fnr" : {
+      "numerator" : 5,
+      "denominator" : 29,
+      "value" : 0.1724,
+      "label" : "FN/(FN+TP)"
+    },
+    "falseDiscovery" : {
+      "numerator" : 9,
+      "denominator" : 33,
+      "value" : 0.2727,
+      "label" : "FP/(TP+FP)"
+    },
+    "falseOmission" : {
+      "numerator" : 5,
+      "denominator" : 39,
+      "value" : 0.1282,
+      "label" : "FN/(TN+FN)"
+    }
+  }, {
+    "key" : "ruleAndCaseCondition:ANCHOR|JOINTLY_NECESSARY",
+    "counts" : {
+      "tp" : 0,
+      "fp" : 9,
+      "tn" : 0,
+      "fn" : 0
+    },
+    "fpr" : {
+      "numerator" : 9,
+      "denominator" : 9,
+      "value" : 1.0,
+      "label" : "FP/(FP+TN)"
+    },
+    "fnr" : {
+      "numerator" : 0,
+      "denominator" : 0,
+      "value" : null,
+      "label" : "FN/(FN+TP)"
+    },
+    "falseDiscovery" : {
+      "numerator" : 9,
+      "denominator" : 9,
+      "value" : 1.0,
+      "label" : "FP/(TP+FP)"
+    },
+    "falseOmission" : {
+      "numerator" : 0,
+      "denominator" : 0,
+      "value" : null,
+      "label" : "FN/(TN+FN)"
+    }
+  }, {
+    "key" : "ruleAndCaseCondition:NECESSARY_PREREQUISITE|JOINTLY_NECESSARY",
+    "counts" : {
+      "tp" : 0,
+      "fp" : 0,
+      "tn" : 9,
+      "fn" : 0
+    },
+    "fpr" : {
+      "numerator" : 0,
+      "denominator" : 9,
+      "value" : 0.0,
+      "label" : "FP/(FP+TN)"
+    },
+    "fnr" : {
+      "numerator" : 0,
+      "denominator" : 0,
+      "value" : null,
+      "label" : "FN/(FN+TP)"
+    },
+    "falseDiscovery" : {
+      "numerator" : 0,
+      "denominator" : 0,
+      "value" : null,
+      "label" : "FP/(TP+FP)"
+    },
+    "falseOmission" : {
+      "numerator" : 0,
+      "denominator" : 9,
+      "value" : 0.0,
+      "label" : "FN/(TN+FN)"
+    }
+  }, {
+    "key" : "ruleAndCaseCondition:ANCHOR|MISSING_PREREQUISITE",
+    "counts" : {
+      "tp" : 0,
+      "fp" : 9,
+      "tn" : 9,
+      "fn" : 0
+    },
+    "fpr" : {
+      "numerator" : 9,
+      "denominator" : 18,
+      "value" : 0.5,
+      "label" : "FP/(FP+TN)"
+    },
+    "fnr" : {
+      "numerator" : 0,
+      "denominator" : 0,
+      "value" : null,
+      "label" : "FN/(FN+TP)"
+    },
+    "falseDiscovery" : {
+      "numerator" : 9,
+      "denominator" : 9,
+      "value" : 1.0,
+      "label" : "FP/(TP+FP)"
+    },
+    "falseOmission" : {
+      "numerator" : 0,
+      "denominator" : 9,
+      "value" : 0.0,
+      "label" : "FN/(TN+FN)"
+    }
+  }, {
+    "key" : "ruleAndCaseCondition:NECESSARY_PREREQUISITE|MISSING_PREREQUISITE",
+    "counts" : {
+      "tp" : 0,
+      "fp" : 9,
+      "tn" : 9,
+      "fn" : 0
+    },
+    "fpr" : {
+      "numerator" : 9,
+      "denominator" : 18,
+      "value" : 0.5,
+      "label" : "FP/(FP+TN)"
+    },
+    "fnr" : {
+      "numerator" : 0,
+      "denominator" : 0,
+      "value" : null,
+      "label" : "FN/(FN+TP)"
+    },
+    "falseDiscovery" : {
+      "numerator" : 9,
+      "denominator" : 9,
+      "value" : 1.0,
+      "label" : "FP/(TP+FP)"
+    },
+    "falseOmission" : {
+      "numerator" : 0,
+      "denominator" : 9,
+      "value" : 0.0,
+      "label" : "FN/(TN+FN)"
+    }
+  }, {
+    "key" : "ruleAndCaseCondition:ANCHOR|SUPERSESSION",
+    "counts" : {
+      "tp" : 14,
+      "fp" : 0,
+      "tn" : 4,
+      "fn" : 0
+    },
+    "fpr" : {
+      "numerator" : 0,
+      "denominator" : 4,
+      "value" : 0.0,
+      "label" : "FP/(FP+TN)"
+    },
+    "fnr" : {
+      "numerator" : 0,
+      "denominator" : 14,
+      "value" : 0.0,
+      "label" : "FN/(FN+TP)"
+    },
+    "falseDiscovery" : {
+      "numerator" : 0,
+      "denominator" : 14,
+      "value" : 0.0,
+      "label" : "FP/(TP+FP)"
+    },
+    "falseOmission" : {
+      "numerator" : 0,
+      "denominator" : 4,
+      "value" : 0.0,
+      "label" : "FN/(TN+FN)"
+    }
+  }, {
+    "key" : "ruleAndCaseCondition:NECESSARY_PREREQUISITE|SUPERSESSION",
+    "counts" : {
+      "tp" : 14,
+      "fp" : 0,
+      "tn" : 4,
+      "fn" : 0
+    },
+    "fpr" : {
+      "numerator" : 0,
+      "denominator" : 4,
+      "value" : 0.0,
+      "label" : "FP/(FP+TN)"
+    },
+    "fnr" : {
+      "numerator" : 0,
+      "denominator" : 14,
+      "value" : 0.0,
+      "label" : "FN/(FN+TP)"
+    },
+    "falseDiscovery" : {
+      "numerator" : 0,
+      "denominator" : 14,
+      "value" : 0.0,
+      "label" : "FP/(TP+FP)"
+    },
+    "falseOmission" : {
+      "numerator" : 0,
+      "denominator" : 4,
+      "value" : 0.0,
+      "label" : "FN/(TN+FN)"
+    }
+  }, {
+    "key" : "ruleAndCaseCondition:ANCHOR|CHANGED_BINDINGS",
+    "counts" : {
+      "tp" : 8,
+      "fp" : 0,
+      "tn" : 10,
+      "fn" : 0
+    },
+    "fpr" : {
+      "numerator" : 0,
+      "denominator" : 10,
+      "value" : 0.0,
+      "label" : "FP/(FP+TN)"
+    },
+    "fnr" : {
+      "numerator" : 0,
+      "denominator" : 8,
+      "value" : 0.0,
+      "label" : "FN/(FN+TP)"
+    },
+    "falseDiscovery" : {
+      "numerator" : 0,
+      "denominator" : 8,
+      "value" : 0.0,
+      "label" : "FP/(TP+FP)"
+    },
+    "falseOmission" : {
+      "numerator" : 0,
+      "denominator" : 10,
+      "value" : 0.0,
+      "label" : "FN/(TN+FN)"
+    }
+  }, {
+    "key" : "ruleAndCaseCondition:NECESSARY_PREREQUISITE|CHANGED_BINDINGS",
+    "counts" : {
+      "tp" : 5,
+      "fp" : 0,
+      "tn" : 10,
+      "fn" : 3
+    },
+    "fpr" : {
+      "numerator" : 0,
+      "denominator" : 10,
+      "value" : 0.0,
+      "label" : "FP/(FP+TN)"
+    },
+    "fnr" : {
+      "numerator" : 3,
+      "denominator" : 8,
+      "value" : 0.375,
+      "label" : "FN/(FN+TP)"
+    },
+    "falseDiscovery" : {
+      "numerator" : 0,
+      "denominator" : 5,
+      "value" : 0.0,
+      "label" : "FP/(TP+FP)"
+    },
+    "falseOmission" : {
+      "numerator" : 3,
+      "denominator" : 13,
+      "value" : 0.2308,
+      "label" : "FN/(TN+FN)"
+    }
+  }, {
+    "key" : "ruleAndCaseCondition:ANCHOR|ALTERNATIVE_SUFFICIENT",
+    "counts" : {
+      "tp" : 7,
+      "fp" : 1,
+      "tn" : 1,
+      "fn" : 0
+    },
+    "fpr" : {
+      "numerator" : 1,
+      "denominator" : 2,
+      "value" : 0.5,
+      "label" : "FP/(FP+TN)"
+    },
+    "fnr" : {
+      "numerator" : 0,
+      "denominator" : 7,
+      "value" : 0.0,
+      "label" : "FN/(FN+TP)"
+    },
+    "falseDiscovery" : {
+      "numerator" : 1,
+      "denominator" : 8,
+      "value" : 0.125,
+      "label" : "FP/(TP+FP)"
+    },
+    "falseOmission" : {
+      "numerator" : 0,
+      "denominator" : 1,
+      "value" : 0.0,
+      "label" : "FN/(TN+FN)"
+    }
+  }, {
+    "key" : "ruleAndCaseCondition:NECESSARY_PREREQUISITE|ALTERNATIVE_SUFFICIENT",
+    "counts" : {
+      "tp" : 5,
+      "fp" : 0,
+      "tn" : 2,
+      "fn" : 2
+    },
+    "fpr" : {
+      "numerator" : 0,
+      "denominator" : 2,
+      "value" : 0.0,
+      "label" : "FP/(FP+TN)"
+    },
+    "fnr" : {
+      "numerator" : 2,
+      "denominator" : 7,
+      "value" : 0.2857,
+      "label" : "FN/(FN+TP)"
+    },
+    "falseDiscovery" : {
+      "numerator" : 0,
+      "denominator" : 5,
+      "value" : 0.0,
+      "label" : "FP/(TP+FP)"
+    },
+    "falseOmission" : {
+      "numerator" : 2,
+      "denominator" : 4,
+      "value" : 0.5,
+      "label" : "FN/(TN+FN)"
+    }
+  } ],
+  "differences" : [ {
+    "domain" : "wbe",
+    "condition" : "BASELINE",
+    "strategy" : "CITATION_DERIVED",
+    "caseId" : "EN-WBE-A1-3",
+    "caseCondition" : "JOINTLY_NECESSARY",
+    "anchor" : "ADMIT",
+    "prerequisite" : "REFUSE",
+    "oracleAdequate" : false
+  }, {
+    "domain" : "wbe",
+    "condition" : "BASELINE",
+    "strategy" : "DECLARED",
+    "caseId" : "EN-WBE-A1-3",
+    "caseCondition" : "JOINTLY_NECESSARY",
+    "anchor" : "ADMIT",
+    "prerequisite" : "REFUSE",
+    "oracleAdequate" : false
+  }, {
+    "domain" : "wbe",
+    "condition" : "BASELINE",
+    "strategy" : "EVIDENCE_DERIVED",
+    "caseId" : "EN-WBE-A1-3",
+    "caseCondition" : "JOINTLY_NECESSARY",
+    "anchor" : "ADMIT",
+    "prerequisite" : "REFUSE",
+    "oracleAdequate" : false
+  }, {
+    "domain" : "wbe",
+    "condition" : "CHANGED_BINDINGS",
+    "strategy" : "CITATION_DERIVED",
+    "caseId" : "EN-WBE-A1-3",
+    "caseCondition" : "JOINTLY_NECESSARY",
+    "anchor" : "ADMIT",
+    "prerequisite" : "REFUSE",
+    "oracleAdequate" : false
+  }, {
+    "domain" : "wbe",
+    "condition" : "CHANGED_BINDINGS",
+    "strategy" : "DECLARED",
+    "caseId" : "EN-WBE-A1-3",
+    "caseCondition" : "JOINTLY_NECESSARY",
+    "anchor" : "ADMIT",
+    "prerequisite" : "REFUSE",
+    "oracleAdequate" : false
+  }, {
+    "domain" : "wbe",
+    "condition" : "CHANGED_BINDINGS",
+    "strategy" : "EVIDENCE_DERIVED",
+    "caseId" : "EN-WBE-A1-3",
+    "caseCondition" : "JOINTLY_NECESSARY",
+    "anchor" : "ADMIT",
+    "prerequisite" : "REFUSE",
+    "oracleAdequate" : false
+  }, {
+    "domain" : "wbe",
+    "condition" : "SUPERSEDED",
+    "strategy" : "CITATION_DERIVED",
+    "caseId" : "EN-WBE-A1-3",
+    "caseCondition" : "JOINTLY_NECESSARY",
+    "anchor" : "ADMIT",
+    "prerequisite" : "REFUSE",
+    "oracleAdequate" : false
+  }, {
+    "domain" : "wbe",
+    "condition" : "SUPERSEDED",
+    "strategy" : "DECLARED",
+    "caseId" : "EN-WBE-A1-3",
+    "caseCondition" : "JOINTLY_NECESSARY",
+    "anchor" : "ADMIT",
+    "prerequisite" : "REFUSE",
+    "oracleAdequate" : false
+  }, {
+    "domain" : "wbe",
+    "condition" : "SUPERSEDED",
+    "strategy" : "EVIDENCE_DERIVED",
+    "caseId" : "EN-WBE-A1-3",
+    "caseCondition" : "JOINTLY_NECESSARY",
+    "anchor" : "ADMIT",
+    "prerequisite" : "REFUSE",
+    "oracleAdequate" : false
+  }, {
+    "domain" : "hpd",
+    "condition" : "BASELINE",
+    "strategy" : "DECLARED",
+    "caseId" : "EN-HPD-A3-3",
+    "caseCondition" : "ALTERNATIVE_SUFFICIENT",
+    "anchor" : "ADMIT",
+    "prerequisite" : "REFUSE",
+    "oracleAdequate" : true
+  }, {
+    "domain" : "hpd",
+    "condition" : "BASELINE",
+    "strategy" : "DECLARED",
+    "caseId" : "EN-HPD-A4-4",
+    "caseCondition" : "CHANGED_BINDINGS",
+    "anchor" : "ADMIT",
+    "prerequisite" : "REFUSE",
+    "oracleAdequate" : true
+  }, {
+    "domain" : "hpd",
+    "condition" : "CHANGED_BINDINGS",
+    "strategy" : "DECLARED",
+    "caseId" : "EN-HPD-A3-3",
+    "caseCondition" : "ALTERNATIVE_SUFFICIENT",
+    "anchor" : "ADMIT",
+    "prerequisite" : "REFUSE",
+    "oracleAdequate" : true
+  }, {
+    "domain" : "hpd",
+    "condition" : "CHANGED_BINDINGS",
+    "strategy" : "DECLARED",
+    "caseId" : "EN-HPD-A4-4",
+    "caseCondition" : "CHANGED_BINDINGS",
+    "anchor" : "ADMIT",
+    "prerequisite" : "REFUSE",
+    "oracleAdequate" : true
+  }, {
+    "domain" : "hpd",
+    "condition" : "SUPERSEDED",
+    "strategy" : "DECLARED",
+    "caseId" : "EN-HPD-A3-3",
+    "caseCondition" : "ALTERNATIVE_SUFFICIENT",
+    "anchor" : "ADMIT",
+    "prerequisite" : "REFUSE",
+    "oracleAdequate" : false
+  }, {
+    "domain" : "hpd",
+    "condition" : "SUPERSEDED",
+    "strategy" : "DECLARED",
+    "caseId" : "EN-HPD-A4-4",
+    "caseCondition" : "CHANGED_BINDINGS",
+    "anchor" : "ADMIT",
+    "prerequisite" : "REFUSE",
+    "oracleAdequate" : true
+  } ]
+}

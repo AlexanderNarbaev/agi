@@ -60,7 +60,8 @@ public enum ScopeCriterion {
     ANCHOR {
         @Override
         public Decision judge(KnowledgeRetriever.Relevance workspace,
-                KnowledgeRetriever.Relevance support, double supportBestCoverage, double floor) {
+                KnowledgeRetriever.Relevance support, double supportBestCoverage, double floor,
+                TaskPrerequisites prerequisites, Set<String> scopeSourceIds) {
             String best = workspace.bestClaimId();
             if (best == null) {
                 return Decision.refused("the workspace's own reading of this question reaches no "
@@ -109,7 +110,8 @@ public enum ScopeCriterion {
     CLAIM_SUFFICIENCY {
         @Override
         public Decision judge(KnowledgeRetriever.Relevance workspace,
-                KnowledgeRetriever.Relevance support, double supportBestCoverage, double floor) {
+                KnowledgeRetriever.Relevance support, double supportBestCoverage, double floor,
+                TaskPrerequisites prerequisites, Set<String> scopeSourceIds) {
             List<String> cited = workspace.relevantClaimIds();
             if (cited.isEmpty()) {
                 return Decision.refused("the workspace's own reading of this question reaches no "
@@ -132,6 +134,69 @@ public enum ScopeCriterion {
             return Decision.refused("the support set does not carry every claim the workspace's reading "
                     + "would cite for this question: it is missing " + missing.size() + " of "
                     + cited.size() + " claim(s) (" + String.join(", ", missing) + ")", missing);
+        }
+    },
+
+    /**
+     * The third rule: the scope must carry <b>a sufficient set of the task's necessary
+     * evidence</b>.
+     *
+     * <p><b>What it adds to the second rule.</b> The claim-sufficiency rule demands that the
+     * scope carry <b>every</b> claim the workspace's reading would cite. That is strictly
+     * stronger than it needs to be: a claim the reading cites may be <b>redundant</b> — another
+     * source states the same thing — and a scope that carries the other source already carries
+     * what the task needs. This rule asks the narrower question: which evidence does the task
+     * <b>not do without</b>, and does the scope carry a set that does the job?</p>
+     *
+     * <p><b>Where the necessary evidence comes from.</b> From the workspace itself, by
+     * <b>leave-one-source-out ablation</b> of the workspace's own reading of the task: a source
+     * is necessary when the reading cannot reproduce the answer without it. Nothing here knows a
+     * word, a concept, a domain or an oracle label — the rule compares a derived set of claims
+     * with the claims a scope carries.</p>
+     *
+     * <p><b>Why the set is not stored in the competence.</b> A prerequisite belongs to a
+     * <b>task</b>, not to a competence: the same competence serves many tasks, and what each
+     * task needs is a fact about the task and the workspace as it is now. A rule that used a
+     * stored set would answer a different question — "what did this competence need when it was
+     * promoted" — and would keep answering it after the workspace moved.</p>
+     *
+     * <p><b>What it costs.</b> The derivation reads the workspace's own reading once per
+     * candidate source. The refusal it produces falls back to the reference path, exactly as
+     * the second rule's refusal does.</p>
+     */
+    NECESSARY_PREREQUISITE {
+        @Override
+        public Decision judge(KnowledgeRetriever.Relevance workspace,
+                KnowledgeRetriever.Relevance support, double supportBestCoverage, double floor,
+                TaskPrerequisites prerequisites, Set<String> scopeSourceIds) {
+            if (prerequisites == null || prerequisites.necessary().isEmpty()) {
+                // NO DERIVATION — the rule cannot decide, and it says so instead of silently
+                // answering for another rule. The incumbent's verdict is the only one
+                // available, so it stands, and the reason says which verdict it is.
+                //
+                // This is also the shape of the RED reproduction: with the derivation switched
+                // off, this rule refuses nothing, and the missing prerequisite is not visible.
+                Decision incumbent = ANCHOR.judge(workspace, support, supportBestCoverage, floor,
+                        null, scopeSourceIds);
+                return new Decision(incumbent.applicable(),
+                        "the task's necessary evidence was NOT derived, so this rule could not "
+                                + "decide and the incumbent's verdict stands: "
+                                + incumbent.reason(), incumbent.missingClaimIds());
+            }
+            PrerequisiteAssessment assessment = PrerequisiteAssessment.of(
+                    prerequisites, scopeSourceIds);
+            if (assessment.satisfied()) {
+                return Decision.allowed("the support set carries a sufficient set of the evidence "
+                        + "the task needs: " + assessment.satisfiedBy().size() + " requirement(s) "
+                        + "of the " + prerequisites.necessary().size() + " the workspace's own "
+                        + "reading cannot do without", List.of());
+            }
+            List<String> missing = assessment.missing().stream()
+                    .map(EvidenceRequirement::claimId).toList();
+            return Decision.refused("the support set does not carry a sufficient set of the "
+                    + "evidence the task needs: it is missing " + missing.size() + " requirement(s) "
+                    + "of the " + prerequisites.necessary().size() + " the workspace's own reading "
+                    + "cannot do without (" + String.join(", ", missing) + ")", missing);
         }
     };
 
@@ -170,8 +235,45 @@ public enum ScopeCriterion {
      * @param floor              the coverage floor the readings applied
      * @return the decision
      */
+    public Decision judge(KnowledgeRetriever.Relevance workspace,
+            KnowledgeRetriever.Relevance support, double supportBestCoverage, double floor) {
+        return judge(workspace, support, supportBestCoverage, floor, null, Set.of());
+    }
+
+    /**
+     * Judges a scope against the workspace's own reading of a question, with the task's derived
+     * prerequisites and the scope's own holdings in hand.
+     *
+     * <p>The prerequisites are <b>null</b> for the rules that do not use them, and the rule that
+     * does use them says so in its reason when they are absent — a rule that silently fell back
+     * to another rule would report a verdict it did not make.</p>
+     *
+     * @param workspace          the workspace's own relevance for the question
+     * @param support            the scope's relevance for the same question, over the same
+     *                           statistics and the same bindings
+     * @param supportBestCoverage the best coverage the scope carries for the question
+     * @param floor              the coverage floor the readings applied
+     * @param prerequisites      the task's necessary evidence, or null
+     * @param scopeSourceIds     the sources the scope holds — what the scope CARRIES
+     * @return the decision
+     */
     public abstract Decision judge(KnowledgeRetriever.Relevance workspace,
-            KnowledgeRetriever.Relevance support, double supportBestCoverage, double floor);
+            KnowledgeRetriever.Relevance support, double supportBestCoverage, double floor,
+            TaskPrerequisites prerequisites, Set<String> scopeSourceIds);
+
+    /**
+     * Whether the rule needs the task's derived prerequisites.
+     *
+     * <p><b>Why this is asked before the work is done.</b> The derivation reads the workspace's
+     * own reading once per candidate source. The incumbent rule and the claim-sufficiency rule
+     * do not need it, so it is not paid for when they are the rule that was asked for — the
+     * served path's behaviour and its cost are exactly what they were.</p>
+     *
+     * @return whether the rule needs the prerequisites
+     */
+    public boolean needsPrerequisites() {
+        return this == NECESSARY_PREREQUISITE;
+    }
 
     /**
      * The criterion a name stands for.

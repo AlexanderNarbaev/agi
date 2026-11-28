@@ -99,6 +99,23 @@ public class KnowledgeWorkbench implements AutoCloseable {
      */
     private final Clock clock;
 
+    /**
+     * Whether the task's prerequisites are DERIVED when a rule that needs them is asked.
+     *
+     * <p><b>Why this is an input and not a switch.</b> The RED reproduction has to show that
+     * the refusal comes from the DERIVATION and not from the rule's name, and the first
+     * version of that reproduction turned the derivation off through a <b>mutable static</b> in
+     * production code — a global that any caller could move, and that the served path read.
+     * The coordinator's acceptance found it. The derivation is now an <b>immutable input of
+     * the workbench</b>: the workbench that derives is a different workbench from the one that
+     * does not, and no request can change either. The served path is unchanged — every
+     * workbench the product builds derives.</p>
+     *
+     * <p>The factory that builds a workbench WITHOUT the derivation is <b>package-private</b>,
+     * so only the test that needs the negative control can ask for one.</p>
+     */
+    private final boolean derivationEnabled;
+
     @Inject
     public KnowledgeWorkbench(
             @ConfigProperty(name = "matrix.knowledge.path", defaultValue = "data/knowledge/workbench.sqlite")
@@ -148,6 +165,79 @@ public class KnowledgeWorkbench implements AutoCloseable {
         this.logicPackResource = logicPackResource;
         this.logicAssessmentResource = logicAssessmentResource;
         this.clock = clock == null ? Clock.systemUTC() : clock;
+        this.derivationEnabled = true;
+    }
+
+    /**
+     * The workbench over a store at a chosen path, WITHOUT the task's prerequisites being
+     * derived.
+     *
+     * <p><b>This is the RED reproduction's negative control</b>, and it is package-private on
+     * purpose: only a test in this package can build a workbench that cannot derive. A
+     * workbench that derives is the only kind the product builds.</p>
+     *
+     * @param databasePath the store's file
+     * @param clock the instant the recorded times come from
+     * @return the workbench
+     */
+    static KnowledgeWorkbench atWithoutDerivation(String databasePath, Clock clock) {
+        KnowledgeWorkbench workbench = new KnowledgeWorkbench(databasePath,
+                "knowledge/photosynthesis.pack.json", "knowledge/photosynthesis.assessment.json",
+                "knowledge/photosynthesis.adversarial.json", "knowledge/logic.pack.json",
+                "knowledge/logic.assessment.json", clock);
+        return workbench.withoutDerivation();
+    }
+
+    /**
+     * This workbench, without the derivation of the task's prerequisites.
+     *
+     * @return the workbench
+     */
+    KnowledgeWorkbench withoutDerivation() {
+        return new KnowledgeWorkbench(databasePath, packResource, assessmentResource,
+                adversarialResource, logicPackResource, logicAssessmentResource, clock, false);
+    }
+
+    /**
+     * The workbench over a store at a chosen path and a chosen clock, with the derivation of
+     * the task's prerequisites chosen.
+     *
+     * @param databasePath the store's file
+     * @param packResource the bundled package
+     * @param assessmentResource the bundled assessment
+     * @param adversarialResource the bundled adversarial set
+     * @param logicPackResource the bundled logic package
+     * @param logicAssessmentResource the bundled logic assessment
+     * @param clock the instant the recorded times come from; the system clock
+     *     when null
+     * @param derivationEnabled whether the task's prerequisites are derived
+     */
+    private KnowledgeWorkbench(
+            String databasePath,
+            String packResource,
+            String assessmentResource,
+            String adversarialResource,
+            String logicPackResource,
+            String logicAssessmentResource,
+            Clock clock,
+            boolean derivationEnabled) {
+        this.databasePath = databasePath;
+        this.packResource = packResource;
+        this.assessmentResource = assessmentResource;
+        this.adversarialResource = adversarialResource;
+        this.logicPackResource = logicPackResource;
+        this.logicAssessmentResource = logicAssessmentResource;
+        this.clock = clock == null ? Clock.systemUTC() : clock;
+        this.derivationEnabled = derivationEnabled;
+    }
+
+    /**
+     * Whether the task's prerequisites are derived.
+     *
+     * @return whether the derivation runs
+     */
+    public boolean derivationEnabled() {
+        return derivationEnabled;
     }
 
     /** The workbench over a store at a chosen path, for tests and tools. */
@@ -777,11 +867,54 @@ public class KnowledgeWorkbench implements AutoCloseable {
         //
         // The COMPETITOR holds the same two readings and asks a different question of them:
         // not whether the FIRST cited claim is carried, but whether EVERY cited claim is.
+        //
+        // THE THIRD RULE asks a question of the WORKSPACE rather than of the two readings:
+        // what does this task actually need, and does the support set carry it? Its
+        // prerequisites are DERIVED here — from the workspace's own reading, by ablation —
+        // and the derivation is paid for only when the rule that needs it is the rule that
+        // was asked for, so the incumbent's behaviour and its cost are unchanged.
+        TaskPrerequisites prerequisites = rule.needsPrerequisites() && derivationEnabled
+                ? new TaskPrerequisiteDerivation(this).derive(view, statisticsView, question, level,
+                        historical)
+                : null;
+        Set<String> scopeSources = sourceIds == null || sourceIds.isEmpty()
+                ? restricted.sources().stream().map(Source::id).collect(Collectors.toSet())
+                : sourceIds;
         ScopeCriterion.Decision decision = rule.judge(workspaceRelevance, supportRelevance,
-                supportBest, floor);
+                supportBest, floor, prerequisites, scopeSources);
         return new ScopeAssessment(decision.applicable(), decision.reason(), rule, bestClaimId,
                 bestCoverage, supportBest, supportClaimIds, supportRelevance.relevantClaimIds(),
-                workspaceRelevance.relevantClaimIds(), decision.missingClaimIds());
+                workspaceRelevance.relevantClaimIds(), decision.missingClaimIds(),
+                prerequisites);
+    }
+
+    /**
+     * Derives what a task cannot be done without, from the workspace's own reading of it.
+     *
+     * <p><b>What this is.</b> The evidence a task requires, derived <b>experimentally</b>: by
+     * <b>leave-one-source-out ablation</b> of the workspace's own reading. A source is
+     * necessary when the reading cannot reproduce the answer without it, and a claim of a
+     * necessary source is a requirement when no other necessary source states the same
+     * thing.</p>
+     *
+     * <p><b>What it is not.</b> It is not a relevance ranking, not a confidence number, not a
+     * provenance rule and not an applicability decision. It carries the provenance of every
+     * requirement and never judges a requirement by it, and it says nothing about whether a
+     * competence may serve the task at all.</p>
+     *
+     * @param view        the view the question is asked over
+     * @param statistics  the view whose claims define the relevance statistics; null means the
+     *                    view itself
+     * @param question    the question
+     * @param level       the abstraction level the answer would be asked for
+     * @param historical  whether the reading would be a historical one
+     * @return the task's prerequisites
+     */
+    public synchronized TaskPrerequisites derivePrerequisites(KnowledgeSnapshot view,
+            KnowledgeSnapshot statistics, String question, AbstractionLevel level,
+            boolean historical) {
+        return new TaskPrerequisiteDerivation(this).derive(view, statistics, question, level,
+                historical);
     }
 
     /**
@@ -1794,7 +1927,7 @@ public class KnowledgeWorkbench implements AutoCloseable {
      * @param workspaceId the workspace
      * @return the stored accumulator of each concept that has one
      */
-    private java.util.Map<String, float[]> weakenedBindings(String workspaceId) {
+    java.util.Map<String, float[]> weakenedBindings(String workspaceId) {
         java.util.Map<String, float[]> bindings = new java.util.LinkedHashMap<>();
         for (Concept concept : workspace(workspaceId).concepts()) {
             io.matrix.neuron.HebbianUpdater.State state = store().hebbianState(workspaceId, concept.id());

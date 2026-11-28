@@ -1,0 +1,100 @@
+{
+  "assignment": "A6",
+  "domain": "hpd",
+  "author": "the DSH case-author subagent for assignment A6 (follow-up round)",
+  "independence": "the author read ONLY the case contract, the corpus of the assigned domain (the four hpd documents), the output template and the checker script that the contract lists as readable; no implementation, no instrument, no previous case set, no pre-registration, no other case author's file",
+  "cases": [
+    {
+      "id": "EN-HPD-A6-1",
+      "domain": "hpd",
+      "slice": "VALIDATION",
+      "condition": "LOWER_RANKED_NECESSARY",
+      "level": "INTRODUCTORY",
+      "question": "The pharmacy keeps a log of what leaves the cabinets, and the manager keeps saying it is more than paperwork. What can the pharmacy no longer tell you about its own stock if a dose comes out and the log never mentions it?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "hpd-a-dispensing.md",
+          "proposition": "An unrecorded unit dose in a hospital pharmacy reduces the ability of the pharmacy to account for the medicines in its cabinets."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": ["ANSWERED", "QUALIFIED"],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "The question asks what is LOST, and the wording it uses lands first on the two log sentences of hpd-a-dispensing.md: 'A picking machine in a hospital pharmacy takes the unit dose from the cabinet and records that removal in the log.' and 'The dispensing log of a hospital pharmacy provides the record of every unit dose that left the cabinet.' Both are about the record itself and neither states a consequence, so a reader who stopped at the most direct lexical match would answer 'the pharmacy has a log of every dose that left the cabinet' and never say what the log is worth. The necessary sentence is reached only indirectly, by a paraphrase of 'what can the pharmacy no longer tell you about its own stock' as 'reduces the ability of the pharmacy to account for the medicines in its cabinets'. Remove it and the answer says nothing about the loss, so the set of one is minimal and necessary."
+    },
+    {
+      "id": "EN-HPD-A6-2",
+      "domain": "hpd",
+      "slice": "VALIDATION",
+      "condition": "JOINTLY_NECESSARY",
+      "level": "INTERMEDIATE",
+      "question": "A patient is admitted with a medicine of their own that the ward does not stock. What does the pharmacy have to put in the record of the admission, and what happens to the patient if that never gets done?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "hpd-c-reconciliation.md",
+          "proposition": "A medicine that the patient brought in and that the ward does not hold requires a note in the record of the admission."
+        },
+        {
+          "corpusFile": "hpd-c-reconciliation.md",
+          "proposition": "A missing entry in the record of an admission creates a risk of a duplicate dose."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": ["ANSWERED", "QUALIFIED"],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "Neither sentence carries the answer alone, and each contributes something the other does not. The first is the only statement of the duty itself: a medicine the patient brought in that the ward does not hold requires a note in the record of the admission; without it the answer names a risk but not the act that the pharmacy owes. The second is the only statement of what the risk is: a missing entry in that record creates a risk of a duplicate dose; without it the answer states a piece of paperwork but leaves the patient harm unexplained, and the question's second half unanswered. The corpus holds no single sentence that carries both the duty and the consequence, and the two are not redundant with one another, so the two-sentence set is the minimal necessary one."
+    },
+    {
+      "id": "EN-HPD-A6-3",
+      "domain": "hpd",
+      "slice": "VALIDATION",
+      "condition": "ALTERNATIVE_SUFFICIENT",
+      "level": "INTRODUCTORY",
+      "question": "Two of the ward's preparations have names that are almost identical and the staff keep picking up the wrong one. What on the packaging is meant to stop that?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "hpd-d-labelling.md",
+          "proposition": "Two preparations with close names need a distinct label on every wrapper."
+        }
+      ],
+      "alternativeSufficientSets": [
+        [
+          {
+            "corpusFile": "hpd-d-labelling.md",
+            "proposition": "The colour of a wrapper lets the staff separate one preparation from another."
+          }
+        ]
+      ],
+      "allowedDispositions": ["ANSWERED", "QUALIFIED"],
+      "corroboration": "hpd-d-labelling.md: 'The colour of a wrapper lets the staff separate one preparation from another.' states the packaging feature from the staff's side and corroborates the necessary set on its own.",
+      "contradiction": "NONE",
+      "note": "The answer is the packaging: the wrapper has to make the two preparations tellable apart. Two different sentences carry it, and a correct answer may rest on either. The necessary set I designate is the labelling file's sentence about close names, which states the requirement itself — a distinct label on every wrapper. The alternative sufficient set is the colour sentence, which supports the same answer from the ward's side — the colour of a wrapper lets the staff separate one preparation from another — and therefore carries a correct answer without the designated sentence. The milestone should score an answer resting on either route as carrying the answer; I designate the first because it states what the pharmacy must do, while the second states how the separation works in the ward's hands."
+    },
+    {
+      "id": "EN-HPD-A6-4",
+      "domain": "hpd",
+      "slice": "VALIDATION",
+      "condition": "CHANGED_BINDINGS",
+      "level": "INTERMEDIATE",
+      "question": "The scanner beside the cabinet could not read the barcode on one pack this morning. What happens to that dose?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "hpd-b-identification.md",
+          "proposition": "A scanner that cannot read the barcode of a medicine requires the cabinet to stop and to ask the pharmacist."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": ["ANSWERED", "QUALIFIED"],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "The question's terms are shared with another sentence of the same file, and the wording alone does not separate the two. 'A scanner that cannot read the barcode of a medicine requires the cabinet to stop and to ask the pharmacist.' and 'A medicine with two similar packages requires a check of the barcode before the unit dose leaves the cabinet.' both turn on the barcode, on the cabinet and on the dose that is about to leave it, and the question's wording — the scanner beside the cabinet, the barcode, the dose — matches both. What separates them is the state of the workspace: here the scanner could not read the code, so the unreadable-barcode rule governs and the cabinet must stop and ask the pharmacist, while the look-alike-package rule is the one that is not reached. A reader who matched on the shared vocabulary of barcode, cabinet and dose alone would land on the second sentence and answer that the barcode must be checked, which does not say what happens to a dose whose code cannot be read. The necessary set is the single sentence of the unreadable-barcode rule; it is minimal, because no other sentence of the corpus says what a failing scanner obliges the cabinet to do."
+    }
+  ],
+  "notes": "Follow-up round, domain hpd: all four cases are held-out VALIDATION cases, one per condition (LOWER_RANKED_NECESSARY, JOINTLY_NECESSARY, ALTERNATIVE_SUFFICIENT, CHANGED_BINDINGS), and the four necessary sets are pairwise disjoint. REVISION AFTER THE MILESTONE'S WHOLE-SET CHECK: the milestone reported that three of my necessary sentences were already necessary sentences of first-round hpd cases (the wrongly-printed-label sentence of hpd-a-dispensing.md, the label-ambiguity sentence of hpd-d-labelling.md and the ward-checks-the-label sentence of hpd-a-dispensing.md). EN-HPD-A6-2, EN-HPD-A6-3 and EN-HPD-A6-4 were therefore rewritten on fresh corpus sentences — the medicine-the-patient-brought-in sentence and the missing-entry sentence of hpd-c-reconciliation.md, the close-names sentence of hpd-d-labelling.md, and the unreadable-barcode sentence of hpd-b-identification.md — keeping their ids, their slice and their conditions; EN-HPD-A6-1 is unchanged. The three colliding sentences appear nowhere in this file any more. The current necessary sentences of this assignment, for the milestone's next whole-set check, are: hpd-a-dispensing.md — 'An unrecorded unit dose in a hospital pharmacy reduces the ability of the pharmacy to account for the medicines in its cabinets.'; hpd-c-reconciliation.md — 'A medicine that the patient brought in and that the ward does not hold requires a note in the record of the admission.' and 'A missing entry in the record of an admission creates a risk of a duplicate dose.'; hpd-d-labelling.md — 'Two preparations with close names need a distinct label on every wrapper.'; hpd-b-identification.md — 'A scanner that cannot read the barcode of a medicine requires the cabinet to stop and to ask the pharmacist.' The only sentence named outside a necessary set is the alternative sufficient set of case 3 (hpd-d-labelling.md, the colour of a wrapper), and the only corpus sentences named in case notes are the two log sentences of hpd-a-dispensing.md (case 1, as the direct lexical match) and the look-alike-package sentence of hpd-b-identification.md (case 4, as the shared-term sibling). LIMITATION I could not remove: the whole-domain rule of CRJ-01 section 12 — a necessary sentence of a follow-up case must not be a sentence that another hpd case already uses — still cannot be verified from inside this assignment, because the other case-author files are out of bounds for me and I did not open them; the sentence list above is given so that the milestone can check it in one place, and any collision that remains is mine and should be recorded against A6. FILES READ: docs-v2/engineering/CRJ-01-NECESSITY-CASE-CONTRACT.md; the four corpus documents under matrix-core/src/test/resources/crj01-reach/hpd/; docs-v2/engineering/evidence/crj01-necessity/case-authors/TEMPLATE.json; scripts/necessity-case-check.py (the checker, which the contract lists as readable — read, not modified). I ran `ls` on the case-authors directory to confirm the path and that no A6.json existed; no other author's file (A1-A5) was opened. NOT READ: anything under matrix-core/src/main or matrix-core/src/test/java, CRJ-01-NECESSITY-DEV-CASES.json, scripts/necessity-cases.py, CRJ-01-COMPETENCE-REACH.md, CRJ-01-REACH-PREREGISTRATION.md, CRJ-01-NECESSITY-PREREGISTRATION.md, the crj01-reach evidence, docs-v2/governance, docs-v2/research, .git and wal. No Gradle was run, no existing file was modified, no commit or staging was done, and A6.json is the only file I created."
+}

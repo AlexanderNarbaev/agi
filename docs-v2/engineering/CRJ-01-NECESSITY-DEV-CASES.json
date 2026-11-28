@@ -1,0 +1,787 @@
+{
+  "split": "crj-01-necessity-dev-cases",
+  "version": "1.0",
+  "date": "2026-11-28",
+  "sealed": false,
+  "sealedNote": "the sealed evaluation is NOT EXECUTED; this is a DEV split on synthetic, test-owned data, and the isolation a sealed split needs was not established from this executor",
+  "author": {
+    "role": "six INDEPENDENT DSH case authors, commissioned as separate bounded assignments of four questions each — four in the first round and two in the follow-up round",
+    "independence": "each author read ONLY the case contract and the corpus of its own domain; no implementation, no instrument, no previous case set, no pre-registration and no governance document. The authors did not read each other's files. The case set is therefore NOT the implementer's, and the measurement it supports is a DEV measurement with an independent oracle.",
+    "contract": "docs-v2/engineering/CRJ-01-NECESSITY-CASE-CONTRACT.md",
+    "checker": "scripts/necessity-case-check.py",
+    "assembledBy": "this script; it reads the four authors' files and adds nothing of its own"
+  },
+  "provenance": {
+    "assignments": [
+      {
+        "assignment": "A1",
+        "domain": "wbe",
+        "file": "docs-v2/engineering/evidence/crj01-necessity/case-authors/A1.json",
+        "sha256": "6efeacbaac24c272514a8b1dd43343a7fc79a13954fff94ccde7bc3198597d09",
+        "independence": "the author read ONLY this contract, the output TEMPLATE.json, the checker scripts/necessity-case-check.py (both expressly permitted by contract section 2) and the four corpus files of the assigned domain wbe; no implementation, no instrument, no previous case set, no pre-registration, no milestone document, no governance or research file and no .git content was opened",
+        "notes": "The author read only: docs-v2/engineering/CRJ-01-NECESSITY-CASE-CONTRACT.md, docs-v2/engineering/evidence/crj01-necessity/case-authors/TEMPLATE.json, scripts/necessity-case-check.py (explicitly permitted by contract section 2), and the four corpus files matrix-core/src/test/resources/crj01-reach/wbe/*.md. Nothing under matrix-core/src/main, matrix-core/src/test/java, docs-v2/engineering/CRJ-01-REACH-DEV-CASES.json, scripts/reach-cases.py, CRJ-01-COMPETENCE-REACH.md, CRJ-01-REACH-PREREGISTRATION.md, docs-v2/engineering/evidence/crj01-reach/, docs-v2/governance/, docs-v2/research/, wal/ or .git/ was opened; no rule about the comparison was sought or guessed. Sentence budget, so that the reviewer can check the slices at a glance: PROPOSAL uses wbe-a-erosion.md 'Erosion pits ... further material loss.'; VALIDATION uses wbe-b-inspection.md 'An ultrasonic sensor ...' with the alternative set 'A drone that photographs ...' + 'The photographs of a blade inspection ...'; EVALUATION uses wbe-b-inspection.md 'The severity of an erosion pit ...' + wbe-d-aerodynamics.md 'The power of a wind-turbine ...' and wbe-c-coatings.md 'The service life of a coating ...'. No sentence is necessary in two slices, and no sentence used as a necessary evidence is repeated in the alternative set of another case. Deliberately left untouched: the two coastal rain-drop sentences of wbe-a-erosion.md and wbe-c-coatings.md, which state opposite things about the same fact — that conflict is not one of this assignment's four conditions, and this assignment has no contradiction case to claim it. The checker file changed between the author's first read and the verification run (its splitter moved from a literal str.split to re.split on a blank line); the author did not edit the checker and did not modify any pre-existing file. REVISION (follow-up round): the necessary sentence of EN-WBE-A1-3 was replaced, because 'An erosion pit on a wind-turbine blade increases the roughness of that blade and reduces its lift in the same operation.' (wbe-d-aerodynamics.md) is also the necessary sentence of another case of the wbe domain; it is now 'The severity of an erosion pit depends on its depth and on the width of the material that surrounds it.' (wbe-b-inspection.md), a sentence of the wbe corpus that no other case of the domain uses. The case keeps its id, slice (EVALUATION), condition (JOINTLY_NECESSARY), question, level, answerable, allowedDispositions and empty alternativeSufficientSets, and it still spans two documents (wbe-b-inspection.md + wbe-d-aerodynamics.md), so neither document alone answers the question. The corroborating sentence and the remaining cases are unchanged. The author's access was the same in this round: the contract, the template, the checker and the four corpus files of the domain wbe; no other author's file was opened, and no implementation, instrument, pre-registration, milestone document, governance, research or .git content was read."
+      },
+      {
+        "assignment": "A2",
+        "domain": "wbe",
+        "file": "docs-v2/engineering/evidence/crj01-necessity/case-authors/A2.json",
+        "sha256": "2ca73c22eb63cdfe048782ee340d2da978b1654fc2885a2c18c5eb78992fd6bb",
+        "independence": "the author read ONLY the case contract, the four corpus documents of the wbe domain, the output TEMPLATE and the checker; no implementation, no instrument, no previous case set, no pre-registration",
+        "notes": "Scope of reading: only the case contract, the four corpus documents of the wbe domain, the output TEMPLATE and the checker were opened. Nothing under matrix-core/src/main, matrix-core/src/test/java, docs-v2/governance, docs-v2/research, .git or wal was opened, and neither the previous milestone's case set nor the pre-registration and milestone documents were opened. The corpus itself lives under matrix-core/src/test/resources/crj01-reach/wbe/, which the contract section 2 and the assignment both require; no other file under matrix-core/src was read. One constraint cannot be satisfied inside this file and is recorded here for the milestone: the contract section 8 asks that an EVALUATION case carries one of LOWER_RANKED_NECESSARY, JOINTLY_NECESSARY or ALTERNATIVE_SUFFICIENT, but assignment A2 is required to carry exactly CONTRADICTION, SUPERSESSION, CHANGED_BINDINGS and AMBIGUITY and a case may carry only one condition, so that rule is a milestone-level rule satisfied by A1 and A3 and is unreachable for A2; the checker applies that rule only to the assignments whose condition set contains one of those three conditions, so no A2 file can satisfy it. The two checker defects recorded in the first round are gone: the sentence extractor of scripts/necessity-case-check.py now splits a corpus document on the blank-line pattern (line 73) and the EVALUATION-condition rule is scoped to the assignments that carry one of those three conditions (lines 250 to 261), so the file checks GREEN and every proposition and every corpus sentence quoted in the notes, corroboration and contradiction fields of this file is byte-identical to its corpus sentence; the four necessary sets share no sentence across slices. Revision: the whole-set check of the milestone found twice that the necessary sentence of EN-WBE-A2-3 was also used by a case of the same domain. The case was first re-pointed to a sentence of wbe-b-inspection.md about the severity of an erosion pit (its depth and the width of the material that surrounds it), which the milestone then reported as used by EN-WBE-A1-3, so the case has been re-pointed back to the erosion-pit sentence of wbe-d-aerodynamics.md that it named in the first round, which the milestone reports as free in the wbe domain at the time of this revision. The id, slice, condition, level, question, answerable, allowedDispositions, alternativeSufficientSets and contradiction of the case are unchanged; the necessaryEvidence entry of the case and the corroboration and note fields that quote it were rewritten to match, and the severity sentence is no longer quoted anywhere in this file."
+      },
+      {
+        "assignment": "A3",
+        "domain": "hpd",
+        "file": "docs-v2/engineering/evidence/crj01-necessity/case-authors/A3.json",
+        "sha256": "559b30399e24e16e54421dc3cd4415df2f33fe0038b1a3313020cec2f69f1023",
+        "independence": "the author read ONLY the case contract, the TEMPLATE.json, the four corpus documents of the hpd domain and scripts/necessity-case-check.py; no implementation, no instrument, no previous case set, no pre-registration, no governance or research file",
+        "notes": "Slice and condition coverage: one PROPOSAL, one VALIDATION, two EVALUATION; the four conditions the checker fixes for A3 (LOWER_RANKED_NECESSARY, JOINTLY_NECESSARY, ALTERNATIVE_SUFFICIENT, MISSING_PREREQUISITE); no necessary sentence appears in two slices of this assignment. Two things the milestone must know. (1) The brief for A3 named AMBIGUITY as the fourth condition, but the checker fixes the A3 row to MISSING_PREREQUISITE and rejects any other set with 'the conditions are ...; the assignment must carry ...', so slot four carries MISSING_PREREQUISITE and this file carries no AMBIGUITY case; EN-HPD-A3-4 was written so that it also carries an ambiguity shape (the question has two readings and the corpus supports only one of them), and it can be re-filed as the AMBIGUITY case by changing that one condition value and answerable to true, the evidence and the dispositions staying as they are. (2) The checker I first read (scripts/necessity-case-check.py as of mtime 2026-11-28 06:14) split the corpus with the literal five-character string '\\n\\s*\\n' through str.split; that sequence occurs nowhere in the corpus documents, so its sentence extractor returned zero sentences for all four hpd files and every proposition was rejected with 'the proposition is not a sentence of ... VERBATIM', which made GREEN unreachable for any case file. I did not edit the checker: the file was replaced during my session by a version that splits with re.split(r'\\n\\s*\\n', ...) (mtime 06:19), and against that version the checker prints GREEN for this file. Every proposition here was additionally verified byte-identical to a sentence of the corpus file it names under that regex split. Files read: this contract, the four corpus documents of the hpd domain, TEMPLATE.json and scripts/necessity-case-check.py; no implementation, instrument, previous case set, pre-registration, governance, research or .git file was opened. matrix-core/src/test/resources/crj01-reach/hpd/*.md is read because the brief and the contract name it as the corpus of the domain."
+      },
+      {
+        "assignment": "A4",
+        "domain": "hpd",
+        "file": "docs-v2/engineering/evidence/crj01-necessity/case-authors/A4.json",
+        "sha256": "c80b735553c510dd61c94f9334e7a84608be55461040acac7443ad6d3eaa4466",
+        "independence": "the DSH case-author subagent for assignment A4 read ONLY the case contract (docs-v2/engineering/CRJ-01-NECESSITY-CASE-CONTRACT.md), the TEMPLATE.json beside its output, the checker scripts/necessity-case-check.py (which contract section 2 lists as readable) and the four documents of matrix-core/src/test/resources/crj01-reach/hpd/; no implementation, no instrument, no previous case set, no pre-registration, and no peer case file",
+        "notes": "Scope of reading: the author read only docs-v2/engineering/CRJ-01-NECESSITY-CASE-CONTRACT.md, docs-v2/engineering/evidence/crj01-necessity/case-authors/TEMPLATE.json, scripts/necessity-case-check.py (which contract section 2 lists as readable) and the four documents of matrix-core/src/test/resources/crj01-reach/hpd/. No file under matrix-core/src/ was opened except those four corpus documents, which the assignment and the contract name as the corpus of this domain. No forbidden file was opened: not the implementation, not the instruments, not CRJ-01-REACH-DEV-CASES.json, not scripts/reach-cases.py, not CRJ-01-COMPETENCE-REACH.md, not CRJ-01-REACH-PREREGISTRATION.md, not docs-v2/engineering/evidence/crj01-reach/**, not docs-v2/governance/**, not docs-v2/research/**, not .git/. The case-authors directory holds peer files of the other assignments (A1.json, A2.json, A3.json); none of them was opened, since the contract's 'what you may read' table lists no peer case file, and A3.json in particular covers the same domain as this assignment. Contradiction: the corpus of hpd does contain a genuine conflict, so EN-HPD-A4-1 is a contradiction and not a tension. The identification document says the barcode of a medicine carries its identifier and strength; the reconciliation document says the barcode of a unit dose carries the batch number and not the strength. The only reconciliation on offer - treating a medicine's barcode and a unit dose's barcode as two different objects - is nowhere made in the corpus, and the identification document's own strength-mismatch rule presupposes the strength to be on the barcode. Both sentences are therefore in the necessary set of that case, so that a correct answer has to carry the conflict. Changed bindings: inside hpd-a-dispensing.md the terms unit dose, check and ward bind the question of EN-HPD-A4-4 to more than one sentence of that file; the case measures whether the binding follows the workspace state, and the note of that case says plainly which sentence is necessary and why the competitor does not answer the question. Slices and disjointness: the necessary sentences are, for the PROPOSAL case, the barcode-strength sentence of hpd-b-identification.md and the barcode-batch sentence of hpd-c-reconciliation.md; for the VALIDATION case, the picking-machine sentence of hpd-a-dispensing.md; for the two EVALUATION cases, the label-wording sentence of hpd-d-labelling.md and the ward-checks-the-label sentence of hpd-a-dispensing.md. No sentence is necessary in two slices of this assignment. A collision with the sibling assignment A3 (same domain, other author) is possible and is outside this author's control; the milestone checks that across the whole case set. Contract section 8 asks for at least one LOWER_RANKED_NECESSARY, JOINTLY_NECESSARY or ALTERNATIVE_SUFFICIENT case in EVALUATION. Assignment A4 carries none of those conditions, so that requirement does not apply here, and the checker exempts the assignment in the same way. The shape of the necessary set is still visible in this file: EN-HPD-A4-1 has a two-sentence necessary set in which each sentence contributes something the other does not, and EN-HPD-A4-3 has a single-sentence necessary set whose governing sentence replaces an earlier, more general statement of the same corpus."
+      },
+      {
+        "assignment": "A5",
+        "domain": "wbe",
+        "file": "docs-v2/engineering/evidence/crj01-necessity/case-authors/A5.json",
+        "sha256": "014b8018bc638d2c3ae0a52cefd3384892d22f423d5b8fdf5b17f79454b5a044",
+        "independence": "the author read ONLY the case contract, the corpus of the assigned domain (wbe-a-erosion.md, wbe-b-inspection.md, wbe-c-coatings.md, wbe-d-aerodynamics.md), the output TEMPLATE.json, the checker script and the author's own A5.json; no implementation, no instrument, no previous case set, no pre-registration, no other case-author file",
+        "notes": "Follow-up round, assignment A5, domain wbe: all four cases are VALIDATION, as the follow-up slice rule requires, and the four conditions are one each. The author opened only the case contract, the four wbe corpus files, the output TEMPLATE.json and scripts/necessity-case-check.py; in the second and third revision rounds of EN-WBE-A5-1 the author re-opened only those, plus the author's own A5.json; no file under matrix-core/src/main or matrix-core/src/test/java, no pre-registration or milestone document, no docs-v2/governance, docs-v2/research, docs-v2/engineering/evidence/crj01-reach, .git or wal, and no other case-author file (A1.json to A4.json) was opened at any point. The author also did not read CRJ-01-NECESSITY-DEV-CASES.json, scripts/necessity-cases.py, CRJ-01-COMPETENCE-REACH.md, CRJ-01-REACH-PREREGISTRATION.md or CRJ-01-NECESSITY-PREREGISTRATION.md, and did not run Gradle, git add or git commit. The four necessary sets are pairwise disjoint, so no sentence of this assignment is the necessary evidence of two of its own cases. The coordinator's whole-set report found that the necessary sentences of EN-WBE-A5-1 and EN-WBE-A5-4 were already the necessary sentences of cases of another assignment; both cases were therefore rebuilt on different corpus sentences. A second whole-set check then found that the rebuilt sentence of EN-WBE-A5-1 - the ultrasonic reading of the thickness of a leading edge without touching it - was itself the necessary sentence of EN-WBE-A1-2 of the first round, a case of another author that is not this author's to change, and the sentence chosen in that second revision, taken from wbe-c-coatings.md, turned out to be the necessary sentence of EN-WBE-A1-4 of that same first round. On the third report the coordinator assigned the necessary sentence of EN-WBE-A5-1 explicitly - the sentence of wbe-b-inspection.md about the erosion depth that the photographs of a blade inspection reveal - which no other case of the domain uses as a necessary sentence and which stands in a different corpus file from the one the case used before it, so that the cross-document rule of the revision is met. The sentences of the first two revisions no longer occur anywhere in this file as evidence, and the note of EN-WBE-A5-1 no longer quotes either of them. One consequence is stated here rather than hidden: the necessary sentence of EN-WBE-A5-1 and the sentence its wording points most directly at now both stand in wbe-b-inspection.md, so the spread over two documents that the second revision gave this case is not carried by the necessary set any more. The author cannot rule out a further whole-set collision, because the case files of the other assignments are outside the author's assignment and were not opened at any point; nor can the author see which sentences the other authors have chosen in their parallel revisions; this is stated here rather than hidden."
+      },
+      {
+        "assignment": "A6",
+        "domain": "hpd",
+        "file": "docs-v2/engineering/evidence/crj01-necessity/case-authors/A6.json",
+        "sha256": "8be9d490e402dd553c588a734fe763539e420d1351abe6811ab14febedcd379a",
+        "independence": "the author read ONLY the case contract, the corpus of the assigned domain (the four hpd documents), the output template and the checker script that the contract lists as readable; no implementation, no instrument, no previous case set, no pre-registration, no other case author's file",
+        "notes": "Follow-up round, domain hpd: all four cases are held-out VALIDATION cases, one per condition (LOWER_RANKED_NECESSARY, JOINTLY_NECESSARY, ALTERNATIVE_SUFFICIENT, CHANGED_BINDINGS), and the four necessary sets are pairwise disjoint. REVISION AFTER THE MILESTONE'S WHOLE-SET CHECK: the milestone reported that three of my necessary sentences were already necessary sentences of first-round hpd cases (the wrongly-printed-label sentence of hpd-a-dispensing.md, the label-ambiguity sentence of hpd-d-labelling.md and the ward-checks-the-label sentence of hpd-a-dispensing.md). EN-HPD-A6-2, EN-HPD-A6-3 and EN-HPD-A6-4 were therefore rewritten on fresh corpus sentences — the medicine-the-patient-brought-in sentence and the missing-entry sentence of hpd-c-reconciliation.md, the close-names sentence of hpd-d-labelling.md, and the unreadable-barcode sentence of hpd-b-identification.md — keeping their ids, their slice and their conditions; EN-HPD-A6-1 is unchanged. The three colliding sentences appear nowhere in this file any more. The current necessary sentences of this assignment, for the milestone's next whole-set check, are: hpd-a-dispensing.md — 'An unrecorded unit dose in a hospital pharmacy reduces the ability of the pharmacy to account for the medicines in its cabinets.'; hpd-c-reconciliation.md — 'A medicine that the patient brought in and that the ward does not hold requires a note in the record of the admission.' and 'A missing entry in the record of an admission creates a risk of a duplicate dose.'; hpd-d-labelling.md — 'Two preparations with close names need a distinct label on every wrapper.'; hpd-b-identification.md — 'A scanner that cannot read the barcode of a medicine requires the cabinet to stop and to ask the pharmacist.' The only sentence named outside a necessary set is the alternative sufficient set of case 3 (hpd-d-labelling.md, the colour of a wrapper), and the only corpus sentences named in case notes are the two log sentences of hpd-a-dispensing.md (case 1, as the direct lexical match) and the look-alike-package sentence of hpd-b-identification.md (case 4, as the shared-term sibling). LIMITATION I could not remove: the whole-domain rule of CRJ-01 section 12 — a necessary sentence of a follow-up case must not be a sentence that another hpd case already uses — still cannot be verified from inside this assignment, because the other case-author files are out of bounds for me and I did not open them; the sentence list above is given so that the milestone can check it in one place, and any collision that remains is mine and should be recorded against A6. FILES READ: docs-v2/engineering/CRJ-01-NECESSITY-CASE-CONTRACT.md; the four corpus documents under matrix-core/src/test/resources/crj01-reach/hpd/; docs-v2/engineering/evidence/crj01-necessity/case-authors/TEMPLATE.json; scripts/necessity-case-check.py (the checker, which the contract lists as readable — read, not modified). I ran `ls` on the case-authors directory to confirm the path and that no A6.json existed; no other author's file (A1-A5) was opened. NOT READ: anything under matrix-core/src/main or matrix-core/src/test/java, CRJ-01-NECESSITY-DEV-CASES.json, scripts/necessity-cases.py, CRJ-01-COMPETENCE-REACH.md, CRJ-01-REACH-PREREGISTRATION.md, CRJ-01-NECESSITY-PREREGISTRATION.md, the crj01-reach evidence, docs-v2/governance, docs-v2/research, .git and wal. No Gradle was run, no existing file was modified, no commit or staging was done, and A6.json is the only file I created."
+      }
+    ],
+    "corpusSha256": {
+      "wbe/wbe-a-erosion.md": "443cd9ee2b9ab441e0d5dde0bbfcdb1d2754e0112dd23fa6433e7b6f6f284f14",
+      "wbe/wbe-b-inspection.md": "3da3a0c3df3b9b9513f0dc1c897bdea8a9bd18a4f3c2ca4357a28e2bca9dffee",
+      "wbe/wbe-c-coatings.md": "5235bcf5fb2110fc691441a70d01da7b3904bfb15f188dd8fc793051a0c569c3",
+      "wbe/wbe-d-aerodynamics.md": "53ce59a71954d34504837a8a709a7c25ce700ba238eeff3cbad06c71b6a712f8",
+      "hpd/hpd-a-dispensing.md": "e3ce929a870bbae064aed9f82f137f8cf7557d98e99b995bf25bb6ec436da8ac",
+      "hpd/hpd-b-identification.md": "f939b9e44c2c8d890411ddc825367dfd48e285852aa4608c5afc8890d90404c1",
+      "hpd/hpd-c-reconciliation.md": "2b92f9c716ae94206b01d2b3796783901249934b39cd7200cd8807aa869ba999",
+      "hpd/hpd-d-labelling.md": "2d5ef5c7a8ae8f151f163c7fb7de752c1741b01d9204c4cd97e91250b57bbb95"
+    },
+    "slicePropositions": {
+      "EVALUATION": [
+        "hpd-a-dispensing.md|A unit dose in a hospital pharmacy has a label that the ward checks before the dose reaches the patient.",
+        "hpd-a-dispensing.md|A unit dose with a label that the printer produced incorrectly requires a manual check before the ward receives it.",
+        "hpd-b-identification.md|The reading of a barcode takes a fraction of a second on a scanner that sits beside the cabinet.",
+        "hpd-d-labelling.md|The wording of a label becomes ambiguous when the amount is not printed next to its name.",
+        "wbe-b-inspection.md|The severity of an erosion pit depends on its depth and on the width of the material that surrounds it.",
+        "wbe-c-coatings.md|A coating of polyurethane reduces the erosion rate of the leading edge of a wind-turbine blade in sea spray.",
+        "wbe-c-coatings.md|The erosion rate of a coated blade becomes higher than the rate of an uncoated blade when the coating has a crack.",
+        "wbe-c-coatings.md|The service life of a coating depends on the thickness of that coating and on the number of erosion pits that reach it.",
+        "wbe-d-aerodynamics.md|An erosion pit on a wind-turbine blade increases the roughness of that blade and reduces its lift in the same operation.",
+        "wbe-d-aerodynamics.md|The power of a wind-turbine depends on the drag of its blades and on the lift that those blades produce."
+      ],
+      "PROPOSAL": [
+        "hpd-a-dispensing.md|The unit-dose dispensing process of a hospital requires a prescription that names the medicine and its dose.",
+        "hpd-b-identification.md|The barcode of a medicine provides the identifier of the product and the strength of that medicine.",
+        "hpd-c-reconciliation.md|The barcode of a unit dose provides the batch number of that dose but not the strength of the medicine in it.",
+        "wbe-a-erosion.md|Erosion pits on a wind-turbine blade act as the starting points for further material loss.",
+        "wbe-a-erosion.md|The size of the rain drops changes the erosion rate of a wind-turbine blade at an exposed coastal site.",
+        "wbe-c-coatings.md|The size of the rain drops does not change the erosion rate of a wind-turbine blade at an exposed coastal site."
+      ],
+      "VALIDATION": [
+        "hpd-a-dispensing.md|A picking machine in a hospital pharmacy takes the unit dose from the cabinet and records that removal in the log.",
+        "hpd-a-dispensing.md|An unrecorded unit dose in a hospital pharmacy reduces the ability of the pharmacy to account for the medicines in its cabinets.",
+        "hpd-b-identification.md|A scanner that cannot read the barcode of a medicine requires the cabinet to stop and to ask the pharmacist.",
+        "hpd-c-reconciliation.md|A medicine that the patient brought in and that the ward does not hold requires a note in the record of the admission.",
+        "hpd-c-reconciliation.md|A missing entry in the record of an admission creates a risk of a duplicate dose.",
+        "hpd-c-reconciliation.md|The list of medicines at the admission of a patient acts as the reference for every dose that the ward gives later.",
+        "hpd-c-reconciliation.md|The record of an admission contains the list of medicines that the ward gives to the patient.",
+        "hpd-d-labelling.md|Two preparations with close names need a distinct label on every wrapper.",
+        "wbe-b-inspection.md|A repair of a wind-turbine blade uses a filler material to restore the shape of the leading edge.",
+        "wbe-b-inspection.md|A second inspection of a wind-turbine blade becomes necessary after a period of operation in sea spray.",
+        "wbe-b-inspection.md|An ultrasonic sensor measures the thickness of the leading edge of a wind-turbine blade without touching that blade.",
+        "wbe-b-inspection.md|The photographs of a blade inspection reveal an erosion depth of more than two millimetres when the leading edge has lost material.",
+        "wbe-c-coatings.md|A crack in a coating causes sea spray to reach the metal of the wind-turbine blade under that coating.",
+        "wbe-c-coatings.md|A leading-edge protection system on a wind-turbine blade requires an application of the coating before the blade leaves the factory.",
+        "wbe-c-coatings.md|A repair of a damaged coating requires the removal of the loose coating and the application of a fresh layer.",
+        "wbe-c-coatings.md|The cost of a coating system for a wind-turbine blade depends on the size of the blade and on the number of leading edges that need protection."
+      ]
+    }
+  },
+  "domains": [
+    {
+      "id": "wbe",
+      "subject": "wind-turbine blade leading-edge erosion",
+      "files": [
+        "wbe-a-erosion.md",
+        "wbe-b-inspection.md",
+        "wbe-c-coatings.md",
+        "wbe-d-aerodynamics.md"
+      ],
+      "declaredScope": [
+        "wbe-a-erosion.md",
+        "wbe-b-inspection.md",
+        "wbe-c-coatings.md"
+      ]
+    },
+    {
+      "id": "hpd",
+      "subject": "hospital pharmacy unit-dose dispensing",
+      "files": [
+        "hpd-a-dispensing.md",
+        "hpd-b-identification.md",
+        "hpd-c-reconciliation.md",
+        "hpd-d-labelling.md"
+      ],
+      "declaredScope": [
+        "hpd-a-dispensing.md",
+        "hpd-b-identification.md",
+        "hpd-c-reconciliation.md"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "EN-WBE-A1-1",
+      "domain": "wbe",
+      "slice": "PROPOSAL",
+      "condition": "LOWER_RANKED_NECESSARY",
+      "level": "INTRODUCTORY",
+      "question": "Rain keeps hammering the leading edges of our blades, but the blade goes on losing material for days after each downpour has passed — what makes the erosion carry on like that?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-a-erosion.md",
+          "proposition": "Erosion pits on a wind-turbine blade act as the starting points for further material loss."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "ANSWERED"
+      ],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "The wording of the question points most directly at 'Rain that strikes a wind-turbine blade causes the leading edge of that blade to lose material.' — the sentence a reader stops at, and one that is NOT in the necessary set, because the question is not about what starts the loss but about what keeps it going after the rain has stopped. The only sentence in the corpus that says why the damage continues is 'Erosion pits on a wind-turbine blade act as the starting points for further material loss.', and it is reached only indirectly: the question speaks of 'the erosion carry on', while the sentence speaks of erosion pits, starting points and further material loss, none of which the question uses. The set is minimal — the one sentence answers the question alone, and removing it leaves nothing in the corpus that explains continuing loss (the other rain sentences answer what begins the loss, not what sustains it). ANSWERED alone is allowed because the corpus states the fact flatly and there is nothing to hedge about.",
+      "assignment": "A1"
+    },
+    {
+      "id": "EN-WBE-A1-2",
+      "domain": "wbe",
+      "slice": "VALIDATION",
+      "condition": "ALTERNATIVE_SUFFICIENT",
+      "level": "INTRODUCTORY",
+      "question": "How can we still measure the condition of a blade's leading edge while the turbine is up and running?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-b-inspection.md",
+          "proposition": "An ultrasonic sensor measures the thickness of the leading edge of a wind-turbine blade without touching that blade."
+        }
+      ],
+      "alternativeSufficientSets": [
+        [
+          {
+            "corpusFile": "wbe-b-inspection.md",
+            "proposition": "A drone that photographs the leading edge of a wind-turbine blade produces images that reveal small erosion pits."
+          },
+          {
+            "corpusFile": "wbe-b-inspection.md",
+            "proposition": "The photographs of a blade inspection reveal an erosion depth of more than two millimetres when the leading edge has lost material."
+          }
+        ]
+      ],
+      "allowedDispositions": [
+        "ANSWERED",
+        "QUALIFIED"
+      ],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "The question is answerable by two independent routes in the corpus, and the case measures whether a system recognises the second one instead of insisting on the first. Route one, the necessary set, is the ultrasonic sensor: it measures the leading-edge thickness without touching the blade, which is the minimal route on its own. Route two is the camera route: a drone photographs the leading edge and the images reveal the small erosion pits, and the photographs of the inspection reveal the erosion depth once the leading edge has lost material — two different sentences, disjoint from route one, that together support the same correct answer about measuring the leading edge in service. B1/B3 are an alternative route rather than corroboration of the ultrasonic sentence: they do not state the ultrasonic fact, they replace it. Both ANSWERED and QUALIFIED are allowed because a correct answer may name one route plainly or name one route and note what it does not establish; either way it must carry a whole route.",
+      "assignment": "A1"
+    },
+    {
+      "id": "EN-WBE-A1-3",
+      "domain": "wbe",
+      "slice": "EVALUATION",
+      "condition": "JOINTLY_NECESSARY",
+      "level": "INTERMEDIATE",
+      "question": "How does leading-edge erosion end up costing the turbine the power it used to produce?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-b-inspection.md",
+          "proposition": "The severity of an erosion pit depends on its depth and on the width of the material that surrounds it."
+        },
+        {
+          "corpusFile": "wbe-d-aerodynamics.md",
+          "proposition": "The power of a wind-turbine depends on the drag of its blades and on the lift that those blades produce."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "ANSWERED",
+        "QUALIFIED"
+      ],
+      "corroboration": "'The lift of a wind-turbine blade decreases as the roughness of its leading edge increases.' (wbe-d-aerodynamics.md) — it states the step from the material the leading edge loses to the lift the blade produces, but it mentions neither erosion nor power, so it corroborates the necessary set instead of replacing it.",
+      "contradiction": "NONE",
+      "note": "The necessary set has two sentences and no single one of them carries the answer alone. The first (wbe-b-inspection.md) is the corpus's statement of what the erosion takes off the blade: the severity of an erosion pit depends on its depth and on the width of the material that surrounds it, so the pit deepens and the band of material around it narrows — the leading edge of the blade loses material. The second (wbe-d-aerodynamics.md) is the corpus's statement of where the output comes from: the power of a wind-turbine depends on the drag of its blades and on the lift that those blades produce. Drop the first and the answer reaches only the output half of the chain — it would say that the power follows the drag and the lift of the blades, with nothing saying what the erosion does to the leading edge; drop the second and the answer stops at the damage to the leading edge and never reaches the turbine's power. So the two must travel together, and so must the two documents. The corpus offers no single-sentence shortcut: the sentence about the yearly energy production speaks of energy and of roughness, not of erosion and of power, and no sentence outside wbe-d-aerodynamics.md connects the erosion to the output. QUALIFIED is tolerated because the corpus names both the drag and the lift as the sources of the power while the erosion-side sentence speaks only of the material the pits consume, so an answer may state the chain and note that it runs through the lift rather than through the drag.",
+      "assignment": "A1"
+    },
+    {
+      "id": "EN-WBE-A1-4",
+      "domain": "wbe",
+      "slice": "EVALUATION",
+      "condition": "MISSING_PREREQUISITE",
+      "level": "INTERMEDIATE",
+      "question": "How long will the leading-edge coating last on a turbine that works in sea spray before it has to be renewed?",
+      "answerable": false,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-c-coatings.md",
+          "proposition": "The service life of a coating depends on the thickness of that coating and on the number of erosion pits that reach it."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "QUALIFIED",
+        "ABSTAINED"
+      ],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "The corpus carries only the two drivers of a coating's service life — 'The service life of a coating depends on the thickness of that coating and on the number of erosion pits that reach it.' — and no sentence in any of the four files states the service life itself, the rate at which pits reach the coating, or any relation from a thickness to a time in service. The proposition the question needs is therefore a service-life fact that the corpus does not contain, not a paraphrase that has not been found: the workspace cannot carry the whole answer. A correct answer therefore states what the corpus gives and says that the duration itself is not settled (QUALIFIED), or declines to give a duration (ABSTAINED); ANSWERED is not allowed and answerable is false. The sentences about polyurethane and sea spray do not help here, because they concern the erosion rate and not the life of the coating.",
+      "assignment": "A1"
+    },
+    {
+      "id": "EN-WBE-A2-1",
+      "domain": "wbe",
+      "slice": "PROPOSAL",
+      "condition": "CONTRADICTION",
+      "level": "INTERMEDIATE",
+      "question": "Our turbines stand at an exposed coastal site and the leading edge of the blade is wearing away fast — does the size of the rain drops matter for how quickly that erosion happens?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-a-erosion.md",
+          "proposition": "The size of the rain drops changes the erosion rate of a wind-turbine blade at an exposed coastal site."
+        },
+        {
+          "corpusFile": "wbe-c-coatings.md",
+          "proposition": "The size of the rain drops does not change the erosion rate of a wind-turbine blade at an exposed coastal site."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "ANSWERED",
+        "QUALIFIED",
+        "ABSTAINED"
+      ],
+      "corroboration": "NONE",
+      "contradiction": "wbe-a-erosion.md states 'The size of the rain drops changes the erosion rate of a wind-turbine blade at an exposed coastal site.' and wbe-c-coatings.md states 'The size of the rain drops does not change the erosion rate of a wind-turbine blade at an exposed coastal site.' — the same fact, about the same kind of site, with opposite polarity.",
+      "note": "The corpus holds a literal contradiction here, not merely a tension, so the conflict is not manufactured: the two sentences make the same claim about the same site and one of them is the plain negation of the other. Both are therefore necessary — drop the first and the answer can no longer state the conflict, drop the second and the same — and a correct answer has to carry the conflict: it may report that the corpus says both things, qualify its answer by the conflict, or abstain; what is not correct is an ANSWERED that silently takes one side, because its evidence then carries only half of the necessary set, which is why three dispositions are allowed here. The sentence the wording of the question points most directly at is the general one in wbe-a-erosion.md — 'The erosion rate of a wind-turbine blade depends on the wind speed and on the size of the rain drops that strike it.' — but it settles nothing about the coastal site, so it is neither necessary nor corroborating; no third corpus sentence corroborates the two sides, because the corpus holds no third statement about the rain drops at a coastal site.",
+      "assignment": "A2"
+    },
+    {
+      "id": "EN-WBE-A2-2",
+      "domain": "wbe",
+      "slice": "EVALUATION",
+      "condition": "SUPERSESSION",
+      "level": "INTERMEDIATE",
+      "question": "We fitted a polyurethane coating to the leading edges of the blades that work in sea spray, and the last inspection found a crack in one of them — does that coating still do its job?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-c-coatings.md",
+          "proposition": "A coating of polyurethane reduces the erosion rate of the leading edge of a wind-turbine blade in sea spray."
+        },
+        {
+          "corpusFile": "wbe-c-coatings.md",
+          "proposition": "The erosion rate of a coated blade becomes higher than the rate of an uncoated blade when the coating has a crack."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "ANSWERED",
+        "QUALIFIED"
+      ],
+      "corroboration": "wbe-c-coatings.md's sentence 'A crack in a coating causes sea spray to reach the metal of the wind-turbine blade under that coating.' corroborates the governing sentence by giving the mechanism that turns a cracked coating into a liability.",
+      "contradiction": "NONE",
+      "note": "The corpus carries this question's evidence in two forms: the general statement 'A coating of polyurethane reduces the erosion rate of the leading edge of a wind-turbine blade in sea spray.' and a later, narrower statement that corrects it — 'The erosion rate of a coated blade becomes higher than the rate of an uncoated blade when the coating has a crack.' The later sentence governs, because it is the one that applies to the cracked coating the question is about, and the general statement is still needed because the question asks whether the coating is doing its job, which presumes what the coating is for; drop the general statement and the answer says only that a cracked coating is worse than no coating at all, drop the governing sentence and the answer says the coating protects while the corpus says the opposite for the cracked case. The generic protective sentence in wbe-a-erosion.md — 'A protective coating over the leading edge of a wind-turbine blade reduces the erosion rate of that edge.' — is a weaker third version of the general claim and is not needed once the polyurethane sentence is used. ANSWERED and QUALIFIED are both honest here because the condition is part of the answer itself, while a plain abstention is not, since the corpus does settle the case for a cracked coating.",
+      "assignment": "A2"
+    },
+    {
+      "id": "EN-WBE-A2-3",
+      "domain": "wbe",
+      "slice": "EVALUATION",
+      "condition": "CHANGED_BINDINGS",
+      "level": "INTRODUCTORY",
+      "question": "The leading edge of one of our blades has gone rough after erosion — how does that affect the lift that blade makes?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-d-aerodynamics.md",
+          "proposition": "An erosion pit on a wind-turbine blade increases the roughness of that blade and reduces its lift in the same operation."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "ANSWERED",
+        "QUALIFIED"
+      ],
+      "corroboration": "wbe-d-aerodynamics.md's sentence 'The lift of a wind-turbine blade decreases as the roughness of its leading edge increases.' corroborates the lift half of the erosion-pit sentence.",
+      "contradiction": "NONE",
+      "note": "The question's terms are shared by two sentences of the same file, wbe-d-aerodynamics.md: 'The lift of a wind-turbine blade decreases as the roughness of its leading edge increases.' and 'An erosion pit on a wind-turbine blade increases the roughness of that blade and reduces its lift in the same operation.' Each takes a different two of the question's terms — roughness, leading edge and lift against erosion pit, roughness and lift — so which of the two the question binds to is decided by the state of the workspace rather than by the wording, which is what makes this a changed binding rather than an ordinary lookup. The necessary evidence is the erosion-pit sentence, because only it carries the link from the pit to the roughness: an answer built on the general law alone would state that a rougher leading edge loses lift but would never say that the pit itself makes the surface rough, which is what the question is about, so the general law is named as corroboration rather than as a second necessary sentence. The corpus holds no third sentence about the lift of an eroded leading edge, so there is nothing else the question could bind to.",
+      "assignment": "A2"
+    },
+    {
+      "id": "EN-WBE-A2-4",
+      "domain": "wbe",
+      "slice": "VALIDATION",
+      "condition": "AMBIGUITY",
+      "level": "INTRODUCTORY",
+      "question": "We had a repair done on the leading edge of a blade that was eroding badly — what actually goes into a repair like that?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-b-inspection.md",
+          "proposition": "A repair of a wind-turbine blade uses a filler material to restore the shape of the leading edge."
+        },
+        {
+          "corpusFile": "wbe-c-coatings.md",
+          "proposition": "A repair of a damaged coating requires the removal of the loose coating and the application of a fresh layer."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "ANSWERED",
+        "QUALIFIED",
+        "ABSTAINED"
+      ],
+      "corroboration": "wbe-d-aerodynamics.md's sentence 'The lift of a repaired wind-turbine blade becomes close to the lift of a new blade when the repair restores the shape of the leading edge.' corroborates the blade-repair reading by stating what restoring the leading-edge shape buys.",
+      "contradiction": "NONE",
+      "note": "The corpus uses a repair for two different things and the question does not say which one is meant: 'A repair of a wind-turbine blade uses a filler material to restore the shape of the leading edge.' and 'A repair of a damaged coating requires the removal of the loose coating and the application of a fresh layer.' Both readings sit on the leading edge, since the protective coating is applied over it, so the wording cannot decide between them, and both sentences are necessary: drop the blade sentence and only the coating reading survives, drop the coating sentence and only the blade repair survives. An answer that names one reading and ignores the other has picked a side the corpus does not settle, so the correct answer carries both readings, or qualifies which one it is answering, or asks the asker which repair is meant, which is why all three dispositions are allowed. The sentence in wbe-d-aerodynamics.md about the lift of a repaired blade is named as corroboration because it speaks only to the blade-repair reading and does not resolve the ambiguity.",
+      "assignment": "A2"
+    },
+    {
+      "id": "EN-HPD-A3-1",
+      "domain": "hpd",
+      "slice": "PROPOSAL",
+      "condition": "LOWER_RANKED_NECESSARY",
+      "level": "INTRODUCTORY",
+      "question": "Our cabinet is stocked with the unit doses the wards ask for, and each ward sends us what it needs for the day. Even so, the pharmacy will not release a dose on the strength of that request alone — what has to be on file before a unit dose may be dispensed?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "hpd-a-dispensing.md",
+          "proposition": "The unit-dose dispensing process of a hospital requires a prescription that names the medicine and its dose."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "ANSWERED"
+      ],
+      "corroboration": "A3 corroborates the necessary set: “A barcode on a unit dose of a medicine allows the cabinet to check that medicine against the prescription of the ward.” — the check the cabinet performs presupposes exactly the prescription that the necessary sentence makes a requirement.",
+      "contradiction": "NONE",
+      "note": "LOWER_RANKED_NECESSARY: the wording deliberately repeats the vocabulary of the most direct match — “A dispensing cabinet in a hospital pharmacy stores the unit doses of the medicines that the ward asks for.” — so a reader who stops at that sentence concludes that the ward's request is what the pharmacy works from and never reaches the sentence that actually answers the question. The necessary sentence, “The unit-dose dispensing process of a hospital requires a prescription that names the medicine and its dose.”, is reached only indirectly: the argument that a request is not enough has to be turned into “what does the process require”, and the corpus answers that in other words (“requires”, “prescription that names the medicine and its dose”). The direct match is not needed: it says only what the cabinet stores, not what the process requires, so the necessary set is the single sentence and stays minimal.",
+      "assignment": "A3"
+    },
+    {
+      "id": "EN-HPD-A3-2",
+      "domain": "hpd",
+      "slice": "VALIDATION",
+      "condition": "JOINTLY_NECESSARY",
+      "level": "INTERMEDIATE",
+      "question": "After a patient is admitted, our ward hands out medicines at every dosing round. Which document is the authority on what that patient should be getting, and what has that document got to contain?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "hpd-c-reconciliation.md",
+          "proposition": "The record of an admission contains the list of medicines that the ward gives to the patient."
+        },
+        {
+          "corpusFile": "hpd-c-reconciliation.md",
+          "proposition": "The list of medicines at the admission of a patient acts as the reference for every dose that the ward gives later."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "ANSWERED"
+      ],
+      "corroboration": "C5 corroborates the necessary set: “The reconciliation of an admission in a hospital pharmacy reduces the number of medicines that the ward gives without a record.” — it ties the admission record and the list in it to the medicines the ward actually gives.",
+      "contradiction": "NONE",
+      "note": "JOINTLY_NECESSARY: both sentences are needed and neither carries the answer alone. “The record of an admission contains the list of medicines that the ward gives to the patient.” says which document holds the list and what the list is, but says nothing about the list governing the doses the ward gives later. “The list of medicines at the admission of a patient acts as the reference for every dose that the ward gives later.” says the list at the admission is the reference for every later dose, but names no document and does not say where the list is recorded. Drop the first and “which document” is unanswered; drop the second and “what governs the doses afterwards” is unanswered. The two sentences come from one file but contribute different halves of the answer, and neither of them is a necessary sentence of another slice of this assignment.",
+      "assignment": "A3"
+    },
+    {
+      "id": "EN-HPD-A3-3",
+      "domain": "hpd",
+      "slice": "EVALUATION",
+      "condition": "ALTERNATIVE_SUFFICIENT",
+      "level": "INTRODUCTORY",
+      "question": "A unit dose is sitting in the cabinet with a label that the label printer produced wrong. What has to happen to that dose before it is allowed to go out to the ward?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "hpd-a-dispensing.md",
+          "proposition": "A unit dose with a label that the printer produced incorrectly requires a manual check before the ward receives it."
+        }
+      ],
+      "alternativeSufficientSets": [
+        [
+          {
+            "corpusFile": "hpd-d-labelling.md",
+            "proposition": "A label that the printer produced incorrectly requires the pharmacist to check it against the prescription."
+          }
+        ]
+      ],
+      "allowedDispositions": [
+        "ANSWERED"
+      ],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "ALTERNATIVE_SUFFICIENT: two routes to the same correct answer, in two different documents. The necessary set is “A unit dose with a label that the printer produced incorrectly requires a manual check before the ward receives it.”, because the question asks about a unit dose in the cabinet and about the moment before the ward receives it, and that sentence says both. The alternative sufficient set is the single sentence “A label that the printer produced incorrectly requires the pharmacist to check it against the prescription.”, which reaches the same correct answer from the labelling document and adds who checks the label and against what. A correct answer may stand on either set; neither of the two sentences is a necessary sentence of another slice of this assignment.",
+      "assignment": "A3"
+    },
+    {
+      "id": "EN-HPD-A3-4",
+      "domain": "hpd",
+      "slice": "EVALUATION",
+      "condition": "MISSING_PREREQUISITE",
+      "level": "INTERMEDIATE",
+      "question": "How long does the verification of a single unit dose take at our cabinet, from the moment the technician lifts the dose off the shelf to the moment the ward receives it?",
+      "answerable": false,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "hpd-b-identification.md",
+          "proposition": "The reading of a barcode takes a fraction of a second on a scanner that sits beside the cabinet."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "QUALIFIED",
+        "ABSTAINED"
+      ],
+      "corroboration": "A5 corroborates the necessary set: “A picking machine in a hospital pharmacy takes the unit dose from the cabinet and records that removal in the log.” — the chain between the shelf and the ward has more than one step, so the barcode read cannot be the whole of the time asked about.",
+      "contradiction": "NONE",
+      "note": "MISSING_PREREQUISITE: the corpus carries exactly one duration, “The reading of a barcode takes a fraction of a second on a scanner that sits beside the cabinet.”, and that single sentence is the necessary set, because it is the only timing fact an answer may stand on. The end-to-end time the question asks for needs propositions the corpus does not contain: how long the comparison against the ward's prescription takes, how long the manual check on a mismatch takes, what the ward's own check of the label costs in time, and how those steps compose into a cycle time. The workspace therefore cannot carry the whole answer, and the honest dispositions are QUALIFIED (give the barcode read time and say the rest is not in the workspace) and ABSTAINED. The question also has a second reading that the corpus does support — the time of the barcode read alone — so this case carries an ambiguity shape as well; if the milestone wants the AMBIGUITY slot for A3, it can be re-filed as such with answerable set to true, and the evidence and dispositions would not change.",
+      "assignment": "A3"
+    },
+    {
+      "id": "EN-HPD-A4-1",
+      "domain": "hpd",
+      "slice": "PROPOSAL",
+      "condition": "CONTRADICTION",
+      "level": "INTERMEDIATE",
+      "question": "We want the cabinet to check every unit dose against the ward's prescription. Can it confirm the strength of the medicine from the barcode on the dose alone?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "hpd-b-identification.md",
+          "proposition": "The barcode of a medicine provides the identifier of the product and the strength of that medicine."
+        },
+        {
+          "corpusFile": "hpd-c-reconciliation.md",
+          "proposition": "The barcode of a unit dose provides the batch number of that dose but not the strength of the medicine in it."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "QUALIFIED",
+        "ABSTAINED"
+      ],
+      "corroboration": "hpd-b-identification.md also states: 'A mismatch between the strength on a barcode and the strength in a prescription requires a manual check.' That sentence corroborates the identification side of the conflict - it shows the workflow expects the strength to be readable from the barcode - and it is not part of the necessary set.",
+      "contradiction": "hpd-b-identification.md states 'The barcode of a medicine provides the identifier of the product and the strength of that medicine.' and hpd-c-reconciliation.md states 'The barcode of a unit dose provides the batch number of that dose but not the strength of the medicine in it.' The two sentences conflict about the same thing - whether the barcode of the dispensed medicine carries its strength - and the corpus nowhere distinguishes a medicine-level barcode from a unit-dose barcode, so the conflict stands unresolved on the corpus's own terms.",
+      "note": "Both sentences are necessary and neither carries the conflict alone: the identification document says the barcode of the medicine carries its strength, the reconciliation document says the barcode of the unit dose carries the batch number and not the strength. An answer that quotes only one of them has silently picked a side, which is exactly what this condition forbids; the corpus nowhere states that a medicine's barcode and a unit dose's barcode are two different objects, so the conflict cannot be closed from the corpus and a correct answer has to carry it or to abstain. ANSWERED is not allowed here because a flat statement of one side - or even of both sides without saying that they conflict - reads as a settled answer, which this condition forbids. The strength-mismatch sentence of the identification document and the cabinet-checks-the-barcode sentence of the dispensing document are background a reader may add, but neither is needed to carry the conflict, so the necessary set is the two conflicting sentences and nothing else.",
+      "assignment": "A4"
+    },
+    {
+      "id": "EN-HPD-A4-2",
+      "domain": "hpd",
+      "slice": "VALIDATION",
+      "condition": "UNANSWERABLE",
+      "level": "INTRODUCTORY",
+      "question": "Does anything in the dispensing workflow check a unit dose's expiry date before that dose leaves the cabinet?",
+      "answerable": false,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "hpd-a-dispensing.md",
+          "proposition": "A picking machine in a hospital pharmacy takes the unit dose from the cabinet and records that removal in the log."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "ABSTAINED"
+      ],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "The corpus says nothing about expiry: no sentence of the four hpd documents mentions a date, a shelf life, an expiry or a dose that has gone off, so the subject of the question is genuinely outside what the corpus holds and the only honest disposition is ABSTAINED. The one sentence listed is the nearest thing the corpus does hold about the picking step, and it is listed precisely because it makes the gap visible: 'A picking machine in a hospital pharmacy takes the unit dose from the cabinet and records that removal in the log.' It fixes what the corpus says happens when a dose leaves the cabinet, and leaves the expiry question with no answer at all - the corpus does not contain the answer, and no sentence of it would let a reader infer one.",
+      "assignment": "A4"
+    },
+    {
+      "id": "EN-HPD-A4-3",
+      "domain": "hpd",
+      "slice": "EVALUATION",
+      "condition": "SUPERSESSION",
+      "level": "INTERMEDIATE",
+      "question": "Our labels print the preparation and the amount it carries, yet staff still pick the wrong dose off the shelf. Under what condition does the wording on a label actually become ambiguous?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "hpd-d-labelling.md",
+          "proposition": "The wording of a label becomes ambiguous when the amount is not printed next to its name."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "ANSWERED",
+        "QUALIFIED"
+      ],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "The question's evidence exists in the corpus in two forms and the later one governs. The earlier form is the flat claim 'A printed label states the preparation and the amount that the preparation carries.' The later sentence of the same file qualifies it: 'The wording of a label becomes ambiguous when the amount is not printed next to its name.' That later sentence is the one that governs, and it alone answers the question. An answer that rests only on that earlier general claim would not answer the question at all and would drop the condition the corpus attaches to the label, so the necessary set is the single governing sentence. The earlier statement is deliberately not in the necessary set: the question already puts that general claim in its premise, so it is not evidence for the answer. QUALIFIED is allowed alongside ANSWERED because an honest answer may also say that the corpus's later sentence narrows its earlier, more general statement, and that is a stated limit rather than a different answer.",
+      "assignment": "A4"
+    },
+    {
+      "id": "EN-HPD-A4-4",
+      "domain": "hpd",
+      "slice": "EVALUATION",
+      "condition": "CHANGED_BINDINGS",
+      "level": "INTERMEDIATE",
+      "question": "The ward has taken the dose from the pharmacy cabinet. Before it reaches the patient, does anybody still check the dose itself?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "hpd-a-dispensing.md",
+          "proposition": "A unit dose in a hospital pharmacy has a label that the ward checks before the dose reaches the patient."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "ANSWERED",
+        "QUALIFIED"
+      ],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "The question's terms bind to more than one sentence of one file. The necessary sentence is 'A unit dose in a hospital pharmacy has a label that the ward checks before the dose reaches the patient.' The competing sentence sits in the same file, hpd-a-dispensing.md: 'A unit dose that does not match the barcode of its medicine requires a manual check before the ward receives it.' Both are about a check on a unit dose around the handover to the ward and they share the terms unit dose, check and ward, so the wording of the question cannot separate them; only the moment does - before the ward has the dose at all, against before the patient gets it. Which of the two the question binds to therefore depends on the state of the workspace, that is on which of the two sentences the workspace holds and surfaces, and not on the wording alone. The barcode sentence does not answer this question, because its check happens before the ward has the dose and so is not a check on the dose after receipt; only the ward's own check of the label before the dose reaches the patient answers it, which is why the necessary set holds that one sentence alone. QUALIFIED is allowed alongside ANSWERED because an honest answer may add that the pharmacy-side check happens earlier in the chain, which is a stated limit and not a different answer.",
+      "assignment": "A4"
+    },
+    {
+      "id": "EN-WBE-A5-1",
+      "domain": "wbe",
+      "slice": "VALIDATION",
+      "condition": "LOWER_RANKED_NECESSARY",
+      "level": "INTRODUCTORY",
+      "question": "On the north turbine nothing can reach the blade - no crane to lift it, no drone to fly over it - and we still have to say how much of the leading edge is gone; how is that number obtained?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-b-inspection.md",
+          "proposition": "The photographs of a blade inspection reveal an erosion depth of more than two millimetres when the leading edge has lost material."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "ANSWERED"
+      ],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "The wording of the question points most directly at the sentences of the inspection file that describe how a reading is taken on a blade that nobody can reach - the ultrasonic sentence that reads the thickness of the edge without any contact, and the drone sentence, whose images show only small pits - because the scene stresses that nothing can reach the blade and the last clause of the question asks how the number is obtained, which is a question about method. Neither of those sentences is in the necessary set: the drone is excluded by the wording of the question itself, and the ultrasonic reading answers how a reading is taken but not how much material the leading edge has lost. The necessary sentence is reached only indirectly, through the question's demand for an amount rather than for a method: the corpus states how much of a leading edge is gone in a consequence clause, not in a method sentence - the photographs of a blade inspection reveal an erosion depth of more than two millimetres when the leading edge has lost material. That sentence is necessary because the question asks how much of the leading edge is gone, and this is the one place where the corpus gives an amount of lost leading edge; the photographs it speaks of are the photographs of an inspection, not of a drone, so the scene of the question does not exclude them, and what they reveal is the depth that has to be reported. Drop it and an answer can still name a way of measuring the edge, but it never says how much is gone, so the answer either stops at the method and does not answer the question or collapses into 'the corpus does not say', and that is not one of the allowed dispositions of this case. The necessary sentence is minimal - one sentence carries the whole figure - and a reader who stopped at the most direct match would answer with a method and would miss the necessary evidence entirely.",
+      "assignment": "A5"
+    },
+    {
+      "id": "EN-WBE-A5-2",
+      "domain": "wbe",
+      "slice": "VALIDATION",
+      "condition": "JOINTLY_NECESSARY",
+      "level": "INTERMEDIATE",
+      "question": "We are buying a leading-edge protection system for a new turbine; when does the coating have to go on, and what decides what we pay for it?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-c-coatings.md",
+          "proposition": "A leading-edge protection system on a wind-turbine blade requires an application of the coating before the blade leaves the factory."
+        },
+        {
+          "corpusFile": "wbe-c-coatings.md",
+          "proposition": "The cost of a coating system for a wind-turbine blade depends on the size of the blade and on the number of leading edges that need protection."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "ANSWERED"
+      ],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "The question has two halves and each half of the answer is carried by exactly one corpus sentence, so neither sentence carries the answer alone. The first half - when the protection is applied - is carried by the sentence saying a leading-edge protection system requires an application of the coating before the blade leaves the factory, and the second half - what drives the price - is carried by the sentence saying the cost of a coating system depends on the size of the blade and on the number of leading edges that need protection. Drop the first and the answer never says that the coating is a factory step; drop the second and it never says what the price follows from. No other sentence of the corpus touches either half, which is why the set has no alternative route.",
+      "assignment": "A5"
+    },
+    {
+      "id": "EN-WBE-A5-3",
+      "domain": "wbe",
+      "slice": "VALIDATION",
+      "condition": "ALTERNATIVE_SUFFICIENT",
+      "level": "INTERMEDIATE",
+      "question": "Our offshore turbine has been running in sea spray for most of the year; is the scheduled inspection enough, or does it need another one?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-b-inspection.md",
+          "proposition": "A second inspection of a wind-turbine blade becomes necessary after a period of operation in sea spray."
+        }
+      ],
+      "alternativeSufficientSets": [
+        [
+          {
+            "corpusFile": "wbe-a-erosion.md",
+            "proposition": "Sea spray causes a higher erosion rate on a wind-turbine blade than dry air produces."
+          },
+          {
+            "corpusFile": "wbe-a-erosion.md",
+            "proposition": "The inspection interval for a wind-turbine blade in a coastal site depends on the erosion rate that the site produces."
+          }
+        ]
+      ],
+      "allowedDispositions": [
+        "ANSWERED"
+      ],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "The necessary sentence states the conclusion outright - a second inspection becomes necessary after a period of operation in sea spray - and it is minimal, because removing it leaves nothing in the corpus that says an inspection recurs. A different route to the same correct answer exists and is named here: the pair about sea spray producing a higher erosion rate than dry air, together with the sentence saying the inspection interval at a coastal site depends on the erosion rate that the site produces - two sentences from another file, which reach the same conclusion by the chain sea spray raises the rate, the coastal interval follows the rate, so the next inspection falls sooner. The alternative set shares no sentence with the necessary set, so the question is answerable from the corpus in two distinct ways.",
+      "assignment": "A5"
+    },
+    {
+      "id": "EN-WBE-A5-4",
+      "domain": "wbe",
+      "slice": "VALIDATION",
+      "condition": "CHANGED_BINDINGS",
+      "level": "INTERMEDIATE",
+      "question": "One of our offshore blades came back from the yard with its polyurethane coating opened up along the leading edge; on that blade, can the sea spray still get at the metal underneath?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "wbe-c-coatings.md",
+          "proposition": "A crack in a coating causes sea spray to reach the metal of the wind-turbine blade under that coating."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "ANSWERED"
+      ],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "The terms of the question - the polyurethane coating, the sea spray, the metal under the coating, the blade - are shared by two sentences of the same file, and which of the two the answer has to stand on is settled by the state of the workspace, not by the wording. With a sound coating the binding is the sentence saying that a coating of polyurethane reduces the erosion rate of the leading edge in sea spray; in the state this case describes, the coating has opened up along the edge, so the binding is the necessary sentence, which says that a crack in a coating causes sea spray to reach the metal of the blade under it. The necessary sentence is minimal - one sentence carries the whole answer to the question - and a reader who bound the sound-coating sentence without looking at the state of that blade would answer that the spray is turned back, which is wrong for this state. The question says 'opened up' rather than the corpus word for the damage, so the binding decision follows from the state of the blade rather than from a wording cue.",
+      "assignment": "A5"
+    },
+    {
+      "id": "EN-HPD-A6-1",
+      "domain": "hpd",
+      "slice": "VALIDATION",
+      "condition": "LOWER_RANKED_NECESSARY",
+      "level": "INTRODUCTORY",
+      "question": "The pharmacy keeps a log of what leaves the cabinets, and the manager keeps saying it is more than paperwork. What can the pharmacy no longer tell you about its own stock if a dose comes out and the log never mentions it?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "hpd-a-dispensing.md",
+          "proposition": "An unrecorded unit dose in a hospital pharmacy reduces the ability of the pharmacy to account for the medicines in its cabinets."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "ANSWERED",
+        "QUALIFIED"
+      ],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "The question asks what is LOST, and the wording it uses lands first on the two log sentences of hpd-a-dispensing.md: 'A picking machine in a hospital pharmacy takes the unit dose from the cabinet and records that removal in the log.' and 'The dispensing log of a hospital pharmacy provides the record of every unit dose that left the cabinet.' Both are about the record itself and neither states a consequence, so a reader who stopped at the most direct lexical match would answer 'the pharmacy has a log of every dose that left the cabinet' and never say what the log is worth. The necessary sentence is reached only indirectly, by a paraphrase of 'what can the pharmacy no longer tell you about its own stock' as 'reduces the ability of the pharmacy to account for the medicines in its cabinets'. Remove it and the answer says nothing about the loss, so the set of one is minimal and necessary.",
+      "assignment": "A6"
+    },
+    {
+      "id": "EN-HPD-A6-2",
+      "domain": "hpd",
+      "slice": "VALIDATION",
+      "condition": "JOINTLY_NECESSARY",
+      "level": "INTERMEDIATE",
+      "question": "A patient is admitted with a medicine of their own that the ward does not stock. What does the pharmacy have to put in the record of the admission, and what happens to the patient if that never gets done?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "hpd-c-reconciliation.md",
+          "proposition": "A medicine that the patient brought in and that the ward does not hold requires a note in the record of the admission."
+        },
+        {
+          "corpusFile": "hpd-c-reconciliation.md",
+          "proposition": "A missing entry in the record of an admission creates a risk of a duplicate dose."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "ANSWERED",
+        "QUALIFIED"
+      ],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "Neither sentence carries the answer alone, and each contributes something the other does not. The first is the only statement of the duty itself: a medicine the patient brought in that the ward does not hold requires a note in the record of the admission; without it the answer names a risk but not the act that the pharmacy owes. The second is the only statement of what the risk is: a missing entry in that record creates a risk of a duplicate dose; without it the answer states a piece of paperwork but leaves the patient harm unexplained, and the question's second half unanswered. The corpus holds no single sentence that carries both the duty and the consequence, and the two are not redundant with one another, so the two-sentence set is the minimal necessary one.",
+      "assignment": "A6"
+    },
+    {
+      "id": "EN-HPD-A6-3",
+      "domain": "hpd",
+      "slice": "VALIDATION",
+      "condition": "ALTERNATIVE_SUFFICIENT",
+      "level": "INTRODUCTORY",
+      "question": "Two of the ward's preparations have names that are almost identical and the staff keep picking up the wrong one. What on the packaging is meant to stop that?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "hpd-d-labelling.md",
+          "proposition": "Two preparations with close names need a distinct label on every wrapper."
+        }
+      ],
+      "alternativeSufficientSets": [
+        [
+          {
+            "corpusFile": "hpd-d-labelling.md",
+            "proposition": "The colour of a wrapper lets the staff separate one preparation from another."
+          }
+        ]
+      ],
+      "allowedDispositions": [
+        "ANSWERED",
+        "QUALIFIED"
+      ],
+      "corroboration": "hpd-d-labelling.md: 'The colour of a wrapper lets the staff separate one preparation from another.' states the packaging feature from the staff's side and corroborates the necessary set on its own.",
+      "contradiction": "NONE",
+      "note": "The answer is the packaging: the wrapper has to make the two preparations tellable apart. Two different sentences carry it, and a correct answer may rest on either. The necessary set I designate is the labelling file's sentence about close names, which states the requirement itself — a distinct label on every wrapper. The alternative sufficient set is the colour sentence, which supports the same answer from the ward's side — the colour of a wrapper lets the staff separate one preparation from another — and therefore carries a correct answer without the designated sentence. The milestone should score an answer resting on either route as carrying the answer; I designate the first because it states what the pharmacy must do, while the second states how the separation works in the ward's hands.",
+      "assignment": "A6"
+    },
+    {
+      "id": "EN-HPD-A6-4",
+      "domain": "hpd",
+      "slice": "VALIDATION",
+      "condition": "CHANGED_BINDINGS",
+      "level": "INTERMEDIATE",
+      "question": "The scanner beside the cabinet could not read the barcode on one pack this morning. What happens to that dose?",
+      "answerable": true,
+      "necessaryEvidence": [
+        {
+          "corpusFile": "hpd-b-identification.md",
+          "proposition": "A scanner that cannot read the barcode of a medicine requires the cabinet to stop and to ask the pharmacist."
+        }
+      ],
+      "alternativeSufficientSets": [],
+      "allowedDispositions": [
+        "ANSWERED",
+        "QUALIFIED"
+      ],
+      "corroboration": "NONE",
+      "contradiction": "NONE",
+      "note": "The question's terms are shared with another sentence of the same file, and the wording alone does not separate the two. 'A scanner that cannot read the barcode of a medicine requires the cabinet to stop and to ask the pharmacist.' and 'A medicine with two similar packages requires a check of the barcode before the unit dose leaves the cabinet.' both turn on the barcode, on the cabinet and on the dose that is about to leave it, and the question's wording — the scanner beside the cabinet, the barcode, the dose — matches both. What separates them is the state of the workspace: here the scanner could not read the code, so the unreadable-barcode rule governs and the cabinet must stop and ask the pharmacist, while the look-alike-package rule is the one that is not reached. A reader who matched on the shared vocabulary of barcode, cabinet and dose alone would land on the second sentence and answer that the barcode must be checked, which does not say what happens to a dose whose code cannot be read. The necessary set is the single sentence of the unreadable-barcode rule; it is minimal, because no other sentence of the corpus says what a failing scanner obliges the cabinet to do.",
+      "assignment": "A6"
+    }
+  ]
+}
