@@ -524,7 +524,7 @@ Checked, with the command that shows it.
    | `NECESSARY_PREREQUISITE` | 24 | 9 | 33 | 6 | `9/42 = 0.2143` | `6/30 = 0.2000` | `9/33 = 0.2727` | `6/39 = 0.1538` |
 
    These match `CRJ-01-NECESSITY-GRID-SUMMARY.json` cell for cell, the milestone's §1 and §4.1
-   tables, and the checkpoint's table (`.opencode/matrix-dsh-checkpoint.md:36-39`) exactly. 72 rows
+   tables, and the checkpoint's table (lines 36–39 of the local DSH checkpoint) exactly. 72 rows
    per rule; 15 cells where the arms differ — **9** where the incumbent admitted a scope the oracle
    calls inadequate and the proposal refused it, **6** where the incumbent admitted an adequate
    scope and the proposal refused it; and **no** cell in which the proposal admitted what the
